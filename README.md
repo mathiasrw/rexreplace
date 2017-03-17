@@ -1,14 +1,15 @@
 [![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
- [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 
 # RexReplace
 
-CLI regexp search and replace in files using lookahead and
+_Commandline search and replace as it should be._
+
+Regexp search and replace in files using lookahead and
 backreference to matching groups in the replacement. 
 Defaults to global multiline case-insensitive search. 
-Will run on node v6+.
+Needs node v6+.
 
-Files subject to the replacement can be given as _glob_ notation, so `docs/*.md` will give same result as explicitly naming each markdown file in the `docs/` dir. 
+Files can be given in [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl16a.html), for example the glob `docs/*.md` represents each markdown file in the `docs/` dir. 
 
 ### Install
 ```bash
@@ -17,7 +18,7 @@ Files subject to the replacement can be given as _glob_ notation, so `docs/*.md`
  
 ### Usages 
 ```bash
-> rexreplace searchFor replaceWith filenameOrGlob_A filenameOrGlob_B filenameOrGlob_C ...
+> rexreplace searchFor replaceWith fileA [fileB fileC ...]
 ```
 
 ### Examples
@@ -37,8 +38,6 @@ Files subject to the replacement can be given as _glob_ notation, so `docs/*.md`
   # Some commandline tools (bash/zsh/...) is a bit funny with the `$` sign. use the '-€' flag to have `€` alias a `$`
 > rexreplace '(f?(o))o(.*)' '€3€1€2' myfile.md -€ 
   # 'foobar' in myfile.md will become 'barfoo'
-
-
 
 ```
 
@@ -68,16 +67,16 @@ Files subject to the replacement can be given as _glob_ notation, so `docs/*.md`
 ```
 
 ### Test 
-All tests are defined in [test.sh](https://github.com/mathiasrw/rexreplace/) and are invoked with
+All tests are defined in [test.sh](https://github.com/mathiasrw/rexreplace/blob/master/test.sh) and after `git clone`ing the repo you can invoke them with:
 
 ```bash
 > npm test
 ```
 
 ### Future ideas
-- Pipe while no globs = this is content to be searched (will always output) (when no -rp flags)
-- Pipe while having 1 globs = output is to be stored in this file (when no -rpo flags)
-- Pipe while having 2+ globs = error (when no -rpg flags)
+- Piped data while no globs = this is content to be searched (will always output) (when no -rp flags)
+- Piped data while having 1 globs = output is to be stored in this file (when no -rpo flags)
+- Piped data while having 2+ globs = error (when no -rpg flags)
 - Let pattern, replacement, globs be piped
 - Let Pattern, replacement, globs come from file
 - Let pattern, replacement, glob be javascript code returning string as result
