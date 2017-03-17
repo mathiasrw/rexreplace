@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const version = `1.1.0`;
+const version = `2.0.0`;
 const fs = require('fs');
 const path = require('path'); 
 const font = require('chalk');
@@ -59,8 +59,9 @@ let yargs = require('yargs')
 		.alias('d', 'debug')
 
 	.boolean('€')
-		.describe('€', "Replace all '€' with '$' in pattern and replace string. Usefull when your commandline (bash/zsh/...) seeks to do interesting things with '$'")
-		.alias('€', 'eurodollar')
+		.describe('€', "Void having '€' as alias for '$' in pattern and replacement")
+		.alias('€', 'void-euro')
+
 
 	/* // Ideas
 
@@ -69,9 +70,6 @@ let yargs = require('yargs')
 		.alias('n', 'name')
 
 
-	.boolean('€')
-		.describe('€', "Stop replacing '€' with '$' in pattern and replacement")
-		.alias('€', 'void-euro')
 
 	.boolean('v')
 		.describe('v', "More chatty output")
@@ -135,7 +133,7 @@ if(args._.length<3){
 	die('Need more than 2 arguments',args._.length+' was found',true);
 }
 
-if(args['€']){
+if(!args['€']){
 	args._[0] = args._[0].replace('€','$');
 	args._[1] = args._[1].replace('€','$');
 }

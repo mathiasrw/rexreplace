@@ -16,51 +16,48 @@ source aserta.sh
 # assert_matches    "echo foobar"  "^f.*r$"
 # 
 # assert_end "example"
+
 reset() {
         echo 'foobar' > myfile
 }
 
-
+# Plain usage
 reset
-assert_success		"rexreplace -version"
-
-reset
-assert_success		"rexreplace -help"
-
-reset
-rexreplace x x myfile -Q
+rexreplace x x myfile
 assert		 		"cat myfile "    "foobar"
 
 reset
-rexreplace o x myfile -Q
+rexreplace o x myfile
 assert		 		"cat myfile"    "fxxbar"
 
+
+# -v
+reset
+assert_success		"rexreplace -version"
+
+
+# -h
+reset
+assert_success		"rexreplace -help"
+
+
+# -o
 reset
 assert		 		"rexreplace x x myfile --output"    "foobar"
 
 reset
 assert		 		"rexreplace o x myfile --output"    "fxxbar"
 
-reset
-echo foobar >> my_file
-assert		 		"rexreplace o x my*le -o"    "fxxbar\nfxxbar"
-rm my_file
 
-reset
-assert		 		"rexreplace '.€' € myfile -o --eurodollar"    'fooba$'
-
-reset
-assert		 		"rexreplace '.€' € myfile -o -€"    'fooba$'
-
-reset
-assert		 		"rexreplace '(f?(o))o(.*)' '\$3\$1\$2' myfile -o"    "barfoo"
-
+# -I
 reset
 assert		 		"rexreplace Foo xxx myfile -o"    "xxxbar"
 
 reset
 assert		 		"rexreplace Foo xxx myfile -o --void-ignore-case"    "foobar"
 
+
+# -M
 reset
 echo foobar >> myfile
 assert		 		"rexreplace '^.' 'x' myfile -o"    "xoobar\nxoobar"
@@ -68,6 +65,30 @@ assert		 		"rexreplace '^.' 'x' myfile -o"    "xoobar\nxoobar"
 reset
 echo foobar >> myfile
 assert		 		"rexreplace '^.' 'x' myfile -o --void-multiline"    "xoobar\nfoobar"
+
+
+# back reference
+reset
+assert		 		"rexreplace '(f?(o))o(.*)' '\$3\$1\$2' myfile -o"    "barfoo"
+
+
+# globs
+reset
+echo foobar >> my_file
+assert		 		"rexreplace o x my*le -o"    "fxxbar\nfxxbar"
+rm my_file
+
+
+# -€
+reset
+assert		 		"rexreplace '.$' '$' myfile -o"    'fooba$'
+
+reset
+assert		 		"rexreplace '.€' '€' myfile -o"    'fooba$'
+
+reset
+assert		 		"rexreplace '.€' '€' myfile -o --void-euro"    'foobar'
+
 
 # Todo: test -e
 # assert		 		"rexreplace ??? ??? myfile -e"    "foobar"
@@ -89,7 +110,6 @@ assert		 		"rexreplace '^.' 'x' myfile -o --void-multiline"    "xoobar\nfoobar"
 # assert		 		"rexreplace ??? ??? myfile -d"    "foobar"
 # reset
 
-reset
 rm myfile
 
 assert_end 			"rexreplace"

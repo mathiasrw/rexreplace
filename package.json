@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "CLI regexp replacement for files with lookahead and backreference to matching groups in the replacement.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
@@ -17,12 +17,13 @@
     "pretest": "node -e 'file=`rexreplace-cli.js`;fs = require(`fs`);fs.writeFileSync(file,fs.readFileSync(file,`utf8`).replace(/^(const version = `).*?(?=`;)/mi,String.fromCharCode(36,49)+require(`./package.json`).version));'"
   },
   "keywords": [
-    "regexp",
-    "text",
-    "replace",
     "CLI",
+    "regexp",
+    "search",
+    "replace",
     "regular",
-    "expression"
+    "expression",
+    "sed"
   ],
   "devDependencies": {},
   "dependencies": {
