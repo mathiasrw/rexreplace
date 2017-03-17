@@ -1,11 +1,14 @@
 [![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
+ [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 
 # RexReplace
 
-CLI Regexp search and replace for files using lookahead and
-backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search. Will run on node v6+.
+CLI regexp search and replace in files using lookahead and
+backreference to matching groups in the replacement. 
+Defaults to global multiline case-insensitive search. 
+Will run on node v6+.
 
-Files can be given in _glob_ notation, so `docs/*.md` will give same result as explicitly naming each markdown file in the `docs/` dir. 
+Files subject to the replacement can be given as _glob_ notation, so `docs/*.md` will give same result as explicitly naming each markdown file in the `docs/` dir. 
 
 ### Install
 ```bash
