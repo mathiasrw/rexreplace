@@ -1,22 +1,20 @@
 [![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
-[![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 
 # RexReplace
 
 CLI Regexp search and replace for files using lookahead and
-backreference to matching groups in the replacement. Defaults to global
-multiline case-insensitive search. Needs Node v6 or higher.
+backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search. Will run on node v6+.
+
+Files can be given in _glob_ notation, so `docs/*.md` will give same result as explicitly naming each markdown file in the `docs/` dir. 
 
 ### Install
 ```bash
 > npm install -g rexreplace
 ```
  
-
-
 ### Usages 
 ```bash
-> rexreplace searchFor replaceWith filenameA filenameB filenameC ...
+> rexreplace searchFor replaceWith filenameOrGlob_A filenameOrGlob_B filenameOrGlob_C ...
 ```
 
 ### Examples
@@ -26,11 +24,14 @@ multiline case-insensitive search. Needs Node v6 or higher.
 
 > rexreplace Foo xxx myfile.md -I     
   # 'foobar' in myfile.md will remain 'foobar'
+
+> rexreplace '^#' '##' *.md      
+  # All markdown files in this dir got all headlines moved one level deeper
   
 > rexreplace '(f?(o))o(.*)' '$3$1$2' myfile.md 
   # 'foobar' in myfile.md will become 'barfoo'
 
-  # Some commandline tools (bash/zsh/...) can be a bit funny with the `$` sign. Use the '-€' flag to let `€` alias a `$` in pattern and replacement
+  # Some commandline tools (bash/zsh/...) is a bit funny with the `$` sign. use the '-€' flag to have `€` alias a `$`
 > rexreplace '(f?(o))o(.*)' '€3€1€2' myfile.md -€ 
   # 'foobar' in myfile.md will become 'barfoo'
 
@@ -63,12 +64,25 @@ multiline case-insensitive search. Needs Node v6 or higher.
   -h, --help              Show help                                    [boolean]
 ```
 
-### Future
-- Handle globs
-- Handle piped data
+### Test 
+All tests are defined in [test.sh](https://github.com/mathiasrw/rexreplace/) and are invoked with
+
+```bash
+> npm test
+```
+
+### Future ideas
+- Pipe while no globs = this is content to be searched (will always output) (when no -rp flags)
+- Pipe while having 1 globs = output is to be stored in this file (when no -rpo flags)
+- Pipe while having 2+ globs = error (when no -rpg flags)
+- Let pattern, replacement, globs be piped
+- Let Pattern, replacement, globs come from file
+- Let pattern, replacement, glob be javascript code returning string as result
+- Error != warning
+- Debug != all debug
+
 
 ### inspiration
 
-.oO(_What "sed" should have been by now_)
+.oO(_What should "sed" have looked like by now?_)
 
-The replace-in-file npm package (but with better naming and backreferences)

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+const version = `1.1.0`;
 const fs = require('fs');
 const path = require('path'); 
-const version = "1.0.0";
 const font = require('chalk');
+const globs = require('globs');
 
 let yargs = require('yargs')
 	.strict()
@@ -13,6 +14,8 @@ let yargs = require('yargs')
 	.example("> rexreplace '(f?(o))o(.*)' '$3$1$2' myfile.md", "'foobar' in myfile.md will become 'barfoo'")
 		.example('')
 		.example("> rexreplace -I 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will remain 'foobar'")
+		.example('')
+		.example(`> rexreplace '^#' '##' *.md`, `All markdown files in this dir got all headlines moved one level deeper`)
 		
 	.version('v', 'Echo rexreplace version', version)
 		.alias('v', 'version')
@@ -70,19 +73,51 @@ let yargs = require('yargs')
 		.describe('€', "Stop replacing '€' with '$' in pattern and replacement")
 		.alias('€', 'void-euro')
 
-	.boolean('d')
-		.describe('d', 'Dump matches as json output')
-		.alias('d', 'dump')
-
-
 	.boolean('v')
 		.describe('v', "More chatty output")
 		.alias('v', 'verbose')
 
+	.boolean('p')
+		.describe('p', "Pattern will be piped in. Note that replacement must then be first argument. Other elements like -P and -€ will be applyed afterwards.")
+		.alias('p', 'pattern-pipe')
 
-	.boolean('n')
-		.describe('n', "Do replacement on file names instead of file content (rename the files)")
-		.alias('n', 'name')
+	.boolean('r')
+		.describe('r', "Replacement will be piped in. Note that filename/globs must then be second argument")
+		.alias('r', 'replacement-pipe')
+
+
+	.boolean('P')
+		.describe('P', "Pattern is a filename from where the pattern will be generated. Pattern will be defined by each line trimmed and having newlines removed followed by other other rules (like -€).)")
+		.alias('P', 'pattern-file')
+
+	.boolean('R')
+		.describe('R', "Replacement is a filename from where the replacement will be generated. Replacement will be defined by each line trimmed and having newlines removed followed by other other rules (like -€).")
+		.alias('R', 'replacement-file')
+
+
+	.boolean('G')
+		.describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
+		.alias('G', 'globs-file')
+
+	.boolean('g')
+		.describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
+		.alias('g', 'glob-pipe')
+
+
+	.boolean('j')
+		.describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
+		.alias('j', 'pattern-js')
+
+
+	.boolean('J')
+		.describe('J', "Replacement is javascript source that will return a string giving the replacement to use to use")
+		.alias('j', 'replacement-js')
+
+
+	.boolean('glob-js')
+		.describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
+
+
 	*/
 
 	.help('h')
@@ -130,7 +165,7 @@ try{
 const replace = args._.shift();
 
 // The rest are files
-const files = args._;
+const files = globs.sync(args._);
 
 files
 	// Correct filepath

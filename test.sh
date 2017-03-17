@@ -42,6 +42,11 @@ reset
 assert		 		"rexreplace o x myfile --output"    "fxxbar"
 
 reset
+echo foobar >> my_file
+assert		 		"rexreplace o x my*le -o"    "fxxbar\nfxxbar"
+rm my_file
+
+reset
 assert		 		"rexreplace '.€' € myfile -o --eurodollar"    'fooba$'
 
 reset
@@ -85,6 +90,7 @@ assert		 		"rexreplace '^.' 'x' myfile -o --void-multiline"    "xoobar\nfoobar"
 # reset
 
 reset
+rm myfile
 
 assert_end 			"rexreplace"
 
