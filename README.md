@@ -44,7 +44,6 @@ Files can be given in [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl
 
 
 ### Options
-
 ```
   -v, --version           Echo rexreplace version                      [boolean]
   -I, --void-ignore-case  Void case insensitive search pattern.        [boolean]
@@ -61,9 +60,8 @@ Files can be given in [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl
   -Q, --quiet-total       Never display erros or info                  [boolean]
   -H, --halt              Halt on first error         [boolean] [default: false]
   -d, --debug             Print debug info                             [boolean]
-  -€, --eurodollar        Replace all '€' with '$' in pattern and replace
-                          string. Usefull when your commandline (bash/zsh/...)
-                          seeks to do interesting things with '$'      [boolean]
+  -€, --void-euro         Void having '€' as alias for '$' in pattern and
+                          replacement                                  [boolean]
   -h, --help              Show help                                    [boolean]
 ```
 
