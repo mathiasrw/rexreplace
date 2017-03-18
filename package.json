@@ -10,7 +10,8 @@
     "url": "https://github.com/mathiasrw/rexreplace/"
   },
   "bin": {
-    "rexreplace": "./rexreplace-cli.js"
+    "rexreplace": "./rexreplace-cli.js",
+    "rr": "./rexreplace-cli.js"
   },
   "scripts": {
     "test": "npm -g install ./ && bash test.sh",
