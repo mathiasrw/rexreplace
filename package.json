@@ -1,21 +1,22 @@
 {
   "name": "rexreplace",
-  "version": "2.0.2",
-  "description": "CLI regexp replacement for files with lookahead and backreference to matching groups in the replacement.",
+  "version": "2.0.3",
+  "description": "Friendly CLI regexp search and replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
-  "main": "rexreplace-cli.js",
+  "main": "bin/rexreplace-cli.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/mathiasrw/rexreplace/"
   },
   "bin": {
-    "rexreplace": "./rexreplace-cli.js",
-    "rr": "./rexreplace-cli.js"
+    "rexreplace": "bin/rexreplace.cli.js",
+    "rr": "bin/rexreplace.cli.js"
   },
   "scripts": {
-    "test": "npm -g install ./ && bash test.sh",
-    "pretest": "node -e 'file=`rexreplace-cli.js`;fs = require(`fs`);fs.writeFileSync(file,fs.readFileSync(file,`utf8`).replace(/^(const version = `).*?(?=`;)/mi,String.fromCharCode(36,49)+require(`./package.json`).version));'"
+    "test": "npm run build && npm -g install ./ && cd test && bash test.sh && cd ..",
+  	"build":"babel src -d bin",
+    "postbuild": "node -e \"file='bin/rexreplace.cli.js';fs = require('fs');fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace('@VERSION_NUMBER',require('./package.json').version))\""
   },
   "keywords": [
     "CLI",
@@ -26,7 +27,10 @@
     "expression",
     "sed"
   ],
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0"
+  },
   "dependencies": {
     "chalk": "^1.1.3",
     "globs": "^0.1.3",
