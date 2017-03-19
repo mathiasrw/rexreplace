@@ -2,5 +2,10 @@ language: node_js
 node_js:
   - "node"
   - "6"
+  - "5"
+  - "4"
+  - "0.12"
 
-
+script: 
+  - npm run test:bin
+  - npm test
