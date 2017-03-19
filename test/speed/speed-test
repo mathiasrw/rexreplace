@@ -1,0 +1,148 @@
+#!/bin/bash
+
+DATETIME=`date '+%Y-%m-%d %H:%M'`
+echo ''
+echo "# RexReplace speed test $DATETIME"
+echo ''
+
+echo "_This test will remove HTML tags from the HTML sorce of George Orwell's 1984 to get the pure text version._"
+
+echo "_All test results printed are the sum of 10 rounds given in seconds._"
+
+TIMEFORMAT=%R
+
+create_testdata(){
+	#return # for debug
+
+	curl -s 1984.surge.sh > source.file
+	head -c $((1*1024))  source.file > 1kb.file
+	head -c $((5*1024))  source.file > 5kb.file
+	head -c $((10*1024)) source.file > 10kb.file
+	head -c $((100*1024)) source.file > 100kb.file
+	head -c $((500*1024)) source.file > 500kb.file
+	echo '' > 1M.file; for i in {1..2}; do cat 500kb.file >> 1M.file; done
+	echo '' > 5M.file; for i in {1..5}; do cat 1M.file >> 5M.file; done
+	echo '' > 10M.file; for i in {1..10}; do cat 1M.file >> 10M.file; done
+	echo '' > 25M.file; for i in {1..25}; do cat 1M.file >> 25M.file; done
+	echo '' > 50M.file; for i in {1..50}; do cat 1M.file >> 50M.file; done
+	echo '' > 100M.file; for i in {1..100}; do cat 1M.file >> 100M.file; done
+}
+
+remove_testdata(){
+	#return # for debug
+
+	rm source.file
+	rm 1kb.file
+	rm 5kb.file
+	rm 10kb.file
+	rm 100kb.file
+	rm 500kb.file
+	rm 1M.file
+	rm 5M.file
+	rm 10M.file
+	rm 25M.file
+	rm 50M.file
+	rm 100M.file
+}
+
+do_test(){
+
+	# Do tests
+	echo ''
+	echo ''
+	echo "## A single $1 file"
+
+	echo ''
+	time for i in {1..10}; do
+		cat "$1.file" | sed 's/<.*>//g' > /dev/null
+	done 
+	Echo " - sed on a $1 file"
+
+	echo ''
+	time for i in {1..10}; do
+		rexreplace '<.*>' '' "$1.file" -o > /dev/null
+	done 
+	Echo " - RexReplace on a $1 file"
+
+}
+
+
+create_testdata
+
+do_test '1kB'
+do_test '5kB'
+do_test '10kB'
+do_test '100kB'
+do_test '500kB'
+do_test '1M'
+do_test '5M'
+do_test '10M'
+do_test '25M'
+do_test '50M'
+do_test '100M'
+
+remove_testdata
+
+
+echo ''
+echo ''
+echo '----'
+echo ''
+echo ''
+echo '## 10 files (10kb each)'
+cat 10kb.file > A0.txt
+cat A0.txt > A1.txt
+cat A0.txt > A2.txt
+cat A0.txt > A3.txt
+cat A0.txt > A4.txt
+cat A0.txt > A5.txt
+cat A0.txt > A6.txt
+cat A0.txt > A7.txt
+cat A0.txt > A8.txt
+cat A0.txt > A9.txt
+
+echo ''
+time for i in {1..10}; do
+	cat A0.txt | sed 's/<.*>//g' > /dev/null
+	cat A1.txt | sed 's/<.*>//g' > /dev/null
+	cat A2.txt | sed 's/<.*>//g' > /dev/null
+	cat A3.txt | sed 's/<.*>//g' > /dev/null
+	cat A4.txt | sed 's/<.*>//g' > /dev/null
+	cat A5.txt | sed 's/<.*>//g' > /dev/null
+	cat A6.txt | sed 's/<.*>//g' > /dev/null
+	cat A7.txt | sed 's/<.*>//g' > /dev/null
+	cat A8.txt | sed 's/<.*>//g' > /dev/null
+	cat A9.txt | sed 's/<.*>//g' > /dev/null
+done 
+Echo " - sed on 10 files"
+
+
+echo ''
+time for i in {1..10}; do
+	rexreplace '<.*>' '' -o A0.txt A1.txt A2.txt A3.txt A4.txt A5.txt A6.txt A7.txt A8.txt A9.txt > /dev/null
+done 
+Echo " - RexReplace on 10 files"
+
+echo ''
+time for i in {1..10}; do
+	rexreplace '<.*>' '' -o A*.txt > /dev/null
+done 
+Echo " - RexReplace on 10 files given as one glob"
+
+
+echo '----'
+
+Echo "All tests completed."
+
+
+rm A0.txt
+rm A1.txt
+rm A2.txt
+rm A3.txt
+rm A4.txt
+rm A5.txt
+rm A6.txt
+rm A7.txt
+rm A8.txt
+rm A9.txt
+
