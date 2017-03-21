@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-var version = '2.0.3';
+var version = '2.0.4';
 var fs = require('fs');
 var path = require('path');
 var font = require('chalk');
