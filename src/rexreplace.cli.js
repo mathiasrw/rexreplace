@@ -6,6 +6,14 @@ const path = require('path');
 const font = require('chalk');
 const globs = require('globs');
 
+let pattern, replacement;
+let helpAndDie = false;
+if(process.argv.length<4){
+	helpAndDie = true;
+} else {
+	[pattern, replacement] = process.argv.splice(2,2);
+}
+
 let yargs = require('yargs')
 	.strict()
 
@@ -129,13 +137,13 @@ const args = yargs.argv;
 
 debug(args);	
 
-if(args._.length<3){
-	die('Need more than 2 arguments',args._.length+' was found',true);
+if(helpAndDie){
+	die('Need both pattern and replacement as arguments',true);
 }
 
 if(!args['€']){
-	args._[0] = args._[0].replace('€','$');
-	args._[1] = args._[1].replace('€','$');
+	pattern = pattern.replace('€','$');
+	replacement = replacement.replace('€','$');
 }
 
 let flags = 'g';
@@ -152,15 +160,15 @@ if(args.unicode){
 debug(flags);
 
 // Get regex pattern
-let regex = args._.shift();
+
+let regex;
 try{
-	regex = new RegExp(regex,flags);
+	regex = new RegExp(pattern,flags);
 } catch (err){
-	die('Wrong formatted regexp', regex);
+	die('Wrong formatted regexp', err);
 }
 
-// Get replacement
-const replace = args._.shift();
+
 
 // The rest are files
 const files = globs.sync(args._);
@@ -173,7 +181,7 @@ files
 	.filter(filepath=>fs.existsSync(filepath)?true:error('File not found:',filepath))
 
 	// Do the replacement 
-	.forEach(filepath=>replaceInFile(filepath,regex,replace,args.encoding))
+	.forEach(filepath=>replaceInFile(filepath,regex,replacement,args.encoding))
 ;
 
 

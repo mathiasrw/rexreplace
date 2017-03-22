@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "Friendly CLI regexp search and replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",

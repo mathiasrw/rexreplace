@@ -1,11 +1,27 @@
 #!/usr/bin/env node
 'use strict';
 
-var version = '2.0.4';
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var version = '2.1.0';
 var fs = require('fs');
 var path = require('path');
 var font = require('chalk');
 var globs = require('globs');
+
+var pattern = void 0,
+    replacement = void 0;
+var helpAndDie = false;
+if (process.argv.length < 4) {
+	helpAndDie = true;
+} else {
+	var _process$argv$splice = process.argv.splice(2, 2);
+
+	var _process$argv$splice2 = _slicedToArray(_process$argv$splice, 2);
+
+	pattern = _process$argv$splice2[0];
+	replacement = _process$argv$splice2[1];
+}
 
 var yargs = require('yargs').strict().usage('RexReplace ' + version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n> rexreplace searchFor replaceWith filename').example("> rexreplace '(f?(o))o(.*)' '$3$1$2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace -I 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will remain 'foobar'").example('').example('> rexreplace \'^#\' \'##\' *.md', 'All markdown files in this dir got all headlines moved one level deeper').version('v', 'Echo rexreplace version', version).alias('v', 'version').boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').describe('e', 'Encoding of files.').alias('e', 'encoding').default('e', 'utf8').boolean('o').describe('o', 'Output the result instead of saving to file. Will also output content even if no replacement have taken place.').alias('o', 'output')
 //.conflicts('o', 'd')
@@ -60,13 +76,13 @@ var args = yargs.argv;
 
 debug(args);
 
-if (args._.length < 3) {
-	die('Need more than 2 arguments', args._.length + ' was found', true);
+if (helpAndDie) {
+	die('Need both pattern and replacement as arguments', true);
 }
 
 if (!args['€']) {
-	args._[0] = args._[0].replace('€', '$');
-	args._[1] = args._[1].replace('€', '$');
+	pattern = pattern.replace('€', '$');
+	replacement = replacement.replace('€', '$');
 }
 
 var flags = 'g';
@@ -83,15 +99,13 @@ if (args.unicode) {
 debug(flags);
 
 // Get regex pattern
-var regex = args._.shift();
-try {
-	regex = new RegExp(regex, flags);
-} catch (err) {
-	die('Wrong formatted regexp', regex);
-}
 
-// Get replacement
-var replace = args._.shift();
+var regex = void 0;
+try {
+	regex = new RegExp(pattern, flags);
+} catch (err) {
+	die('Wrong formatted regexp', err);
+}
 
 // The rest are files
 var files = globs.sync(args._);
@@ -109,7 +123,7 @@ files
 
 // Do the replacement 
 .forEach(function (filepath) {
-	return replaceInFile(filepath, regex, replace, args.encoding);
+	return replaceInFile(filepath, regex, replacement, args.encoding);
 });
 
 function replaceInFile(file, regex, replace, encoding) {

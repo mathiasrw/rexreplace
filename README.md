@@ -173,6 +173,7 @@ Please note that the data might look very differently when the files get so larg
 
 ### Future ideas
 
+
 - Test-run a with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
@@ -188,7 +189,9 @@ Please note that the data might look very differently when the files get so larg
 - Flag for simple string search (all other chars than [\n\r\t])
 - Flag for plain string search litteral (no regex, no special chars, no escape chars)
 - Check if https://github.com/eugeneware/replacestream is good to rely on
-
+- Check if regex engine from spidermonkey can be wrapped in someting thatdoes not need node
+- Implement in go, so all platforms can be supported with no need for node (might be based on)
+- let https://github.com/dthree/vorpal deal with the interface?
 
 
 

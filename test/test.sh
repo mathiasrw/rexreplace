@@ -30,6 +30,11 @@ reset
 rexreplace o x myfile
 assert		 		"cat myfile"    "fxxbar"
 
+# rr can handle a pattern and replcaement starting with '-'
+reset
+rexreplace '^(.+)$' '- $1' myfile
+rexreplace '- f' '_' myfile
+assert		 		"cat myfile"    "_oobar"
 
 # -v
 reset
