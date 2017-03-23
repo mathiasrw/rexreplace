@@ -1,0 +1,19 @@
+{
+  "name": "rreplace",
+  "version": "1.0.0",
+  "description": "Regex replace in a file from CLI",
+  "main": "rreplace.js",
+  "scripts": {
+    "test": "npm install -g ./ && echo 'foobar' > myfile && rreplace '(f?(o))o(.*)' '$3$1$2' myfile && grep -q 'barfoo' myfile"
+  },
+  "bin": {
+    "rreplace": "rreplace.js"
+  },
+  "keywords": [
+    "replace",
+    "in",
+    "files"
+  ],
+  "author": "MRW",
+  "license": "MIT"
+}
