@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source aserta.sh
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+source $DIR/aserta.sh
 
 # # Command exit codes
 # assert_success    "true"
@@ -88,6 +90,36 @@ assert		 		"rexreplace '.€' '€' myfile -o"    'fooba$'
 
 reset
 assert		 		"rexreplace '.€' '€' myfile -o --void-euro"    'foobar'
+
+
+# # -P
+# # -R
+# reset
+# echo '.€' > pattern.txt
+# echo '€' > replacement.txt
+# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' myfile -o --pattern-file --replacement-file"    'fooba$'
+# rm pattern.txt
+# rm replacement.txt
+
+# # Multiply lines in files!
+# reset
+# echo " . \n € " > pattern.txt
+# echo " €\n " > replacement.txt
+# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' myfile -o --pattern-file --replacement-file"    'fooba$'
+# rm pattern.txt
+# rm replacement.txt
+
+
+# # Ssinge line file (with space)
+# reset
+# echo 'fooba r' > myfile
+# echo ' .€' > pattern.txt
+# echo ' €' > replacement.txt
+# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' myfile -o --pattern-file --replacement-file"    'fooba $'
+# rm pattern.txt
+# rm replacement.txt
+
+
 
 
 # Todo: test -e

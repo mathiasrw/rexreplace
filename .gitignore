@@ -1,3 +1,4 @@
 node_modules
 myfile
 *.log
+*.file
