@@ -174,11 +174,12 @@ Please note that the data might look very differently when the files get so larg
 ### Future ideas
 
 
-- Test-run a with info outputted about what will happen (sets -t and does not change anything)
+
+- Test-run with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
 - Piped data while no globs = this is content to be searched (will always output) (when no -rp flags)
-- Piped data while having 1 globs = output is to be stored in this file (when no -rpo flags)
+- Piped data while having 1 globs = output is to be stored in this file (when no -rpo flags). Hmm. Could crete misunderstandings. Might be better just to demand a `>`
 - Piped data while having 2+ globs = error (when no -rpg flags)
 - Let pattern, replacement, globs be piped
 - Let Pattern, replacement, and globs come from file
@@ -189,12 +190,22 @@ Please note that the data might look very differently when the files get so larg
 - Flag for simple string search (all other chars than [\n\r\t])
 - Flag for plain string search litteral (no regex, no special chars, no escape chars)
 - Check if https://github.com/eugeneware/replacestream is good to rely on
-- Check if regex engine from spidermonkey can be wrapped in someting thatdoes not need node
+- Check if regex engine from spidermonkey can be wrapped in someting that does not need node
 - Implement in go, so all platforms can be supported with no need for node (might be based on)
-- let https://github.com/dthree/vorpal deal with the interface?
+- let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
+- have cli wrapper in `bin/` and include from `src/` or `dist/` depending on node version. Let replace be in all .js files (with rreplace?)
+- Output only matched groups
 
 
+## Related projects
 
+There are many projekcts seeking to solve same problem as RexReplace but in different ways. If our way does not suit you we suggest your have a look at 
+
+- https://www.npmjs.com/package/replace-in-file
+
+- https://www.npmjs.com/package/modify-filename
+
+- https://www.npmjs.com/package/find-and-replace
 
 
 ----
