@@ -334,7 +334,7 @@ function expand(str, isTop) {
 }
 
 
-},{"balanced-match":3,"concat-map":11}],5:[function(require,module,exports){
+},{"balanced-match":3,"concat-map":10}],5:[function(require,module,exports){
 'use strict';
 
 var blacklist = [
@@ -522,59 +522,7 @@ module.exports.hasColor = hasAnsi;
 module.exports.stripColor = stripAnsi;
 module.exports.supportsColor = supportsColor;
 
-},{"ansi-styles":2,"escape-string-regexp":14,"has-ansi":27,"strip-ansi":73,"supports-color":8}],8:[function(require,module,exports){
-'use strict';
-var argv = process.argv;
-
-var terminator = argv.indexOf('--');
-var hasFlag = function (flag) {
-	flag = '--' + flag;
-	var pos = argv.indexOf(flag);
-	return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
-};
-
-module.exports = (function () {
-	if ('FORCE_COLOR' in process.env) {
-		return true;
-	}
-
-	if (hasFlag('no-color') ||
-		hasFlag('no-colors') ||
-		hasFlag('color=false')) {
-		return false;
-	}
-
-	if (hasFlag('color') ||
-		hasFlag('colors') ||
-		hasFlag('color=true') ||
-		hasFlag('color=always')) {
-		return true;
-	}
-
-	if (process.stdout && !process.stdout.isTTY) {
-		return false;
-	}
-
-	if (process.platform === 'win32') {
-		return true;
-	}
-
-	if ('COLORTERM' in process.env) {
-		return true;
-	}
-
-	if (process.env.TERM === 'dumb') {
-		return false;
-	}
-
-	if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
-		return true;
-	}
-
-	return false;
-})();
-
-},{}],9:[function(require,module,exports){
+},{"ansi-styles":2,"escape-string-regexp":13,"has-ansi":26,"strip-ansi":71,"supports-color":73}],8:[function(require,module,exports){
 var stringWidth = require('string-width')
 var stripAnsi = require('strip-ansi')
 var wrap = require('wrap-ansi')
@@ -892,7 +840,7 @@ module.exports = function (opts) {
   })
 }
 
-},{"string-width":72,"strip-ansi":73,"wrap-ansi":78}],10:[function(require,module,exports){
+},{"string-width":70,"strip-ansi":71,"wrap-ansi":76}],9:[function(require,module,exports){
 /* eslint-disable babel/new-cap, xo/throw-new-error */
 'use strict';
 module.exports = function (str, pos) {
@@ -926,7 +874,7 @@ module.exports = function (str, pos) {
 	return first;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 module.exports = function (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -941,7 +889,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 module.exports = function (str, sep) {
 	if (typeof str !== 'string') {
@@ -956,7 +904,7 @@ module.exports = function (str, sep) {
 		.toLowerCase();
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 var util = require('util');
@@ -1091,7 +1039,7 @@ errorEx.line = function (str, def) {
 
 module.exports = errorEx;
 
-},{"is-arrayish":35,"util":undefined}],14:[function(require,module,exports){
+},{"is-arrayish":34,"util":undefined}],13:[function(require,module,exports){
 'use strict';
 
 var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
@@ -1104,7 +1052,7 @@ module.exports = function (str) {
 	return str.replace(matchOperatorsRe, '\\$&');
 };
 
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 var path = require('path');
 var pathExists = require('path-exists');
@@ -1159,7 +1107,7 @@ module.exports.sync = function (filename, opts) {
 	return null;
 };
 
-},{"path":undefined,"path-exists":56,"pinkie-promise":60}],16:[function(require,module,exports){
+},{"path":undefined,"path-exists":54,"pinkie-promise":58}],15:[function(require,module,exports){
 module.exports = realpath
 realpath.realpath = realpath
 realpath.sync = realpathSync
@@ -1227,7 +1175,7 @@ function unmonkeypatch () {
   fs.realpathSync = origRealpathSync
 }
 
-},{"./old.js":17,"fs":undefined}],17:[function(require,module,exports){
+},{"./old.js":16,"fs":undefined}],16:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1532,7 +1480,7 @@ exports.realpath = function realpath(p, cache, cb) {
   }
 };
 
-},{"fs":undefined,"path":undefined}],18:[function(require,module,exports){
+},{"fs":undefined,"path":undefined}],17:[function(require,module,exports){
 'use strict';
 
 // Call this function in a another function to find out the file from
@@ -1554,108 +1502,7 @@ module.exports = function getCallerFile(_position) {
   return stack[position] ? stack[position].getFileName() : undefined;
 };
 
-},{}],19:[function(require,module,exports){
-'use strict';
-
-var glob = require('glob');
-
-/**
- * Expand one or more patterns into an Array of files.
- *
- * ## Examples:
- *
- * ```
- * globs('../*.js', function (err, jsfiles) {
- *   console.log(jsfiles);
- * })
- *
- * globs(['*.js', '../*.js'], function (err, jsfiles) {
- *   console.log(jsfiles)
- * })
- *
- * globs(['*.js', '../*.js'], { cwd: '/foo' }, function (err, jsfiles) {
- *   console.log(jsfiles)
- * })
- * ```
- *
- * @param {String|Array} patterns One or more patterns to match
- * @param {Object} [options] Options
- * @param {Function} callback Function which accepts two parameters: err, files
- */
-var globs = module.exports = function (patterns, options, callback) {
-  var pending
-    , groups = [];
-
-  // not an Array?  make it so!
-  if (!Array.isArray(patterns)) {
-    patterns = [ patterns ];
-  }
-
-  pending = patterns.length;
-
-  // parameter shifting is really horrible, but i'm
-  // mimicing glob's api...
-  if (typeof options === 'function') {
-    callback = options;
-    options = {};
-  }
-
-  if (!pending) {
-    // nothing to do
-    // ensure callback called asynchronously
-    return process.nextTick(function() {
-      callback(null, []);
-    })
-  }
-
-  // walk the patterns
-  patterns.forEach(function (pattern) {
-    // grab the files
-    glob(pattern, options, function (err, files) {
-      if (err) {
-        return callback(err);
-      }
-
-      // add the files to the group
-      groups = groups.concat(files);
-
-      pending -= 1;
-      // last pattern?
-      if (!pending) {
-        // done
-        return callback(null, groups);
-      }
-    });
-  });
-};
-
-/**
- * Synchronously Expand one or more patterns to an Array of files
- *
- * @api public
- * @param {String|Array} patterns
- * @param {Object} [options]
- * @return {Array}
- */
-globs.sync = function (patterns, options) {
-  options = options || {};
-
-  var groups = []
-    , index
-    , length;
-
-  if (!Array.isArray(patterns)) {
-    patterns = [ patterns ];
-  }
-
-  for (index = 0, length = patterns.length; index < length; index++) {
-    groups = groups.concat(glob.sync(patterns[index], options));
-  }
-
-  return groups;
-};
-
-},{"glob":21}],20:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 exports.alphasort = alphasort
 exports.alphasorti = alphasorti
 exports.setopts = setopts
@@ -1897,7 +1744,7 @@ function childrenIgnored (self, path) {
   })
 }
 
-},{"minimatch":43,"path":undefined,"path-is-absolute":57}],21:[function(require,module,exports){
+},{"minimatch":41,"path":undefined,"path-is-absolute":55}],19:[function(require,module,exports){
 // Approach:
 //
 // 1. Get the minimatch set
@@ -2691,7 +2538,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
   return cb(null, c, stat)
 }
 
-},{"./common.js":20,"./sync.js":22,"assert":undefined,"events":undefined,"fs":undefined,"fs.realpath":16,"inflight":31,"inherits":32,"minimatch":43,"once":51,"path":undefined,"path-is-absolute":57,"util":undefined}],22:[function(require,module,exports){
+},{"./common.js":18,"./sync.js":20,"assert":undefined,"events":undefined,"fs":undefined,"fs.realpath":15,"inflight":30,"inherits":31,"minimatch":41,"once":49,"path":undefined,"path-is-absolute":55,"util":undefined}],20:[function(require,module,exports){
 module.exports = globSync
 globSync.GlobSync = GlobSync
 
@@ -3179,7 +3026,108 @@ GlobSync.prototype._makeAbs = function (f) {
   return common.makeAbs(this, f)
 }
 
-},{"./common.js":20,"./glob.js":21,"assert":undefined,"fs":undefined,"fs.realpath":16,"minimatch":43,"path":undefined,"path-is-absolute":57,"util":undefined}],23:[function(require,module,exports){
+},{"./common.js":18,"./glob.js":19,"assert":undefined,"fs":undefined,"fs.realpath":15,"minimatch":41,"path":undefined,"path-is-absolute":55,"util":undefined}],21:[function(require,module,exports){
+'use strict';
+
+var glob = require('glob');
+
+/**
+ * Expand one or more patterns into an Array of files.
+ *
+ * ## Examples:
+ *
+ * ```
+ * globs('../*.js', function (err, jsfiles) {
+ *   console.log(jsfiles);
+ * })
+ *
+ * globs(['*.js', '../*.js'], function (err, jsfiles) {
+ *   console.log(jsfiles)
+ * })
+ *
+ * globs(['*.js', '../*.js'], { cwd: '/foo' }, function (err, jsfiles) {
+ *   console.log(jsfiles)
+ * })
+ * ```
+ *
+ * @param {String|Array} patterns One or more patterns to match
+ * @param {Object} [options] Options
+ * @param {Function} callback Function which accepts two parameters: err, files
+ */
+var globs = module.exports = function (patterns, options, callback) {
+  var pending
+    , groups = [];
+
+  // not an Array?  make it so!
+  if (!Array.isArray(patterns)) {
+    patterns = [ patterns ];
+  }
+
+  pending = patterns.length;
+
+  // parameter shifting is really horrible, but i'm
+  // mimicing glob's api...
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+
+  if (!pending) {
+    // nothing to do
+    // ensure callback called asynchronously
+    return process.nextTick(function() {
+      callback(null, []);
+    })
+  }
+
+  // walk the patterns
+  patterns.forEach(function (pattern) {
+    // grab the files
+    glob(pattern, options, function (err, files) {
+      if (err) {
+        return callback(err);
+      }
+
+      // add the files to the group
+      groups = groups.concat(files);
+
+      pending -= 1;
+      // last pattern?
+      if (!pending) {
+        // done
+        return callback(null, groups);
+      }
+    });
+  });
+};
+
+/**
+ * Synchronously Expand one or more patterns to an Array of files
+ *
+ * @api public
+ * @param {String|Array} patterns
+ * @param {Object} [options]
+ * @return {Array}
+ */
+globs.sync = function (patterns, options) {
+  options = options || {};
+
+  var groups = []
+    , index
+    , length;
+
+  if (!Array.isArray(patterns)) {
+    patterns = [ patterns ];
+  }
+
+  for (index = 0, length = patterns.length; index < length; index++) {
+    groups = groups.concat(glob.sync(patterns[index], options));
+  }
+
+  return groups;
+};
+
+},{"glob":19}],22:[function(require,module,exports){
 'use strict'
 
 var fs = require('fs')
@@ -3202,7 +3150,7 @@ function clone (obj) {
   return copy
 }
 
-},{"fs":undefined}],24:[function(require,module,exports){
+},{"fs":undefined}],23:[function(require,module,exports){
 var fs = require('fs')
 var polyfills = require('./polyfills.js')
 var legacy = require('./legacy-streams.js')
@@ -3466,7 +3414,7 @@ function retry () {
   }
 }
 
-},{"./fs.js":23,"./legacy-streams.js":25,"./polyfills.js":26,"assert":undefined,"fs":undefined,"util":undefined}],25:[function(require,module,exports){
+},{"./fs.js":22,"./legacy-streams.js":24,"./polyfills.js":25,"assert":undefined,"fs":undefined,"util":undefined}],24:[function(require,module,exports){
 var Stream = require('stream').Stream
 
 module.exports = legacy
@@ -3586,7 +3534,7 @@ function legacy (fs) {
   }
 }
 
-},{"stream":undefined}],26:[function(require,module,exports){
+},{"stream":undefined}],25:[function(require,module,exports){
 var fs = require('./fs.js')
 var constants = require('constants')
 
@@ -3918,13 +3866,13 @@ function chownErOk (er) {
   return false
 }
 
-},{"./fs.js":23,"constants":undefined}],27:[function(require,module,exports){
+},{"./fs.js":22,"constants":undefined}],26:[function(require,module,exports){
 'use strict';
 var ansiRegex = require('ansi-regex');
 var re = new RegExp(ansiRegex().source); // remove the `g` flag
 module.exports = re.test.bind(re);
 
-},{"ansi-regex":1}],28:[function(require,module,exports){
+},{"ansi-regex":1}],27:[function(require,module,exports){
 'use strict'
 
 var gitHosts = module.exports = {
@@ -3990,15 +3938,16 @@ Object.keys(gitHosts).forEach(function (name) {
   })
   gitHosts[name].protocols_re = RegExp('^(' +
     gitHosts[name].protocols.map(function (protocol) {
-      return protocol.replace(/([\\+*{}()\[\]$^|])/g, '\\$1')
+      return protocol.replace(/([\\+*{}()[\]$^|])/g, '\\$1')
     }).join('|') + '):$')
 })
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict'
 var gitHosts = require('./git-host-info.js')
+var extend = Object.assign || require('util')._extend
 
-var GitHost = module.exports = function (type, user, auth, project, committish, defaultRepresentation) {
+var GitHost = module.exports = function (type, user, auth, project, committish, defaultRepresentation, opts) {
   var gitHostInfo = this
   gitHostInfo.type = type
   Object.keys(gitHosts[type]).forEach(function (key) {
@@ -4009,6 +3958,7 @@ var GitHost = module.exports = function (type, user, auth, project, committish, 
   gitHostInfo.project = project
   gitHostInfo.committish = committish
   gitHostInfo.default = defaultRepresentation
+  gitHostInfo.opts = opts || {}
 }
 GitHost.prototype = {}
 
@@ -4016,9 +3966,10 @@ GitHost.prototype.hash = function () {
   return this.committish ? '#' + this.committish : ''
 }
 
-GitHost.prototype._fill = function (template, vars) {
+GitHost.prototype._fill = function (template, opts) {
   if (!template) return
-  if (!vars) vars = {}
+  var vars = extend({}, opts)
+  opts = extend(extend({}, this.opts), opts)
   var self = this
   Object.keys(this).forEach(function (key) {
     if (self[key] != null && vars[key] == null) vars[key] = self[key]
@@ -4029,74 +3980,85 @@ GitHost.prototype._fill = function (template, vars) {
     vars[key] = encodeURIComponent(vars[key])
   })
   vars['auth@'] = rawAuth ? rawAuth + '@' : ''
-  vars['#committish'] = rawComittish ? '#' + rawComittish : ''
-  vars['/tree/committish'] = vars.committish
-                          ? '/' + vars.treepath + '/' + vars.committish
-                          : ''
-  vars['/committish'] = vars.committish ? '/' + vars.committish : ''
-  vars.committish = vars.committish || 'master'
+  if (opts.noCommittish) {
+    vars['#committish'] = ''
+    vars['/tree/committish'] = ''
+    vars['/comittish'] = ''
+    vars.comittish = ''
+  } else {
+    vars['#committish'] = rawComittish ? '#' + rawComittish : ''
+    vars['/tree/committish'] = vars.committish
+                            ? '/' + vars.treepath + '/' + vars.committish
+                            : ''
+    vars['/committish'] = vars.committish ? '/' + vars.committish : ''
+    vars.committish = vars.committish || 'master'
+  }
   var res = template
   Object.keys(vars).forEach(function (key) {
     res = res.replace(new RegExp('[{]' + key + '[}]', 'g'), vars[key])
   })
-  return res
+  if (opts.noGitPlus) {
+    return res.replace(/^git[+]/, '')
+  } else {
+    return res
+  }
 }
 
-GitHost.prototype.ssh = function () {
-  return this._fill(this.sshtemplate)
+GitHost.prototype.ssh = function (opts) {
+  return this._fill(this.sshtemplate, opts)
 }
 
-GitHost.prototype.sshurl = function () {
-  return this._fill(this.sshurltemplate)
+GitHost.prototype.sshurl = function (opts) {
+  return this._fill(this.sshurltemplate, opts)
 }
 
-GitHost.prototype.browse = function () {
-  return this._fill(this.browsetemplate)
+GitHost.prototype.browse = function (opts) {
+  return this._fill(this.browsetemplate, opts)
 }
 
-GitHost.prototype.docs = function () {
-  return this._fill(this.docstemplate)
+GitHost.prototype.docs = function (opts) {
+  return this._fill(this.docstemplate, opts)
 }
 
-GitHost.prototype.bugs = function () {
-  return this._fill(this.bugstemplate)
+GitHost.prototype.bugs = function (opts) {
+  return this._fill(this.bugstemplate, opts)
 }
 
-GitHost.prototype.https = function () {
-  return this._fill(this.httpstemplate)
+GitHost.prototype.https = function (opts) {
+  return this._fill(this.httpstemplate, opts)
 }
 
-GitHost.prototype.git = function () {
-  return this._fill(this.gittemplate)
+GitHost.prototype.git = function (opts) {
+  return this._fill(this.gittemplate, opts)
 }
 
-GitHost.prototype.shortcut = function () {
-  return this._fill(this.shortcuttemplate)
+GitHost.prototype.shortcut = function (opts) {
+  return this._fill(this.shortcuttemplate, opts)
 }
 
-GitHost.prototype.path = function () {
-  return this._fill(this.pathtemplate)
+GitHost.prototype.path = function (opts) {
+  return this._fill(this.pathtemplate, opts)
 }
 
-GitHost.prototype.tarball = function () {
-  return this._fill(this.tarballtemplate)
+GitHost.prototype.tarball = function (opts) {
+  return this._fill(this.tarballtemplate, opts)
 }
 
-GitHost.prototype.file = function (P) {
-  return this._fill(this.filetemplate, {
+GitHost.prototype.file = function (P, opts) {
+  return this._fill(this.filetemplate, extend({
     path: P.replace(/^[/]+/g, '')
-  })
+  }, opts))
 }
 
 GitHost.prototype.getDefaultRepresentation = function () {
   return this.default
 }
 
-GitHost.prototype.toString = function () {
-  return (this[this.default] || this.sshurl).call(this)
+GitHost.prototype.toString = function (opts) {
+  return (this[this.default] || this.sshurl).call(this, opts)
 }
 
-},{"./git-host-info.js":28}],30:[function(require,module,exports){
+},{"./git-host-info.js":27,"util":undefined}],29:[function(require,module,exports){
 'use strict'
 var url = require('url')
 var gitHosts = require('./git-host-info.js')
@@ -4122,7 +4084,7 @@ var authProtocols = {
   'git+http:': true
 }
 
-module.exports.fromUrl = function (giturl) {
+module.exports.fromUrl = function (giturl, opts) {
   if (giturl == null || giturl === '') return
   var url = fixupUnqualifiedGist(
     isGitHubShorthand(giturl) ? 'github:' + giturl : giturl
@@ -4155,7 +4117,7 @@ module.exports.fromUrl = function (giturl) {
         if (matched[2] != null) project = decodeURIComponent(matched[2])
         defaultRepresentation = protocolToRepresentation(parsed.protocol)
       }
-      return new GitHost(gitHostName, user, auth, project, committish, defaultRepresentation)
+      return new GitHost(gitHostName, user, auth, project, committish, defaultRepresentation, opts)
     } catch (ex) {
       if (!(ex instanceof URIError)) throw ex
     }
@@ -4188,7 +4150,7 @@ function fixupUnqualifiedGist (giturl) {
 
 function parseGitUrl (giturl) {
   if (typeof giturl !== 'string') giturl = '' + giturl
-  var matched = giturl.match(/^([^@]+)@([^:]+):[/]?((?:[^/]+[/])?[^/]+?)(?:[.]git)?(#.*)?$/)
+  var matched = giturl.match(/^([^@]+)@([^:/]+):[/]?((?:[^/]+[/])?[^/]+?)(?:[.]git)?(#.*)?$/)
   if (!matched) return url.parse(giturl)
   return {
     protocol: 'git+ssh:',
@@ -4207,7 +4169,7 @@ function parseGitUrl (giturl) {
   }
 }
 
-},{"./git-host-info.js":28,"./git-host.js":29,"url":undefined}],31:[function(require,module,exports){
+},{"./git-host-info.js":27,"./git-host.js":28,"url":undefined}],30:[function(require,module,exports){
 var wrappy = require('wrappy')
 var reqs = Object.create(null)
 var once = require('once')
@@ -4263,7 +4225,7 @@ function slice (args) {
   return array
 }
 
-},{"once":51,"wrappy":79}],32:[function(require,module,exports){
+},{"once":49,"wrappy":77}],31:[function(require,module,exports){
 try {
   var util = require('util');
   if (typeof util.inherits !== 'function') throw '';
@@ -4272,7 +4234,7 @@ try {
   module.exports = require('./inherits_browser.js');
 }
 
-},{"./inherits_browser.js":33,"util":undefined}],33:[function(require,module,exports){
+},{"./inherits_browser.js":32,"util":undefined}],32:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -4297,7 +4259,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 'use strict';
 module.exports = function (obj) {
 	if (typeof obj !== 'object') {
@@ -4314,7 +4276,7 @@ module.exports = function (obj) {
 	return ret;
 };
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 module.exports = function isArrayish(obj) {
@@ -4326,7 +4288,7 @@ module.exports = function isArrayish(obj) {
 		(obj.length >= 0 && obj.splice instanceof Function);
 };
 
-},{}],36:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 var builtinModules = require('builtin-modules');
 
@@ -4338,7 +4300,7 @@ module.exports = function (str) {
 	return builtinModules.indexOf(str) !== -1;
 };
 
-},{"builtin-modules":5}],37:[function(require,module,exports){
+},{"builtin-modules":5}],36:[function(require,module,exports){
 'use strict';
 var numberIsNan = require('number-is-nan');
 
@@ -4386,7 +4348,7 @@ module.exports = function (x) {
 	return false;
 }
 
-},{"number-is-nan":50}],38:[function(require,module,exports){
+},{"number-is-nan":48}],37:[function(require,module,exports){
 
 exports = module.exports = function(bytes)
 {
@@ -4464,7 +4426,7 @@ exports = module.exports = function(bytes)
     return true;
 }
 
-},{}],39:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 var invertKv = require('invert-kv');
 var all = require('./lcid.json');
@@ -4488,7 +4450,7 @@ exports.to = function (localeId) {
 
 exports.all = all;
 
-},{"./lcid.json":40,"invert-kv":34}],40:[function(require,module,exports){
+},{"./lcid.json":39,"invert-kv":33}],39:[function(require,module,exports){
 module.exports={
 	"af_ZA": 1078,
 	"am_ET": 1118,
@@ -4693,7 +4655,7 @@ module.exports={
 	"zu_ZA": 1077
 }
 
-},{}],41:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 'use strict';
 var path = require('path');
 var fs = require('graceful-fs');
@@ -4716,646 +4678,7 @@ module.exports.sync = function (fp) {
 	return parse(fs.readFileSync(fp, 'utf8'), fp);
 };
 
-},{"graceful-fs":24,"parse-json":53,"path":undefined,"pify":59,"pinkie-promise":60,"strip-bom":74}],42:[function(require,module,exports){
-/**
- * lodash (Custom Build) <https://lodash.com/>
- * Build: `lodash modularize exports="npm" -o ./`
- * Copyright jQuery Foundation and other contributors <https://jquery.org/>
- * Released under MIT license <https://lodash.com/license>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- */
-
-/** Used as references for various `Number` constants. */
-var MAX_SAFE_INTEGER = 9007199254740991;
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]',
-    funcTag = '[object Function]',
-    genTag = '[object GeneratorFunction]';
-
-/** Used to detect unsigned integer values. */
-var reIsUint = /^(?:0|[1-9]\d*)$/;
-
-/**
- * A faster alternative to `Function#apply`, this function invokes `func`
- * with the `this` binding of `thisArg` and the arguments of `args`.
- *
- * @private
- * @param {Function} func The function to invoke.
- * @param {*} thisArg The `this` binding of `func`.
- * @param {Array} args The arguments to invoke `func` with.
- * @returns {*} Returns the result of `func`.
- */
-function apply(func, thisArg, args) {
-  switch (args.length) {
-    case 0: return func.call(thisArg);
-    case 1: return func.call(thisArg, args[0]);
-    case 2: return func.call(thisArg, args[0], args[1]);
-    case 3: return func.call(thisArg, args[0], args[1], args[2]);
-  }
-  return func.apply(thisArg, args);
-}
-
-/**
- * The base implementation of `_.times` without support for iteratee shorthands
- * or max array length checks.
- *
- * @private
- * @param {number} n The number of times to invoke `iteratee`.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns the array of results.
- */
-function baseTimes(n, iteratee) {
-  var index = -1,
-      result = Array(n);
-
-  while (++index < n) {
-    result[index] = iteratee(index);
-  }
-  return result;
-}
-
-/**
- * Creates a unary function that invokes `func` with its argument transformed.
- *
- * @private
- * @param {Function} func The function to wrap.
- * @param {Function} transform The argument transform.
- * @returns {Function} Returns the new function.
- */
-function overArg(func, transform) {
-  return function(arg) {
-    return func(transform(arg));
-  };
-}
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objectToString = objectProto.toString;
-
-/** Built-in value references. */
-var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-
-/* Built-in method references for those with the same name as other `lodash` methods. */
-var nativeKeys = overArg(Object.keys, Object),
-    nativeMax = Math.max;
-
-/** Detect if properties shadowing those on `Object.prototype` are non-enumerable. */
-var nonEnumShadows = !propertyIsEnumerable.call({ 'valueOf': 1 }, 'valueOf');
-
-/**
- * Creates an array of the enumerable property names of the array-like `value`.
- *
- * @private
- * @param {*} value The value to query.
- * @param {boolean} inherited Specify returning inherited property names.
- * @returns {Array} Returns the array of property names.
- */
-function arrayLikeKeys(value, inherited) {
-  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
-  // Safari 9 makes `arguments.length` enumerable in strict mode.
-  var result = (isArray(value) || isArguments(value))
-    ? baseTimes(value.length, String)
-    : [];
-
-  var length = result.length,
-      skipIndexes = !!length;
-
-  for (var key in value) {
-    if ((inherited || hasOwnProperty.call(value, key)) &&
-        !(skipIndexes && (key == 'length' || isIndex(key, length)))) {
-      result.push(key);
-    }
-  }
-  return result;
-}
-
-/**
- * Assigns `value` to `key` of `object` if the existing value is not equivalent
- * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
- * for equality comparisons.
- *
- * @private
- * @param {Object} object The object to modify.
- * @param {string} key The key of the property to assign.
- * @param {*} value The value to assign.
- */
-function assignValue(object, key, value) {
-  var objValue = object[key];
-  if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
-      (value === undefined && !(key in object))) {
-    object[key] = value;
-  }
-}
-
-/**
- * The base implementation of `_.keys` which doesn't treat sparse arrays as dense.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property names.
- */
-function baseKeys(object) {
-  if (!isPrototype(object)) {
-    return nativeKeys(object);
-  }
-  var result = [];
-  for (var key in Object(object)) {
-    if (hasOwnProperty.call(object, key) && key != 'constructor') {
-      result.push(key);
-    }
-  }
-  return result;
-}
-
-/**
- * The base implementation of `_.rest` which doesn't validate or coerce arguments.
- *
- * @private
- * @param {Function} func The function to apply a rest parameter to.
- * @param {number} [start=func.length-1] The start position of the rest parameter.
- * @returns {Function} Returns the new function.
- */
-function baseRest(func, start) {
-  start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
-  return function() {
-    var args = arguments,
-        index = -1,
-        length = nativeMax(args.length - start, 0),
-        array = Array(length);
-
-    while (++index < length) {
-      array[index] = args[start + index];
-    }
-    index = -1;
-    var otherArgs = Array(start + 1);
-    while (++index < start) {
-      otherArgs[index] = args[index];
-    }
-    otherArgs[start] = array;
-    return apply(func, this, otherArgs);
-  };
-}
-
-/**
- * Copies properties of `source` to `object`.
- *
- * @private
- * @param {Object} source The object to copy properties from.
- * @param {Array} props The property identifiers to copy.
- * @param {Object} [object={}] The object to copy properties to.
- * @param {Function} [customizer] The function to customize copied values.
- * @returns {Object} Returns `object`.
- */
-function copyObject(source, props, object, customizer) {
-  object || (object = {});
-
-  var index = -1,
-      length = props.length;
-
-  while (++index < length) {
-    var key = props[index];
-
-    var newValue = customizer
-      ? customizer(object[key], source[key], key, object, source)
-      : undefined;
-
-    assignValue(object, key, newValue === undefined ? source[key] : newValue);
-  }
-  return object;
-}
-
-/**
- * Creates a function like `_.assign`.
- *
- * @private
- * @param {Function} assigner The function to assign values.
- * @returns {Function} Returns the new assigner function.
- */
-function createAssigner(assigner) {
-  return baseRest(function(object, sources) {
-    var index = -1,
-        length = sources.length,
-        customizer = length > 1 ? sources[length - 1] : undefined,
-        guard = length > 2 ? sources[2] : undefined;
-
-    customizer = (assigner.length > 3 && typeof customizer == 'function')
-      ? (length--, customizer)
-      : undefined;
-
-    if (guard && isIterateeCall(sources[0], sources[1], guard)) {
-      customizer = length < 3 ? undefined : customizer;
-      length = 1;
-    }
-    object = Object(object);
-    while (++index < length) {
-      var source = sources[index];
-      if (source) {
-        assigner(object, source, index, customizer);
-      }
-    }
-    return object;
-  });
-}
-
-/**
- * Checks if `value` is a valid array-like index.
- *
- * @private
- * @param {*} value The value to check.
- * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
- * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
- */
-function isIndex(value, length) {
-  length = length == null ? MAX_SAFE_INTEGER : length;
-  return !!length &&
-    (typeof value == 'number' || reIsUint.test(value)) &&
-    (value > -1 && value % 1 == 0 && value < length);
-}
-
-/**
- * Checks if the given arguments are from an iteratee call.
- *
- * @private
- * @param {*} value The potential iteratee value argument.
- * @param {*} index The potential iteratee index or key argument.
- * @param {*} object The potential iteratee object argument.
- * @returns {boolean} Returns `true` if the arguments are from an iteratee call,
- *  else `false`.
- */
-function isIterateeCall(value, index, object) {
-  if (!isObject(object)) {
-    return false;
-  }
-  var type = typeof index;
-  if (type == 'number'
-        ? (isArrayLike(object) && isIndex(index, object.length))
-        : (type == 'string' && index in object)
-      ) {
-    return eq(object[index], value);
-  }
-  return false;
-}
-
-/**
- * Checks if `value` is likely a prototype object.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a prototype, else `false`.
- */
-function isPrototype(value) {
-  var Ctor = value && value.constructor,
-      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
-
-  return value === proto;
-}
-
-/**
- * Performs a
- * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
- * comparison between two values to determine if they are equivalent.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to compare.
- * @param {*} other The other value to compare.
- * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
- * @example
- *
- * var object = { 'a': 1 };
- * var other = { 'a': 1 };
- *
- * _.eq(object, object);
- * // => true
- *
- * _.eq(object, other);
- * // => false
- *
- * _.eq('a', 'a');
- * // => true
- *
- * _.eq('a', Object('a'));
- * // => false
- *
- * _.eq(NaN, NaN);
- * // => true
- */
-function eq(value, other) {
-  return value === other || (value !== value && other !== other);
-}
-
-/**
- * Checks if `value` is likely an `arguments` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an `arguments` object,
- *  else `false`.
- * @example
- *
- * _.isArguments(function() { return arguments; }());
- * // => true
- *
- * _.isArguments([1, 2, 3]);
- * // => false
- */
-function isArguments(value) {
-  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
-  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
-    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
-}
-
-/**
- * Checks if `value` is classified as an `Array` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array, else `false`.
- * @example
- *
- * _.isArray([1, 2, 3]);
- * // => true
- *
- * _.isArray(document.body.children);
- * // => false
- *
- * _.isArray('abc');
- * // => false
- *
- * _.isArray(_.noop);
- * // => false
- */
-var isArray = Array.isArray;
-
-/**
- * Checks if `value` is array-like. A value is considered array-like if it's
- * not a function and has a `value.length` that's an integer greater than or
- * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- * @example
- *
- * _.isArrayLike([1, 2, 3]);
- * // => true
- *
- * _.isArrayLike(document.body.children);
- * // => true
- *
- * _.isArrayLike('abc');
- * // => true
- *
- * _.isArrayLike(_.noop);
- * // => false
- */
-function isArrayLike(value) {
-  return value != null && isLength(value.length) && !isFunction(value);
-}
-
-/**
- * This method is like `_.isArrayLike` except that it also checks if `value`
- * is an object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array-like object,
- *  else `false`.
- * @example
- *
- * _.isArrayLikeObject([1, 2, 3]);
- * // => true
- *
- * _.isArrayLikeObject(document.body.children);
- * // => true
- *
- * _.isArrayLikeObject('abc');
- * // => false
- *
- * _.isArrayLikeObject(_.noop);
- * // => false
- */
-function isArrayLikeObject(value) {
-  return isObjectLike(value) && isArrayLike(value);
-}
-
-/**
- * Checks if `value` is classified as a `Function` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a function, else `false`.
- * @example
- *
- * _.isFunction(_);
- * // => true
- *
- * _.isFunction(/abc/);
- * // => false
- */
-function isFunction(value) {
-  // The use of `Object#toString` avoids issues with the `typeof` operator
-  // in Safari 8-9 which returns 'object' for typed array and other constructors.
-  var tag = isObject(value) ? objectToString.call(value) : '';
-  return tag == funcTag || tag == genTag;
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This method is loosely based on
- * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- * @example
- *
- * _.isLength(3);
- * // => true
- *
- * _.isLength(Number.MIN_VALUE);
- * // => false
- *
- * _.isLength(Infinity);
- * // => false
- *
- * _.isLength('3');
- * // => false
- */
-function isLength(value) {
-  return typeof value == 'number' &&
-    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Checks if `value` is the
- * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
- * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(_.noop);
- * // => true
- *
- * _.isObject(null);
- * // => false
- */
-function isObject(value) {
-  var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
-}
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-/**
- * Assigns own enumerable string keyed properties of source objects to the
- * destination object. Source objects are applied from left to right.
- * Subsequent sources overwrite property assignments of previous sources.
- *
- * **Note:** This method mutates `object` and is loosely based on
- * [`Object.assign`](https://mdn.io/Object/assign).
- *
- * @static
- * @memberOf _
- * @since 0.10.0
- * @category Object
- * @param {Object} object The destination object.
- * @param {...Object} [sources] The source objects.
- * @returns {Object} Returns `object`.
- * @see _.assignIn
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- * }
- *
- * function Bar() {
- *   this.c = 3;
- * }
- *
- * Foo.prototype.b = 2;
- * Bar.prototype.d = 4;
- *
- * _.assign({ 'a': 0 }, new Foo, new Bar);
- * // => { 'a': 1, 'c': 3 }
- */
-var assign = createAssigner(function(object, source) {
-  if (nonEnumShadows || isPrototype(source) || isArrayLike(source)) {
-    copyObject(source, keys(source), object);
-    return;
-  }
-  for (var key in source) {
-    if (hasOwnProperty.call(source, key)) {
-      assignValue(object, key, source[key]);
-    }
-  }
-});
-
-/**
- * Creates an array of the own enumerable property names of `object`.
- *
- * **Note:** Non-object values are coerced to objects. See the
- * [ES spec](http://ecma-international.org/ecma-262/7.0/#sec-object.keys)
- * for more details.
- *
- * @static
- * @since 0.1.0
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property names.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.keys(new Foo);
- * // => ['a', 'b'] (iteration order is not guaranteed)
- *
- * _.keys('hi');
- * // => ['0', '1']
- */
-function keys(object) {
-  return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
-}
-
-module.exports = assign;
-
-},{}],43:[function(require,module,exports){
+},{"graceful-fs":23,"parse-json":51,"path":undefined,"pify":57,"pinkie-promise":58,"strip-bom":72}],41:[function(require,module,exports){
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
@@ -6280,7 +5603,7 @@ function regExpEscape (s) {
   return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 }
 
-},{"brace-expansion":4,"path":undefined}],44:[function(require,module,exports){
+},{"brace-expansion":4,"path":undefined}],42:[function(require,module,exports){
 module.exports = extractDescription
 
 // Extracts description from contents of a readme file in markdown format
@@ -6296,7 +5619,7 @@ function extractDescription (d) {
   return d.slice(s, e).join(' ').trim()
 }
 
-},{}],45:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var semver = require("semver")
 var validateLicense = require('validate-npm-package-license');
 var hostedGitInfo = require("hosted-git-info")
@@ -6716,7 +6039,7 @@ function bugsTypos(bugs, warn) {
   })
 }
 
-},{"./extract_description":44,"./typos":48,"hosted-git-info":30,"is-builtin-module":36,"semver":66,"url":undefined,"validate-npm-package-license":75}],46:[function(require,module,exports){
+},{"./extract_description":42,"./typos":46,"hosted-git-info":29,"is-builtin-module":35,"semver":64,"url":undefined,"validate-npm-package-license":74}],44:[function(require,module,exports){
 var util = require("util")
 var messages = require("./warning_messages.json")
 
@@ -6741,7 +6064,7 @@ function makeTypoWarning (providedName, probableName, field) {
   return util.format(messages.typo, providedName, probableName)
 }
 
-},{"./warning_messages.json":49,"util":undefined}],47:[function(require,module,exports){
+},{"./warning_messages.json":47,"util":undefined}],45:[function(require,module,exports){
 module.exports = normalize
 
 var fixer = require("./fixer")
@@ -6782,7 +6105,7 @@ function ucFirst (string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-},{"./fixer":45,"./make_warning":46}],48:[function(require,module,exports){
+},{"./fixer":43,"./make_warning":44}],46:[function(require,module,exports){
 module.exports={
   "topLevel": {
     "dependancies": "dependencies"
@@ -6809,7 +6132,7 @@ module.exports={
   "script": { "server": "start", "tests": "test" }
 }
 
-},{}],49:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module.exports={
   "repositories": "'repositories' (plural) Not supported. Please pick one as the 'repository' field"
   ,"missingRepository": "No repository field."
@@ -6842,13 +6165,13 @@ module.exports={
   ,"typo": "%s should probably be %s."
 }
 
-},{}],50:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 'use strict';
 module.exports = Number.isNaN || function (x) {
 	return x !== x;
 };
 
-},{}],51:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 var wrappy = require('wrappy')
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
@@ -6892,7 +6215,7 @@ function onceStrict (fn) {
   return f
 }
 
-},{"wrappy":79}],52:[function(require,module,exports){
+},{"wrappy":77}],50:[function(require,module,exports){
 'use strict';
 var childProcess = require('child_process');
 var execFileSync = childProcess.execFileSync;
@@ -7021,7 +6344,7 @@ module.exports.sync = function (opts) {
 	return cache;
 };
 
-},{"child_process":undefined,"lcid":39}],53:[function(require,module,exports){
+},{"child_process":undefined,"lcid":38}],51:[function(require,module,exports){
 'use strict';
 var errorEx = require('error-ex');
 var fallback = require('./vendor/parse');
@@ -7058,7 +6381,7 @@ module.exports = function (x, reviver, filename) {
 	}
 };
 
-},{"./vendor/parse":54,"error-ex":13}],54:[function(require,module,exports){
+},{"./vendor/parse":52,"error-ex":12}],52:[function(require,module,exports){
 /*
  * Author: Alex Kocharin <alex@kocharin.ru>
  * GIT: https://github.com/rlidwka/jju
@@ -7812,7 +7135,7 @@ module.exports.tokenize = function tokenizeJSON(input, options) {
 }
 
 
-},{"./unicode":55}],55:[function(require,module,exports){
+},{"./unicode":53}],53:[function(require,module,exports){
 
 // This is autogenerated with esprima tools, see:
 // https://github.com/ariya/esprima/blob/master/esprima.js
@@ -7885,7 +7208,7 @@ module.exports.NonAsciiIdentifierStart = /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u
 
 module.exports.NonAsciiIdentifierPart = /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u0527\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0\u08A2-\u08AC\u08E4-\u08FE\u0900-\u0963\u0966-\u096F\u0971-\u0977\u0979-\u097F\u0981-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C01-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C82\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D02\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191C\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1D00-\u1DE6\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA697\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A\uAA7B\uAA80-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE26\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/
 
-},{}],56:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 'use strict';
 var fs = require('fs');
 var Promise = require('pinkie-promise');
@@ -7911,7 +7234,7 @@ module.exports.sync = function (fp) {
 	}
 };
 
-},{"fs":undefined,"pinkie-promise":60}],57:[function(require,module,exports){
+},{"fs":undefined,"pinkie-promise":58}],55:[function(require,module,exports){
 'use strict';
 
 function posix(path) {
@@ -7933,7 +7256,7 @@ module.exports = process.platform === 'win32' ? win32 : posix;
 module.exports.posix = posix;
 module.exports.win32 = win32;
 
-},{}],58:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 'use strict';
 var fs = require('graceful-fs');
 var Promise = require('pinkie-promise');
@@ -7964,7 +7287,7 @@ exports.fileSync = typeSync.bind(null, 'statSync', 'isFile');
 exports.dirSync = typeSync.bind(null, 'statSync', 'isDirectory');
 exports.symlinkSync = typeSync.bind(null, 'lstatSync', 'isSymbolicLink');
 
-},{"graceful-fs":24,"pify":59,"pinkie-promise":60}],59:[function(require,module,exports){
+},{"graceful-fs":23,"pify":57,"pinkie-promise":58}],57:[function(require,module,exports){
 'use strict';
 
 var processFn = function (fn, P, opts) {
@@ -8034,12 +7357,12 @@ var pify = module.exports = function (obj, P, opts) {
 
 pify.all = pify;
 
-},{}],60:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 'use strict';
 
 module.exports = typeof Promise === 'function' ? Promise : require('pinkie');
 
-},{"pinkie":61}],61:[function(require,module,exports){
+},{"pinkie":59}],59:[function(require,module,exports){
 'use strict';
 
 var PENDING = 'pending';
@@ -8333,7 +7656,7 @@ Promise.reject = function (reason) {
 
 module.exports = Promise;
 
-},{}],62:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 'use strict';
 var findUp = require('find-up');
 var readPkg = require('read-pkg');
@@ -8366,7 +7689,7 @@ module.exports.sync = function (opts) {
 	};
 };
 
-},{"find-up":15,"read-pkg":63}],63:[function(require,module,exports){
+},{"find-up":14,"read-pkg":61}],61:[function(require,module,exports){
 'use strict';
 var path = require('path');
 var loadJsonFile = require('load-json-file');
@@ -8416,7 +7739,7 @@ module.exports.sync = function (fp, opts) {
 	return x;
 };
 
-},{"load-json-file":41,"normalize-package-data":47,"path":undefined,"path-type":58}],64:[function(require,module,exports){
+},{"load-json-file":40,"normalize-package-data":45,"path":undefined,"path-type":56}],62:[function(require,module,exports){
 'use strict';
 
 var fs = require('fs'),
@@ -8504,7 +7827,7 @@ function requireDirectory(m, path, options) {
 module.exports = requireDirectory;
 module.exports.defaults = defaultOptions;
 
-},{"fs":undefined,"path":undefined}],65:[function(require,module,exports){
+},{"fs":undefined,"path":undefined}],63:[function(require,module,exports){
 module.exports = function (_require) {
   _require = _require || require
   var main = _require.main
@@ -8524,7 +7847,7 @@ function handleIISNode (main) {
   }
 }
 
-},{}],66:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 exports = module.exports = SemVer;
 
 // The debug function is excluded entirely from the minified version.
@@ -9729,7 +9052,7 @@ function prerelease(version, loose) {
   return (parsed && parsed.prerelease.length) ? parsed.prerelease : null;
 }
 
-},{}],67:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 module.exports = function (blocking) {
   [process.stdout, process.stderr].forEach(function (stream) {
     if (stream._handle && stream.isTTY && typeof stream._handle.setBlocking === 'function') {
@@ -9738,7 +9061,7 @@ module.exports = function (blocking) {
   })
 }
 
-},{}],68:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 var licenseIDs = require('spdx-license-ids');
 
 function valid(string) {
@@ -9977,14 +9300,14 @@ module.exports = function(identifier) {
   return null;
 };
 
-},{"spdx-license-ids":71}],69:[function(require,module,exports){
+},{"spdx-license-ids":69}],67:[function(require,module,exports){
 var parser = require('./parser').parser
 
 module.exports = function (argument) {
   return parser.parse(argument)
 }
 
-},{"./parser":70}],70:[function(require,module,exports){
+},{"./parser":68}],68:[function(require,module,exports){
 /* parser generated by jison 0.4.17 */
 /*
   Returns a Parser object of the following structure:
@@ -11343,7 +10666,7 @@ if (typeof module !== 'undefined' && require.main === module) {
 }
 }
 
-},{"fs":undefined,"path":undefined}],71:[function(require,module,exports){
+},{"fs":undefined,"path":undefined}],69:[function(require,module,exports){
 module.exports=[
   "Glide",
   "Abstyles",
@@ -11679,7 +11002,7 @@ module.exports=[
   "WXwindows"
 ]
 
-},{}],72:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 'use strict';
 var stripAnsi = require('strip-ansi');
 var codePointAt = require('code-point-at');
@@ -11718,7 +11041,7 @@ module.exports = function (str) {
 	return width;
 };
 
-},{"code-point-at":10,"is-fullwidth-code-point":37,"strip-ansi":73}],73:[function(require,module,exports){
+},{"code-point-at":9,"is-fullwidth-code-point":36,"strip-ansi":71}],71:[function(require,module,exports){
 'use strict';
 var ansiRegex = require('ansi-regex')();
 
@@ -11726,7 +11049,7 @@ module.exports = function (str) {
 	return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
 };
 
-},{"ansi-regex":1}],74:[function(require,module,exports){
+},{"ansi-regex":1}],72:[function(require,module,exports){
 'use strict';
 var isUtf8 = require('is-utf8');
 
@@ -11745,7 +11068,59 @@ module.exports = function (x) {
 	return x;
 };
 
-},{"is-utf8":38}],75:[function(require,module,exports){
+},{"is-utf8":37}],73:[function(require,module,exports){
+'use strict';
+var argv = process.argv;
+
+var terminator = argv.indexOf('--');
+var hasFlag = function (flag) {
+	flag = '--' + flag;
+	var pos = argv.indexOf(flag);
+	return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
+};
+
+module.exports = (function () {
+	if ('FORCE_COLOR' in process.env) {
+		return true;
+	}
+
+	if (hasFlag('no-color') ||
+		hasFlag('no-colors') ||
+		hasFlag('color=false')) {
+		return false;
+	}
+
+	if (hasFlag('color') ||
+		hasFlag('colors') ||
+		hasFlag('color=true') ||
+		hasFlag('color=always')) {
+		return true;
+	}
+
+	if (process.stdout && !process.stdout.isTTY) {
+		return false;
+	}
+
+	if (process.platform === 'win32') {
+		return true;
+	}
+
+	if ('COLORTERM' in process.env) {
+		return true;
+	}
+
+	if (process.env.TERM === 'dumb') {
+		return false;
+	}
+
+	if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
+		return true;
+	}
+
+	return false;
+})();
+
+},{}],74:[function(require,module,exports){
 var parse = require('spdx-expression-parse');
 var correct = require('spdx-correct');
 
@@ -11831,7 +11206,7 @@ module.exports = function(argument) {
   }
 };
 
-},{"spdx-correct":68,"spdx-expression-parse":69}],76:[function(require,module,exports){
+},{"spdx-correct":66,"spdx-expression-parse":67}],75:[function(require,module,exports){
 'use strict'
 
 module.exports = function whichModule (exported) {
@@ -11842,41 +11217,7 @@ module.exports = function whichModule (exported) {
   return null
 }
 
-},{}],77:[function(require,module,exports){
-'use strict';
-
-/*!
- * window-size <https://github.com/jonschlinkert/window-size>
- *
- * Copyright (c) 2014-2015 Jon Schlinkert
- * Licensed under the MIT license.
- */
-
-var tty = require('tty');
-
-module.exports = (function () {
-  var width;
-  var height;
-
-  if (tty.isatty(1) && tty.isatty(2)) {
-    if (process.stdout.getWindowSize) {
-      width = process.stdout.getWindowSize(1)[0];
-      height = process.stdout.getWindowSize(1)[1];
-    } else if (tty.getWindowSize) {
-      width = tty.getWindowSize()[1];
-      height = tty.getWindowSize()[0];
-    } else if (process.stdout.columns && process.stdout.rows) {
-      height = process.stdout.rows;
-      width = process.stdout.columns;
-    }
-  } else {
-    Error('window-size could not get size with tty or process.stdout.');
-  }
-
-  return {height: height, width: width};
-})();
-
-},{"tty":undefined}],78:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 'use strict';
 var stringWidth = require('string-width');
 var stripAnsi = require('strip-ansi');
@@ -12046,7 +11387,7 @@ module.exports = function (str, cols, opts) {
 	}).join('\n');
 };
 
-},{"string-width":72,"strip-ansi":73}],79:[function(require,module,exports){
+},{"string-width":70,"strip-ansi":71}],77:[function(require,module,exports){
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
 // presumably different callback function.
@@ -12081,7 +11422,7 @@ function wrappy (fn, cb) {
   }
 }
 
-},{}],80:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 var fs = require('fs')
 var path = require('path')
 var util = require('util')
@@ -12255,1051 +11596,7 @@ module.exports = function (opts) {
   return y18n
 }
 
-},{"fs":undefined,"path":undefined,"util":undefined}],81:[function(require,module,exports){
-// classic singleton yargs API, to use yargs
-// without running as a singleton do:
-// require('yargs/yargs')(process.argv.slice(2))
-const yargs = require('./yargs')
-
-Argv(process.argv.slice(2))
-
-module.exports = Argv
-
-function Argv (processArgs, cwd) {
-  const argv = yargs(processArgs, cwd, require)
-  singletonify(argv)
-  return argv
-}
-
-/*  Hack an instance of Argv with process.argv into Argv
-    so people can do
-    require('yargs')(['--beeble=1','-z','zizzle']).argv
-    to parse a list of args and
-    require('yargs').argv
-    to get a parsed version of process.argv.
-*/
-function singletonify (inst) {
-  Object.keys(inst).forEach(function (key) {
-    if (key === 'argv') {
-      Argv.__defineGetter__(key, inst.__lookupGetter__(key))
-    } else {
-      Argv[key] = typeof inst[key] === 'function' ? inst[key].bind(inst) : inst[key]
-    }
-  })
-}
-
-},{"./yargs":89}],82:[function(require,module,exports){
-const path = require('path')
-const inspect = require('util').inspect
-const requireDirectory = require('require-directory')
-const whichModule = require('which-module')
-
-// handles parsing positional arguments,
-// and populating argv with said positional
-// arguments.
-module.exports = function (yargs, usage, validation) {
-  const self = {}
-
-  var handlers = {}
-  self.addHandler = function (cmd, description, builder, handler) {
-    if (typeof cmd === 'object') {
-      const commandString = typeof cmd.command === 'string' ? cmd.command : moduleName(cmd)
-      self.addHandler(commandString, extractDesc(cmd), cmd.builder, cmd.handler)
-      return
-    }
-
-    // allow a module to be provided instead of separate builder and handler
-    if (typeof builder === 'object' && builder.builder && typeof builder.handler === 'function') {
-      self.addHandler(cmd, description, builder.builder, builder.handler)
-      return
-    }
-
-    if (description !== false) {
-      usage.command(cmd, description)
-    }
-
-    // we should not register a handler if no
-    // builder is provided, e.g., user will
-    // handle command themselves with '_'.
-    var parsedCommand = parseCommand(cmd)
-    handlers[parsedCommand.cmd] = {
-      original: cmd,
-      handler: handler,
-      // TODO: default to a noop builder in
-      // yargs@5.x
-      builder: builder,
-      demanded: parsedCommand.demanded,
-      optional: parsedCommand.optional
-    }
-  }
-
-  self.addDirectory = function (dir, context, req, callerFile, opts) {
-    opts = opts || {}
-    // disable recursion to support nested directories of subcommands
-    if (typeof opts.recurse !== 'boolean') opts.recurse = false
-    // exclude 'json', 'coffee' from require-directory defaults
-    if (!Array.isArray(opts.extensions)) opts.extensions = ['js']
-    // allow consumer to define their own visitor function
-    const parentVisit = typeof opts.visit === 'function' ? opts.visit : function (o) { return o }
-    // call addHandler via visitor function
-    opts.visit = function (obj, joined, filename) {
-      const visited = parentVisit(obj, joined, filename)
-      // allow consumer to skip modules with their own visitor
-      if (visited) {
-        // check for cyclic reference
-        // each command file path should only be seen once per execution
-        if (~context.files.indexOf(joined)) return visited
-        // keep track of visited files in context.files
-        context.files.push(joined)
-        self.addHandler(visited)
-      }
-      return visited
-    }
-    requireDirectory({ require: req, filename: callerFile }, dir, opts)
-  }
-
-  // lookup module object from require()d command and derive name
-  // if module was not require()d and no name given, throw error
-  function moduleName (obj) {
-    const mod = whichModule(obj)
-    if (!mod) throw new Error('No command name given for module: ' + inspect(obj))
-    return commandFromFilename(mod.filename)
-  }
-
-  // derive command name from filename
-  function commandFromFilename (filename) {
-    return path.basename(filename, path.extname(filename))
-  }
-
-  function extractDesc (obj) {
-    for (var keys = ['describe', 'description', 'desc'], i = 0, l = keys.length, test; i < l; i++) {
-      test = obj[keys[i]]
-      if (typeof test === 'string' || typeof test === 'boolean') return test
-    }
-    return false
-  }
-
-  function parseCommand (cmd) {
-    var splitCommand = cmd.split(/\s/)
-    var bregex = /\.*[\][<>]/g
-    var parsedCommand = {
-      cmd: (splitCommand.shift()).replace(bregex, ''),
-      demanded: [],
-      optional: []
-    }
-    splitCommand.forEach(function (cmd, i) {
-      var variadic = false
-      if (/\.+[\]>]/.test(cmd) && i === splitCommand.length - 1) variadic = true
-      if (/^\[/.test(cmd)) {
-        parsedCommand.optional.push({
-          cmd: cmd.replace(bregex, ''),
-          variadic: variadic
-        })
-      } else {
-        parsedCommand.demanded.push({
-          cmd: cmd.replace(bregex, ''),
-          variadic: variadic
-        })
-      }
-    })
-    return parsedCommand
-  }
-
-  self.getCommands = function () {
-    return Object.keys(handlers)
-  }
-
-  self.getCommandHandlers = function () {
-    return handlers
-  }
-
-  self.runCommand = function (command, yargs, parsed) {
-    var argv = parsed.argv
-    var commandHandler = handlers[command]
-    var innerArgv = argv
-    var currentContext = yargs.getContext()
-    var parentCommands = currentContext.commands.slice()
-    currentContext.commands.push(command)
-    if (commandHandler.builder && typeof commandHandler.builder === 'function') {
-      // a function can be provided, which interacts which builds
-      // up a yargs chain and returns it.
-      innerArgv = commandHandler.builder(yargs.reset(parsed.aliases))
-      // if the builder function did not yet parse argv with reset yargs
-      // and did not explicitly set a usage() string, then apply the
-      // original command string as usage() for consistent behavior with
-      // options object below
-      if (yargs.parsed === false && typeof yargs.getUsageInstance().getUsage() === 'undefined') {
-        yargs.usage('$0 ' + (parentCommands.length ? parentCommands.join(' ') + ' ' : '') + commandHandler.original)
-      }
-      innerArgv = innerArgv ? innerArgv.argv : argv
-    } else if (commandHandler.builder && typeof commandHandler.builder === 'object') {
-      // as a short hand, an object can instead be provided, specifying
-      // the options that a command takes.
-      innerArgv = yargs.reset(parsed.aliases)
-      innerArgv.usage('$0 ' + (parentCommands.length ? parentCommands.join(' ') + ' ' : '') + commandHandler.original)
-      Object.keys(commandHandler.builder).forEach(function (key) {
-        innerArgv.option(key, commandHandler.builder[key])
-      })
-      innerArgv = innerArgv.argv
-    }
-
-    populatePositional(commandHandler, innerArgv, currentContext)
-
-    if (commandHandler.handler) {
-      commandHandler.handler(innerArgv)
-    }
-    currentContext.commands.pop()
-    return innerArgv
-  }
-
-  function populatePositional (commandHandler, argv, context) {
-    argv._ = argv._.slice(context.commands.length) // nuke the current commands
-    var demanded = commandHandler.demanded.slice(0)
-    var optional = commandHandler.optional.slice(0)
-
-    validation.positionalCount(demanded.length, argv._.length)
-
-    while (demanded.length) {
-      var demand = demanded.shift()
-      if (demand.variadic) argv[demand.cmd] = []
-      if (!argv._.length) break
-      if (demand.variadic) argv[demand.cmd] = argv._.splice(0)
-      else argv[demand.cmd] = argv._.shift()
-    }
-
-    while (optional.length) {
-      var maybe = optional.shift()
-      if (maybe.variadic) argv[maybe.cmd] = []
-      if (!argv._.length) break
-      if (maybe.variadic) argv[maybe.cmd] = argv._.splice(0)
-      else argv[maybe.cmd] = argv._.shift()
-    }
-
-    argv._ = context.commands.concat(argv._)
-  }
-
-  self.reset = function () {
-    handlers = {}
-    return self
-  }
-
-  return self
-}
-
-},{"path":undefined,"require-directory":64,"util":undefined,"which-module":76}],83:[function(require,module,exports){
-(function (__dirname){
-const fs = require('fs')
-const path = require('path')
-
-// add bash completions to your
-//  yargs-powered applications.
-module.exports = function (yargs, usage, command) {
-  const self = {
-    completionKey: 'get-yargs-completions'
-  }
-
-  // get a list of completion commands.
-  // 'args' is the array of strings from the line to be completed
-  self.getCompletion = function (args, done) {
-    const completions = []
-    const current = args.length ? args[args.length - 1] : ''
-    const argv = yargs.parse(args, true)
-    const aliases = yargs.parsed.aliases
-
-    // a custom completion function can be provided
-    // to completion().
-    if (completionFunction) {
-      if (completionFunction.length < 3) {
-        var result = completionFunction(current, argv)
-
-        // promise based completion function.
-        if (typeof result.then === 'function') {
-          return result.then(function (list) {
-            process.nextTick(function () { done(list) })
-          }).catch(function (err) {
-            process.nextTick(function () { throw err })
-          })
-        }
-
-        // synchronous completion function.
-        return done(result)
-      } else {
-        // asynchronous completion function
-        return completionFunction(current, argv, function (completions) {
-          done(completions)
-        })
-      }
-    }
-
-    var handlers = command.getCommandHandlers()
-    for (var i = 0, ii = args.length; i < ii; ++i) {
-      if (handlers[args[i]] && handlers[args[i]].builder) {
-        return handlers[args[i]].builder(yargs.reset()).argv
-      }
-    }
-
-    if (!current.match(/^-/)) {
-      usage.getCommands().forEach(function (command) {
-        if (args.indexOf(command[0]) === -1) {
-          completions.push(command[0])
-        }
-      })
-    }
-
-    if (current.match(/^-/)) {
-      Object.keys(yargs.getOptions().key).forEach(function (key) {
-        // If the key and its aliases aren't in 'args', add the key to 'completions'
-        var keyAndAliases = [key].concat(aliases[key] || [])
-        var notInArgs = keyAndAliases.every(function (val) {
-          return args.indexOf('--' + val) === -1
-        })
-        if (notInArgs) {
-          completions.push('--' + key)
-        }
-      })
-    }
-
-    done(completions)
-  }
-
-  // generate the completion script to add to your .bashrc.
-  self.generateCompletionScript = function ($0) {
-    var script = fs.readFileSync(
-      path.resolve(__dirname, '../completion.sh.hbs'),
-      'utf-8'
-    )
-    var name = path.basename($0)
-
-    // add ./to applications not yet installed as bin.
-    if ($0.match(/\.js$/)) $0 = './' + $0
-
-    script = script.replace(/{{app_name}}/g, name)
-    return script.replace(/{{app_path}}/g, $0)
-  }
-
-  // register a function to perform your own custom
-  // completions., this function can be either
-  // synchrnous or asynchronous.
-  var completionFunction = null
-  self.registerFunction = function (fn) {
-    completionFunction = fn
-  }
-
-  return self
-}
-
-}).call(this,"/Users/mrw/git/rexreplace/node_modules/yargs/lib")
-},{"fs":undefined,"path":undefined}],84:[function(require,module,exports){
-module.exports = function (original, filter) {
-  const obj = {}
-  filter = filter || function (k, v) { return true }
-  Object.keys(original || {}).forEach(function (key) {
-    if (filter(key, original[key])) {
-      obj[key] = original[key]
-    }
-  })
-  return obj
-}
-
-},{}],85:[function(require,module,exports){
-// this file handles outputting usage instructions,
-// failures, etc. keeps logging in one place.
-const cliui = require('cliui')
-const decamelize = require('decamelize')
-const stringWidth = require('string-width')
-const wsize = require('window-size')
-const objFilter = require('./obj-filter')
-const setBlocking = require('set-blocking')
-
-module.exports = function (yargs, y18n) {
-  const __ = y18n.__
-  const self = {}
-
-  // methods for ouputting/building failure message.
-  var fails = []
-  self.failFn = function (f) {
-    fails.push(f)
-  }
-
-  var failMessage = null
-  var showHelpOnFail = true
-  self.showHelpOnFail = function (enabled, message) {
-    if (typeof enabled === 'string') {
-      message = enabled
-      enabled = true
-    } else if (typeof enabled === 'undefined') {
-      enabled = true
-    }
-    failMessage = message
-    showHelpOnFail = enabled
-    return self
-  }
-
-  var failureOutput = false
-  self.fail = function (msg, err) {
-    if (fails.length) {
-      fails.forEach(function (f) {
-        f(msg, err)
-      })
-    } else {
-      if (yargs.getExitProcess()) setBlocking(true)
-
-      // don't output failure message more than once
-      if (!failureOutput) {
-        failureOutput = true
-        if (showHelpOnFail) yargs.showHelp('error')
-        if (msg) console.error(msg)
-        if (failMessage) {
-          if (msg) console.error('')
-          console.error(failMessage)
-        }
-      }
-      if (yargs.getExitProcess()) {
-        process.exit(1)
-      } else {
-        throw err || new Error(msg)
-      }
-    }
-  }
-
-  // methods for ouputting/building help (usage) message.
-  var usage
-  self.usage = function (msg) {
-    usage = msg
-  }
-  self.getUsage = function () {
-    return usage
-  }
-
-  var examples = []
-  self.example = function (cmd, description) {
-    examples.push([cmd, description || ''])
-  }
-
-  var commands = []
-  self.command = function (cmd, description) {
-    commands.push([cmd, description || ''])
-  }
-  self.getCommands = function () {
-    return commands
-  }
-
-  var descriptions = {}
-  self.describe = function (key, desc) {
-    if (typeof key === 'object') {
-      Object.keys(key).forEach(function (k) {
-        self.describe(k, key[k])
-      })
-    } else {
-      descriptions[key] = desc
-    }
-  }
-  self.getDescriptions = function () {
-    return descriptions
-  }
-
-  var epilog
-  self.epilog = function (msg) {
-    epilog = msg
-  }
-
-  var wrap = windowWidth()
-  self.wrap = function (cols) {
-    wrap = cols
-  }
-
-  var deferY18nLookupPrefix = '__yargsString__:'
-  self.deferY18nLookup = function (str) {
-    return deferY18nLookupPrefix + str
-  }
-
-  var defaultGroup = 'Options:'
-  self.help = function () {
-    normalizeAliases()
-
-    var demanded = yargs.getDemanded()
-    var groups = yargs.getGroups()
-    var options = yargs.getOptions()
-    var keys = Object.keys(
-      Object.keys(descriptions)
-      .concat(Object.keys(demanded))
-      .concat(Object.keys(options.default))
-      .reduce(function (acc, key) {
-        if (key !== '_') acc[key] = true
-        return acc
-      }, {})
-    )
-    var ui = cliui({
-      width: wrap,
-      wrap: !!wrap
-    })
-
-    // the usage string.
-    if (usage) {
-      var u = usage.replace(/\$0/g, yargs.$0)
-      ui.div(u + '\n')
-    }
-
-    // your application's commands, i.e., non-option
-    // arguments populated in '_'.
-    if (commands.length) {
-      ui.div(__('Commands:'))
-
-      commands.forEach(function (command) {
-        ui.div(
-          {text: command[0], padding: [0, 2, 0, 2], width: maxWidth(commands) + 4},
-          {text: command[1]}
-        )
-      })
-
-      ui.div()
-    }
-
-    // perform some cleanup on the keys array, making it
-    // only include top-level keys not their aliases.
-    var aliasKeys = (Object.keys(options.alias) || [])
-      .concat(Object.keys(yargs.parsed.newAliases) || [])
-
-    keys = keys.filter(function (key) {
-      return !yargs.parsed.newAliases[key] && aliasKeys.every(function (alias) {
-        return (options.alias[alias] || []).indexOf(key) === -1
-      })
-    })
-
-    // populate 'Options:' group with any keys that have not
-    // explicitly had a group set.
-    if (!groups[defaultGroup]) groups[defaultGroup] = []
-    addUngroupedKeys(keys, options.alias, groups)
-
-    // display 'Options:' table along with any custom tables:
-    Object.keys(groups).forEach(function (groupName) {
-      if (!groups[groupName].length) return
-
-      ui.div(__(groupName))
-
-      // if we've grouped the key 'f', but 'f' aliases 'foobar',
-      // normalizedKeys should contain only 'foobar'.
-      var normalizedKeys = groups[groupName].map(function (key) {
-        if (~aliasKeys.indexOf(key)) return key
-        for (var i = 0, aliasKey; (aliasKey = aliasKeys[i]) !== undefined; i++) {
-          if (~(options.alias[aliasKey] || []).indexOf(key)) return aliasKey
-        }
-        return key
-      })
-
-      // actually generate the switches string --foo, -f, --bar.
-      var switches = normalizedKeys.reduce(function (acc, key) {
-        acc[key] = [ key ].concat(options.alias[key] || [])
-          .map(function (sw) {
-            return (sw.length > 1 ? '--' : '-') + sw
-          })
-          .join(', ')
-
-        return acc
-      }, {})
-
-      normalizedKeys.forEach(function (key) {
-        var kswitch = switches[key]
-        var desc = descriptions[key] || ''
-        var type = null
-
-        if (~desc.lastIndexOf(deferY18nLookupPrefix)) desc = __(desc.substring(deferY18nLookupPrefix.length))
-
-        if (~options.boolean.indexOf(key)) type = '[' + __('boolean') + ']'
-        if (~options.count.indexOf(key)) type = '[' + __('count') + ']'
-        if (~options.string.indexOf(key)) type = '[' + __('string') + ']'
-        if (~options.normalize.indexOf(key)) type = '[' + __('string') + ']'
-        if (~options.array.indexOf(key)) type = '[' + __('array') + ']'
-        if (~options.number.indexOf(key)) type = '[' + __('number') + ']'
-
-        var extra = [
-          type,
-          demanded[key] ? '[' + __('required') + ']' : null,
-          options.choices && options.choices[key] ? '[' + __('choices:') + ' ' +
-            self.stringifiedValues(options.choices[key]) + ']' : null,
-          defaultString(options.default[key], options.defaultDescription[key])
-        ].filter(Boolean).join(' ')
-
-        ui.span(
-          {text: kswitch, padding: [0, 2, 0, 2], width: maxWidth(switches) + 4},
-          desc
-        )
-
-        if (extra) ui.div({text: extra, padding: [0, 0, 0, 2], align: 'right'})
-        else ui.div()
-      })
-
-      ui.div()
-    })
-
-    // describe some common use-cases for your application.
-    if (examples.length) {
-      ui.div(__('Examples:'))
-
-      examples.forEach(function (example) {
-        example[0] = example[0].replace(/\$0/g, yargs.$0)
-      })
-
-      examples.forEach(function (example) {
-        ui.div(
-          {text: example[0], padding: [0, 2, 0, 2], width: maxWidth(examples) + 4},
-          example[1]
-        )
-      })
-
-      ui.div()
-    }
-
-    // the usage string.
-    if (epilog) {
-      var e = epilog.replace(/\$0/g, yargs.$0)
-      ui.div(e + '\n')
-    }
-
-    return ui.toString()
-  }
-
-  // return the maximum width of a string
-  // in the left-hand column of a table.
-  function maxWidth (table) {
-    var width = 0
-
-    // table might be of the form [leftColumn],
-    // or {key: leftColumn}}
-    if (!Array.isArray(table)) {
-      table = Object.keys(table).map(function (key) {
-        return [table[key]]
-      })
-    }
-
-    table.forEach(function (v) {
-      width = Math.max(stringWidth(v[0]), width)
-    })
-
-    // if we've enabled 'wrap' we should limit
-    // the max-width of the left-column.
-    if (wrap) width = Math.min(width, parseInt(wrap * 0.5, 10))
-
-    return width
-  }
-
-  // make sure any options set for aliases,
-  // are copied to the keys being aliased.
-  function normalizeAliases () {
-    var demanded = yargs.getDemanded()
-    var options = yargs.getOptions()
-
-    ;(Object.keys(options.alias) || []).forEach(function (key) {
-      options.alias[key].forEach(function (alias) {
-        // copy descriptions.
-        if (descriptions[alias]) self.describe(key, descriptions[alias])
-        // copy demanded.
-        if (demanded[alias]) yargs.demand(key, demanded[alias].msg)
-        // type messages.
-        if (~options.boolean.indexOf(alias)) yargs.boolean(key)
-        if (~options.count.indexOf(alias)) yargs.count(key)
-        if (~options.string.indexOf(alias)) yargs.string(key)
-        if (~options.normalize.indexOf(alias)) yargs.normalize(key)
-        if (~options.array.indexOf(alias)) yargs.array(key)
-        if (~options.number.indexOf(alias)) yargs.number(key)
-      })
-    })
-  }
-
-  // given a set of keys, place any keys that are
-  // ungrouped under the 'Options:' grouping.
-  function addUngroupedKeys (keys, aliases, groups) {
-    var groupedKeys = []
-    var toCheck = null
-    Object.keys(groups).forEach(function (group) {
-      groupedKeys = groupedKeys.concat(groups[group])
-    })
-
-    keys.forEach(function (key) {
-      toCheck = [key].concat(aliases[key])
-      if (!toCheck.some(function (k) {
-        return groupedKeys.indexOf(k) !== -1
-      })) {
-        groups[defaultGroup].push(key)
-      }
-    })
-    return groupedKeys
-  }
-
-  self.showHelp = function (level) {
-    if (!level) level = 'error'
-    var emit = typeof level === 'function' ? level : console[ level ]
-    emit(self.help())
-  }
-
-  self.functionDescription = function (fn) {
-    var description = fn.name ? decamelize(fn.name, '-') : __('generated-value')
-    return ['(', description, ')'].join('')
-  }
-
-  self.stringifiedValues = function (values, separator) {
-    var string = ''
-    var sep = separator || ', '
-    var array = [].concat(values)
-
-    if (!values || !array.length) return string
-
-    array.forEach(function (value) {
-      if (string.length) string += sep
-      string += JSON.stringify(value)
-    })
-
-    return string
-  }
-
-  // format the default-value-string displayed in
-  // the right-hand column.
-  function defaultString (value, defaultDescription) {
-    var string = '[' + __('default:') + ' '
-
-    if (value === undefined && !defaultDescription) return null
-
-    if (defaultDescription) {
-      string += defaultDescription
-    } else {
-      switch (typeof value) {
-        case 'string':
-          string += JSON.stringify(value)
-          break
-        case 'object':
-          string += JSON.stringify(value)
-          break
-        default:
-          string += value
-      }
-    }
-
-    return string + ']'
-  }
-
-  // guess the width of the console window, max-width 80.
-  function windowWidth () {
-    return wsize.width ? Math.min(80, wsize.width) : null
-  }
-
-  // logic for displaying application version.
-  var version = null
-  self.version = function (ver) {
-    version = ver
-  }
-
-  self.showVersion = function () {
-    if (typeof version === 'function') console.log(version())
-    else console.log(version)
-  }
-
-  self.reset = function (globalLookup) {
-    // do not reset wrap here
-    fails = []
-    failMessage = null
-    failureOutput = false
-    usage = undefined
-    epilog = undefined
-    examples = []
-    commands = []
-    descriptions = objFilter(descriptions, function (k, v) {
-      return globalLookup[k]
-    })
-    return self
-  }
-
-  return self
-}
-
-},{"./obj-filter":84,"cliui":9,"decamelize":12,"set-blocking":67,"string-width":72,"window-size":77}],86:[function(require,module,exports){
-const objFilter = require('./obj-filter')
-
-// validation-type-stuff, missing params,
-// bad implications, custom checks.
-module.exports = function (yargs, usage, y18n) {
-  const __ = y18n.__
-  const __n = y18n.__n
-  const self = {}
-
-  // validate appropriate # of non-option
-  // arguments were provided, i.e., '_'.
-  self.nonOptionCount = function (argv) {
-    const demanded = yargs.getDemanded()
-    const _s = argv._.length
-
-    if (demanded._ && (_s < demanded._.count || _s > demanded._.max)) {
-      if (demanded._.msg !== undefined) {
-        usage.fail(demanded._.msg)
-      } else if (_s < demanded._.count) {
-        usage.fail(
-          __('Not enough non-option arguments: got %s, need at least %s', argv._.length, demanded._.count)
-        )
-      } else {
-        usage.fail(
-          __('Too many non-option arguments: got %s, maximum of %s', argv._.length, demanded._.max)
-        )
-      }
-    }
-  }
-
-  // validate the appropriate # of <required>
-  // positional arguments were provided:
-  self.positionalCount = function (required, observed) {
-    if (observed < required) {
-      usage.fail(
-        __('Not enough non-option arguments: got %s, need at least %s', observed, required)
-      )
-    }
-  }
-
-  // make sure that any args that require an
-  // value (--foo=bar), have a value.
-  self.missingArgumentValue = function (argv) {
-    const defaultValues = [true, false, '']
-    const options = yargs.getOptions()
-
-    if (options.requiresArg.length > 0) {
-      const missingRequiredArgs = []
-
-      options.requiresArg.forEach(function (key) {
-        const value = argv[key]
-
-        // if a value is explicitly requested,
-        // flag argument as missing if it does not
-        // look like foo=bar was entered.
-        if (~defaultValues.indexOf(value) ||
-          (Array.isArray(value) && !value.length)) {
-          missingRequiredArgs.push(key)
-        }
-      })
-
-      if (missingRequiredArgs.length > 0) {
-        usage.fail(__n(
-          'Missing argument value: %s',
-          'Missing argument values: %s',
-          missingRequiredArgs.length,
-          missingRequiredArgs.join(', ')
-        ))
-      }
-    }
-  }
-
-  // make sure all the required arguments are present.
-  self.requiredArguments = function (argv) {
-    const demanded = yargs.getDemanded()
-    var missing = null
-
-    Object.keys(demanded).forEach(function (key) {
-      if (!argv.hasOwnProperty(key)) {
-        missing = missing || {}
-        missing[key] = demanded[key]
-      }
-    })
-
-    if (missing) {
-      const customMsgs = []
-      Object.keys(missing).forEach(function (key) {
-        const msg = missing[key].msg
-        if (msg && customMsgs.indexOf(msg) < 0) {
-          customMsgs.push(msg)
-        }
-      })
-
-      const customMsg = customMsgs.length ? '\n' + customMsgs.join('\n') : ''
-
-      usage.fail(__n(
-        'Missing required argument: %s',
-        'Missing required arguments: %s',
-        Object.keys(missing).length,
-        Object.keys(missing).join(', ') + customMsg
-      ))
-    }
-  }
-
-  // check for unknown arguments (strict-mode).
-  self.unknownArguments = function (argv, aliases) {
-    const aliasLookup = {}
-    const descriptions = usage.getDescriptions()
-    const demanded = yargs.getDemanded()
-    const commandKeys = yargs.getCommandInstance().getCommands()
-    const unknown = []
-    const currentContext = yargs.getContext()
-
-    Object.keys(aliases).forEach(function (key) {
-      aliases[key].forEach(function (alias) {
-        aliasLookup[alias] = key
-      })
-    })
-
-    Object.keys(argv).forEach(function (key) {
-      if (key !== '$0' && key !== '_' &&
-        !descriptions.hasOwnProperty(key) &&
-        !demanded.hasOwnProperty(key) &&
-        !aliasLookup.hasOwnProperty(key)) {
-        unknown.push(key)
-      }
-    })
-
-    if (commandKeys.length > 0) {
-      argv._.slice(currentContext.commands.length).forEach(function (key) {
-        if (commandKeys.indexOf(key) === -1) {
-          unknown.push(key)
-        }
-      })
-    }
-
-    if (unknown.length > 0) {
-      usage.fail(__n(
-        'Unknown argument: %s',
-        'Unknown arguments: %s',
-        unknown.length,
-        unknown.join(', ')
-      ))
-    }
-  }
-
-  // validate arguments limited to enumerated choices
-  self.limitedChoices = function (argv) {
-    const options = yargs.getOptions()
-    const invalid = {}
-
-    if (!Object.keys(options.choices).length) return
-
-    Object.keys(argv).forEach(function (key) {
-      if (key !== '$0' && key !== '_' &&
-        options.choices.hasOwnProperty(key)) {
-        [].concat(argv[key]).forEach(function (value) {
-          // TODO case-insensitive configurability
-          if (options.choices[key].indexOf(value) === -1) {
-            invalid[key] = (invalid[key] || []).concat(value)
-          }
-        })
-      }
-    })
-
-    const invalidKeys = Object.keys(invalid)
-
-    if (!invalidKeys.length) return
-
-    var msg = __('Invalid values:')
-    invalidKeys.forEach(function (key) {
-      msg += '\n  ' + __(
-        'Argument: %s, Given: %s, Choices: %s',
-        key,
-        usage.stringifiedValues(invalid[key]),
-        usage.stringifiedValues(options.choices[key])
-      )
-    })
-    usage.fail(msg)
-  }
-
-  // custom checks, added using the `check` option on yargs.
-  var checks = []
-  self.check = function (f) {
-    checks.push(f)
-  }
-
-  self.customChecks = function (argv, aliases) {
-    checks.forEach(function (f) {
-      try {
-        const result = f(argv, aliases)
-        if (!result) {
-          usage.fail(__('Argument check failed: %s', f.toString()))
-        } else if (typeof result === 'string') {
-          usage.fail(result)
-        }
-      } catch (err) {
-        usage.fail(err.message ? err.message : err, err)
-      }
-    })
-  }
-
-  // check implications, argument foo implies => argument bar.
-  var implied = {}
-  self.implies = function (key, value) {
-    if (typeof key === 'object') {
-      Object.keys(key).forEach(function (k) {
-        self.implies(k, key[k])
-      })
-    } else {
-      implied[key] = value
-    }
-  }
-  self.getImplied = function () {
-    return implied
-  }
-
-  self.implications = function (argv) {
-    const implyFail = []
-
-    Object.keys(implied).forEach(function (key) {
-      var booleanNegation
-      if (yargs.getOptions().configuration['boolean-negation'] === false) {
-        booleanNegation = false
-      } else {
-        booleanNegation = true
-      }
-      var num
-      const origKey = key
-      var value = implied[key]
-
-      // convert string '1' to number 1
-      num = Number(key)
-      key = isNaN(num) ? key : num
-
-      if (typeof key === 'number') {
-        // check length of argv._
-        key = argv._.length >= key
-      } else if (key.match(/^--no-.+/) && booleanNegation) {
-        // check if key doesn't exist
-        key = key.match(/^--no-(.+)/)[1]
-        key = !argv[key]
-      } else {
-        // check if key exists
-        key = argv[key]
-      }
-
-      num = Number(value)
-      value = isNaN(num) ? value : num
-
-      if (typeof value === 'number') {
-        value = argv._.length >= value
-      } else if (value.match(/^--no-.+/) && booleanNegation) {
-        value = value.match(/^--no-(.+)/)[1]
-        value = !argv[value]
-      } else {
-        value = argv[value]
-      }
-
-      if (key && !value) {
-        implyFail.push(origKey)
-      }
-    })
-
-    if (implyFail.length) {
-      var msg = __('Implications failed:') + '\n'
-
-      implyFail.forEach(function (key) {
-        msg += ('  ' + key + ' -> ' + implied[key])
-      })
-
-      usage.fail(msg)
-    }
-  }
-
-  self.reset = function (globalLookup) {
-    implied = objFilter(implied, function (k, v) {
-      return globalLookup[k]
-    })
-    checks = []
-    return self
-  }
-
-  return self
-}
-
-},{"./obj-filter":84}],87:[function(require,module,exports){
-var assign = require('lodash.assign')
+},{"fs":undefined,"path":undefined,"util":undefined}],79:[function(require,module,exports){
 var camelCase = require('camelcase')
 var path = require('path')
 var tokenizeArgString = require('./lib/tokenize-arg-string')
@@ -13312,12 +11609,14 @@ function parse (args, opts) {
   args = tokenizeArgString(args)
   // aliases might have transitive relationships, normalize this.
   var aliases = combineAliases(opts.alias || {})
-  var configuration = assign({}, {
+  var configuration = assign({
     'short-option-groups': true,
     'camel-case-expansion': true,
     'dot-notation': true,
     'parse-numbers': true,
-    'boolean-negation': true
+    'boolean-negation': true,
+    'duplicate-arguments-array': true,
+    'flatten-duplicate-arrays': true
   }, opts.configuration)
   var defaults = opts.default || {}
   var configObjects = opts.configObjects || []
@@ -13338,8 +11637,10 @@ function parse (args, opts) {
     normalize: {},
     configs: {},
     defaulted: {},
-    nargs: {}
+    nargs: {},
+    coercions: {}
   }
+  var negative = /^-[0-9]+(\.[0-9]+)?/
 
   ;[].concat(opts.array).filter(Boolean).forEach(function (key) {
     flags.arrays[key] = true
@@ -13367,6 +11668,10 @@ function parse (args, opts) {
 
   Object.keys(opts.narg || {}).forEach(function (k) {
     flags.nargs[k] = opts.narg[k]
+  })
+
+  Object.keys(opts.coerce || {}).forEach(function (k) {
+    flags.coercions[k] = opts.coerce[k]
   })
 
   if (Array.isArray(opts.config) || typeof opts.config === 'string') {
@@ -13451,7 +11756,8 @@ function parse (args, opts) {
       } else {
         next = args[i + 1]
 
-        if (next !== undefined && !next.match(/^-/) &&
+        if (next !== undefined && (!next.match(/^-/) ||
+          next.match(negative)) &&
           !checkAllAliases(key, flags.bools) &&
           !checkAllAliases(key, flags.counts)) {
           setArg(key, next)
@@ -13482,7 +11788,7 @@ function parse (args, opts) {
       } else {
         setArg(key, defaultForType(guessType(key, flags)))
       }
-    } else if (arg.match(/^-[^-]+/)) {
+    } else if (arg.match(/^-[^-]+/) && !arg.match(negative)) {
       letters = arg.slice(1, -1).split('')
       broken = false
 
@@ -13514,8 +11820,9 @@ function parse (args, opts) {
           continue
         }
 
+        // current letter is an alphabetic character and next value is a number
         if (/[A-Za-z]/.test(letters[j]) &&
-          /-?\d+(\.\d*)?(e-?\d+)?$/.test(next)) {
+          /^-?\d+(\.\d*)?(e-?\d+)?$/.test(next)) {
           setArg(letters[j], next)
           broken = true
           break
@@ -13542,7 +11849,8 @@ function parse (args, opts) {
         } else {
           next = args[i + 1]
 
-          if (next !== undefined && !/^(-|--)[^-]/.test(next) &&
+          if (next !== undefined && (!/^(-|--)[^-]/.test(next) ||
+            next.match(negative)) &&
             !checkAllAliases(key, flags.bools) &&
             !checkAllAliases(key, flags.counts)) {
             setArg(key, next)
@@ -13564,15 +11872,16 @@ function parse (args, opts) {
 
   // order of precedence:
   // 1. command line arg
-  // 2. value from config file
-  // 3. value from config objects
-  // 4. value from env var
+  // 2. value from env var
+  // 3. value from config file
+  // 4. value from config objects
   // 5. configured default value
   applyEnvVars(argv, true) // special case: check env vars that point to config file
+  applyEnvVars(argv, false)
   setConfig(argv)
   setConfigObjects()
-  applyEnvVars(argv, false)
   applyDefaultsAndAliases(argv, flags.aliases, defaults)
+  applyCoercions(argv)
 
   // for any counts either not in args or without an explicit default, set to 0
   Object.keys(flags.counts).forEach(function (key) {
@@ -13602,15 +11911,27 @@ function parse (args, opts) {
   // e.g., --foo apple banana cat becomes ["apple", "banana", "cat"]
   function eatArray (i, key, args) {
     var start = i + 1
+    var argsToSet = []
+    var multipleArrayFlag = i > 0
     for (var ii = i + 1; ii < args.length; ii++) {
-      if (/^-/.test(args[ii])) {
+      if (/^-/.test(args[ii]) && !negative.test(args[ii])) {
         if (ii === start) {
           setArg(key, defaultForType('array'))
         }
+        multipleArrayFlag = true
         break
       }
       i = ii
-      setArg(key, args[ii])
+      argsToSet.push(args[ii])
+    }
+    if (multipleArrayFlag) {
+      setArg(key, argsToSet.map(function (arg) {
+        return processValue(key, arg)
+      }))
+    } else {
+      argsToSet.forEach(function (arg) {
+        setArg(key, arg)
+      })
     }
 
     return i
@@ -13619,32 +11940,13 @@ function parse (args, opts) {
   function setArg (key, val) {
     unsetDefaulted(key)
 
-    // handle parsing boolean arguments --foo=true --bar false.
-    if (checkAllAliases(key, flags.bools) || checkAllAliases(key, flags.counts)) {
-      if (typeof val === 'string') val = val === 'true'
-    }
-
     if (/-/.test(key) && !(flags.aliases[key] && flags.aliases[key].length) && configuration['camel-case-expansion']) {
       var c = camelCase(key)
       flags.aliases[key] = [c]
       newAliases[c] = true
     }
 
-    var value = val
-    if (!checkAllAliases(key, flags.strings)) {
-      if (isNumber(val)) value = Number(val)
-      if (!isUndefined(val) && !isNumber(val) && checkAllAliases(key, flags.numbers)) value = NaN
-    }
-
-    // increment a count given as arg (either no value or value parsed as boolean)
-    if (checkAllAliases(key, flags.counts) && (isUndefined(value) || typeof value === 'boolean')) {
-      value = increment
-    }
-
-    // Set normalized value when key is in 'normalize' and in 'arrays'
-    if (checkAllAliases(key, flags.normalize) && checkAllAliases(key, flags.arrays)) {
-      value = path.normalize(val)
-    }
+    var value = processValue(key, val)
 
     var splitKey = key.split('.')
     setKey(argv, splitKey, value)
@@ -13684,6 +11986,31 @@ function parse (args, opts) {
         })
       })
     }
+  }
+
+  function processValue (key, val) {
+    // handle parsing boolean arguments --foo=true --bar false.
+    if (checkAllAliases(key, flags.bools) || checkAllAliases(key, flags.counts)) {
+      if (typeof val === 'string') val = val === 'true'
+    }
+
+    var value = val
+    if (!checkAllAliases(key, flags.strings) && !checkAllAliases(key, flags.coercions)) {
+      if (isNumber(val)) value = Number(val)
+      if (!isUndefined(val) && !isNumber(val) && checkAllAliases(key, flags.numbers)) value = NaN
+    }
+
+    // increment a count given as arg (either no value or value parsed as boolean)
+    if (checkAllAliases(key, flags.counts) && (isUndefined(value) || typeof value === 'boolean')) {
+      value = increment
+    }
+
+    // Set normalized value when key is in 'normalize' and in 'arrays'
+    if (checkAllAliases(key, flags.normalize) && checkAllAliases(key, flags.arrays)) {
+      if (Array.isArray(val)) value = val.map(path.normalize)
+      else value = path.normalize(val)
+    }
+    return value
   }
 
   // set args from config.json file, this should be
@@ -13731,7 +12058,10 @@ function parse (args, opts) {
       var value = config[key]
       var fullKey = prev ? prev + '.' + key : key
 
-      if (Object.prototype.toString.call(value) === '[object Object]') {
+      // if the value is an inner object and we have dot-notation
+      // enabled, treat inner objects in config the same as
+      // heavily nested dot notations (foo.bar.apple).
+      if (typeof value === 'object' && !Array.isArray(value) && configuration['dot-notation']) {
         // if the value is an object but not an array, check nested object
         setConfigObject(value, fullKey)
       } else {
@@ -13768,6 +12098,20 @@ function parse (args, opts) {
 
         if (((configOnly && flags.configs[keys.join('.')]) || !configOnly) && (!hasKey(argv, keys) || flags.defaulted[keys.join('.')])) {
           setArg(keys.join('.'), process.env[envVar])
+        }
+      }
+    })
+  }
+
+  function applyCoercions (argv) {
+    var coerce
+    Object.keys(argv).forEach(function (key) {
+      coerce = checkAllAliases(key, flags.coercions)
+      if (typeof coerce === 'function') {
+        try {
+          argv[key] = coerce(argv[key])
+        } catch (err) {
+          error = err
         }
       }
     })
@@ -13813,16 +12157,26 @@ function parse (args, opts) {
 
     var key = keys[keys.length - 1]
 
+    var isTypeArray = checkAllAliases(key, flags.arrays)
+    var isValueArray = Array.isArray(value)
+    var duplicate = configuration['duplicate-arguments-array']
+
     if (value === increment) {
       o[key] = increment(o[key])
-    } else if (o[key] === undefined && checkAllAliases(key, flags.arrays)) {
-      o[key] = Array.isArray(value) ? value : [value]
-    } else if (o[key] === undefined || checkAllAliases(key, flags.bools) || checkAllAliases(key, flags.counts)) {
-      o[key] = value
     } else if (Array.isArray(o[key])) {
-      o[key].push(value)
-    } else {
+      if (duplicate && isTypeArray && isValueArray) {
+        o[key] = configuration['flatten-duplicate-arrays'] ? o[key].concat(value) : [o[key]].concat([value])
+      } else if (!duplicate && Boolean(isTypeArray) === Boolean(isValueArray)) {
+        o[key] = value
+      } else {
+        o[key] = o[key].concat([value])
+      }
+    } else if (o[key] === undefined && isTypeArray) {
+      o[key] = isValueArray ? value : [value]
+    } else if (duplicate && !(o[key] === undefined || checkAllAliases(key, flags.bools) || checkAllAliases(keys.join('.'), flags.bools) || checkAllAliases(key, flags.counts))) {
       o[key] = [ o[key], value ]
+    } else {
+      o[key] = value
     }
   }
 
@@ -13894,9 +12248,9 @@ function parse (args, opts) {
   function guessType (key, flags) {
     var type = 'boolean'
 
-    if (flags.strings && flags.strings[key]) type = 'string'
-    else if (flags.numbers && flags.numbers[key]) type = 'number'
-    else if (flags.arrays && flags.arrays[key]) type = 'array'
+    if (checkAllAliases(key, flags.strings)) type = 'string'
+    else if (checkAllAliases(key, flags.numbers)) type = 'number'
+    else if (checkAllAliases(key, flags.arrays)) type = 'array'
 
     return type
   }
@@ -13968,6 +12322,20 @@ function combineAliases (aliases) {
   return combined
 }
 
+function assign (defaults, configuration) {
+  var o = {}
+  configuration = configuration || {}
+
+  Object.keys(defaults).forEach(function (k) {
+    o[k] = defaults[k]
+  })
+  Object.keys(configuration).forEach(function (k) {
+    o[k] = configuration[k]
+  })
+
+  return o
+}
+
 // this function should only be called when a count is given as an arg
 // it is NOT called to set a default value
 // thus we can start the count at 1 instead of 0
@@ -13989,7 +12357,7 @@ Parser.detailed = function (args, opts) {
 
 module.exports = Parser
 
-},{"./lib/tokenize-arg-string":88,"camelcase":6,"lodash.assign":42,"path":undefined,"util":undefined}],88:[function(require,module,exports){
+},{"./lib/tokenize-arg-string":80,"camelcase":6,"path":undefined,"util":undefined}],80:[function(require,module,exports){
 // take an un-split argv string and tokenize it.
 module.exports = function (argString) {
   if (Array.isArray(argString)) return argString
@@ -14025,10 +12393,1550 @@ module.exports = function (argString) {
   return args
 }
 
-},{}],89:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
+// classic singleton yargs API, to use yargs
+// without running as a singleton do:
+// require('yargs/yargs')(process.argv.slice(2))
+const yargs = require('./yargs')
+
+Argv(process.argv.slice(2))
+
+module.exports = Argv
+
+function Argv (processArgs, cwd) {
+  const argv = yargs(processArgs, cwd, require)
+  singletonify(argv)
+  return argv
+}
+
+/*  Hack an instance of Argv with process.argv into Argv
+    so people can do
+    require('yargs')(['--beeble=1','-z','zizzle']).argv
+    to parse a list of args and
+    require('yargs').argv
+    to get a parsed version of process.argv.
+*/
+function singletonify (inst) {
+  Object.keys(inst).forEach(function (key) {
+    if (key === 'argv') {
+      Argv.__defineGetter__(key, inst.__lookupGetter__(key))
+    } else {
+      Argv[key] = typeof inst[key] === 'function' ? inst[key].bind(inst) : inst[key]
+    }
+  })
+}
+
+},{"./yargs":92}],82:[function(require,module,exports){
+var fs = require('fs')
+var path = require('path')
+var assign = require('./assign')
+var YError = require('./yerror')
+
+var previouslyVisitedConfigs = []
+
+function checkForCircularExtends (path) {
+  if (previouslyVisitedConfigs.indexOf(path) > -1) {
+    throw new YError("Circular extended configurations: '" + path + "'.")
+  }
+}
+
+function getPathToDefaultConfig (cwd, pathToExtend) {
+  return path.resolve(cwd, pathToExtend)
+}
+
+function applyExtends (config, cwd, subKey) {
+  var defaultConfig = {}
+
+  if (config.hasOwnProperty('extends')) {
+    var pathToDefault = getPathToDefaultConfig(cwd, config.extends)
+
+    checkForCircularExtends(pathToDefault)
+
+    previouslyVisitedConfigs.push(pathToDefault)
+    delete config.extends
+
+    defaultConfig = JSON.parse(fs.readFileSync(pathToDefault, 'utf8'))
+    if (subKey) {
+      defaultConfig = defaultConfig[subKey] || {}
+    }
+    defaultConfig = applyExtends(defaultConfig, path.dirname(pathToDefault), subKey)
+  }
+
+  previouslyVisitedConfigs = []
+
+  return assign(defaultConfig, config)
+}
+
+module.exports = applyExtends
+
+},{"./assign":84,"./yerror":91,"fs":undefined,"path":undefined}],83:[function(require,module,exports){
+const command = require('./command')()
+const YError = require('./yerror')
+
+const positionName = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth']
+
+module.exports = function (expected, callerArguments, length) {
+  // TODO: should this eventually raise an exception.
+  try {
+    // preface the argument description with "cmd", so
+    // that we can run it through yargs' command parser.
+    var position = 0
+    var parsed = {demanded: [], optional: []}
+    if (typeof expected === 'object') {
+      length = callerArguments
+      callerArguments = expected
+    } else {
+      parsed = command.parseCommand('cmd ' + expected)
+    }
+    const args = [].slice.call(callerArguments)
+
+    while (args.length && args[args.length - 1] === undefined) args.pop()
+    length = length || args.length
+
+    if (length < parsed.demanded.length) {
+      throw new YError('Not enough arguments provided. Expected ' + parsed.demanded.length +
+        ' but received ' + args.length + '.')
+    }
+
+    const totalCommands = parsed.demanded.length + parsed.optional.length
+    if (length > totalCommands) {
+      throw new YError('Too many arguments provided. Expected max ' + totalCommands +
+        ' but received ' + length + '.')
+    }
+
+    parsed.demanded.forEach(function (demanded) {
+      const arg = args.shift()
+      const observedType = guessType(arg)
+      const matchingTypes = demanded.cmd.filter(function (type) {
+        return type === observedType || type === '*'
+      })
+      if (matchingTypes.length === 0) argumentTypeError(observedType, demanded.cmd, position, false)
+      position += 1
+    })
+
+    parsed.optional.forEach(function (optional) {
+      if (args.length === 0) return
+      const arg = args.shift()
+      const observedType = guessType(arg)
+      const matchingTypes = optional.cmd.filter(function (type) {
+        return type === observedType || type === '*'
+      })
+      if (matchingTypes.length === 0) argumentTypeError(observedType, optional.cmd, position, true)
+      position += 1
+    })
+  } catch (err) {
+    console.warn(err.stack)
+  }
+}
+
+function guessType (arg) {
+  if (Array.isArray(arg)) {
+    return 'array'
+  } else if (arg === null) {
+    return 'null'
+  }
+  return typeof arg
+}
+
+function argumentTypeError (observedType, allowedTypes, position, optional) {
+  throw new YError('Invalid ' + (positionName[position] || 'manyith') + ' argument.' +
+    ' Expected ' + allowedTypes.join(' or ') + ' but received ' + observedType + '.')
+}
+
+},{"./command":85,"./yerror":91}],84:[function(require,module,exports){
+// lazy Object.assign logic that only works for merging
+// two objects; eventually we should replace this with Object.assign.
+module.exports = function assign (defaults, configuration) {
+  var o = {}
+  configuration = configuration || {}
+
+  Object.keys(defaults).forEach(function (k) {
+    o[k] = defaults[k]
+  })
+  Object.keys(configuration).forEach(function (k) {
+    o[k] = configuration[k]
+  })
+
+  return o
+}
+
+},{}],85:[function(require,module,exports){
+const path = require('path')
+const inspect = require('util').inspect
+const camelCase = require('camelcase')
+
+const DEFAULT_MARKER = '*'
+
+// handles parsing positional arguments,
+// and populating argv with said positional
+// arguments.
+module.exports = function (yargs, usage, validation) {
+  const self = {}
+
+  var handlers = {}
+  var aliasMap = {}
+  var defaultCommand
+  self.addHandler = function (cmd, description, builder, handler) {
+    var aliases = []
+    if (Array.isArray(cmd)) {
+      aliases = cmd.slice(1)
+      cmd = cmd[0]
+    } else if (typeof cmd === 'object') {
+      var command = (Array.isArray(cmd.command) || typeof cmd.command === 'string') ? cmd.command : moduleName(cmd)
+      if (cmd.aliases) command = [].concat(command).concat(cmd.aliases)
+      self.addHandler(command, extractDesc(cmd), cmd.builder, cmd.handler)
+      return
+    }
+
+    // allow a module to be provided instead of separate builder and handler
+    if (typeof builder === 'object' && builder.builder && typeof builder.handler === 'function') {
+      self.addHandler([cmd].concat(aliases), description, builder.builder, builder.handler)
+      return
+    }
+
+    // parse positionals out of cmd string
+    var parsedCommand = self.parseCommand(cmd)
+
+    // remove positional args from aliases only
+    aliases = aliases.map(function (alias) {
+      return self.parseCommand(alias).cmd
+    })
+
+    // check for default and filter out '*''
+    var isDefault = false
+    var parsedAliases = [parsedCommand.cmd].concat(aliases).filter(function (c) {
+      if (c === DEFAULT_MARKER) {
+        isDefault = true
+        return false
+      }
+      return true
+    })
+
+    // short-circuit if default with no aliases
+    if (isDefault && parsedAliases.length === 0) {
+      defaultCommand = {
+        original: cmd.replace(DEFAULT_MARKER, '').trim(),
+        handler: handler,
+        builder: builder || {},
+        demanded: parsedCommand.demanded,
+        optional: parsedCommand.optional
+      }
+      return
+    }
+
+    // shift cmd and aliases after filtering out '*'
+    if (isDefault) {
+      parsedCommand.cmd = parsedAliases[0]
+      aliases = parsedAliases.slice(1)
+      cmd = cmd.replace(DEFAULT_MARKER, parsedCommand.cmd)
+    }
+
+    // populate aliasMap
+    aliases.forEach(function (alias) {
+      aliasMap[alias] = parsedCommand.cmd
+    })
+
+    if (description !== false) {
+      usage.command(cmd, description, isDefault, aliases)
+    }
+
+    handlers[parsedCommand.cmd] = {
+      original: cmd,
+      handler: handler,
+      builder: builder || {},
+      demanded: parsedCommand.demanded,
+      optional: parsedCommand.optional
+    }
+
+    if (isDefault) defaultCommand = handlers[parsedCommand.cmd]
+  }
+
+  self.addDirectory = function (dir, context, req, callerFile, opts) {
+    opts = opts || {}
+    // disable recursion to support nested directories of subcommands
+    if (typeof opts.recurse !== 'boolean') opts.recurse = false
+    // exclude 'json', 'coffee' from require-directory defaults
+    if (!Array.isArray(opts.extensions)) opts.extensions = ['js']
+    // allow consumer to define their own visitor function
+    const parentVisit = typeof opts.visit === 'function' ? opts.visit : function (o) { return o }
+    // call addHandler via visitor function
+    opts.visit = function (obj, joined, filename) {
+      const visited = parentVisit(obj, joined, filename)
+      // allow consumer to skip modules with their own visitor
+      if (visited) {
+        // check for cyclic reference
+        // each command file path should only be seen once per execution
+        if (~context.files.indexOf(joined)) return visited
+        // keep track of visited files in context.files
+        context.files.push(joined)
+        self.addHandler(visited)
+      }
+      return visited
+    }
+    require('require-directory')({ require: req, filename: callerFile }, dir, opts)
+  }
+
+  // lookup module object from require()d command and derive name
+  // if module was not require()d and no name given, throw error
+  function moduleName (obj) {
+    const mod = require('which-module')(obj)
+    if (!mod) throw new Error('No command name given for module: ' + inspect(obj))
+    return commandFromFilename(mod.filename)
+  }
+
+  // derive command name from filename
+  function commandFromFilename (filename) {
+    return path.basename(filename, path.extname(filename))
+  }
+
+  function extractDesc (obj) {
+    for (var keys = ['describe', 'description', 'desc'], i = 0, l = keys.length, test; i < l; i++) {
+      test = obj[keys[i]]
+      if (typeof test === 'string' || typeof test === 'boolean') return test
+    }
+    return false
+  }
+
+  self.parseCommand = function (cmd) {
+    var extraSpacesStrippedCommand = cmd.replace(/\s{2,}/g, ' ')
+    var splitCommand = extraSpacesStrippedCommand.split(/\s+(?![^[]*]|[^<]*>)/)
+    var bregex = /\.*[\][<>]/g
+    var parsedCommand = {
+      cmd: (splitCommand.shift()).replace(bregex, ''),
+      demanded: [],
+      optional: []
+    }
+    splitCommand.forEach(function (cmd, i) {
+      var variadic = false
+      cmd = cmd.replace(/\s/g, '')
+      if (/\.+[\]>]/.test(cmd) && i === splitCommand.length - 1) variadic = true
+      if (/^\[/.test(cmd)) {
+        parsedCommand.optional.push({
+          cmd: cmd.replace(bregex, '').split('|'),
+          variadic: variadic
+        })
+      } else {
+        parsedCommand.demanded.push({
+          cmd: cmd.replace(bregex, '').split('|'),
+          variadic: variadic
+        })
+      }
+    })
+    return parsedCommand
+  }
+
+  self.getCommands = function () {
+    return Object.keys(handlers).concat(Object.keys(aliasMap))
+  }
+
+  self.getCommandHandlers = function () {
+    return handlers
+  }
+
+  self.hasDefaultCommand = function () {
+    return !!defaultCommand
+  }
+
+  self.runCommand = function (command, yargs, parsed) {
+    var aliases = parsed.aliases
+    var commandHandler = handlers[command] || handlers[aliasMap[command]] || defaultCommand
+    var currentContext = yargs.getContext()
+    var numFiles = currentContext.files.length
+    var parentCommands = currentContext.commands.slice()
+
+    // what does yargs look like after the buidler is run?
+    var innerArgv = parsed.argv
+    var innerYargs = null
+    var positionalMap = {}
+
+    if (command) currentContext.commands.push(command)
+    if (typeof commandHandler.builder === 'function') {
+      // a function can be provided, which builds
+      // up a yargs chain and possibly returns it.
+      innerYargs = commandHandler.builder(yargs.reset(parsed.aliases))
+      // if the builder function did not yet parse argv with reset yargs
+      // and did not explicitly set a usage() string, then apply the
+      // original command string as usage() for consistent behavior with
+      // options object below.
+      if (yargs.parsed === false) {
+        if (typeof yargs.getUsageInstance().getUsage() === 'undefined') {
+          yargs.usage('$0 ' + (parentCommands.length ? parentCommands.join(' ') + ' ' : '') + commandHandler.original)
+        }
+        innerArgv = innerYargs ? innerYargs._parseArgs(null, null, true) : yargs._parseArgs(null, null, true)
+      } else {
+        innerArgv = yargs.parsed.argv
+      }
+
+      if (innerYargs && yargs.parsed === false) aliases = innerYargs.parsed.aliases
+      else aliases = yargs.parsed.aliases
+    } else if (typeof commandHandler.builder === 'object') {
+      // as a short hand, an object can instead be provided, specifying
+      // the options that a command takes.
+      innerYargs = yargs.reset(parsed.aliases)
+      innerYargs.usage('$0 ' + (parentCommands.length ? parentCommands.join(' ') + ' ' : '') + commandHandler.original)
+      Object.keys(commandHandler.builder).forEach(function (key) {
+        innerYargs.option(key, commandHandler.builder[key])
+      })
+      innerArgv = innerYargs._parseArgs(null, null, true)
+      aliases = innerYargs.parsed.aliases
+    }
+
+    if (!yargs._hasOutput()) {
+      positionalMap = populatePositionals(commandHandler, innerArgv, currentContext, yargs)
+    }
+
+    // we apply validation post-hoc, so that custom
+    // checks get passed populated positional arguments.
+    if (!yargs._hasOutput()) yargs._runValidation(innerArgv, aliases, positionalMap, yargs.parsed.error)
+
+    if (commandHandler.handler && !yargs._hasOutput()) {
+      yargs._setHasOutput()
+      commandHandler.handler(innerArgv)
+    }
+
+    if (command) currentContext.commands.pop()
+    numFiles = currentContext.files.length - numFiles
+    if (numFiles > 0) currentContext.files.splice(numFiles * -1, numFiles)
+
+    return innerArgv
+  }
+
+  // transcribe all positional arguments "command <foo> <bar> [apple]"
+  // onto argv.
+  function populatePositionals (commandHandler, argv, context, yargs) {
+    argv._ = argv._.slice(context.commands.length) // nuke the current commands
+    var demanded = commandHandler.demanded.slice(0)
+    var optional = commandHandler.optional.slice(0)
+    var positionalMap = {}
+
+    validation.positionalCount(demanded.length, argv._.length)
+
+    while (demanded.length) {
+      var demand = demanded.shift()
+      populatePositional(demand, argv, yargs, positionalMap)
+    }
+
+    while (optional.length) {
+      var maybe = optional.shift()
+      populatePositional(maybe, argv, yargs, positionalMap)
+    }
+
+    argv._ = context.commands.concat(argv._)
+    return positionalMap
+  }
+
+  // populate a single positional argument and its
+  // aliases onto argv.
+  function populatePositional (positional, argv, yargs, positionalMap) {
+    // "positional" consists of the positional.cmd, an array representing
+    // the positional's name and aliases, and positional.variadic
+    // indicating whether or not it is a variadic array.
+    var variadics = null
+    var value = null
+    for (var i = 0, cmd; (cmd = positional.cmd[i]) !== undefined; i++) {
+      if (positional.variadic) {
+        if (variadics) argv[cmd] = variadics.slice(0)
+        else argv[cmd] = variadics = argv._.splice(0)
+      } else {
+        if (!value && !argv._.length) continue
+        if (value) argv[cmd] = value
+        else argv[cmd] = value = argv._.shift()
+      }
+      positionalMap[cmd] = true
+      postProcessPositional(yargs, argv, cmd)
+      addCamelCaseExpansions(argv, cmd)
+    }
+  }
+
+  // TODO move positional arg logic to yargs-parser and remove this duplication
+  function postProcessPositional (yargs, argv, key) {
+    var coerce = yargs.getOptions().coerce[key]
+    if (typeof coerce === 'function') {
+      try {
+        argv[key] = coerce(argv[key])
+      } catch (err) {
+        yargs.getUsageInstance().fail(err.message, err)
+      }
+    }
+  }
+
+  function addCamelCaseExpansions (argv, option) {
+    if (/-/.test(option)) {
+      const cc = camelCase(option)
+      if (typeof argv[option] === 'object') argv[cc] = argv[option].slice(0)
+      else argv[cc] = argv[option]
+    }
+  }
+
+  self.reset = function () {
+    handlers = {}
+    aliasMap = {}
+    defaultCommand = undefined
+    return self
+  }
+
+  // used by yargs.parse() to freeze
+  // the state of commands such that
+  // we can apply .parse() multiple times
+  // with the same yargs instance.
+  var frozen
+  self.freeze = function () {
+    frozen = {}
+    frozen.handlers = handlers
+    frozen.aliasMap = aliasMap
+    frozen.defaultCommand = defaultCommand
+  }
+  self.unfreeze = function () {
+    handlers = frozen.handlers
+    aliasMap = frozen.aliasMap
+    defaultCommand = frozen.defaultCommand
+    frozen = undefined
+  }
+
+  return self
+}
+
+},{"camelcase":6,"path":undefined,"require-directory":62,"util":undefined,"which-module":75}],86:[function(require,module,exports){
 (function (__dirname){
-const assert = require('assert')
-const assign = require('lodash.assign')
+const fs = require('fs')
+const path = require('path')
+
+// add bash completions to your
+//  yargs-powered applications.
+module.exports = function (yargs, usage, command) {
+  const self = {
+    completionKey: 'get-yargs-completions'
+  }
+
+  // get a list of completion commands.
+  // 'args' is the array of strings from the line to be completed
+  self.getCompletion = function (args, done) {
+    const completions = []
+    const current = args.length ? args[args.length - 1] : ''
+    const argv = yargs.parse(args, true)
+    const aliases = yargs.parsed.aliases
+
+    // a custom completion function can be provided
+    // to completion().
+    if (completionFunction) {
+      if (completionFunction.length < 3) {
+        var result = completionFunction(current, argv)
+
+        // promise based completion function.
+        if (typeof result.then === 'function') {
+          return result.then(function (list) {
+            process.nextTick(function () { done(list) })
+          }).catch(function (err) {
+            process.nextTick(function () { throw err })
+          })
+        }
+
+        // synchronous completion function.
+        return done(result)
+      } else {
+        // asynchronous completion function
+        return completionFunction(current, argv, function (completions) {
+          done(completions)
+        })
+      }
+    }
+
+    var handlers = command.getCommandHandlers()
+    for (var i = 0, ii = args.length; i < ii; ++i) {
+      if (handlers[args[i]] && handlers[args[i]].builder) {
+        const builder = handlers[args[i]].builder
+        if (typeof builder === 'function') {
+          const y = yargs.reset()
+          builder(y)
+          return y.argv
+        }
+      }
+    }
+
+    if (!current.match(/^-/)) {
+      usage.getCommands().forEach(function (command) {
+        if (args.indexOf(command[0]) === -1) {
+          completions.push(command[0])
+        }
+      })
+    }
+
+    if (current.match(/^-/)) {
+      Object.keys(yargs.getOptions().key).forEach(function (key) {
+        // If the key and its aliases aren't in 'args', add the key to 'completions'
+        var keyAndAliases = [key].concat(aliases[key] || [])
+        var notInArgs = keyAndAliases.every(function (val) {
+          return args.indexOf('--' + val) === -1
+        })
+        if (notInArgs) {
+          completions.push('--' + key)
+        }
+      })
+    }
+
+    done(completions)
+  }
+
+  // generate the completion script to add to your .bashrc.
+  self.generateCompletionScript = function ($0) {
+    var script = fs.readFileSync(
+      path.resolve(__dirname, '../completion.sh.hbs'),
+      'utf-8'
+    )
+    var name = path.basename($0)
+
+    // add ./to applications not yet installed as bin.
+    if ($0.match(/\.js$/)) $0 = './' + $0
+
+    script = script.replace(/{{app_name}}/g, name)
+    return script.replace(/{{app_path}}/g, $0)
+  }
+
+  // register a function to perform your own custom
+  // completions., this function can be either
+  // synchrnous or asynchronous.
+  var completionFunction = null
+  self.registerFunction = function (fn) {
+    completionFunction = fn
+  }
+
+  return self
+}
+
+}).call(this,"/Users/mrw/git/rexreplace/node_modules/yargs/lib")
+},{"fs":undefined,"path":undefined}],87:[function(require,module,exports){
+/*
+Copyright (c) 2011 Andrei Mackenzie
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+// levenshtein distance algorithm, pulled from Andrei Mackenzie's MIT licensed.
+// gist, which can be found here: https://gist.github.com/andrei-m/982927
+
+// Compute the edit distance between the two given strings
+module.exports = function (a, b) {
+  if (a.length === 0) return b.length
+  if (b.length === 0) return a.length
+
+  var matrix = []
+
+  // increment along the first column of each row
+  var i
+  for (i = 0; i <= b.length; i++) {
+    matrix[i] = [i]
+  }
+
+  // increment each column in the first row
+  var j
+  for (j = 0; j <= a.length; j++) {
+    matrix[0][j] = j
+  }
+
+  // Fill in the rest of the matrix
+  for (i = 1; i <= b.length; i++) {
+    for (j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1]
+      } else {
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, // substitution
+                                Math.min(matrix[i][j - 1] + 1, // insertion
+                                         matrix[i - 1][j] + 1)) // deletion
+      }
+    }
+  }
+
+  return matrix[b.length][a.length]
+}
+
+},{}],88:[function(require,module,exports){
+module.exports = function (original, filter) {
+  const obj = {}
+  filter = filter || function (k, v) { return true }
+  Object.keys(original || {}).forEach(function (key) {
+    if (filter(key, original[key])) {
+      obj[key] = original[key]
+    }
+  })
+  return obj
+}
+
+},{}],89:[function(require,module,exports){
+// this file handles outputting usage instructions,
+// failures, etc. keeps logging in one place.
+const stringWidth = require('string-width')
+const objFilter = require('./obj-filter')
+const setBlocking = require('set-blocking')
+const YError = require('./yerror')
+
+module.exports = function (yargs, y18n) {
+  const __ = y18n.__
+  const self = {}
+
+  // methods for ouputting/building failure message.
+  var fails = []
+  self.failFn = function (f) {
+    fails.push(f)
+  }
+
+  var failMessage = null
+  var showHelpOnFail = true
+  self.showHelpOnFail = function (enabled, message) {
+    if (typeof enabled === 'string') {
+      message = enabled
+      enabled = true
+    } else if (typeof enabled === 'undefined') {
+      enabled = true
+    }
+    failMessage = message
+    showHelpOnFail = enabled
+    return self
+  }
+
+  var failureOutput = false
+  self.fail = function (msg, err) {
+    const logger = yargs._getLoggerInstance()
+
+    if (fails.length) {
+      for (var i = fails.length - 1; i >= 0; --i) {
+        fails[i](msg, err, self)
+      }
+    } else {
+      if (yargs.getExitProcess()) setBlocking(true)
+
+      // don't output failure message more than once
+      if (!failureOutput) {
+        failureOutput = true
+        if (showHelpOnFail) yargs.showHelp('error')
+        if (msg) logger.error(msg)
+        if (failMessage) {
+          if (msg) logger.error('')
+          logger.error(failMessage)
+        }
+      }
+
+      err = err || new YError(msg)
+      if (yargs.getExitProcess()) {
+        return yargs.exit(1)
+      } else if (yargs._hasParseCallback()) {
+        return yargs.exit(1, err)
+      } else {
+        throw err
+      }
+    }
+  }
+
+  // methods for ouputting/building help (usage) message.
+  var usage
+  self.usage = function (msg) {
+    usage = msg
+  }
+  self.getUsage = function () {
+    return usage
+  }
+
+  var examples = []
+  self.example = function (cmd, description) {
+    examples.push([cmd, description || ''])
+  }
+
+  var commands = []
+  self.command = function (cmd, description, isDefault, aliases) {
+    // the last default wins, so cancel out any previously set default
+    if (isDefault) {
+      commands = commands.map(function (cmdArray) {
+        cmdArray[2] = false
+        return cmdArray
+      })
+    }
+    commands.push([cmd, description || '', isDefault, aliases])
+  }
+  self.getCommands = function () {
+    return commands
+  }
+
+  var descriptions = {}
+  self.describe = function (key, desc) {
+    if (typeof key === 'object') {
+      Object.keys(key).forEach(function (k) {
+        self.describe(k, key[k])
+      })
+    } else {
+      descriptions[key] = desc
+    }
+  }
+  self.getDescriptions = function () {
+    return descriptions
+  }
+
+  var epilog
+  self.epilog = function (msg) {
+    epilog = msg
+  }
+
+  var wrapSet = false
+  var wrap
+  self.wrap = function (cols) {
+    wrapSet = true
+    wrap = cols
+  }
+
+  function getWrap () {
+    if (!wrapSet) {
+      wrap = windowWidth()
+      wrapSet = true
+    }
+
+    return wrap
+  }
+
+  var deferY18nLookupPrefix = '__yargsString__:'
+  self.deferY18nLookup = function (str) {
+    return deferY18nLookupPrefix + str
+  }
+
+  var defaultGroup = 'Options:'
+  self.help = function () {
+    normalizeAliases()
+
+    // handle old demanded API
+    var demandedOptions = yargs.getDemandedOptions()
+    var demandedCommands = yargs.getDemandedCommands()
+    var groups = yargs.getGroups()
+    var options = yargs.getOptions()
+    var keys = Object.keys(
+      Object.keys(descriptions)
+      .concat(Object.keys(demandedOptions))
+      .concat(Object.keys(demandedCommands))
+      .concat(Object.keys(options.default))
+      .reduce(function (acc, key) {
+        if (key !== '_') acc[key] = true
+        return acc
+      }, {})
+    )
+
+    var theWrap = getWrap()
+    var ui = require('cliui')({
+      width: theWrap,
+      wrap: !!theWrap
+    })
+
+    // the usage string.
+    if (usage) {
+      var u = usage.replace(/\$0/g, yargs.$0)
+      ui.div(u + '\n')
+    }
+
+    // your application's commands, i.e., non-option
+    // arguments populated in '_'.
+    if (commands.length) {
+      ui.div(__('Commands:'))
+
+      commands.forEach(function (command) {
+        ui.span(
+          {text: command[0], padding: [0, 2, 0, 2], width: maxWidth(commands, theWrap) + 4},
+          {text: command[1]}
+        )
+        var hints = []
+        if (command[2]) hints.push('[' + __('default:').slice(0, -1) + ']') // TODO hacking around i18n here
+        if (command[3] && command[3].length) {
+          hints.push('[' + __('aliases:') + ' ' + command[3].join(', ') + ']')
+        }
+        if (hints.length) {
+          ui.div({text: hints.join(' '), padding: [0, 0, 0, 2], align: 'right'})
+        } else {
+          ui.div()
+        }
+      })
+
+      ui.div()
+    }
+
+    // perform some cleanup on the keys array, making it
+    // only include top-level keys not their aliases.
+    var aliasKeys = (Object.keys(options.alias) || [])
+      .concat(Object.keys(yargs.parsed.newAliases) || [])
+
+    keys = keys.filter(function (key) {
+      return !yargs.parsed.newAliases[key] && aliasKeys.every(function (alias) {
+        return (options.alias[alias] || []).indexOf(key) === -1
+      })
+    })
+
+    // populate 'Options:' group with any keys that have not
+    // explicitly had a group set.
+    if (!groups[defaultGroup]) groups[defaultGroup] = []
+    addUngroupedKeys(keys, options.alias, groups)
+
+    // display 'Options:' table along with any custom tables:
+    Object.keys(groups).forEach(function (groupName) {
+      if (!groups[groupName].length) return
+
+      ui.div(__(groupName))
+
+      // if we've grouped the key 'f', but 'f' aliases 'foobar',
+      // normalizedKeys should contain only 'foobar'.
+      var normalizedKeys = groups[groupName].map(function (key) {
+        if (~aliasKeys.indexOf(key)) return key
+        for (var i = 0, aliasKey; (aliasKey = aliasKeys[i]) !== undefined; i++) {
+          if (~(options.alias[aliasKey] || []).indexOf(key)) return aliasKey
+        }
+        return key
+      })
+
+      // actually generate the switches string --foo, -f, --bar.
+      var switches = normalizedKeys.reduce(function (acc, key) {
+        acc[key] = [ key ].concat(options.alias[key] || [])
+          .map(function (sw) {
+            return (sw.length > 1 ? '--' : '-') + sw
+          })
+          .join(', ')
+
+        return acc
+      }, {})
+
+      normalizedKeys.forEach(function (key) {
+        var kswitch = switches[key]
+        var desc = descriptions[key] || ''
+        var type = null
+
+        if (~desc.lastIndexOf(deferY18nLookupPrefix)) desc = __(desc.substring(deferY18nLookupPrefix.length))
+
+        if (~options.boolean.indexOf(key)) type = '[' + __('boolean') + ']'
+        if (~options.count.indexOf(key)) type = '[' + __('count') + ']'
+        if (~options.string.indexOf(key)) type = '[' + __('string') + ']'
+        if (~options.normalize.indexOf(key)) type = '[' + __('string') + ']'
+        if (~options.array.indexOf(key)) type = '[' + __('array') + ']'
+        if (~options.number.indexOf(key)) type = '[' + __('number') + ']'
+
+        var extra = [
+          type,
+          (key in demandedOptions) ? '[' + __('required') + ']' : null,
+          options.choices && options.choices[key] ? '[' + __('choices:') + ' ' +
+            self.stringifiedValues(options.choices[key]) + ']' : null,
+          defaultString(options.default[key], options.defaultDescription[key])
+        ].filter(Boolean).join(' ')
+
+        ui.span(
+          {text: kswitch, padding: [0, 2, 0, 2], width: maxWidth(switches, theWrap) + 4},
+          desc
+        )
+
+        if (extra) ui.div({text: extra, padding: [0, 0, 0, 2], align: 'right'})
+        else ui.div()
+      })
+
+      ui.div()
+    })
+
+    // describe some common use-cases for your application.
+    if (examples.length) {
+      ui.div(__('Examples:'))
+
+      examples.forEach(function (example) {
+        example[0] = example[0].replace(/\$0/g, yargs.$0)
+      })
+
+      examples.forEach(function (example) {
+        if (example[1] === '') {
+          ui.div(
+            {
+              text: example[0],
+              padding: [0, 2, 0, 2]
+            }
+          )
+        } else {
+          ui.div(
+            {
+              text: example[0],
+              padding: [0, 2, 0, 2],
+              width: maxWidth(examples, theWrap) + 4
+            }, {
+              text: example[1]
+            }
+          )
+        }
+      })
+
+      ui.div()
+    }
+
+    // the usage string.
+    if (epilog) {
+      var e = epilog.replace(/\$0/g, yargs.$0)
+      ui.div(e + '\n')
+    }
+
+    return ui.toString()
+  }
+
+  // return the maximum width of a string
+  // in the left-hand column of a table.
+  function maxWidth (table, theWrap) {
+    var width = 0
+
+    // table might be of the form [leftColumn],
+    // or {key: leftColumn}
+    if (!Array.isArray(table)) {
+      table = Object.keys(table).map(function (key) {
+        return [table[key]]
+      })
+    }
+
+    table.forEach(function (v) {
+      width = Math.max(stringWidth(v[0]), width)
+    })
+
+    // if we've enabled 'wrap' we should limit
+    // the max-width of the left-column.
+    if (theWrap) width = Math.min(width, parseInt(theWrap * 0.5, 10))
+
+    return width
+  }
+
+  // make sure any options set for aliases,
+  // are copied to the keys being aliased.
+  function normalizeAliases () {
+    // handle old demanded API
+    var demandedOptions = yargs.getDemandedOptions()
+    var options = yargs.getOptions()
+
+    ;(Object.keys(options.alias) || []).forEach(function (key) {
+      options.alias[key].forEach(function (alias) {
+        // copy descriptions.
+        if (descriptions[alias]) self.describe(key, descriptions[alias])
+        // copy demanded.
+        if (alias in demandedOptions) yargs.demandOption(key, demandedOptions[alias])
+        // type messages.
+        if (~options.boolean.indexOf(alias)) yargs.boolean(key)
+        if (~options.count.indexOf(alias)) yargs.count(key)
+        if (~options.string.indexOf(alias)) yargs.string(key)
+        if (~options.normalize.indexOf(alias)) yargs.normalize(key)
+        if (~options.array.indexOf(alias)) yargs.array(key)
+        if (~options.number.indexOf(alias)) yargs.number(key)
+      })
+    })
+  }
+
+  // given a set of keys, place any keys that are
+  // ungrouped under the 'Options:' grouping.
+  function addUngroupedKeys (keys, aliases, groups) {
+    var groupedKeys = []
+    var toCheck = null
+    Object.keys(groups).forEach(function (group) {
+      groupedKeys = groupedKeys.concat(groups[group])
+    })
+
+    keys.forEach(function (key) {
+      toCheck = [key].concat(aliases[key])
+      if (!toCheck.some(function (k) {
+        return groupedKeys.indexOf(k) !== -1
+      })) {
+        groups[defaultGroup].push(key)
+      }
+    })
+    return groupedKeys
+  }
+
+  self.showHelp = function (level) {
+    const logger = yargs._getLoggerInstance()
+    if (!level) level = 'error'
+    var emit = typeof level === 'function' ? level : logger[level]
+    emit(self.help())
+  }
+
+  self.functionDescription = function (fn) {
+    var description = fn.name ? require('decamelize')(fn.name, '-') : __('generated-value')
+    return ['(', description, ')'].join('')
+  }
+
+  self.stringifiedValues = function (values, separator) {
+    var string = ''
+    var sep = separator || ', '
+    var array = [].concat(values)
+
+    if (!values || !array.length) return string
+
+    array.forEach(function (value) {
+      if (string.length) string += sep
+      string += JSON.stringify(value)
+    })
+
+    return string
+  }
+
+  // format the default-value-string displayed in
+  // the right-hand column.
+  function defaultString (value, defaultDescription) {
+    var string = '[' + __('default:') + ' '
+
+    if (value === undefined && !defaultDescription) return null
+
+    if (defaultDescription) {
+      string += defaultDescription
+    } else {
+      switch (typeof value) {
+        case 'string':
+          string += JSON.stringify(value)
+          break
+        case 'object':
+          string += JSON.stringify(value)
+          break
+        default:
+          string += value
+      }
+    }
+
+    return string + ']'
+  }
+
+  // guess the width of the console window, max-width 80.
+  function windowWidth () {
+    var maxWidth = 80
+    if (typeof process === 'object' && process.stdout && process.stdout.columns) {
+      return Math.min(maxWidth, process.stdout.columns)
+    } else {
+      return maxWidth
+    }
+  }
+
+  // logic for displaying application version.
+  var version = null
+  self.version = function (ver) {
+    version = ver
+  }
+
+  self.showVersion = function () {
+    const logger = yargs._getLoggerInstance()
+    if (typeof version === 'function') logger.log(version())
+    else logger.log(version)
+  }
+
+  self.reset = function (localLookup) {
+    // do not reset wrap here
+    // do not reset fails here
+    failMessage = null
+    failureOutput = false
+    usage = undefined
+    epilog = undefined
+    examples = []
+    commands = []
+    descriptions = objFilter(descriptions, function (k, v) {
+      return !localLookup[k]
+    })
+    return self
+  }
+
+  var frozen
+  self.freeze = function () {
+    frozen = {}
+    frozen.failMessage = failMessage
+    frozen.failureOutput = failureOutput
+    frozen.usage = usage
+    frozen.epilog = epilog
+    frozen.examples = examples
+    frozen.commands = commands
+    frozen.descriptions = descriptions
+  }
+  self.unfreeze = function () {
+    failMessage = frozen.failMessage
+    failureOutput = frozen.failureOutput
+    usage = frozen.usage
+    epilog = frozen.epilog
+    examples = frozen.examples
+    commands = frozen.commands
+    descriptions = frozen.descriptions
+    frozen = undefined
+  }
+
+  return self
+}
+
+},{"./obj-filter":88,"./yerror":91,"cliui":8,"decamelize":11,"set-blocking":65,"string-width":70}],90:[function(require,module,exports){
+const objFilter = require('./obj-filter')
+
+// validation-type-stuff, missing params,
+// bad implications, custom checks.
+module.exports = function (yargs, usage, y18n) {
+  const __ = y18n.__
+  const __n = y18n.__n
+  const self = {}
+
+  // validate appropriate # of non-option
+  // arguments were provided, i.e., '_'.
+  self.nonOptionCount = function (argv) {
+    const demandedCommands = yargs.getDemandedCommands()
+    // don't count currently executing commands
+    const _s = argv._.length - yargs.getContext().commands.length
+
+    if (demandedCommands._ && (_s < demandedCommands._.min || _s > demandedCommands._.max)) {
+      if (_s < demandedCommands._.min) {
+        if (demandedCommands._.minMsg !== undefined) {
+          usage.fail(
+            // replace $0 with observed, $1 with expected.
+            demandedCommands._.minMsg ? demandedCommands._.minMsg.replace(/\$0/g, _s).replace(/\$1/, demandedCommands._.min) : null
+          )
+        } else {
+          usage.fail(
+            __('Not enough non-option arguments: got %s, need at least %s', _s, demandedCommands._.min)
+          )
+        }
+      } else if (_s > demandedCommands._.max) {
+        if (demandedCommands._.maxMsg !== undefined) {
+          usage.fail(
+            // replace $0 with observed, $1 with expected.
+            demandedCommands._.maxMsg ? demandedCommands._.maxMsg.replace(/\$0/g, _s).replace(/\$1/, demandedCommands._.max) : null
+          )
+        } else {
+          usage.fail(
+          __('Too many non-option arguments: got %s, maximum of %s', _s, demandedCommands._.max)
+          )
+        }
+      }
+    }
+  }
+
+  // validate the appropriate # of <required>
+  // positional arguments were provided:
+  self.positionalCount = function (required, observed) {
+    if (observed < required) {
+      usage.fail(
+        __('Not enough non-option arguments: got %s, need at least %s', observed, required)
+      )
+    }
+  }
+
+  // make sure that any args that require an
+  // value (--foo=bar), have a value.
+  self.missingArgumentValue = function (argv) {
+    const defaultValues = [true, false, '']
+    const options = yargs.getOptions()
+
+    if (options.requiresArg.length > 0) {
+      const missingRequiredArgs = []
+
+      options.requiresArg.forEach(function (key) {
+        const value = argv[key]
+
+        // if a value is explicitly requested,
+        // flag argument as missing if it does not
+        // look like foo=bar was entered.
+        if (~defaultValues.indexOf(value) ||
+          (Array.isArray(value) && !value.length)) {
+          missingRequiredArgs.push(key)
+        }
+      })
+
+      if (missingRequiredArgs.length > 0) {
+        usage.fail(__n(
+          'Missing argument value: %s',
+          'Missing argument values: %s',
+          missingRequiredArgs.length,
+          missingRequiredArgs.join(', ')
+        ))
+      }
+    }
+  }
+
+  // make sure all the required arguments are present.
+  self.requiredArguments = function (argv) {
+    const demandedOptions = yargs.getDemandedOptions()
+    var missing = null
+
+    Object.keys(demandedOptions).forEach(function (key) {
+      if (!argv.hasOwnProperty(key) || typeof argv[key] === 'undefined') {
+        missing = missing || {}
+        missing[key] = demandedOptions[key]
+      }
+    })
+
+    if (missing) {
+      const customMsgs = []
+      Object.keys(missing).forEach(function (key) {
+        const msg = missing[key]
+        if (msg && customMsgs.indexOf(msg) < 0) {
+          customMsgs.push(msg)
+        }
+      })
+
+      const customMsg = customMsgs.length ? '\n' + customMsgs.join('\n') : ''
+
+      usage.fail(__n(
+        'Missing required argument: %s',
+        'Missing required arguments: %s',
+        Object.keys(missing).length,
+        Object.keys(missing).join(', ') + customMsg
+      ))
+    }
+  }
+
+  // check for unknown arguments (strict-mode).
+  self.unknownArguments = function (argv, aliases, positionalMap) {
+    const aliasLookup = {}
+    const descriptions = usage.getDescriptions()
+    const demandedOptions = yargs.getDemandedOptions()
+    const commandKeys = yargs.getCommandInstance().getCommands()
+    const unknown = []
+    const currentContext = yargs.getContext()
+
+    Object.keys(aliases).forEach(function (key) {
+      aliases[key].forEach(function (alias) {
+        aliasLookup[alias] = key
+      })
+    })
+
+    Object.keys(argv).forEach(function (key) {
+      if (key !== '$0' && key !== '_' &&
+        !descriptions.hasOwnProperty(key) &&
+        !demandedOptions.hasOwnProperty(key) &&
+        !positionalMap.hasOwnProperty(key) &&
+        !yargs._getParseContext().hasOwnProperty(key) &&
+        !aliasLookup.hasOwnProperty(key)) {
+        unknown.push(key)
+      }
+    })
+
+    if (commandKeys.length > 0) {
+      argv._.slice(currentContext.commands.length).forEach(function (key) {
+        if (commandKeys.indexOf(key) === -1) {
+          unknown.push(key)
+        }
+      })
+    }
+
+    if (unknown.length > 0) {
+      usage.fail(__n(
+        'Unknown argument: %s',
+        'Unknown arguments: %s',
+        unknown.length,
+        unknown.join(', ')
+      ))
+    }
+  }
+
+  // validate arguments limited to enumerated choices
+  self.limitedChoices = function (argv) {
+    const options = yargs.getOptions()
+    const invalid = {}
+
+    if (!Object.keys(options.choices).length) return
+
+    Object.keys(argv).forEach(function (key) {
+      if (key !== '$0' && key !== '_' &&
+        options.choices.hasOwnProperty(key)) {
+        [].concat(argv[key]).forEach(function (value) {
+          // TODO case-insensitive configurability
+          if (options.choices[key].indexOf(value) === -1) {
+            invalid[key] = (invalid[key] || []).concat(value)
+          }
+        })
+      }
+    })
+
+    const invalidKeys = Object.keys(invalid)
+
+    if (!invalidKeys.length) return
+
+    var msg = __('Invalid values:')
+    invalidKeys.forEach(function (key) {
+      msg += '\n  ' + __(
+        'Argument: %s, Given: %s, Choices: %s',
+        key,
+        usage.stringifiedValues(invalid[key]),
+        usage.stringifiedValues(options.choices[key])
+      )
+    })
+    usage.fail(msg)
+  }
+
+  // custom checks, added using the `check` option on yargs.
+  var checks = []
+  self.check = function (f, global) {
+    checks.push({
+      func: f,
+      global: global
+    })
+  }
+
+  self.customChecks = function (argv, aliases) {
+    for (var i = 0, f; (f = checks[i]) !== undefined; i++) {
+      var func = f.func
+      var result = null
+      try {
+        result = func(argv, aliases)
+      } catch (err) {
+        usage.fail(err.message ? err.message : err, err)
+        continue
+      }
+
+      if (!result) {
+        usage.fail(__('Argument check failed: %s', func.toString()))
+      } else if (typeof result === 'string' || result instanceof Error) {
+        usage.fail(result.toString(), result)
+      }
+    }
+  }
+
+  // check implications, argument foo implies => argument bar.
+  var implied = {}
+  self.implies = function (key, value) {
+    if (typeof key === 'object') {
+      Object.keys(key).forEach(function (k) {
+        self.implies(k, key[k])
+      })
+    } else {
+      yargs.global(key)
+      implied[key] = value
+    }
+  }
+  self.getImplied = function () {
+    return implied
+  }
+
+  self.implications = function (argv) {
+    const implyFail = []
+
+    Object.keys(implied).forEach(function (key) {
+      var num
+      const origKey = key
+      var value = implied[key]
+
+      // convert string '1' to number 1
+      num = Number(key)
+      key = isNaN(num) ? key : num
+
+      if (typeof key === 'number') {
+        // check length of argv._
+        key = argv._.length >= key
+      } else if (key.match(/^--no-.+/)) {
+        // check if key doesn't exist
+        key = key.match(/^--no-(.+)/)[1]
+        key = !argv[key]
+      } else {
+        // check if key exists
+        key = argv[key]
+      }
+
+      num = Number(value)
+      value = isNaN(num) ? value : num
+
+      if (typeof value === 'number') {
+        value = argv._.length >= value
+      } else if (value.match(/^--no-.+/)) {
+        value = value.match(/^--no-(.+)/)[1]
+        value = !argv[value]
+      } else {
+        value = argv[value]
+      }
+
+      if (key && !value) {
+        implyFail.push(origKey)
+      }
+    })
+
+    if (implyFail.length) {
+      var msg = __('Implications failed:') + '\n'
+
+      implyFail.forEach(function (key) {
+        msg += ('  ' + key + ' -> ' + implied[key])
+      })
+
+      usage.fail(msg)
+    }
+  }
+
+  var conflicting = {}
+  self.conflicts = function (key, value) {
+    if (typeof key === 'object') {
+      Object.keys(key).forEach(function (k) {
+        self.conflicts(k, key[k])
+      })
+    } else {
+      yargs.global(key)
+      conflicting[key] = value
+    }
+  }
+  self.getConflicting = function () {
+    return conflicting
+  }
+
+  self.conflicting = function (argv) {
+    var args = Object.getOwnPropertyNames(argv)
+
+    args.forEach(function (arg) {
+      if (conflicting[arg] && args.indexOf(conflicting[arg]) !== -1) {
+        usage.fail(__('Arguments %s and %s are mutually exclusive', arg, conflicting[arg]))
+      }
+    })
+  }
+
+  self.recommendCommands = function (cmd, potentialCommands) {
+    const distance = require('./levenshtein')
+    const threshold = 3 // if it takes more than three edits, let's move on.
+    potentialCommands = potentialCommands.sort(function (a, b) { return b.length - a.length })
+
+    var recommended = null
+    var bestDistance = Infinity
+    for (var i = 0, candidate; (candidate = potentialCommands[i]) !== undefined; i++) {
+      var d = distance(cmd, candidate)
+      if (d <= threshold && d < bestDistance) {
+        bestDistance = d
+        recommended = candidate
+      }
+    }
+    if (recommended) usage.fail(__('Did you mean %s?', recommended))
+  }
+
+  self.reset = function (localLookup) {
+    implied = objFilter(implied, function (k, v) {
+      return !localLookup[k]
+    })
+    conflicting = objFilter(conflicting, function (k, v) {
+      return !localLookup[k]
+    })
+    checks = checks.filter(function (c) {
+      return c.global
+    })
+    return self
+  }
+
+  var frozen
+  self.freeze = function () {
+    frozen = {}
+    frozen.implied = implied
+    frozen.checks = checks
+    frozen.conflicting = conflicting
+  }
+  self.unfreeze = function () {
+    implied = frozen.implied
+    checks = frozen.checks
+    conflicting = frozen.conflicting
+    frozen = undefined
+  }
+
+  return self
+}
+
+},{"./levenshtein":87,"./obj-filter":88}],91:[function(require,module,exports){
+function YError (msg) {
+  this.name = 'YError'
+  this.message = msg || 'yargs error'
+  Error.captureStackTrace(this, YError)
+}
+
+YError.prototype = Object.create(Error.prototype)
+YError.prototype.constructor = YError
+
+module.exports = YError
+
+},{}],92:[function(require,module,exports){
+(function (__dirname){
+const argsert = require('./lib/argsert')
+const assign = require('./lib/assign')
 const Command = require('./lib/command')
 const Completion = require('./lib/completion')
 const Parser = require('yargs-parser')
@@ -14036,9 +13944,10 @@ const path = require('path')
 const Usage = require('./lib/usage')
 const Validation = require('./lib/validation')
 const Y18n = require('y18n')
-const requireMainFilename = require('require-main-filename')
 const objFilter = require('./lib/obj-filter')
 const setBlocking = require('set-blocking')
+const applyExtends = require('./lib/apply-extends')
+const YError = require('./lib/yerror')
 
 var exports = module.exports = Yargs
 function Yargs (processArgs, cwd, parentRequire) {
@@ -14048,6 +13957,7 @@ function Yargs (processArgs, cwd, parentRequire) {
   var command = null
   var completion = null
   var groups = {}
+  var output = ''
   var preservedGroups = {}
   var usage = null
   var validation = null
@@ -14095,22 +14005,23 @@ function Yargs (processArgs, cwd, parentRequire) {
     // logic is used to build a nested command
     // hierarchy.
     var tmpOptions = {}
-    tmpOptions.global = options.global ? options.global : []
+    tmpOptions.local = options.local ? options.local : []
+    tmpOptions.configObjects = options.configObjects ? options.configObjects : []
 
-    // if a key has been set as a global, we
-    // do not want to reset it or its aliases.
-    var globalLookup = {}
-    tmpOptions.global.forEach(function (g) {
-      globalLookup[g] = true
-      ;(aliases[g] || []).forEach(function (a) {
-        globalLookup[a] = true
+    // if a key has been explicitly set as local,
+    // we should reset it before passing options to command.
+    var localLookup = {}
+    tmpOptions.local.forEach(function (l) {
+      localLookup[l] = true
+      ;(aliases[l] || []).forEach(function (a) {
+        localLookup[a] = true
       })
     })
 
-    // preserve groups containing global keys
+    // preserve all groups not set to local.
     preservedGroups = Object.keys(groups).reduce(function (acc, groupName) {
       var keys = groups[groupName].filter(function (key) {
-        return key in globalLookup
+        return !(key in localLookup)
       })
       if (keys.length > 0) {
         acc[groupName] = keys
@@ -14127,90 +14038,216 @@ function Yargs (processArgs, cwd, parentRequire) {
 
     var objectOptions = [
       'narg', 'key', 'alias', 'default', 'defaultDescription',
-      'config', 'choices', 'demanded'
+      'config', 'choices', 'demandedOptions', 'demandedCommands', 'coerce'
     ]
 
     arrayOptions.forEach(function (k) {
       tmpOptions[k] = (options[k] || []).filter(function (k) {
-        return globalLookup[k]
+        return !localLookup[k]
       })
     })
 
     objectOptions.forEach(function (k) {
       tmpOptions[k] = objFilter(options[k], function (k, v) {
-        return globalLookup[k]
+        return !localLookup[k]
       })
     })
 
-    tmpOptions.envPrefix = undefined
+    tmpOptions.envPrefix = options.envPrefix
     options = tmpOptions
 
     // if this is the first time being executed, create
     // instances of all our helpers -- otherwise just reset.
-    usage = usage ? usage.reset(globalLookup) : Usage(self, y18n)
-    validation = validation ? validation.reset(globalLookup) : Validation(self, usage, y18n)
+    usage = usage ? usage.reset(localLookup) : Usage(self, y18n)
+    validation = validation ? validation.reset(localLookup) : Validation(self, usage, y18n)
     command = command ? command.reset() : Command(self, usage, validation)
     if (!completion) completion = Completion(self, usage, command)
 
-    exitProcess = true
-    strict = false
+    if (!strictGlobal) strict = false
     completionCommand = null
+    output = ''
+    exitError = null
+    hasOutput = false
     self.parsed = false
 
     return self
   }
   self.resetOptions()
 
-  self.boolean = function (bools) {
-    options.boolean.push.apply(options.boolean, [].concat(bools))
+  // temporary hack: allow "freezing" of reset-able state for parse(msg, cb)
+  var frozen
+  function freeze () {
+    frozen = {}
+    frozen.options = options
+    frozen.configObjects = options.configObjects.slice(0)
+    frozen.exitProcess = exitProcess
+    frozen.groups = groups
+    usage.freeze()
+    validation.freeze()
+    command.freeze()
+    frozen.strict = strict
+    frozen.completionCommand = completionCommand
+    frozen.output = output
+    frozen.exitError = exitError
+    frozen.hasOutput = hasOutput
+    frozen.parsed = self.parsed
+  }
+  function unfreeze () {
+    options = frozen.options
+    options.configObjects = frozen.configObjects
+    exitProcess = frozen.exitProcess
+    groups = frozen.groups
+    output = frozen.output
+    exitError = frozen.exitError
+    hasOutput = frozen.hasOutput
+    self.parsed = frozen.parsed
+    usage.unfreeze()
+    validation.unfreeze()
+    command.unfreeze()
+    strict = frozen.strict
+    completionCommand = frozen.completionCommand
+    parseFn = null
+    parseContext = null
+    frozen = undefined
+  }
+
+  self.boolean = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('boolean', keys)
     return self
   }
 
-  self.array = function (arrays) {
-    options.array.push.apply(options.array, [].concat(arrays))
+  self.array = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('array', keys)
     return self
   }
 
-  self.nargs = function (key, n) {
-    if (typeof key === 'object') {
+  self.number = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('number', keys)
+    return self
+  }
+
+  self.normalize = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('normalize', keys)
+    return self
+  }
+
+  self.count = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('count', keys)
+    return self
+  }
+
+  self.string = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('string', keys)
+    return self
+  }
+
+  self.requiresArg = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('requiresArg', keys)
+    return self
+  }
+
+  self.skipValidation = function (keys) {
+    argsert('<array|string>', [keys], arguments.length)
+    populateParserHintArray('skipValidation', keys)
+    return self
+  }
+
+  function populateParserHintArray (type, keys, value) {
+    keys = [].concat(keys)
+    keys.forEach(function (key) {
+      options[type].push(key)
+    })
+  }
+
+  self.nargs = function (key, value) {
+    argsert('<string|object|array> [number]', [key, value], arguments.length)
+    populateParserHintObject(self.nargs, false, 'narg', key, value)
+    return self
+  }
+
+  self.choices = function (key, value) {
+    argsert('<object|string|array> [string|array]', [key, value], arguments.length)
+    populateParserHintObject(self.choices, true, 'choices', key, value)
+    return self
+  }
+
+  self.alias = function (key, value) {
+    argsert('<object|string|array> [string|array]', [key, value], arguments.length)
+    populateParserHintObject(self.alias, true, 'alias', key, value)
+    return self
+  }
+
+  // TODO: actually deprecate self.defaults.
+  self.default = self.defaults = function (key, value, defaultDescription) {
+    argsert('<object|string|array> [*] [string]', [key, value, defaultDescription], arguments.length)
+    if (defaultDescription) options.defaultDescription[key] = defaultDescription
+    if (typeof value === 'function') {
+      if (!options.defaultDescription[key]) options.defaultDescription[key] = usage.functionDescription(value)
+      value = value.call()
+    }
+    populateParserHintObject(self.default, false, 'default', key, value)
+    return self
+  }
+
+  self.describe = function (key, desc) {
+    argsert('<object|string|array> [string]', [key, desc], arguments.length)
+    populateParserHintObject(self.describe, false, 'key', key, true)
+    usage.describe(key, desc)
+    return self
+  }
+
+  self.demandOption = function (keys, msg) {
+    argsert('<object|string|array> [string]', [keys, msg], arguments.length)
+    populateParserHintObject(self.demandOption, false, 'demandedOptions', keys, msg)
+    return self
+  }
+
+  self.coerce = function (keys, value) {
+    argsert('<object|string|array> [function]', [keys, value], arguments.length)
+    populateParserHintObject(self.coerce, false, 'coerce', keys, value)
+    return self
+  }
+
+  function populateParserHintObject (builder, isArray, type, key, value) {
+    if (Array.isArray(key)) {
+      // an array of keys with one value ['x', 'y', 'z'], function parse () {}
+      var temp = {}
+      key.forEach(function (k) {
+        temp[k] = value
+      })
+      builder(temp)
+    } else if (typeof key === 'object') {
+      // an object of key value pairs: {'x': parse () {}, 'y': parse() {}}
       Object.keys(key).forEach(function (k) {
-        self.nargs(k, key[k])
+        builder(k, key[k])
       })
     } else {
-      options.narg[key] = n
+      // a single key value pair 'x', parse() {}
+      if (isArray) {
+        options[type][key] = (options[type][key] || []).concat(value)
+      } else {
+        options[type][key] = value
+      }
     }
-    return self
-  }
-
-  self.number = function (numbers) {
-    options.number.push.apply(options.number, [].concat(numbers))
-    return self
-  }
-
-  self.choices = function (key, values) {
-    if (typeof key === 'object') {
-      Object.keys(key).forEach(function (k) {
-        self.choices(k, key[k])
-      })
-    } else {
-      options.choices[key] = (options.choices[key] || []).concat(values)
-    }
-    return self
-  }
-
-  self.normalize = function (strings) {
-    options.normalize.push.apply(options.normalize, [].concat(strings))
-    return self
   }
 
   self.config = function (key, msg, parseFn) {
-    // allow to pass a configuration object
+    argsert('[object|string] [string|function] [function]', [key, msg, parseFn], arguments.length)
+    // allow a config object to be provided directly.
     if (typeof key === 'object') {
+      key = applyExtends(key, cwd)
       options.configObjects = (options.configObjects || []).concat(key)
       return self
     }
 
-    // allow to provide a parsing function
+    // allow for a custom parsing function.
     if (typeof msg === 'function') {
       parseFn = msg
       msg = null
@@ -14221,71 +14258,38 @@ function Yargs (processArgs, cwd, parentRequire) {
     ;(Array.isArray(key) ? key : [key]).forEach(function (k) {
       options.config[k] = parseFn || true
     })
+
     return self
   }
 
   self.example = function (cmd, description) {
+    argsert('<string> [string]', [cmd, description], arguments.length)
     usage.example(cmd, description)
     return self
   }
 
   self.command = function (cmd, description, builder, handler) {
+    argsert('<string|array|object> [string|boolean] [function|object] [function]', [cmd, description, builder, handler], arguments.length)
     command.addHandler(cmd, description, builder, handler)
     return self
   }
 
   self.commandDir = function (dir, opts) {
+    argsert('<string> [object]', [dir, opts], arguments.length)
     const req = parentRequire || require
     command.addDirectory(dir, self.getContext(), req, require('get-caller-file')(), opts)
     return self
   }
 
-  self.string = function (strings) {
-    options.string.push.apply(options.string, [].concat(strings))
-    return self
-  }
-
-  // The 'defaults' alias is deprecated. It will be removed in the next major version.
-  self.default = self.defaults = function (key, value, defaultDescription) {
-    if (typeof key === 'object') {
-      Object.keys(key).forEach(function (k) {
-        self.default(k, key[k])
-      })
-    } else {
-      if (defaultDescription) options.defaultDescription[key] = defaultDescription
-      if (typeof value === 'function') {
-        if (!options.defaultDescription[key]) options.defaultDescription[key] = usage.functionDescription(value)
-        value = value.call()
-      }
-      options.default[key] = value
-    }
-    return self
-  }
-
-  self.alias = function (x, y) {
-    if (typeof x === 'object') {
-      Object.keys(x).forEach(function (key) {
-        self.alias(key, x[key])
-      })
-    } else {
-      options.alias[x] = (options.alias[x] || []).concat(y)
-    }
-    return self
-  }
-
-  self.count = function (counts) {
-    options.count.push.apply(options.count, [].concat(counts))
-    return self
-  }
-
+  // TODO: deprecate self.demand in favor of
+  // .demandCommand() .demandOption().
   self.demand = self.required = self.require = function (keys, max, msg) {
     // you can optionally provide a 'max' key,
     // which will raise an exception if too many '_'
     // options are provided.
-
     if (Array.isArray(max)) {
       max.forEach(function (key) {
-        self.demand(key, msg)
+        self.demandOption(key, msg)
       })
       max = Infinity
     } else if (typeof max !== 'number') {
@@ -14294,44 +14298,69 @@ function Yargs (processArgs, cwd, parentRequire) {
     }
 
     if (typeof keys === 'number') {
-      if (!options.demanded._) options.demanded._ = { count: 0, msg: null, max: max }
-      options.demanded._.count = keys
-      options.demanded._.msg = msg
+      self.demandCommand(keys, max, msg, msg)
     } else if (Array.isArray(keys)) {
       keys.forEach(function (key) {
-        self.demand(key, msg)
+        self.demandOption(key, msg)
       })
     } else {
       if (typeof msg === 'string') {
-        options.demanded[keys] = { msg: msg }
+        self.demandOption(keys, msg)
       } else if (msg === true || typeof msg === 'undefined') {
-        options.demanded[keys] = { msg: undefined }
+        self.demandOption(keys)
       }
     }
 
     return self
   }
 
-  self.getDemanded = function () {
-    return options.demanded
-  }
+  self.demandCommand = function (min, max, minMsg, maxMsg) {
+    argsert('[number] [number|string] [string|null] [string|null]', [min, max, minMsg, maxMsg], arguments.length)
 
-  self.requiresArg = function (requiresArgs) {
-    options.requiresArg.push.apply(options.requiresArg, [].concat(requiresArgs))
+    if (typeof min === 'undefined') min = 1
+
+    if (typeof max !== 'number') {
+      minMsg = max
+      max = Infinity
+    }
+
+    self.global('_', false)
+
+    options.demandedCommands._ = {
+      min: min,
+      max: max,
+      minMsg: minMsg,
+      maxMsg: maxMsg
+    }
+
     return self
   }
 
-  self.skipValidation = function (skipValidations) {
-    options.skipValidation.push.apply(options.skipValidation, [].concat(skipValidations))
-    return self
+  self.getDemandedOptions = function () {
+    argsert([], 0)
+    return options.demandedOptions
+  }
+
+  self.getDemandedCommands = function () {
+    argsert([], 0)
+    return options.demandedCommands
   }
 
   self.implies = function (key, value) {
+    argsert('<string|object> [string]', [key, value], arguments.length)
     validation.implies(key, value)
     return self
   }
 
+  self.conflicts = function (key1, key2) {
+    argsert('<string|object> [string]', [key1, key2], arguments.length)
+    validation.conflicts(key1, key2)
+    return self
+  }
+
   self.usage = function (msg, opts) {
+    argsert('<string|null|object> [object]', [msg, opts], arguments.length)
+
     if (!opts && typeof msg === 'object') {
       opts = msg
       msg = null
@@ -14345,39 +14374,49 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   self.epilogue = self.epilog = function (msg) {
+    argsert('<string>', [msg], arguments.length)
     usage.epilog(msg)
     return self
   }
 
   self.fail = function (f) {
+    argsert('<function>', [f], arguments.length)
     usage.failFn(f)
     return self
   }
 
-  self.check = function (f) {
-    validation.check(f)
+  self.check = function (f, _global) {
+    argsert('<function> [boolean]', [f, _global], arguments.length)
+    validation.check(f, _global !== false)
     return self
   }
 
-  self.describe = function (key, desc) {
-    options.key[key] = true
-    usage.describe(key, desc)
-    return self
-  }
-
-  self.global = function (globals) {
-    options.global.push.apply(options.global, [].concat(globals))
+  self.global = function (globals, global) {
+    argsert('<string|array> [boolean]', [globals, global], arguments.length)
+    globals = [].concat(globals)
+    if (global !== false) {
+      options.local = options.local.filter(function (l) {
+        return globals.indexOf(l) === -1
+      })
+    } else {
+      globals.forEach(function (g) {
+        if (options.local.indexOf(g) === -1) options.local.push(g)
+      })
+    }
     return self
   }
 
   self.pkgConf = function (key, path) {
+    argsert('<string> [string]', [key, path], arguments.length)
     var conf = null
-
-    var obj = pkgUp(path)
+    // prefer cwd to require-main-filename in this method
+    // since we're looking for e.g. "nyc" config in nyc consumer
+    // rather than "yargs" config in nyc (where nyc is the main filename)
+    var obj = pkgUp(path || cwd)
 
     // If an object exists in the key, add it to options.configObjects
     if (obj[key] && typeof obj[key] === 'object') {
-      conf = obj[key]
+      conf = applyExtends(obj[key], path || cwd, key)
       options.configObjects = (options.configObjects || []).concat(conf)
     }
 
@@ -14393,7 +14432,8 @@ function Yargs (processArgs, cwd, parentRequire) {
     var obj = {}
     try {
       obj = readPkgUp.sync({
-        cwd: path || requireMainFilename(parentRequire || require)
+        cwd: path || require('require-main-filename')(parentRequire || require),
+        normalize: false
       })
     } catch (noop) {}
 
@@ -14401,18 +14441,57 @@ function Yargs (processArgs, cwd, parentRequire) {
     return pkgs[npath]
   }
 
-  self.parse = function (args, shortCircuit) {
+  var parseFn = null
+  var parseContext = null
+  self.parse = function (args, shortCircuit, _parseFn) {
+    argsert('<string|array> [function|boolean|object] [function]', [args, shortCircuit, _parseFn], arguments.length)
+
+    // a context object can optionally be provided, this allows
+    // additional information to be passed to a command handler.
+    if (typeof shortCircuit === 'object') {
+      parseContext = shortCircuit
+      shortCircuit = _parseFn
+    }
+
+    // by providing a function as a second argument to
+    // parse you can capture output that would otherwise
+    // default to printing to stdout/stderr.
+    if (typeof shortCircuit === 'function') {
+      parseFn = shortCircuit
+      shortCircuit = null
+    }
+    // completion short-circuits the parsing process,
+    // skipping validation, etc.
     if (!shortCircuit) processArgs = args
-    return parseArgs(args, shortCircuit)
+
+    freeze()
+    if (parseFn) exitProcess = false
+
+    var parsed = self._parseArgs(args, shortCircuit)
+    if (parseFn) parseFn(exitError, parsed, output)
+    unfreeze()
+
+    return parsed
+  }
+
+  self._getParseContext = function () {
+    return parseContext || {}
+  }
+
+  self._hasParseCallback = function () {
+    return !!parseFn
   }
 
   self.option = self.options = function (key, opt) {
+    argsert('<string|object> [object]', [key, opt], arguments.length)
     if (typeof key === 'object') {
       Object.keys(key).forEach(function (k) {
         self.options(k, key[k])
       })
     } else {
-      assert(typeof opt === 'object', 'second argument to option must be an object')
+      if (typeof opt !== 'object') {
+        opt = {}
+      }
 
       options.key[key] = true // track manually set keys.
 
@@ -14420,39 +14499,84 @@ function Yargs (processArgs, cwd, parentRequire) {
 
       var demand = opt.demand || opt.required || opt.require
 
+      // deprecated, use 'demandOption' instead
       if (demand) {
         self.demand(key, demand)
-      } if ('config' in opt) {
+      }
+
+      if ('demandOption' in opt) {
+        self.demandOption(key, typeof opt.demandOption === 'string' ? opt.demandOption : undefined)
+      }
+
+      if ('config' in opt) {
         self.config(key, opt.configParser)
-      } if ('default' in opt) {
+      }
+
+      if ('conflicts' in opt) {
+        self.conflicts(key, opt.conflicts)
+      }
+
+      if ('default' in opt) {
         self.default(key, opt.default)
-      } if ('nargs' in opt) {
+      }
+
+      if ('implies' in opt) {
+        self.implies(key, opt.implies)
+      }
+
+      if ('nargs' in opt) {
         self.nargs(key, opt.nargs)
-      } if ('normalize' in opt) {
+      }
+
+      if ('normalize' in opt) {
         self.normalize(key)
-      } if ('choices' in opt) {
+      }
+
+      if ('choices' in opt) {
         self.choices(key, opt.choices)
-      } if ('group' in opt) {
+      }
+
+      if ('coerce' in opt) {
+        self.coerce(key, opt.coerce)
+      }
+
+      if ('group' in opt) {
         self.group(key, opt.group)
-      } if (opt.global) {
-        self.global(key)
-      } if (opt.boolean || opt.type === 'boolean') {
+      }
+
+      if (opt.boolean || opt.type === 'boolean') {
         self.boolean(key)
         if (opt.alias) self.boolean(opt.alias)
-      } if (opt.array || opt.type === 'array') {
+      }
+
+      if (opt.array || opt.type === 'array') {
         self.array(key)
         if (opt.alias) self.array(opt.alias)
-      } if (opt.number || opt.type === 'number') {
+      }
+
+      if (opt.number || opt.type === 'number') {
         self.number(key)
         if (opt.alias) self.number(opt.alias)
-      } if (opt.string || opt.type === 'string') {
+      }
+
+      if (opt.string || opt.type === 'string') {
         self.string(key)
         if (opt.alias) self.string(opt.alias)
-      } if (opt.count || opt.type === 'count') {
+      }
+
+      if (opt.count || opt.type === 'count') {
         self.count(key)
-      } if (opt.defaultDescription) {
+      }
+
+      if (typeof opt.global === 'boolean') {
+        self.global(key, opt.global)
+      }
+
+      if (opt.defaultDescription) {
         options.defaultDescription[key] = opt.defaultDescription
-      } if (opt.skipValidation) {
+      }
+
+      if (opt.skipValidation) {
         self.skipValidation(key)
       }
 
@@ -14473,10 +14597,10 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   self.group = function (opts, groupName) {
+    argsert('<string|array> <string>', [opts, groupName], arguments.length)
     var existing = preservedGroups[groupName] || groups[groupName]
     if (preservedGroups[groupName]) {
-      // the preserved group will be moved to the set of explicitly declared
-      // groups
+      // we now only need to track this group name in groups.
       delete preservedGroups[groupName]
     }
 
@@ -14489,25 +14613,30 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
   self.getGroups = function () {
     // combine explicit and preserved groups. explicit groups should be first
-    return assign({}, groups, preservedGroups)
+    return assign(groups, preservedGroups)
   }
 
   // as long as options.envPrefix is not undefined,
   // parser will apply env vars matching prefix to argv
   self.env = function (prefix) {
+    argsert('[string|boolean]', [prefix], arguments.length)
     if (prefix === false) options.envPrefix = undefined
     else options.envPrefix = prefix || ''
     return self
   }
 
   self.wrap = function (cols) {
+    argsert('<number|null>', [cols], arguments.length)
     usage.wrap(cols)
     return self
   }
 
   var strict = false
-  self.strict = function () {
+  var strictGlobal = false
+  self.strict = function (global) {
+    argsert('[boolean]', [global], arguments.length)
     strict = true
+    strictGlobal = global !== false
     return self
   }
   self.getStrict = function () {
@@ -14515,13 +14644,15 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   self.showHelp = function (level) {
-    if (!self.parsed) parseArgs(processArgs) // run parser, if it has not already been executed.
+    argsert('[string|function]', [level], arguments.length)
+    if (!self.parsed) self._parseArgs(processArgs) // run parser, if it has not already been executed.
     usage.showHelp(level)
     return self
   }
 
   var versionOpt = null
   self.version = function (opt, msg, ver) {
+    argsert('[string|function] [string|function] [string]', [opt, msg, ver], arguments.length)
     if (arguments.length === 0) {
       ver = guessVersion()
       opt = 'version'
@@ -14530,6 +14661,7 @@ function Yargs (processArgs, cwd, parentRequire) {
       opt = 'version'
     } else if (arguments.length === 2) {
       ver = msg
+      msg = null
     }
 
     versionOpt = opt
@@ -14537,7 +14669,6 @@ function Yargs (processArgs, cwd, parentRequire) {
 
     usage.version(ver || undefined)
     self.boolean(versionOpt)
-    self.global(versionOpt)
     self.describe(versionOpt, msg)
     return self
   }
@@ -14549,22 +14680,46 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   var helpOpt = null
-  self.addHelpOpt = self.help = function (opt, msg) {
-    opt = opt || 'help'
-    helpOpt = opt
-    self.boolean(opt)
-    self.global(opt)
-    self.describe(opt, msg || usage.deferY18nLookup('Show help'))
+  var useHelpOptAsCommand = false // a call to .help() will enable this
+  self.addHelpOpt = self.help = function (opt, msg, addImplicitCmd) {
+    argsert('[string|boolean] [string|boolean] [boolean]', [opt, msg, addImplicitCmd], arguments.length)
+
+    // argument shuffle
+    if (arguments.length === 0) {
+      useHelpOptAsCommand = true
+    } else if (arguments.length === 1) {
+      if (typeof opt === 'boolean') {
+        useHelpOptAsCommand = opt
+        opt = null
+      } else {
+        useHelpOptAsCommand = true
+      }
+    } else if (arguments.length === 2) {
+      if (typeof msg === 'boolean') {
+        useHelpOptAsCommand = msg
+        msg = null
+      } else {
+        useHelpOptAsCommand = true
+      }
+    } else {
+      useHelpOptAsCommand = Boolean(addImplicitCmd)
+    }
+    // use arguments, fallback to defaults for opt and msg
+    helpOpt = opt || 'help'
+    self.boolean(helpOpt)
+    self.describe(helpOpt, msg || usage.deferY18nLookup('Show help'))
     return self
   }
 
   self.showHelpOnFail = function (enabled, message) {
+    argsert('[boolean|string] [string]', [enabled, message], arguments.length)
     usage.showHelpOnFail(enabled, message)
     return self
   }
 
   var exitProcess = true
   self.exitProcess = function (enabled) {
+    argsert('[boolean]', [enabled], arguments.length)
     if (typeof enabled !== 'boolean') {
       enabled = true
     }
@@ -14577,6 +14732,8 @@ function Yargs (processArgs, cwd, parentRequire) {
 
   var completionCommand = null
   self.completion = function (cmd, desc, fn) {
+    argsert('[string] [string|boolean|function] [function]', [cmd, desc, fn], arguments.length)
+
     // a function to execute when generating
     // completions can be provided as the second
     // or third argument to completion.
@@ -14599,16 +14756,19 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   self.showCompletionScript = function ($0) {
+    argsert('[string]', [$0], arguments.length)
     $0 = $0 || self.$0
-    console.log(completion.generateCompletionScript($0))
+    _logger.log(completion.generateCompletionScript($0))
     return self
   }
 
   self.getCompletion = function (args, done) {
+    argsert('<array> <function>', [args, done], arguments.length)
     completion.getCompletion(args, done)
   }
 
   self.locale = function (locale) {
+    argsert('[string]', [locale], arguments.length)
     if (arguments.length === 0) {
       guessLocale()
       return y18n.getLocale()
@@ -14619,6 +14779,7 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   self.updateStrings = self.updateLocale = function (obj) {
+    argsert('<object>', [obj], arguments.length)
     detectLocale = false
     y18n.updateLocale(obj)
     return self
@@ -14626,11 +14787,62 @@ function Yargs (processArgs, cwd, parentRequire) {
 
   var detectLocale = true
   self.detectLocale = function (detect) {
+    argsert('<boolean>', [detect], arguments.length)
     detectLocale = detect
     return self
   }
   self.getDetectLocale = function () {
     return detectLocale
+  }
+
+  var hasOutput = false
+  var exitError = null
+  // maybe exit, always capture
+  // context about why we wanted to exit.
+  self.exit = function (code, err) {
+    hasOutput = true
+    exitError = err
+    if (exitProcess) process.exit(code)
+  }
+
+  // we use a custom logger that buffers output,
+  // so that we can print to non-CLIs, e.g., chat-bots.
+  var _logger = {
+    log: function () {
+      const args = []
+      for (var i = 0; i < arguments.length; i++) args.push(arguments[i])
+      if (!self._hasParseCallback()) console.log.apply(console, args)
+      hasOutput = true
+      if (output.length) output += '\n'
+      output += args.join(' ')
+    },
+    error: function () {
+      const args = []
+      for (var i = 0; i < arguments.length; i++) args.push(arguments[i])
+      if (!self._hasParseCallback()) console.error.apply(console, args)
+      hasOutput = true
+      if (output.length) output += '\n'
+      output += args.join(' ')
+    }
+  }
+  self._getLoggerInstance = function () {
+    return _logger
+  }
+  // has yargs output an error our help
+  // message in the current execution context.
+  self._hasOutput = function () {
+    return hasOutput
+  }
+
+  self._setHasOutput = function () {
+    hasOutput = true
+  }
+
+  var recommendCommands
+  self.recommendCommands = function (recommend) {
+    argsert('[boolean]', [recommend], arguments.length)
+    recommendCommands = typeof recommend === 'boolean' ? recommend : true
+    return self
   }
 
   self.getUsageInstance = function () {
@@ -14646,133 +14858,172 @@ function Yargs (processArgs, cwd, parentRequire) {
   }
 
   self.terminalWidth = function () {
-    return require('window-size').width
+    argsert([], 0)
+    return process.stdout.columns
   }
 
   Object.defineProperty(self, 'argv', {
     get: function () {
-      var args = null
-
-      try {
-        args = parseArgs(processArgs)
-      } catch (err) {
-        usage.fail(err.message, err)
-      }
-
-      return args
+      return self._parseArgs(processArgs)
     },
     enumerable: true
   })
 
-  function parseArgs (args, shortCircuit) {
+  self._parseArgs = function (args, shortCircuit, _skipValidation) {
+    var skipValidation = !!_skipValidation
+    args = args || processArgs
+
     options.__ = y18n.__
-    options.configuration = pkgUp(cwd)['yargs'] || {}
+    options.configuration = pkgUp()['yargs'] || {}
     const parsed = Parser.detailed(args, options)
-    const argv = parsed.argv
+    var argv = parsed.argv
+    if (parseContext) argv = assign(argv, parseContext)
     var aliases = parsed.aliases
 
     argv.$0 = self.$0
     self.parsed = parsed
 
-    guessLocale() // guess locale lazily, so that it can be turned off in chain.
+    try {
+      guessLocale() // guess locale lazily, so that it can be turned off in chain.
 
-    // while building up the argv object, there
-    // are two passes through the parser. If completion
-    // is being performed short-circuit on the first pass.
-    if (shortCircuit) {
-      return argv
-    }
+      // while building up the argv object, there
+      // are two passes through the parser. If completion
+      // is being performed short-circuit on the first pass.
+      if (shortCircuit) {
+        return argv
+      }
 
-    // if there's a handler associated with a
-    // command defer processing to it.
-    var handlerKeys = command.getCommands()
-    for (var i = 0, cmd; (cmd = argv._[i]) !== undefined; i++) {
-      if (~handlerKeys.indexOf(cmd) && cmd !== completionCommand) {
+      if (argv._.length) {
+        // check for helpOpt in argv._ before running commands
+        // assumes helpOpt must be valid if useHelpOptAsCommand is true
+        if (useHelpOptAsCommand) {
+          // consider any multi-char helpOpt alias as a valid help command
+          // unless all helpOpt aliases are single-char
+          // note that parsed.aliases is a normalized bidirectional map :)
+          var helpCmds = [helpOpt].concat(aliases[helpOpt] || [])
+          var multiCharHelpCmds = helpCmds.filter(function (k) {
+            return k.length > 1
+          })
+          if (multiCharHelpCmds.length) helpCmds = multiCharHelpCmds
+          // look for and strip any helpCmds from argv._
+          argv._ = argv._.filter(function (cmd) {
+            if (~helpCmds.indexOf(cmd)) {
+              argv[helpOpt] = true
+              return false
+            }
+            return true
+          })
+        }
+
+        // if there's a handler associated with a
+        // command defer processing to it.
+        var handlerKeys = command.getCommands()
+        if (handlerKeys.length) {
+          var firstUnknownCommand
+          for (var i = 0, cmd; (cmd = argv._[i]) !== undefined; i++) {
+            if (~handlerKeys.indexOf(cmd) && cmd !== completionCommand) {
+              setPlaceholderKeys(argv)
+              return command.runCommand(cmd, self, parsed)
+            } else if (!firstUnknownCommand && cmd !== completionCommand) {
+              firstUnknownCommand = cmd
+            }
+          }
+
+          // run the default command, if defined
+          if (command.hasDefaultCommand() && !argv[helpOpt]) {
+            setPlaceholderKeys(argv)
+            return command.runCommand(null, self, parsed)
+          }
+
+          // recommend a command if recommendCommands() has
+          // been enabled, and no commands were found to execute
+          if (recommendCommands && firstUnknownCommand) {
+            validation.recommendCommands(firstUnknownCommand, handlerKeys)
+          }
+        }
+
+        // generate a completion script for adding to ~/.bashrc.
+        if (completionCommand && ~argv._.indexOf(completionCommand) && !argv[completion.completionKey]) {
+          if (exitProcess) setBlocking(true)
+          self.showCompletionScript()
+          self.exit(0)
+        }
+      } else if (command.hasDefaultCommand() && !argv[helpOpt]) {
         setPlaceholderKeys(argv)
-        return command.runCommand(cmd, self, parsed)
+        return command.runCommand(null, self, parsed)
       }
-    }
 
-    // generate a completion script for adding to ~/.bashrc.
-    if (completionCommand && ~argv._.indexOf(completionCommand) && !argv[completion.completionKey]) {
-      if (exitProcess) setBlocking(true)
-      self.showCompletionScript()
-      if (exitProcess) {
-        process.exit(0)
-      }
-    }
+      // we must run completions first, a user might
+      // want to complete the --help or --version option.
+      if (completion.completionKey in argv) {
+        if (exitProcess) setBlocking(true)
 
-    // we must run completions first, a user might
-    // want to complete the --help or --version option.
-    if (completion.completionKey in argv) {
-      if (exitProcess) setBlocking(true)
+        // we allow for asynchronous completions,
+        // e.g., loading in a list of commands from an API.
+        var completionArgs = args.slice(args.indexOf('--' + completion.completionKey) + 1)
+        completion.getCompletion(completionArgs, function (completions) {
+          ;(completions || []).forEach(function (completion) {
+            _logger.log(completion)
+          })
 
-      // we allow for asynchronous completions,
-      // e.g., loading in a list of commands from an API.
-      var completionArgs = args.slice(args.indexOf('--' + completion.completionKey) + 1)
-      completion.getCompletion(completionArgs, function (completions) {
-        ;(completions || []).forEach(function (completion) {
-          console.log(completion)
+          self.exit(0)
         })
+        return setPlaceholderKeys(argv)
+      }
 
-        if (exitProcess) {
-          process.exit(0)
+      // Handle 'help' and 'version' options
+      Object.keys(argv).forEach(function (key) {
+        if (key === helpOpt && argv[key]) {
+          if (exitProcess) setBlocking(true)
+
+          skipValidation = true
+          self.showHelp('log')
+          self.exit(0)
+        } else if (key === versionOpt && argv[key]) {
+          if (exitProcess) setBlocking(true)
+
+          skipValidation = true
+          usage.showVersion()
+          self.exit(0)
         }
       })
-      return
-    }
 
-    var skipValidation = false
+      // Check if any of the options to skip validation were provided
+      if (!skipValidation && options.skipValidation.length > 0) {
+        skipValidation = Object.keys(argv).some(function (key) {
+          return options.skipValidation.indexOf(key) >= 0 && argv[key] === true
+        })
+      }
 
-    // Handle 'help' and 'version' options
-    Object.keys(argv).forEach(function (key) {
-      if (key === helpOpt && argv[key]) {
-        if (exitProcess) setBlocking(true)
+      // If the help or version options where used and exitProcess is false,
+      // or if explicitly skipped, we won't run validations.
+      if (!skipValidation) {
+        if (parsed.error) throw new YError(parsed.error.message)
 
-        skipValidation = true
-        self.showHelp('log')
-        if (exitProcess) {
-          process.exit(0)
-        }
-      } else if (key === versionOpt && argv[key]) {
-        if (exitProcess) setBlocking(true)
-
-        skipValidation = true
-        usage.showVersion()
-        if (exitProcess) {
-          process.exit(0)
+        // if we're executed via bash completion, don't
+        // bother with validation.
+        if (!argv[completion.completionKey]) {
+          self._runValidation(argv, aliases, {}, parsed.error)
         }
       }
-    })
-
-    // Check if any of the options to skip validation were provided
-    if (!skipValidation && options.skipValidation.length > 0) {
-      skipValidation = Object.keys(argv).some(function (key) {
-        return options.skipValidation.indexOf(key) >= 0
-      })
+    } catch (err) {
+      if (err instanceof YError) usage.fail(err.message, err)
+      else throw err
     }
 
-    // If the help or version options where used and exitProcess is false,
-    // or if explicitly skipped, we won't run validations
-    if (!skipValidation) {
-      if (parsed.error) throw parsed.error
+    return setPlaceholderKeys(argv)
+  }
 
-      // if we're executed via bash completion, don't
-      // bother with validation.
-      if (!argv[completion.completionKey]) {
-        validation.nonOptionCount(argv)
-        validation.missingArgumentValue(argv)
-        validation.requiredArguments(argv)
-        if (strict) validation.unknownArguments(argv, aliases)
-        validation.customChecks(argv, aliases)
-        validation.limitedChoices(argv)
-        validation.implications(argv)
-      }
-    }
-
-    setPlaceholderKeys(argv)
-
-    return argv
+  self._runValidation = function (argv, aliases, positionalMap, parseErrors) {
+    if (parseErrors) throw new YError(parseErrors.message)
+    validation.nonOptionCount(argv)
+    validation.missingArgumentValue(argv)
+    validation.requiredArguments(argv)
+    if (strict) validation.unknownArguments(argv, aliases, positionalMap)
+    validation.customChecks(argv, aliases)
+    validation.limitedChoices(argv)
+    validation.implications(argv)
+    validation.conflicting(argv)
   }
 
   function guessLocale () {
@@ -14794,6 +15045,7 @@ function Yargs (processArgs, cwd, parentRequire) {
       if (~key.indexOf('.')) return
       if (typeof argv[key] === 'undefined') argv[key] = undefined
     })
+    return argv
   }
 
   return self
@@ -14807,17 +15059,18 @@ function rebase (base, dir) {
 }
 
 }).call(this,"/Users/mrw/git/rexreplace/node_modules/yargs")
-},{"./lib/command":82,"./lib/completion":83,"./lib/obj-filter":84,"./lib/usage":85,"./lib/validation":86,"assert":undefined,"get-caller-file":18,"lodash.assign":42,"os-locale":52,"path":undefined,"read-pkg-up":62,"require-main-filename":65,"set-blocking":67,"window-size":77,"y18n":80,"yargs-parser":87}],90:[function(require,module,exports){
-rexreplace = require('./core');
+},{"./lib/apply-extends":82,"./lib/argsert":83,"./lib/assign":84,"./lib/command":85,"./lib/completion":86,"./lib/obj-filter":88,"./lib/usage":89,"./lib/validation":90,"./lib/yerror":91,"get-caller-file":17,"os-locale":50,"path":undefined,"read-pkg-up":60,"require-main-filename":63,"set-blocking":65,"y18n":78,"yargs-parser":79}],93:[function(require,module,exports){
+let rexreplace = require('./core');
 
 let	pattern, replacement;
 
 // CLI interface for rexreplace
-needHelp = false;
+
+// To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed befores yargs does it magic - but we still need to handle -version and -help
+let needHelp = false;
 if(process.argv.length<4){
 	needHelp = true;
 } else {
-	// To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed befores yargs does it magic
 	[pattern, replacement] = process.argv.splice(2,2);
 }
 
@@ -14966,24 +15219,30 @@ if(!yargs.argv.voidEuro){
 }
 
 // All options into one big config object for the rexreplace core
-let config = Object.assign(
-								yargs.argv, 
-								{
-									showHelp: 		yargs.showHelp,
-									pattern: 		pattern,
-									replacement: 	replacement
-								}
-							);
+let config = {};
+
+// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+Object.keys(yargs.argv).forEach(key=>{
+	if(1<key.length && key.indexOf('-')<0){
+		config[key] = yargs.argv[key];
+	}
+});
+
+config.files = yargs.argv._;
+config.showHelp = yargs.showHelp;
+config.pattern = pattern;
+config.replacement = replacement;
+
 
 rexreplace(config);
 
-},{"./core":91,"yargs":81}],91:[function(require,module,exports){
+},{"./core":94,"yargs":81}],94:[function(require,module,exports){
 
 const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.1.0';
+const version = '2.1.1';
 
 module.exports = function(config){
 
@@ -14995,9 +15254,9 @@ module.exports = function(config){
 
 	config.regex = getFinalRegex(config);
 
-	let files = globs.sync(config._);
+	config.files = globs.sync(config.files);
 
-	files
+	config.files
 		// Correct filepath
 		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
 		// Find out if any filepaths are invalid
@@ -15120,7 +15379,7 @@ module.exports = function(config){
 
 module.exports.version = version;
 
-},{"./output":92,"fs":undefined,"globs":19,"path":undefined}],92:[function(require,module,exports){
+},{"./output":95,"fs":undefined,"globs":21,"path":undefined}],95:[function(require,module,exports){
 
 // let font = {};
 // font.red = font.green = font.gray = str=>str;
@@ -15176,4 +15435,4 @@ module.exports = function(config){
 };
 
 
-},{"chalk":7}]},{},[90]);
+},{"chalk":7}]},{},[93]);

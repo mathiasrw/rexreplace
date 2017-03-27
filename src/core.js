@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.1.0';
+const version = '2.1.1';
 
 module.exports = function(config){
 
@@ -15,9 +15,9 @@ module.exports = function(config){
 
 	config.regex = getFinalRegex(config);
 
-	let files = globs.sync(config._);
+	config.files = globs.sync(config.files);
 
-	files
+	config.files
 		// Correct filepath
 		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
 		// Find out if any filepaths are invalid

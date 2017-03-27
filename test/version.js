@@ -13,7 +13,7 @@ describe(__filename.replace(/.*\/([^\/]+)\.js$/,'$1')+' - Stub', function() {
 		rexreplace({
 			pattern:'a',
 			replacement:'b',
-			_:['myfile'],
+			files:['myfile'],
 		});
 		assert.equal(1, 1);
 	});

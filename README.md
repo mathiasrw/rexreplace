@@ -28,7 +28,6 @@ Files can be given as [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl
 ```bash
 > npm install -g rexreplace
 ```
-
  
 ### Usage 
 ```bash
@@ -56,7 +55,8 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 
 ### Options
 ```
-  -v, --version           Echo rexreplace version                      [boolean]
+  -v, --version           Print rexreplace version (can be given as only
+                          argument)                                    [boolean]
   -I, --void-ignore-case  Void case insensitive search pattern.        [boolean]
   -M, --void-multiline    Void multiline search pattern. Makes ^ and $ match
                           start/end of whole content rather than each line.
@@ -73,25 +73,18 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
   -d, --debug             Print debug info                             [boolean]
   -€, --void-euro         Void having '€' as alias for '$' in pattern and
                           replacement                                  [boolean]
-  -P, --pattern-file      Pattern is a filename from where the pattern will be
-                          generated. Pattern will be defined by each line
-                          trimmed and having newlines removed followed by other
-                          other rules (like -€).)                      [boolean]
-  -R, --replacement-file  Replacement is a filename from where the replacement
-                          will be generated. Replacement will be defined by each
-                          line trimmed and having newlines removed followed by
-                          other other rules (like -€).                 [boolean]
-  -h, --help              Show help                                    [boolean]
-
+  -h, --help              Display manual. (can be given as only argument)
+                                                                       [boolean]
 ```
 
 ## Good to know 
 
 ### Limitations
 - RexReplace reads each file fully into memory, so working on your 4Gb log files will probably not be ideal.
+- For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
 
 ### Quirks
-- Per default `€` is treated as an alias for `$`. The main reason is for you not to worry about how command line tools often have a special relationship with the `$` char. Your can escape your way out of this old love story, but it often pops up in unexpected ways. Use the `-€` flag if you need to search or replace the actual euro char. 
+- Per default `€` is treated as an alias for `$` in the CLI input. The main reason is for you not to worry about how command line tools often have a special relationship with the `$` char. Your can escape your way out of this old love story, but it often pops up in unexpected ways. Use the `-€` flag if you need to search or replace the actual euro char. 
 
 - Options can only be set after the replacement parameter. _But I like to put my options as the first thing, so I know what I am doing_ I agree, but we must sometimes sacrifice some habits for the sake of simplicity.
 

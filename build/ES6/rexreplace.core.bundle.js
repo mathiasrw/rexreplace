@@ -334,7 +334,7 @@ function expand(str, isTop) {
 }
 
 
-},{"balanced-match":3,"concat-map":7}],5:[function(require,module,exports){
+},{"balanced-match":3,"concat-map":6}],5:[function(require,module,exports){
 'use strict';
 var escapeStringRegexp = require('escape-string-regexp');
 var ansiStyles = require('ansi-styles');
@@ -452,59 +452,7 @@ module.exports.hasColor = hasAnsi;
 module.exports.stripColor = stripAnsi;
 module.exports.supportsColor = supportsColor;
 
-},{"ansi-styles":2,"escape-string-regexp":8,"has-ansi":15,"strip-ansi":22,"supports-color":6}],6:[function(require,module,exports){
-'use strict';
-var argv = process.argv;
-
-var terminator = argv.indexOf('--');
-var hasFlag = function (flag) {
-	flag = '--' + flag;
-	var pos = argv.indexOf(flag);
-	return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
-};
-
-module.exports = (function () {
-	if ('FORCE_COLOR' in process.env) {
-		return true;
-	}
-
-	if (hasFlag('no-color') ||
-		hasFlag('no-colors') ||
-		hasFlag('color=false')) {
-		return false;
-	}
-
-	if (hasFlag('color') ||
-		hasFlag('colors') ||
-		hasFlag('color=true') ||
-		hasFlag('color=always')) {
-		return true;
-	}
-
-	if (process.stdout && !process.stdout.isTTY) {
-		return false;
-	}
-
-	if (process.platform === 'win32') {
-		return true;
-	}
-
-	if ('COLORTERM' in process.env) {
-		return true;
-	}
-
-	if (process.env.TERM === 'dumb') {
-		return false;
-	}
-
-	if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
-		return true;
-	}
-
-	return false;
-})();
-
-},{}],7:[function(require,module,exports){
+},{"ansi-styles":2,"escape-string-regexp":7,"has-ansi":14,"strip-ansi":21,"supports-color":22}],6:[function(require,module,exports){
 module.exports = function (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -519,7 +467,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
@@ -532,7 +480,7 @@ module.exports = function (str) {
 	return str.replace(matchOperatorsRe, '\\$&');
 };
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 module.exports = realpath
 realpath.realpath = realpath
 realpath.sync = realpathSync
@@ -600,7 +548,7 @@ function unmonkeypatch () {
   fs.realpathSync = origRealpathSync
 }
 
-},{"./old.js":10,"fs":undefined}],10:[function(require,module,exports){
+},{"./old.js":9,"fs":undefined}],9:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -905,108 +853,7 @@ exports.realpath = function realpath(p, cache, cb) {
   }
 };
 
-},{"fs":undefined,"path":undefined}],11:[function(require,module,exports){
-'use strict';
-
-var glob = require('glob');
-
-/**
- * Expand one or more patterns into an Array of files.
- *
- * ## Examples:
- *
- * ```
- * globs('../*.js', function (err, jsfiles) {
- *   console.log(jsfiles);
- * })
- *
- * globs(['*.js', '../*.js'], function (err, jsfiles) {
- *   console.log(jsfiles)
- * })
- *
- * globs(['*.js', '../*.js'], { cwd: '/foo' }, function (err, jsfiles) {
- *   console.log(jsfiles)
- * })
- * ```
- *
- * @param {String|Array} patterns One or more patterns to match
- * @param {Object} [options] Options
- * @param {Function} callback Function which accepts two parameters: err, files
- */
-var globs = module.exports = function (patterns, options, callback) {
-  var pending
-    , groups = [];
-
-  // not an Array?  make it so!
-  if (!Array.isArray(patterns)) {
-    patterns = [ patterns ];
-  }
-
-  pending = patterns.length;
-
-  // parameter shifting is really horrible, but i'm
-  // mimicing glob's api...
-  if (typeof options === 'function') {
-    callback = options;
-    options = {};
-  }
-
-  if (!pending) {
-    // nothing to do
-    // ensure callback called asynchronously
-    return process.nextTick(function() {
-      callback(null, []);
-    })
-  }
-
-  // walk the patterns
-  patterns.forEach(function (pattern) {
-    // grab the files
-    glob(pattern, options, function (err, files) {
-      if (err) {
-        return callback(err);
-      }
-
-      // add the files to the group
-      groups = groups.concat(files);
-
-      pending -= 1;
-      // last pattern?
-      if (!pending) {
-        // done
-        return callback(null, groups);
-      }
-    });
-  });
-};
-
-/**
- * Synchronously Expand one or more patterns to an Array of files
- *
- * @api public
- * @param {String|Array} patterns
- * @param {Object} [options]
- * @return {Array}
- */
-globs.sync = function (patterns, options) {
-  options = options || {};
-
-  var groups = []
-    , index
-    , length;
-
-  if (!Array.isArray(patterns)) {
-    patterns = [ patterns ];
-  }
-
-  for (index = 0, length = patterns.length; index < length; index++) {
-    groups = groups.concat(glob.sync(patterns[index], options));
-  }
-
-  return groups;
-};
-
-},{"glob":13}],12:[function(require,module,exports){
+},{"fs":undefined,"path":undefined}],10:[function(require,module,exports){
 exports.alphasort = alphasort
 exports.alphasorti = alphasorti
 exports.setopts = setopts
@@ -1248,7 +1095,7 @@ function childrenIgnored (self, path) {
   })
 }
 
-},{"minimatch":19,"path":undefined,"path-is-absolute":21}],13:[function(require,module,exports){
+},{"minimatch":18,"path":undefined,"path-is-absolute":20}],11:[function(require,module,exports){
 // Approach:
 //
 // 1. Get the minimatch set
@@ -2042,7 +1889,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
   return cb(null, c, stat)
 }
 
-},{"./common.js":12,"./sync.js":14,"assert":undefined,"events":undefined,"fs":undefined,"fs.realpath":9,"inflight":16,"inherits":17,"minimatch":19,"once":20,"path":undefined,"path-is-absolute":21,"util":undefined}],14:[function(require,module,exports){
+},{"./common.js":10,"./sync.js":12,"assert":undefined,"events":undefined,"fs":undefined,"fs.realpath":8,"inflight":15,"inherits":16,"minimatch":18,"once":19,"path":undefined,"path-is-absolute":20,"util":undefined}],12:[function(require,module,exports){
 module.exports = globSync
 globSync.GlobSync = GlobSync
 
@@ -2530,13 +2377,114 @@ GlobSync.prototype._makeAbs = function (f) {
   return common.makeAbs(this, f)
 }
 
-},{"./common.js":12,"./glob.js":13,"assert":undefined,"fs":undefined,"fs.realpath":9,"minimatch":19,"path":undefined,"path-is-absolute":21,"util":undefined}],15:[function(require,module,exports){
+},{"./common.js":10,"./glob.js":11,"assert":undefined,"fs":undefined,"fs.realpath":8,"minimatch":18,"path":undefined,"path-is-absolute":20,"util":undefined}],13:[function(require,module,exports){
+'use strict';
+
+var glob = require('glob');
+
+/**
+ * Expand one or more patterns into an Array of files.
+ *
+ * ## Examples:
+ *
+ * ```
+ * globs('../*.js', function (err, jsfiles) {
+ *   console.log(jsfiles);
+ * })
+ *
+ * globs(['*.js', '../*.js'], function (err, jsfiles) {
+ *   console.log(jsfiles)
+ * })
+ *
+ * globs(['*.js', '../*.js'], { cwd: '/foo' }, function (err, jsfiles) {
+ *   console.log(jsfiles)
+ * })
+ * ```
+ *
+ * @param {String|Array} patterns One or more patterns to match
+ * @param {Object} [options] Options
+ * @param {Function} callback Function which accepts two parameters: err, files
+ */
+var globs = module.exports = function (patterns, options, callback) {
+  var pending
+    , groups = [];
+
+  // not an Array?  make it so!
+  if (!Array.isArray(patterns)) {
+    patterns = [ patterns ];
+  }
+
+  pending = patterns.length;
+
+  // parameter shifting is really horrible, but i'm
+  // mimicing glob's api...
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+
+  if (!pending) {
+    // nothing to do
+    // ensure callback called asynchronously
+    return process.nextTick(function() {
+      callback(null, []);
+    })
+  }
+
+  // walk the patterns
+  patterns.forEach(function (pattern) {
+    // grab the files
+    glob(pattern, options, function (err, files) {
+      if (err) {
+        return callback(err);
+      }
+
+      // add the files to the group
+      groups = groups.concat(files);
+
+      pending -= 1;
+      // last pattern?
+      if (!pending) {
+        // done
+        return callback(null, groups);
+      }
+    });
+  });
+};
+
+/**
+ * Synchronously Expand one or more patterns to an Array of files
+ *
+ * @api public
+ * @param {String|Array} patterns
+ * @param {Object} [options]
+ * @return {Array}
+ */
+globs.sync = function (patterns, options) {
+  options = options || {};
+
+  var groups = []
+    , index
+    , length;
+
+  if (!Array.isArray(patterns)) {
+    patterns = [ patterns ];
+  }
+
+  for (index = 0, length = patterns.length; index < length; index++) {
+    groups = groups.concat(glob.sync(patterns[index], options));
+  }
+
+  return groups;
+};
+
+},{"glob":11}],14:[function(require,module,exports){
 'use strict';
 var ansiRegex = require('ansi-regex');
 var re = new RegExp(ansiRegex().source); // remove the `g` flag
 module.exports = re.test.bind(re);
 
-},{"ansi-regex":1}],16:[function(require,module,exports){
+},{"ansi-regex":1}],15:[function(require,module,exports){
 var wrappy = require('wrappy')
 var reqs = Object.create(null)
 var once = require('once')
@@ -2592,7 +2540,7 @@ function slice (args) {
   return array
 }
 
-},{"once":20,"wrappy":23}],17:[function(require,module,exports){
+},{"once":19,"wrappy":23}],16:[function(require,module,exports){
 try {
   var util = require('util');
   if (typeof util.inherits !== 'function') throw '';
@@ -2601,7 +2549,7 @@ try {
   module.exports = require('./inherits_browser.js');
 }
 
-},{"./inherits_browser.js":18,"util":undefined}],18:[function(require,module,exports){
+},{"./inherits_browser.js":17,"util":undefined}],17:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2626,7 +2574,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
@@ -3551,7 +3499,7 @@ function regExpEscape (s) {
   return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 }
 
-},{"brace-expansion":4,"path":undefined}],20:[function(require,module,exports){
+},{"brace-expansion":4,"path":undefined}],19:[function(require,module,exports){
 var wrappy = require('wrappy')
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
@@ -3595,7 +3543,7 @@ function onceStrict (fn) {
   return f
 }
 
-},{"wrappy":23}],21:[function(require,module,exports){
+},{"wrappy":23}],20:[function(require,module,exports){
 'use strict';
 
 function posix(path) {
@@ -3617,7 +3565,7 @@ module.exports = process.platform === 'win32' ? win32 : posix;
 module.exports.posix = posix;
 module.exports.win32 = win32;
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 var ansiRegex = require('ansi-regex')();
 
@@ -3625,7 +3573,59 @@ module.exports = function (str) {
 	return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
 };
 
-},{"ansi-regex":1}],23:[function(require,module,exports){
+},{"ansi-regex":1}],22:[function(require,module,exports){
+'use strict';
+var argv = process.argv;
+
+var terminator = argv.indexOf('--');
+var hasFlag = function (flag) {
+	flag = '--' + flag;
+	var pos = argv.indexOf(flag);
+	return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
+};
+
+module.exports = (function () {
+	if ('FORCE_COLOR' in process.env) {
+		return true;
+	}
+
+	if (hasFlag('no-color') ||
+		hasFlag('no-colors') ||
+		hasFlag('color=false')) {
+		return false;
+	}
+
+	if (hasFlag('color') ||
+		hasFlag('colors') ||
+		hasFlag('color=true') ||
+		hasFlag('color=always')) {
+		return true;
+	}
+
+	if (process.stdout && !process.stdout.isTTY) {
+		return false;
+	}
+
+	if (process.platform === 'win32') {
+		return true;
+	}
+
+	if ('COLORTERM' in process.env) {
+		return true;
+	}
+
+	if (process.env.TERM === 'dumb') {
+		return false;
+	}
+
+	if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
+		return true;
+	}
+
+	return false;
+})();
+
+},{}],23:[function(require,module,exports){
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
 // presumably different callback function.
@@ -3666,7 +3666,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.1.0';
+const version = '2.1.1';
 
 module.exports = function(config){
 
@@ -3678,9 +3678,9 @@ module.exports = function(config){
 
 	config.regex = getFinalRegex(config);
 
-	let files = globs.sync(config._);
+	config.files = globs.sync(config.files);
 
-	files
+	config.files
 		// Correct filepath
 		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
 		// Find out if any filepaths are invalid
@@ -3803,7 +3803,7 @@ module.exports = function(config){
 
 module.exports.version = version;
 
-},{"./output":25,"fs":undefined,"globs":11,"path":undefined}],25:[function(require,module,exports){
+},{"./output":25,"fs":undefined,"globs":13,"path":undefined}],25:[function(require,module,exports){
 
 // let font = {};
 // font.red = font.green = font.gray = str=>str;

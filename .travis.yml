@@ -6,6 +6,5 @@ node_js:
   - "4"
   - "0.12"
 
-script: 
-  - npm run test:bin
-  - npm test
+script:
+  - npm run test-cli

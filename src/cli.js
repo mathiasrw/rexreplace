@@ -1,13 +1,14 @@
-rexreplace = require('./core');
+let rexreplace = require('./core');
 
 let	pattern, replacement;
 
 // CLI interface for rexreplace
-needHelp = false;
+
+// To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed befores yargs does it magic - but we still need to handle -version and -help
+let needHelp = false;
 if(process.argv.length<4){
 	needHelp = true;
 } else {
-	// To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed befores yargs does it magic
 	[pattern, replacement] = process.argv.splice(2,2);
 }
 
@@ -156,13 +157,19 @@ if(!yargs.argv.voidEuro){
 }
 
 // All options into one big config object for the rexreplace core
-let config = Object.assign(
-								yargs.argv, 
-								{
-									showHelp: 		yargs.showHelp,
-									pattern: 		pattern,
-									replacement: 	replacement
-								}
-							);
+let config = {};
+
+// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+Object.keys(yargs.argv).forEach(key=>{
+	if(1<key.length && key.indexOf('-')<0){
+		config[key] = yargs.argv[key];
+	}
+});
+
+config.files = yargs.argv._;
+config.showHelp = yargs.showHelp;
+config.pattern = pattern;
+config.replacement = replacement;
+
 
 rexreplace(config);
