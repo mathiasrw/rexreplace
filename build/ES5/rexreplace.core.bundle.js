@@ -3432,7 +3432,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.2.0';
+    var version = '2.2.1';
 
     module.exports = function (config) {
       var _require = require('./output')(config),

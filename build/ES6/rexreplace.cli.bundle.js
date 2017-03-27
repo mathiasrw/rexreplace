@@ -15245,7 +15245,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.2.0';
+const version = '2.2.1';
 
 module.exports = function(config){
 
