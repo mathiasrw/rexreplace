@@ -3432,7 +3432,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.1.1';
+    var version = '2.2.0';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3515,23 +3515,28 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       function getFinalReplacement(config) {
         var replacement = config.replacement;
 
-        if (config.replacementFile) {
-          replacement = fs.readFileSync(replacement, 'utf8');
-          replacement = oneLinerFromFile(replacement);
+        /*if(config.replacementFile){
+        	replacement = fs.readFileSync(replacement,'utf8');
+        	replacement = oneLinerFromFile(replacement);
+        }*/
+
+        if (config.replacementJs) {
+          replacement = eval(replacement); // Todo: make a bit more scoped
         }
 
         return replacement;
       }
-
-      function oneLinerFromFile(str) {
-        var lines = str.split("\n");
-        if (liens.length === 1) {
-          return str;
-        }
-        return lines.map(function (line) {
-          return line.trim();
-        }).join(' ');
-      }
+      /*
+      	function oneLinerFromFile(str){
+      		var lines = str.split("\n");
+      		if(liens.length===1){
+      			return str;
+      		}
+      		return lines.map(function (line) {
+      			return line.trim();
+      		}).join(' ');
+      	}
+      */
 
       function getFinalRegex(config) {
         var regex = null;

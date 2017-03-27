@@ -70,24 +70,14 @@ const yargs = require('yargs')
 	.boolean('€')
 		.describe('€', "Void having '€' as alias for '$' in pattern and replacement")
 		.alias('€', 'void-euro')
-	
-/*	.boolean('P')
-		.describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
-		.alias('P', 'pattern-file')
-
-	.boolean('R')
-		.alias('R', 'replacement-file')
-		.describe('R', 	
-			`Replacement is a filename from where the replacement will be generated. ` +
-			`If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
-		)
 
 	.boolean('J')
 		.alias('J', 'replacement-js')
 		.describe('J',	
 			`Replacement is javascript source code. `+
-			`Output from last statement will be used as replacement. `+
-			`Purpusfullly implemented the most insecure way possible to remove _any_ incentive to consider running code from any untrused person - that be anyone that is not yourself. `+
+			`Output from last statement will be used as final replacement. `+
+			`Purpusfullly implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrused person - that be anyone that is not yourself. `+
+		/*	
 			`The sources is ran once for each file to be searched, so you can make the replacement file specific. `+
 			`The code has access to the following predefined values: `+
 			`'fs' from node, `+
@@ -100,8 +90,21 @@ const yargs = require('yargs')
 			`'_name' is the filename of the active file being searched with no extension, `+
 			`'_ext' is the filename of the active file being searched with no extension, `+
 			`'_content' is the full content of the active file being searched or.`+
-			''
-		)*/
+			*/''
+		)
+	
+/*	.boolean('P')
+		.describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
+		.alias('P', 'pattern-file')
+
+	.boolean('R')
+		.alias('R', 'replacement-file')
+		.describe('R', 	
+			`Replacement is a filename from where the replacement will be generated. ` +
+			`If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
+		)
+
+	*/
 
 	/* // Ideas
 

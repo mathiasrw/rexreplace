@@ -43,13 +43,15 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 
 > rexreplace '^#' '##' docs/*.md      
   # All markdown files in the docs/ dir got headlines moved one level deeper
+  
+> rexreplace "VERSION_NUMBER" "require('package.json').version" -J build/*.js  
+  # Let the version number from package.json replace the string 'VERSION_NUMBER' in all builded js files
 
-> rexreplace '(f?(o))o(.*)' '$3$1$2' myfile.md 
+> rexreplace '(foo)(.*)' '$2$1' myfile.md 
   # 'foobar' in myfile.md will become 'barfoo'
 
-> rexreplace '(f?(o))o(.*)' '€3€1€2' myfile.md  
-  # '€' is treated as an alias for '$' so this also transforms 'foobar' into 'barfoo'
-
+> rexreplace '(foo)(.*)' '€2€1' myfile.md  
+  # '€' is treated as an alias for '$' so this one also transforms 'foobar' into 'barfoo'      
 ```
 
 
@@ -73,8 +75,14 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
   -d, --debug             Print debug info                             [boolean]
   -€, --void-euro         Void having '€' as alias for '$' in pattern and
                           replacement                                  [boolean]
+  -J, --replacement-js    Replacement is javascript source code. Output from
+                          last statement will be used as final replacement.
+                          Purpusfullly implemented the most insecure way
+                          possible to remove _any_ incentive to consider
+                          running code from an untrused person - that be anyone
+                          that is not yourself.                        [boolean]
   -h, --help              Display manual. (can be given as only argument)
-                                                                       [boolean]
+                                                                       [boolean]                                                               
 ```
 
 ## Good to know 

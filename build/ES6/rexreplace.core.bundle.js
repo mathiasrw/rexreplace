@@ -3666,7 +3666,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.1.1';
+const version = '2.2.0';
 
 module.exports = function(config){
 
@@ -3746,14 +3746,18 @@ module.exports = function(config){
 	function getFinalReplacement(config){
 		let replacement = config.replacement;
 
-		if(config.replacementFile){
+		/*if(config.replacementFile){
 			replacement = fs.readFileSync(replacement,'utf8');
 			replacement = oneLinerFromFile(replacement);
+		}*/
+
+		if(config.replacementJs){
+			replacement = eval(replacement); // Todo: make a bit more scoped
 		}
 
 		return replacement;
 	}
-
+/*
 	function oneLinerFromFile(str){
 		var lines = str.split("\n");
 		if(liens.length===1){
@@ -3763,7 +3767,7 @@ module.exports = function(config){
 			return line.trim();
 		}).join(' ');
 	}
-
+*/
 
 	function getFinalRegex(config){
 		let regex = null;	

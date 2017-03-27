@@ -97,6 +97,13 @@ reset
 assert		 		"rexreplace '.€' '€' myfile -o --void-euro"    'foobar'
 
 
+# -J
+reset
+assert		 		"rexreplace 'foo' '2+2' myfile -o --replacement-js"    '4bar'
+
+reset
+assert		 		"rexreplace 'foo' 'var i = 2; i + 2' myfile -o --replacement-js"    '4bar'
+
 # # -P
 # # -R
 # reset
