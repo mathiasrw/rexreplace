@@ -1,0 +1,19 @@
+{
+  "ignore": [
+    "**/**-min.**",
+    "**/**.min.**",
+    "**/**.bundle.**",
+    "**/**.file",
+    "**/**.test",
+    "build/**",
+    "legacy/**",
+    "lib/**",
+    "test/**",
+  ],
+  "test": [
+    "**/test/**",
+  ],
+  "critics": {
+    "wc": { "limit": 5000 }
+  }
+}i

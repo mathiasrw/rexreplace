@@ -1,7 +1,7 @@
 {
   "name": "rexreplace",
   "version": "2.2.1",
-  "description": "Regex replace in files from CLI. Dynamic replacements and globs.",
+  "description": "CLI regex replace in files as it should be.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
   "main": "build/multiversion.core.js",
