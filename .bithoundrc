@@ -8,6 +8,6 @@
     "/build/**",
     "/legacy/**",
     "/lib/**",
-    "/test/**",
+    "/test/**"
   ]
 }
