@@ -1,6 +1,6 @@
-let rexreplace = require('./core');
+const rexreplace = require('./core');
 
-let    pattern, replacement;
+let pattern, replacement;
 
 // CLI interface for rexreplace
 

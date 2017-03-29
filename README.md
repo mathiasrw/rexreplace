@@ -13,7 +13,9 @@
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](https://open-oss.com)
 [![ghit.me](https://ghit.me/badge.svg?repo=mathiasrw/rexreplace)](https://ghit.me/repo/mathiasrw/rexreplace)
+[![bitHound Overall Score](https://www.bithound.io/github/mathiasrw/rexreplace/badges/score.svg)](https://www.bithound.io/github/mathiasrw/rexreplace)
 [![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=alasql)
+
 
 
 
@@ -31,35 +33,64 @@ Key features:
 - Files are given as [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl16a.html) so `docs/*.md` represents each markdown file in your `docs/` dir.
 - No more brute forcing the right combination of `find`, `cat`, `sed`, `tr`, and `awk` to replace a text pattern in a bunch of files.
 
-### Examples
-
-```bash
-> rexreplace Foo xxx myfile.md     
-  # 'foobar' in myfile.md will become 'xxxbar'
-
-> rexreplace '^#' '##' docs/*.md      
-  # All markdown files in the docs/ dir got headlines moved one level deeper
-  
-> rexreplace VERSION_NUMBER require('package.json').version -J build/*.js  
-  # The version number from package.json got into your built js files (use 'VERSION_NUMER' in your source files)
-
-  # Replacement can have backreferences to matching groups: 
-> rexreplace '(foo)(.*)' '$2$1' myfile.md 
-  # 'foobar' in myfile.md will become 'barfoo'
-
-  # RexReplace will as default treat `€` as an alias for `$`:
-> rexreplace '(foo)(.*)' '€2€1' myfile.md  
-  # This also transforms 'foobar' into 'barfoo'      
-   
-```
-
-
-### Install
+## Install
 ```bash
 > npm install -g rexreplace
 ```
+
+## Examples
+
+Let foobar' in myfile.md will become 'xxxbar'
+
+```bash
+> rexreplace 'Foo' 'xxx' myfile.md
+```
+
+Short version of same command
+
+```bash
+> rr Foo xxx myfile.md
+```
+
+
+----
+
+Let All markdown files in the `docs/` dir get headlines moved one level deeper
+
+```bash
+> rexreplace '^#' '##' docs/*.md			
+```
  
-### Usage 
+----
+Let the version number from package.json get into your distribution js files (Use `const version = 'VERSION_NUMER'` in your source files).
+   
+```bash
+> rexreplace VERSION_NUMBER require('package.json').version -J dist/*.js 
+```
+
+
+
+----
+
+Let 'foobar' in myfile.md become 'barfoo' by using backreferences to matching groups 
+
+```bash
+> rexreplace '(foo)(.*)' '$2$1' myfile.md
+```
+
+
+RexReplace will as default treat `€` as an alias for `$` so this will also let 'foobar' in myfile.md become 'barfoo'
+
+```bash
+> rexreplace '(foo)(.*)' '€2€1' myfile.md  
+```
+  
+----
+
+
+
+ 
+## Usage 
 ```bash
 > rexreplace pattern replacement [fileGlob|option]+
 ```
@@ -195,11 +226,10 @@ Please note that speeds might look very different when files get as large as the
 
 ### Inspiration
 
-.oO(_What should "sed" have looked like by now?)_
+_.oO(What should "sed" have looked like by now?)_
 
 
 ### Future ideas
-
 
 
 - Test-run with info outputted about what will happen (sets -t and does not change anything)
