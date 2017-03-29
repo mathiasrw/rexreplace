@@ -1,7 +1,7 @@
 {
   "name": "rexreplace",
-  "version": "2.2.1",
-  "description": "CLI regex replace in files as it should be.",
+  "version": "2.2.2",
+  "description": "Flexible CLI regex replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
   "main": "build/multiversion.core.js",
@@ -35,7 +35,7 @@
     "mocha": "^3.2.0"
   },
   "directories": {
-    "test": "test/regression/js"
+    "test": "test"
   },
   "dependencies": {
     "chalk": "^1.1.3",
