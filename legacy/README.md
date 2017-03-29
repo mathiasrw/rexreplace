@@ -1,4 +1,4 @@
-_This is a legacy version of [RexReplace](https://github.com/mathiasrw/rexreplace)_
+_This is the legacy version of [RexReplace](https://www.npmjs.com/package/rexreplace)_
 
 # rreplace
 
@@ -18,20 +18,19 @@ Works on any version of Node.js since 0.6
 
 - Pattern is a regex and may capture groups
 
-- Replacement may refer back to captured groups. The first group is named `$1`
+- Replacement may refer to captured groups. The first group is named `$1`
 
-- Filepath can only contain a path to one specific file (no globs)
+- Filepath can only contain a path to one particular file (no globs)
 
-- Default is global case-insensitive multiline search (regexFlags is `gmi`)
+- Default is global case-insensitive multiline search (regexFlags is default `gmi`)
 
 - Default file encoding is `utf8`
 
 ### Example
 
 ```bash
-echo 'foobar' > myfile 
-rreplace '(F?(O))O(.*)' '$3$1$2' myfile 
-grep -q 'barfoo' myfile || exit 100
+> rreplace '(foo)(.*)' '$2$1' myfile.md 
+  # 'foobar' is now 'barfoo' in myfile.md
 ```
 
 
