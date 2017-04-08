@@ -14,7 +14,7 @@
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](https://open-oss.com)
 [![ghit.me](https://ghit.me/badge.svg?repo=mathiasrw/rexreplace)](https://ghit.me/repo/mathiasrw/rexreplace)
 [![bitHound Overall Score](https://www.bithound.io/github/mathiasrw/rexreplace/badges/score.svg)](https://www.bithound.io/github/mathiasrw/rexreplace)
-[![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=alasql)
+[![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace)
 
 
 
@@ -34,13 +34,23 @@ Key features:
 - No more brute forcing the right combination of `find`, `cat`, `sed`, `tr`, and `awk` to replace a text pattern in a bunch of files.
 
 ## Install
+To use RexReplace from your command line
+
 ```bash
 > npm install -g rexreplace
 ```
 
+To use RexReplace from a npm build script
+
+```bash
+> npm install rexreplace --save-dev
+```
+
+
+
 ## Examples
 
-Let foobar' in myfile.md will become 'xxxbar'
+Let 'foobar' in myfile.md become 'xxxbar'
 
 ```bash
 > rexreplace 'Foo' 'xxx' myfile.md
@@ -55,31 +65,31 @@ Short version of same command
 
 ----
 
-Let All markdown files in the `docs/` dir get headlines moved one level deeper
+Let all markdown files in the `docs/` dir get headlines moved one level deeper
 
 ```bash
 > rexreplace '^#' '##' docs/*.md			
 ```
  
 ----
-Let the version number from package.json get into your distribution js files (Use `const version = 'VERSION_NUMER'` in your source files).
+Let the version number from package.json get into your distribution js files (use the string `VERSION_NUMER` in your source files).
    
 ```bash
-> rexreplace VERSION_NUMBER require('package.json').version -J dist/*.js 
+> rexreplace 'VERSION_NUMBER' 'require('package.json').version' -J dist/*.js 
 ```
 
 
 
 ----
 
-Let 'foobar' in myfile.md become 'barfoo' by using backreferences to matching groups 
+Let 'foobar' in myfile.md become 'barfoo' (backreferences to matching group) 
 
 ```bash
 > rexreplace '(foo)(.*)' '$2$1' myfile.md
 ```
 
 
-RexReplace will as default treat `€` as an alias for `$` so this will also let 'foobar' in myfile.md become 'barfoo'
+RexReplace normally treat `€` as an alias for `$` so the following will do the exact same
 
 ```bash
 > rexreplace '(foo)(.*)' '€2€1' myfile.md  
@@ -105,15 +115,32 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 
 
 ### Options
-```
-  -v, --version           Print rexreplace version (can be given as only
-                          argument)                                    [boolean]
-  -I, --void-ignore-case  Void case insensitive search pattern.        [boolean]
-  -M, --void-multiline    Void multiline search pattern. Makes ^ and $ match
-                          start/end of whole content rather than each line.
+
+ Name  | Explanation 
+ ---- | ----
+ -v, --version  | Print rexreplace version (can be given as only argument) [boolean]
+ -I, --void-ignore-case  | Void case insensitive search pattern.        [boolean]
+
+
+
+####  
+
+
+----
+
+####  -I, --void-ignore-case  
+
+
+----
+
+####  -M, --void-multiline   
+ Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.
                                                                        [boolean]
-  -u, --unicode           Treat pattern as a sequence of unicode code points.
+
+####  -u, --unicode          
+ Treat pattern as a sequence of unicode code points.
                                                                        [boolean]
+
   -e, --encoding          Encoding of files.                   [default: "utf8"]
   -o, --output            Output the result instead of saving to file. Will also
                           output content even if no replacement have taken
@@ -151,7 +178,7 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 ### Quirks
 - Per default `€` is treated as an alias for `$` in the CLI input. The main reason is for you not to worry about how command line tools often have a special relationship with the `$` char. Your can escape your way out of this old love story, but it often pops up in unexpected ways. Use the `-€` flag if you need to search or replace the actual euro char. 
 
-- Options can only be set after the replacement parameter. _But I like to put my options as the first thing, so I know what I am doing_ I agree, but we must sometimes sacrifice some habits for the sake of simplicity.
+- Options can only be set after the replacement parameter. "_But I like to put my options as the first thing, so I know what I am doing_" I agree, but we must sometimes sacrifice habits for consistency.
 
 
 
@@ -251,6 +278,9 @@ _.oO(What should "sed" have looked like by now?)_
 - Implement in go, so all platforms can be supported with no need for node (might be based on)
 - let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
 - Output only matched groups
+- Expand speed test to compare all related projects
+- Build step options into readme (`"[\s\S]+\nOptions:\n([\s\S]+?)\nExamples:[\s\S]+"`)
+- Check if modular + compile is slower than minimonolit + require fs
 
 
 ## Related projects
