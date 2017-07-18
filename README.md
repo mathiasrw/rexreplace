@@ -116,22 +116,13 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 
 ### Options
 
- Name  | Explanation 
- ---- | ----
- -v, --version  | Print rexreplace version (can be given as only argument) [boolean]
- -I, --void-ignore-case  | Void case insensitive search pattern.        [boolean]
 
+####   -v, --version   
+Print rexreplace version (can be given as only argument) [boolean]
 
-
-####  
-
-
-----
 
 ####  -I, --void-ignore-case  
-
-
-----
+Void case insensitive search pattern.        [boolean]
 
 ####  -M, --void-multiline   
  Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.
@@ -141,25 +132,41 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
  Treat pattern as a sequence of unicode code points.
                                                                        [boolean]
 
-  -e, --encoding          Encoding of files.                   [default: "utf8"]
-  -o, --output            Output the result instead of saving to file. Will also
+####  -e, --encoding          
+Encoding of files.                   [default: "utf8"]
+
+#### -o, --output
+Output the result instead of saving to file. Will also
                           output content even if no replacement have taken
                           place.                                       [boolean]
-  -q, --quiet             Only display erros (no other info)           [boolean]
-  -Q, --quiet-total       Never display erros or info                  [boolean]
-  -H, --halt              Halt on first error         [boolean] [default: false]
-  -d, --debug             Print debug info                             [boolean]
-  -€, --void-euro         Void having '€' as alias for '$' in pattern and
+
+#### -q, --quiet   
+Only display erros (no other info)           [boolean]
+
+#### -Q, --quiet-total  
+Never display erros or info                  [boolean]
+
+#### -H, --halt   
+Halt on first error         [boolean] [default: false]
+
+#### -d, --debug   
+Print debug info                             [boolean]
+
+#### -€, --void-euro  
+Void having '€' as alias for '$' in pattern and
                           replacement                                  [boolean]
-  -J, --replacement-js    Replacement is javascript source code. Output from
+
+#### -J, --replacement-js  
+Replacement is javascript source code. Output from
                           last statement will be used as final replacement.
                           Purposefully implemented the most insecure way
                           possible to remove _any_ incentive to consider
                           running code from an untrusted person - that be anyone
                           that is not yourself.                        [boolean]
-  -h, --help              Display manual. (can be given as only argument)
+
+#### -h, --help    
+Display manual. (can be given as only argument)
                                                                        [boolean]                                                               
-```
 
 ## Good to know 
 
