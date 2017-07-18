@@ -143,7 +143,7 @@ const yargs = require('yargs')
         .describe('h', "Display help.")
         .alias('h', 'help')
 
-    .epilog(`Inspiration: .oO(What shuold 'sed' have been by now?)`)
+    .epilog(`Inspiration: .oO(What should 'sed' have been by now?)`)
     
 ;
 
