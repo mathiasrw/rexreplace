@@ -88,6 +88,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       get: assembleStyles
     });
   }, {}], 3: [function (require, module, exports) {
+    'use strict';
+
     module.exports = balanced;
     function balanced(a, b, str) {
       if (a instanceof RegExp) a = maybeMatch(a, str);
@@ -242,7 +244,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
       var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
       var isSequence = isNumericSequence || isAlphaSequence;
-      var isOptions = /^(.*,)+(.+)?$/.test(m.body);
+      var isOptions = m.body.indexOf(',') >= 0;
       if (!isSequence && !isOptions) {
         // {a},b}
         if (m.post.match(/,.*\}/)) {
@@ -1196,9 +1198,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       var self = this;
-      var n = this.minimatch.set.length;
       this._processing = 0;
-      this.matches = new Array(n);
 
       this._emitQueue = [];
       this._processQueue = [];
@@ -2390,11 +2390,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       '+': { open: '(?:', close: ')+' },
       '*': { open: '(?:', close: ')*' },
       '@': { open: '(?:', close: ')' }
-    };
 
-    // any single thing other than /
-    // don't need to escape / when using new RegExp()
-    var qmark = '[^/]';
+      // any single thing other than /
+      // don't need to escape / when using new RegExp()
+    };var qmark = '[^/]';
 
     // * => any number of characters
     var star = qmark + '*?';
@@ -3432,7 +3431,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.2.2';
+    var version = '2.3.0';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3513,18 +3512,27 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFinalReplacement(config) {
-        var replacement = config.replacement;
 
         /*if(config.replacementFile){
-        	replacement = fs.readFileSync(replacement,'utf8');
-        	replacement = oneLinerFromFile(replacement);
+        	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
 
         if (config.replacementJs) {
-          replacement = eval(replacement); // Todo: make a bit more scoped
+          return eval(config.replacement); // Todo: make a bit more scoped
         }
 
-        return replacement;
+        if (config.replacementJsDynamic) {
+          var code = config.replacement;
+
+          return function () {
+            for (var i = 0; i < arguments.length - 2; i++) {
+              eval('var $' + i + '="' + arguments[i] + '";'); // we are already using eval - so wth...
+            }
+            return eval(code);
+          };
+        }
+
+        return config.replacement;
       }
       /*
       	function oneLinerFromFile(str){

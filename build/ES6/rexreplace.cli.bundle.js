@@ -72,6 +72,7 @@ Object.defineProperty(module, 'exports', {
 });
 
 },{}],3:[function(require,module,exports){
+'use strict';
 module.exports = balanced;
 function balanced(a, b, str) {
   if (a instanceof RegExp) a = maybeMatch(a, str);
@@ -240,7 +241,7 @@ function expand(str, isTop) {
   var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
   var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
   var isSequence = isNumericSequence || isAlphaSequence;
-  var isOptions = /^(.*,)+(.+)?$/.test(m.body);
+  var isOptions = m.body.indexOf(',') >= 0;
   if (!isSequence && !isOptions) {
     // {a},b}
     if (m.post.match(/,.*\}/)) {
@@ -1900,9 +1901,7 @@ function Glob (pattern, options, cb) {
   }
 
   var self = this
-  var n = this.minimatch.set.length
   this._processing = 0
-  this.matches = new Array(n)
 
   this._emitQueue = []
   this._processQueue = []
@@ -4084,7 +4083,19 @@ var authProtocols = {
   'git+http:': true
 }
 
+var cache = {}
+
 module.exports.fromUrl = function (giturl, opts) {
+  var key = giturl + JSON.stringify(opts || {})
+
+  if (!(key in cache)) {
+    cache[key] = fromUrl(giturl, opts)
+  }
+
+  return cache[key]
+}
+
+function fromUrl (giturl, opts) {
   if (giturl == null || giturl === '') return
   var url = fixupUnqualifiedGist(
     isGitHubShorthand(giturl) ? 'github:' + giturl : giturl
@@ -4113,7 +4124,7 @@ module.exports.fromUrl = function (giturl, opts) {
         var pathmatch = gitHostInfo.pathmatch
         var matched = parsed.path.match(pathmatch)
         if (!matched) return
-        if (matched[1] != null) user = decodeURIComponent(matched[1])
+        if (matched[1] != null) user = decodeURIComponent(matched[1].replace(/^:/, ''))
         if (matched[2] != null) project = decodeURIComponent(matched[2])
         defaultRepresentation = protocolToRepresentation(parsed.protocol)
       }
@@ -5627,7 +5638,7 @@ var isBuiltinModule = require("is-builtin-module")
 var depTypes = ["dependencies","devDependencies","optionalDependencies"]
 var extractDescription = require("./extract_description")
 var url = require("url")
-var typos = require("./typos")
+var typos = require("./typos.json")
 
 var fixer = module.exports = {
   // default warning function
@@ -5911,7 +5922,6 @@ var fixer = module.exports = {
       return delete data.homepage
     }
     if(!url.parse(data.homepage).protocol) {
-      this.warn("missingProtocolHomepage")
       data.homepage = "http://" + data.homepage
     }
   }
@@ -6039,7 +6049,7 @@ function bugsTypos(bugs, warn) {
   })
 }
 
-},{"./extract_description":42,"./typos":46,"hosted-git-info":29,"is-builtin-module":35,"semver":64,"url":undefined,"validate-npm-package-license":74}],44:[function(require,module,exports){
+},{"./extract_description":42,"./typos.json":46,"hosted-git-info":29,"is-builtin-module":35,"semver":64,"url":undefined,"validate-npm-package-license":74}],44:[function(require,module,exports){
 var util = require("util")
 var messages = require("./warning_messages.json")
 
@@ -6161,7 +6171,6 @@ module.exports={
   ,"emptyNormalizedBugs": "Normalized value of bugs field is an empty object. Deleted."
   ,"nonUrlHomepage": "homepage field must be a string url. Deleted."
   ,"invalidLicense": "license should be a valid SPDX license expression"
-  ,"missingProtocolHomepage": "homepage field must start with a protocol."
   ,"typo": "%s should probably be %s."
 }
 
@@ -8413,7 +8422,7 @@ function patch(a, loose) {
 
 exports.compare = compare;
 function compare(a, b, loose) {
-  return new SemVer(a, loose).compare(b);
+  return new SemVer(a, loose).compare(new SemVer(b, loose));
 }
 
 exports.compareLoose = compareLoose;
@@ -8554,11 +8563,59 @@ Comparator.prototype.test = function(version) {
   return cmp(version, this.operator, this.semver, this.loose);
 };
 
+Comparator.prototype.intersects = function(comp, loose) {
+  if (!(comp instanceof Comparator)) {
+    throw new TypeError('a Comparator is required');
+  }
+
+  var rangeTmp;
+
+  if (this.operator === '') {
+    rangeTmp = new Range(comp.value, loose);
+    return satisfies(this.value, rangeTmp, loose);
+  } else if (comp.operator === '') {
+    rangeTmp = new Range(this.value, loose);
+    return satisfies(comp.semver, rangeTmp, loose);
+  }
+
+  var sameDirectionIncreasing =
+    (this.operator === '>=' || this.operator === '>') &&
+    (comp.operator === '>=' || comp.operator === '>');
+  var sameDirectionDecreasing =
+    (this.operator === '<=' || this.operator === '<') &&
+    (comp.operator === '<=' || comp.operator === '<');
+  var sameSemVer = this.semver.version === comp.semver.version;
+  var differentDirectionsInclusive =
+    (this.operator === '>=' || this.operator === '<=') &&
+    (comp.operator === '>=' || comp.operator === '<=');
+  var oppositeDirectionsLessThan =
+    cmp(this.semver, '<', comp.semver, loose) &&
+    ((this.operator === '>=' || this.operator === '>') &&
+    (comp.operator === '<=' || comp.operator === '<'));
+  var oppositeDirectionsGreaterThan =
+    cmp(this.semver, '>', comp.semver, loose) &&
+    ((this.operator === '<=' || this.operator === '<') &&
+    (comp.operator === '>=' || comp.operator === '>'));
+
+  return sameDirectionIncreasing || sameDirectionDecreasing ||
+    (sameSemVer && differentDirectionsInclusive) ||
+    oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
+};
+
 
 exports.Range = Range;
 function Range(range, loose) {
-  if ((range instanceof Range) && range.loose === loose)
-    return range;
+  if (range instanceof Range) {
+    if (range.loose === loose) {
+      return range;
+    } else {
+      return new Range(range.raw, loose);
+    }
+  }
+
+  if (range instanceof Comparator) {
+    return new Range(range.value, loose);
+  }
 
   if (!(this instanceof Range))
     return new Range(range, loose);
@@ -8631,6 +8688,22 @@ Range.prototype.parseRange = function(range) {
   });
 
   return set;
+};
+
+Range.prototype.intersects = function(range, loose) {
+  if (!(range instanceof Range)) {
+    throw new TypeError('a Range is required');
+  }
+
+  return this.set.some(function(thisComparators) {
+    return thisComparators.every(function(thisComparator) {
+      return range.set.some(function(rangeComparators) {
+        return rangeComparators.every(function(rangeComparator) {
+          return thisComparator.intersects(rangeComparator, loose);
+        });
+      });
+    });
+  });
 };
 
 // Mostly just for testing and legacy API reasons
@@ -8937,20 +9010,42 @@ function satisfies(version, range, loose) {
 
 exports.maxSatisfying = maxSatisfying;
 function maxSatisfying(versions, range, loose) {
-  return versions.filter(function(version) {
-    return satisfies(version, range, loose);
-  }).sort(function(a, b) {
-    return rcompare(a, b, loose);
-  })[0] || null;
+  var max = null;
+  var maxSV = null;
+  try {
+    var rangeObj = new Range(range, loose);
+  } catch (er) {
+    return null;
+  }
+  versions.forEach(function (v) {
+    if (rangeObj.test(v)) { // satisfies(v, range, loose)
+      if (!max || maxSV.compare(v) === -1) { // compare(max, v, true)
+        max = v;
+        maxSV = new SemVer(max, loose);
+      }
+    }
+  })
+  return max;
 }
 
 exports.minSatisfying = minSatisfying;
 function minSatisfying(versions, range, loose) {
-  return versions.filter(function(version) {
-    return satisfies(version, range, loose);
-  }).sort(function(a, b) {
-    return compare(a, b, loose);
-  })[0] || null;
+  var min = null;
+  var minSV = null;
+  try {
+    var rangeObj = new Range(range, loose);
+  } catch (er) {
+    return null;
+  }
+  versions.forEach(function (v) {
+    if (rangeObj.test(v)) { // satisfies(v, range, loose)
+      if (!min || minSV.compare(v) === 1) { // compare(min, v, true)
+        min = v;
+        minSV = new SemVer(min, loose);
+      }
+    }
+  })
+  return min;
 }
 
 exports.validRange = validRange;
@@ -9050,6 +9145,13 @@ exports.prerelease = prerelease;
 function prerelease(version, loose) {
   var parsed = parse(version, loose);
   return (parsed && parsed.prerelease.length) ? parsed.prerelease : null;
+}
+
+exports.intersects = intersects;
+function intersects(r1, r2, loose) {
+  r1 = new Range(r1, loose)
+  r2 = new Range(r2, loose)
+  return r1.intersects(r2)
 }
 
 },{}],65:[function(require,module,exports){
@@ -13003,7 +13105,7 @@ module.exports = function (yargs, usage, command) {
   return self
 }
 
-}).call(this,"/Users/mrw/git/rexreplace/node_modules/yargs/lib")
+}).call(this,"/Users/mrw/git/rr/node_modules/yargs/lib")
 },{"fs":undefined,"path":undefined}],87:[function(require,module,exports){
 /*
 Copyright (c) 2011 Andrei Mackenzie
@@ -14504,7 +14606,7 @@ function Yargs (processArgs, cwd, parentRequire) {
         self.demand(key, demand)
       }
 
-      if ('demandOption' in opt) {
+      if (opt.demandOption) {
         self.demandOption(key, typeof opt.demandOption === 'string' ? opt.demandOption : undefined)
       }
 
@@ -14859,7 +14961,7 @@ function Yargs (processArgs, cwd, parentRequire) {
 
   self.terminalWidth = function () {
     argsert([], 0)
-    return process.stdout.columns
+    return typeof process.stdout.columns !== 'undefined' ? process.stdout.columns : null
   }
 
   Object.defineProperty(self, 'argv', {
@@ -14920,7 +15022,8 @@ function Yargs (processArgs, cwd, parentRequire) {
         var handlerKeys = command.getCommands()
         if (handlerKeys.length) {
           var firstUnknownCommand
-          for (var i = 0, cmd; (cmd = argv._[i]) !== undefined; i++) {
+          for (var i = 0, cmd; argv._[i] !== undefined; i++) {
+            cmd = String(argv._[i])
             if (~handlerKeys.indexOf(cmd) && cmd !== completionCommand) {
               setPlaceholderKeys(argv)
               return command.runCommand(cmd, self, parsed)
@@ -14972,21 +15075,24 @@ function Yargs (processArgs, cwd, parentRequire) {
       }
 
       // Handle 'help' and 'version' options
-      Object.keys(argv).forEach(function (key) {
-        if (key === helpOpt && argv[key]) {
-          if (exitProcess) setBlocking(true)
+      // if we haven't already output help!
+      if (!hasOutput) {
+        Object.keys(argv).forEach(function (key) {
+          if (key === helpOpt && argv[key]) {
+            if (exitProcess) setBlocking(true)
 
-          skipValidation = true
-          self.showHelp('log')
-          self.exit(0)
-        } else if (key === versionOpt && argv[key]) {
-          if (exitProcess) setBlocking(true)
+            skipValidation = true
+            self.showHelp('log')
+            self.exit(0)
+          } else if (key === versionOpt && argv[key]) {
+            if (exitProcess) setBlocking(true)
 
-          skipValidation = true
-          usage.showVersion()
-          self.exit(0)
-        }
-      })
+            skipValidation = true
+            usage.showVersion()
+            self.exit(0)
+          }
+        })
+      }
 
       // Check if any of the options to skip validation were provided
       if (!skipValidation && options.skipValidation.length > 0) {
@@ -15058,11 +15164,11 @@ function rebase (base, dir) {
   return path.relative(base, dir)
 }
 
-}).call(this,"/Users/mrw/git/rexreplace/node_modules/yargs")
+}).call(this,"/Users/mrw/git/rr/node_modules/yargs")
 },{"./lib/apply-extends":82,"./lib/argsert":83,"./lib/assign":84,"./lib/command":85,"./lib/completion":86,"./lib/obj-filter":88,"./lib/usage":89,"./lib/validation":90,"./lib/yerror":91,"get-caller-file":17,"os-locale":50,"path":undefined,"read-pkg-up":60,"require-main-filename":63,"set-blocking":65,"y18n":78,"yargs-parser":79}],93:[function(require,module,exports){
-let rexreplace = require('./core');
+const rexreplace = require('./core');
 
-let    pattern, replacement;
+let pattern, replacement;
 
 // CLI interface for rexreplace
 
@@ -15084,7 +15190,7 @@ const yargs = require('yargs')
         .example('')
         .example(`> rr Foo xxx myfile.md`,`The alias 'rr' can be used instead of 'rexreplace'`)
         .example('')
-        .example(`> rexreplace '(f?(o))o(.*)' '$3$1$2' myfile.md`, `'foobar' in myfile.md will become 'barfoo'`)
+        .example(`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`, `'foobar' in myfile.md will become 'barfoo'`)
         .example('')
         .example(`> rexreplace '^#' '##' *.md`, `All markdown files in this dir got all headlines moved one level deeper`)
         
@@ -15137,7 +15243,7 @@ const yargs = require('yargs')
         .alias('J', 'replacement-js')
         .describe('J',    
             `Replacement is javascript source code. `+
-            `Output from last statement will be used as final replacement. `+
+            `Will run _once_ and output from last statement will become final replacement. `+
             `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
         /*    
             `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
@@ -15154,6 +15260,35 @@ const yargs = require('yargs')
             `'_content' is the full content of the active file being searched or.`+
             */''
         )
+        .conflicts('j')
+
+
+        .boolean('j')
+        .alias('j', 'replacement-js-dynamic')
+        .describe('j',    
+            `Replacement is javascript source code. `+
+            `Will run multiple times as the output from last statement will become replacement for each match. `+
+            `Has impact on peformance so be wise and use 'J' flag if captured groups are not being used. `+
+            `The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
+            `At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. `+
+            `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
+        /*    
+            `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
+            `The code has access to the following predefined values: `+
+            `'fs' from node, `+
+            `'globs' from npm, `+
+            `'_pattern' is the final pattern. `+
+            `The following values are also available but if content is being piped they are all set to an empty string: `+
+            `'_file' is the full path of the active file being searched (including fiename), `+
+            `'_path' is the full path without file name of the active file being searched, `+
+            `'_filename' is the filename of the active file being searched, `+
+            `'_name' is the filename of the active file being searched with no extension, `+
+            `'_ext' is the filename of the active file being searched with no extension, `+
+            `'_content' is the full content of the active file being searched or.`+
+            */''
+        )
+        .conflicts('J')
+
     
 /*    .boolean('P')
         .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -15205,7 +15340,7 @@ const yargs = require('yargs')
         .describe('h', "Display help.")
         .alias('h', 'help')
 
-    .epilog(`Inspiration: .oO(What shuold 'sed' have been by now?)`)
+    .epilog(`Inspiration: .oO(What should 'sed' have been by now?)`)
     
 ;
 
@@ -15245,7 +15380,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.2.2';
+const version = '2.3.0';
 
 module.exports = function(config){
 
@@ -15323,18 +15458,27 @@ module.exports = function(config){
 	}
 
 	function getFinalReplacement(config){
-		let replacement = config.replacement;
 
 		/*if(config.replacementFile){
-			replacement = fs.readFileSync(replacement,'utf8');
-			replacement = oneLinerFromFile(replacement);
+			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
 
 		if(config.replacementJs){
-			replacement = eval(replacement); // Todo: make a bit more scoped
-		}
+			return eval(config.replacement); // Todo: make a bit more scoped
+		}  
 
-		return replacement;
+		if(config.replacementJsDynamic){
+			let code = config.replacement;
+
+			return function(){
+								for(var i = 0;i<arguments.length-2;i++){
+									eval('var $'+i+'="'+arguments[i]+'";'); // we are already using eval - so wth...
+								}
+								return eval(code);
+							}; 
+		} 
+
+		return config.replacement;
 	}
 /*
 	function oneLinerFromFile(str){

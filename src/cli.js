@@ -22,7 +22,7 @@ const yargs = require('yargs')
         .example('')
         .example(`> rr Foo xxx myfile.md`,`The alias 'rr' can be used instead of 'rexreplace'`)
         .example('')
-        .example(`> rexreplace '(f?(o))o(.*)' '$3$1$2' myfile.md`, `'foobar' in myfile.md will become 'barfoo'`)
+        .example(`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`, `'foobar' in myfile.md will become 'barfoo'`)
         .example('')
         .example(`> rexreplace '^#' '##' *.md`, `All markdown files in this dir got all headlines moved one level deeper`)
         
@@ -75,7 +75,7 @@ const yargs = require('yargs')
         .alias('J', 'replacement-js')
         .describe('J',    
             `Replacement is javascript source code. `+
-            `Output from last statement will be used as final replacement. `+
+            `Will run _once_ and output from last statement will become final replacement. `+
             `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
         /*    
             `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
@@ -92,6 +92,35 @@ const yargs = require('yargs')
             `'_content' is the full content of the active file being searched or.`+
             */''
         )
+        .conflicts('j')
+
+
+        .boolean('j')
+        .alias('j', 'replacement-js-dynamic')
+        .describe('j',    
+            `Replacement is javascript source code. `+
+            `Will run multiple times as the output from last statement will become replacement for each match. `+
+            `Has impact on peformance so be wise and use 'J' flag if captured groups are not being used. `+
+            `The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
+            `At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. `+
+            `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
+        /*    
+            `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
+            `The code has access to the following predefined values: `+
+            `'fs' from node, `+
+            `'globs' from npm, `+
+            `'_pattern' is the final pattern. `+
+            `The following values are also available but if content is being piped they are all set to an empty string: `+
+            `'_file' is the full path of the active file being searched (including fiename), `+
+            `'_path' is the full path without file name of the active file being searched, `+
+            `'_filename' is the filename of the active file being searched, `+
+            `'_name' is the filename of the active file being searched with no extension, `+
+            `'_ext' is the filename of the active file being searched with no extension, `+
+            `'_content' is the full content of the active file being searched or.`+
+            */''
+        )
+        .conflicts('J')
+
     
 /*    .boolean('P')
         .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")

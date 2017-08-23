@@ -164,6 +164,24 @@ Replacement is javascript source code. Output from
                           running code from an untrusted person - that be anyone
                           that is not yourself.                        [boolean]
 
+
+###  -j, --replacement-js-dynamic  
+Replacement is javascript source code. Will run
+multiple times as the output from last
+                                statement will become replacement for each
+                                match. Has impact on peformance so be wise and
+                                use 'J' flag if captured groups are not being
+                                used. The full match will be avaiable as a
+                                javascript _variable_ named $0 while each
+                                captured group will be avaiable as $1, $2, $3,
+                                ... and so on. At some point the $ char _will_
+                                give you a headache when used in commandlines,
+                                so use €0, €1, €2 €3... instead. Purposefully
+                                implemented the most insecure way possible to
+                                remove _any_ incentive to consider running code
+                                from an untrusted person - that be anyone that
+                                is not yourself. [boolean]
+
 #### -h, --help    
 Display manual. (can be given as only argument)
                                                                        [boolean]                                                               

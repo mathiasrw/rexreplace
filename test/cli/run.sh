@@ -23,6 +23,8 @@ reset() {
         echo 'foobar' > myfile
 }
 
+
+
 # Plain usage
 reset
 rexreplace x x myfile
@@ -103,6 +105,13 @@ assert		 		"rexreplace 'foo' '2+2' myfile -o --replacement-js"    '4bar'
 
 reset
 assert		 		"rexreplace 'foo' 'var i = 2; i + 2' myfile -o --replacement-js"    '4bar'
+
+
+
+reset
+assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' myfile -o --replacement-js-dynamic"    'OoAr'
+
+
 
 # # -P
 # # -R

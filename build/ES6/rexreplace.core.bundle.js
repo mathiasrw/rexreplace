@@ -72,6 +72,7 @@ Object.defineProperty(module, 'exports', {
 });
 
 },{}],3:[function(require,module,exports){
+'use strict';
 module.exports = balanced;
 function balanced(a, b, str) {
   if (a instanceof RegExp) a = maybeMatch(a, str);
@@ -240,7 +241,7 @@ function expand(str, isTop) {
   var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
   var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
   var isSequence = isNumericSequence || isAlphaSequence;
-  var isOptions = /^(.*,)+(.+)?$/.test(m.body);
+  var isOptions = m.body.indexOf(',') >= 0;
   if (!isSequence && !isOptions) {
     // {a},b}
     if (m.post.match(/,.*\}/)) {
@@ -1251,9 +1252,7 @@ function Glob (pattern, options, cb) {
   }
 
   var self = this
-  var n = this.minimatch.set.length
   this._processing = 0
-  this.matches = new Array(n)
 
   this._emitQueue = []
   this._processQueue = []
@@ -3666,7 +3665,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.2.2';
+const version = '2.3.0';
 
 module.exports = function(config){
 
@@ -3744,18 +3743,27 @@ module.exports = function(config){
 	}
 
 	function getFinalReplacement(config){
-		let replacement = config.replacement;
 
 		/*if(config.replacementFile){
-			replacement = fs.readFileSync(replacement,'utf8');
-			replacement = oneLinerFromFile(replacement);
+			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
 
 		if(config.replacementJs){
-			replacement = eval(replacement); // Todo: make a bit more scoped
-		}
+			return eval(config.replacement); // Todo: make a bit more scoped
+		}  
 
-		return replacement;
+		if(config.replacementJsDynamic){
+			let code = config.replacement;
+
+			return function(){
+								for(var i = 0;i<arguments.length-2;i++){
+									eval('var $'+i+'="'+arguments[i]+'";'); // we are already using eval - so wth...
+								}
+								return eval(code);
+							}; 
+		} 
+
+		return config.replacement;
 	}
 /*
 	function oneLinerFromFile(str){
