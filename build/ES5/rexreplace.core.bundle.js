@@ -3522,6 +3522,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
 
         if (config.replacementJsDynamic) {
+
+          if ('6' > process.versions.node) {
+            return kill('replacementJsDynamic is only supported in node 6+');
+          }
+
           var code = config.replacement;
 
           return function () {
