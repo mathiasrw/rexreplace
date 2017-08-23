@@ -265,7 +265,7 @@ _.oO(What should "sed" have looked like by now?)_
 
 ### Future ideas
 
-
+- Run replacement JS code once foe each match (not just once for each run) see [this issue](https://github.com/mathiasrw/rexreplace/issues/1)
 - Test-run with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
