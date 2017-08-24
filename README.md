@@ -156,6 +156,8 @@ Print debug info                             [boolean]
 Void having '€' as alias for '$' in pattern and
                           replacement                                  [boolean]
 
+
+
 #### -J, --replacement-js  
 Replacement is javascript source code. Output from
                           last statement will be used as final replacement.
@@ -164,14 +166,11 @@ Replacement is javascript source code. Output from
                           running code from an untrusted person - that be anyone
                           that is not yourself.                        [boolean]
 
-
-###  -j, --replacement-js-dynamic  
+####  -j, --replacement-js-dynamic  
 Replacement is javascript source code. Will run
 multiple times as the output from last
                                 statement will become replacement for each
-                                match. Has impact on peformance so be wise and
-                                use 'J' flag if captured groups are not being
-                                used. The full match will be avaiable as a
+                                match. Use 'J' flag if you do not use captured groups (for peformance). The full match will be avaiable as a
                                 javascript _variable_ named $0 while each
                                 captured group will be avaiable as $1, $2, $3,
                                 ... and so on. At some point the $ char _will_
@@ -181,6 +180,9 @@ multiple times as the output from last
                                 remove _any_ incentive to consider running code
                                 from an untrusted person - that be anyone that
                                 is not yourself. [boolean]
+
+
+
 
 #### -h, --help    
 Display manual. (can be given as only argument)
