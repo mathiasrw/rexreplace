@@ -25,7 +25,7 @@
 
 
 
-RexReplace is a versatile tool for doing search-and-replaces in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts.     
+RexReplace is a versatile tool for doing search-and-replaces in files from the command line - inspired by how developers often need to do quick fixes or one-liners for build scripts.     
 
 Key features:
 
