@@ -14422,8 +14422,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     // CLI interface default has € as alias for $
     if (!yargs.argv.voidEuro) {
-      pattern = pattern.replace('€', '$');
-      replacement = replacement.replace('€', '$');
+      pattern = pattern.replace(/€/g, '$');
+      replacement = replacement.replace(/€/g, '$');
     }
 
     // All options into one big config object for the rexreplace core

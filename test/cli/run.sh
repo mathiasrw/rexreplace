@@ -103,6 +103,9 @@ assert		 		"rexreplace '^.' 'x' myfile -o --void-multiline"    "xoobar\nfoobar"
 reset
 assert		 		"rexreplace '(f?(o))o(.*)' '\$3\$1\$2' myfile -o"    "barfoo"
 
+reset
+assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' myfile -o"    "barfoo"
+
 
 # globs
 reset

@@ -25,7 +25,7 @@
 
 
 
-RexReplace is a versatile tool for doing search-and-replaces in files from the command line - inspired by how developers often need to do quick fixes or one-liners for build scripts.     
+RexReplace is a versatile tool for doing search-and-replaces in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts.     
 
 Key features:
 
@@ -116,86 +116,25 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 
 ### Options
 
-
-####   -v, --version   
-Print rexreplace version (can be given as only argument) [boolean]
-
-
-####  -I, --void-ignore-case  
-Void case insensitive search pattern.        [boolean]
-
-
-####  -G, --void-global 
-Void global search (work only with first match).
- 
-####  -M, --void-multiline   
- Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.
-                                                                       [boolean]
-
-####  -u, --unicode          
- Treat pattern as a sequence of unicode code points.
-                                                                       [boolean]
-
-####  -e, --encoding          
-Encoding of files.                   [default: "utf8"]
-
-#### -o, --output
-Output the result instead of saving to file. Will also
-                          output content even if no replacement have taken
-                          place.                                       [boolean]
-
-#### -q, --quiet   
-Only display erros (no other info)           [boolean]
-
-#### -Q, --quiet-total  
-Never display erros or info                  [boolean]
-
-#### -H, --halt   
-Halt on first error         [boolean] [default: false]
-
-#### -d, --debug   
-Print debug info                             [boolean]
-
-#### -€, --void-euro  
-Void having '€' as alias for '$' in pattern and
-                          replacement                                  [boolean]
-
-####  -j, --replacement-js-dynamic  
-Replacement is javascript source code. Will run
-                                once for each match. Last statement will become
-                                replacement for this match. The full
-                                match will be avaiable as a javascript
-                                _variable_ named $0 while each captured group
-                                will be avaiable as $1, $2, $3, ... and so on.
-                                At some point the $ char _will_ give you a
-                                headache when used in commandlines, so use €0,
-                                €1, €2, €3 ... instead. Purposefully implemented
-                                the most insecure way possible to remove _any_
-                                incentive to consider running code from an
-                                untrusted person - that be anyone that is not
-                                yourself.                              [boolean]
-
-
-####  -J, --replacement-js   
-       
-Same as -j flag but Will run
-                                _once_ and the output from last statement will
-                                become replacement for all matches.
-                                        [boolean]
-
-####  -T, --trim-pipe               
-Trim piped data before processing. If piped
-                                data only consists of chars that can be trimmed
-                                (new line, space, tabs...) it will be
-                                considered an empty string .           [boolean]
-
-
-
-
-
-#### -h, --help    
-Display manual. (can be given as only argument)
-                                                                       [boolean]                                                               
+Flag | Name | Effect
+---- | ---- | ----
+`-v` | `--version` | Print rexreplace version (can be given as only argument)                              [boolean]
+`-I` | `--void-ignore-case` | Void case insensitive search pattern.  [boolean]
+`-G` | `--void-global` | Void global search (work only with first match).                                        [boolean]
+`-M` | `--void-multiline` | Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.                             [boolean]
+`-u` | `--unicode` | Treat pattern as a sequence of unicode code points.                                [boolean]
+`-e` | `--encoding` | Encoding of files/piped data.  [default: "utf8"]
+`-o` | `--output` | Output the final result instead of saving to file. Will also output content even if no replacement have taken place.          [boolean]
+`-O` | `--output-match` | Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.                                        [boolean]
+`-q` | `--quiet` | Only display erros (no other info)     [boolean]
+`-Q` | `--quiet-total` | Never display erros or info            [boolean]
+`-H` | `--halt` | Halt on first error   [boolean] [default: false]
+`-d` | `--debug` | Print debug info                       [boolean]
+`-€` | `--void-euro` | Void having '€' as alias for '$' in pattern and replacement                            [boolean]
+`-j` | `--replacement-js-dynamic` | Replacement is javascript source code. Will run once for each match. Last statement will become replacement for this match. Use 'J' flag if captured groups are not being used. The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself.                              [boolean]
+`-J` | `--replacement-js` | Same as -j option but will run only _once_ so output from last statement will become replacement for all matches.           [boolean]
+`-T` | `--trim-pipe` | Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string .           [boolean]
+`-h` | `--help` | Display help.                          [boolean]                                                           
 
 
 ## Good to know 
