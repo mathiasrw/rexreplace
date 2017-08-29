@@ -25,7 +25,7 @@
 
 
 
-RexReplace is a versatile tool for doing search-and-replaces in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts.     
+RexReplace is a versatile tool for doing search-and-replaces in files from the command line - inspired by how developers often need to do quick fixes or one-liners for build scripts.     
 
 Key features:
 
@@ -188,6 +188,10 @@ Trim piped data before processing. If piped
                                 data only consists of chars that can be trimmed
                                 (new line, space, tabs...) it will be
                                 considered an empty string .           [boolean]
+
+
+
+
 
 #### -h, --help    
 Display manual. (can be given as only argument)
