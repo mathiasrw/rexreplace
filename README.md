@@ -111,12 +111,7 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 
 
 
- 
-
-
-### Options
-
-Flag | Name | Effect
+Flag | Option name | Effect
 ---- | ---- | ----
 `-v` | `--version` | Print rexreplace version (can be given as only argument)                              [boolean]
 `-I` | `--void-ignore-case` | Void case insensitive search pattern.  [boolean]
@@ -136,6 +131,8 @@ Flag | Name | Effect
 `-T` | `--trim-pipe` | Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string .           [boolean]
 `-h` | `--help` | Display help.                          [boolean]                                                           
 
+
+See the [release note](https://github.com/mathiasrw/rexreplace/releases) for log of changes. 
 
 ## Good to know 
 
