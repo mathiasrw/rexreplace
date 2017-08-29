@@ -14340,12 +14340,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     }).call(this, "/Users/mrw/git/rr/node_modules/yargs");
   }, { "./lib/apply-extends": 82, "./lib/argsert": 83, "./lib/assign": 84, "./lib/command": 85, "./lib/completion": 86, "./lib/obj-filter": 88, "./lib/usage": 89, "./lib/validation": 90, "./lib/yerror": 91, "get-caller-file": 17, "os-locale": 50, "path": undefined, "read-pkg-up": 60, "require-main-filename": 63, "set-blocking": 65, "y18n": 78, "yargs-parser": 79 }], 93: [function (require, module, exports) {
+
+    // CLI interface for rexreplace
+
     var rexreplace = require('./core');
 
     var pattern = void 0,
         replacement = void 0;
-
-    // CLI interface for rexreplace
 
     // To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed before yargs does it magic - but we still need to handle -version and -help
     var needHelp = false;
@@ -14360,10 +14361,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       replacement = _process$argv$splice2[1];
     }
 
-    var yargs = require('yargs').strict().usage('RexReplace ' + rexreplace.version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' + '> rexreplace pattern replacement [fileGlob|option]+').example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'").example('').example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'").example('').example("> rexreplace '(f?(o))o(.*)' '$3$1\u20AC2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper").version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version).alias('v', 'version').boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files.').boolean('o').describe('o', 'Output the result instead of saving to file. Will also output content even if no replacement have taken place.').alias('o', 'output')
-    //.conflicts('o', 'd')
-
-    .boolean('q').describe('q', "Only display erros (no other info)").alias('q', 'quiet').boolean('Q').describe('Q', "Never display erros or info").alias('Q', 'quiet-total').boolean('H').describe('H', "Halt on first error").alias('H', 'halt').default('H', false).boolean('d').describe('d', "Print debug info").alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement").alias('€', 'void-euro').boolean('J').alias('J', 'replacement-js').describe('J', "Replacement is javascript source code. " + "Will run _once_ and output from last statement will become final replacement. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
+    var yargs = require('yargs').strict().usage('RexReplace ' + rexreplace.version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' + '> rexreplace pattern replacement [fileGlob|option]+').example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'").example('').example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'").example('').example("> rexreplace '(f?(o))o(.*)' '$3$1\u20AC2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper").version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version).alias('v', 'version').boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('G').describe('G', 'Void global search (work only with first match).').alias('G', 'void-global').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files/piped data.').boolean('o').describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement have taken place.').alias('o', 'output').conflicts('O').boolean('O').describe('O', 'Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.').alias('O', 'output-match').boolean('q').describe('q', "Only display erros (no other info)").alias('q', 'quiet').boolean('Q').describe('Q', "Never display erros or info").alias('Q', 'quiet-total').boolean('H').describe('H', "Halt on first error").alias('H', 'halt').default('H', false).boolean('d').describe('d', "Print debug info").alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement").alias('€', 'void-euro').boolean('j').alias('j', 'replacement-js-dynamic').describe('j', "Replacement is javascript source code. " + "Will run once for each match. Last statement will become replacement for this match. " + "Use 'J' flag if captured groups are not being used. " + "The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. " + "At some point the $ char _will_ give you a headache when used in commandlines, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
     /*    
         `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
         `The code has access to the following predefined values: `+
@@ -14377,21 +14375,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         `'_name' is the filename of the active file being searched with no extension, `+
         `'_ext' is the filename of the active file being searched with no extension, `+
         `'_content' is the full content of the active file being searched or.`+
-        */'').conflicts('j').boolean('j').alias('j', 'replacement-js-dynamic').describe('j', "Replacement is javascript source code. " + "Will run multiple times as the output from last statement will become replacement for each match. " + "Has impact on peformance so be wise and use 'J' flag if captured groups are not being used. " + "The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. " + "At some point the $ char _will_ give you a headache when used in commandlines, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
-    /*    
-        `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
-        `The code has access to the following predefined values: `+
-        `'fs' from node, `+
-        `'globs' from npm, `+
-        `'_pattern' is the final pattern. `+
-        `The following values are also available but if content is being piped they are all set to an empty string: `+
-        `'_file' is the full path of the active file being searched (including fiename), `+
-        `'_path' is the full path without file name of the active file being searched, `+
-        `'_filename' is the filename of the active file being searched, `+
-        `'_name' is the filename of the active file being searched with no extension, `+
-        `'_ext' is the filename of the active file being searched with no extension, `+
-        `'_content' is the full content of the active file being searched or.`+
-        */'').conflicts('J')
+        */'').boolean('J').alias('J', 'replacement-js').describe('J', "Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. " + '').conflicts('j').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . " + '')
 
     /*    .boolean('P')
             .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -14452,19 +14436,48 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     });
 
+    var pipeInUse = false;
+    var pipeData = '';
     config.files = yargs.argv._;
+    config.pipedData = null;
     config.showHelp = yargs.showHelp;
     config.pattern = pattern;
     config.replacement = replacement;
 
-    rexreplace(config);
+    if (Boolean(process.stdin.isTTY)) {
+      rexreplace(config);
+    } else {
+      process.stdin.setEncoding(config.encoding);
+
+      process.stdin.on('readable', function () {
+        var chunk = process.stdin.read();
+
+        if (null !== chunk) {
+          pipeInUse = true;
+          pipeData += chunk;
+          while (chunk = process.stdin.read()) {
+            pipeData += chunk;
+          }
+        }
+      });
+
+      process.stdin.on('end', function () {
+        if (pipeInUse) {
+          if (yargs.argv.trimPipe) {
+            pipeData = pipeData.trim();
+          }
+          config.pipedData = pipeData;
+        }
+        rexreplace(config);
+      });
+    }
   }, { "./core": 94, "yargs": 81 }], 94: [function (require, module, exports) {
 
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.3.0';
+    var version = '2.4.0';
 
     module.exports = function (config) {
       var _require2 = require('./output')(config),
@@ -14481,7 +14494,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       config.regex = getFinalRegex(config);
 
+      // data is piped in and will always be printed - but must be ignored if files are also given
+      if (null !== config.pipedData) {
+        if (config.files.length) {
+          error('Ignoring piped data as file/glob was also given.');
+        } else {
+          debug('Outputting result from piped data');
+          return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));
+        }
+      }
+
       config.files = globs.sync(config.files);
+
+      debug(config.files.length + ' files found');
 
       config.files
       // Correct filepath
@@ -14507,7 +14532,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (config.output) {
             debug('Outputting result from: ' + file);
             return process.stdout.write(result);
-            //return console.log(result);
           }
 
           // Nothing replaced = no need for writing file again 
@@ -14550,14 +14574,33 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
 
+        if (config.outputMatch) {
+          if ('6' > process.versions.node) {
+            return die('outputMatch is only supported in node 6+');
+          }
+          return function () {
+            process.stdout.write(arguments[0]);
+            return '';
+          };
+        }
+
+        if (config.replacementJsDynamic && !/\$\d/.test(config.replacement)) {
+          config.replacementJsDynamic = false;
+          config.replacementJs = true;
+        }
+
+        if (config.replacementJs && /\$\d/.test(config.replacement)) {
+          info('Use the -J flag to use captured groups dynamically in the replacement');
+        }
+
         if (config.replacementJs) {
-          return eval(config.replacement); // Todo: make a bit more scoped
+          return eval(config.replacement); // Todo: make a bit more scoped?
         }
 
         if (config.replacementJsDynamic) {
 
           if ('6' > process.versions.node) {
-            return kill('replacementJsDynamic is only supported in node 6+');
+            return die('replacementJsDynamic is only supported in node 6+');
           }
 
           var code = config.replacement;
@@ -14599,7 +14642,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFlags(config) {
-        var flags = 'g';
+        var flags = '';
+
+        if (!config.voidGlobal) {
+          flags += 'g';
+        }
 
         if (!config.voidIgnoreCase) {
           flags += 'i';
@@ -14637,7 +14684,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (config.quiet || config.quietTotal) {
           return;
         }
-        console.log(font.green(msg), data);
+        console.error(font.green(msg), data);
       };
 
       me.die = function (msg) {

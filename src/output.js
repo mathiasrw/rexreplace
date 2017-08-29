@@ -12,7 +12,7 @@ module.exports = function(config){
 		if(config.quiet || config.quietTotal){
 			return;
 		}
-		console.log(font.green(msg), data);	
+		console.error(font.green(msg), data);	
 	};
 
 	me.die = function(msg, data='', displayHelp=false){

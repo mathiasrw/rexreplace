@@ -3665,7 +3665,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.3.0';
+const version = '2.4.0';
 
 module.exports = function(config){
 
@@ -3677,7 +3677,20 @@ module.exports = function(config){
 
 	config.regex = getFinalRegex(config);
 
+	// data is piped in and will always be printed - but must be ignored if files are also given
+	if(null !== config.pipedData){		
+		if(config.files.length){
+			error('Ignoring piped data as file/glob was also given.');
+		} else {
+			debug('Outputting result from piped data');
+			return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));			
+		}
+	
+	}
+
 	config.files = globs.sync(config.files);
+
+	debug(config.files.length+' files found');
 
 	config.files
 		// Correct filepath
@@ -3688,6 +3701,7 @@ module.exports = function(config){
 		// Do the replacement 
 		.forEach(filepath=>treatFile(filepath,config))
 	;
+
 
 	function treatFile(file,config){
 		fs.readFile(file, config.encoding, function (err,data) {
@@ -3700,7 +3714,6 @@ module.exports = function(config){
 			if(config.output){
 				debug('Outputting result from: '+file);
 				return process.stdout.write(result);
-				//return console.log(result);
 			}
 
 			// Nothing replaced = no need for writing file again 
@@ -3748,14 +3761,33 @@ module.exports = function(config){
 			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
 
+		if(config.outputMatch){
+			if('6'>process.versions.node){
+				return die('outputMatch is only supported in node 6+');
+			}
+			return function(){
+								process.stdout.write(arguments[0]);
+								return '';
+							}; 
+		}
+
+		if(config.replacementJsDynamic && !(/\$\d/.test(config.replacement))){
+			config.replacementJsDynamic = false;
+			config.replacementJs = true; 
+		}
+
+		if(config.replacementJs && /\$\d/.test(config.replacement)){
+			info('Use the -J flag to use captured groups dynamically in the replacement'); 
+		}
+
 		if(config.replacementJs){
-			return eval(config.replacement); // Todo: make a bit more scoped
+			return eval(config.replacement); // Todo: make a bit more scoped?
 		}  
 
 		if(config.replacementJsDynamic){
 
 			if('6'>process.versions.node){
-				return kill('replacementJsDynamic is only supported in node 6+');
+				return die('replacementJsDynamic is only supported in node 6+');
 			}
 
 			let code = config.replacement;
@@ -3798,7 +3830,11 @@ module.exports = function(config){
 	}
 
 	function getFlags(config){
-		let flags = 'g';
+		let flags = '';
+
+		if(!config.voidGlobal){
+			flags += 'g';
+		}
 
 		if(!config.voidIgnoreCase){
 			flags += 'i';
@@ -3816,6 +3852,8 @@ module.exports = function(config){
 		
 		return flags;
 	}
+
+
 };
 
 module.exports.version = version;
@@ -3835,7 +3873,7 @@ module.exports = function(config){
 		if(config.quiet || config.quietTotal){
 			return;
 		}
-		console.log(font.green(msg), data);	
+		console.error(font.green(msg), data);	
 	};
 
 	me.die = function(msg, data='', displayHelp=false){

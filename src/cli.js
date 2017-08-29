@@ -1,8 +1,10 @@
+
+// CLI interface for rexreplace
+
 const rexreplace = require('./core');
 
 let pattern, replacement;
 
-// CLI interface for rexreplace
 
 // To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = false;
@@ -32,6 +34,10 @@ const yargs = require('yargs')
     .boolean('I')
         .describe('I', 'Void case insensitive search pattern.')
         .alias('I', 'void-ignore-case')
+    
+    .boolean('G')
+        .describe('G', 'Void global search (work only with first match).')
+        .alias('G', 'void-global')
 
     .boolean('M')
         .describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.')
@@ -43,12 +49,16 @@ const yargs = require('yargs')
 
     .default('e', 'utf8')
         .alias('e', 'encoding')
-        .describe('e', 'Encoding of files.')
+        .describe('e', 'Encoding of files/piped data.')
 
     .boolean('o')
-        .describe('o', 'Output the result instead of saving to file. Will also output content even if no replacement have taken place.')
+        .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement have taken place.')
         .alias('o', 'output')
-        //.conflicts('o', 'd')
+        .conflicts('O')
+
+    .boolean('O')
+        .describe('O', 'Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.')
+        .alias('O', 'output-match')
 
     .boolean('q')
         .describe('q', "Only display erros (no other info)")
@@ -71,36 +81,15 @@ const yargs = require('yargs')
         .describe('€', "Void having '€' as alias for '$' in pattern and replacement")
         .alias('€', 'void-euro')
 
-    .boolean('J')
-        .alias('J', 'replacement-js')
-        .describe('J',    
-            `Replacement is javascript source code. `+
-            `Will run _once_ and output from last statement will become final replacement. `+
-            `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
-        /*    
-            `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
-            `The code has access to the following predefined values: `+
-            `'fs' from node, `+
-            `'globs' from npm, `+
-            `'_pattern' is the final pattern. `+
-            `The following values are also available but if content is being piped they are all set to an empty string: `+
-            `'_file' is the full path of the active file being searched (including fiename), `+
-            `'_path' is the full path without file name of the active file being searched, `+
-            `'_filename' is the filename of the active file being searched, `+
-            `'_name' is the filename of the active file being searched with no extension, `+
-            `'_ext' is the filename of the active file being searched with no extension, `+
-            `'_content' is the full content of the active file being searched or.`+
-            */''
-        )
-        .conflicts('j')
+
 
 
         .boolean('j')
         .alias('j', 'replacement-js-dynamic')
         .describe('j',    
             `Replacement is javascript source code. `+
-            `Will run multiple times as the output from last statement will become replacement for each match. `+
-            `Has impact on peformance so be wise and use 'J' flag if captured groups are not being used. `+
+            `Will run once for each match. Last statement will become replacement for this match. `+
+            `Use 'J' flag if captured groups are not being used. `+
             `The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
             `At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. `+
             `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
@@ -119,8 +108,22 @@ const yargs = require('yargs')
             `'_content' is the full content of the active file being searched or.`+
             */''
         )
-        .conflicts('J')
 
+        .boolean('J')
+        .alias('J', 'replacement-js')
+        .describe('J',    
+            `Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. `+
+       		''
+        )
+        .conflicts('j')
+
+        .boolean('T')
+        .alias('T', 'trim-pipe')
+        .describe('T',    
+            `Trim piped data before processing. `+
+            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . `+
+       		''
+        )
     
 /*    .boolean('P')
         .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -198,10 +201,41 @@ Object.keys(yargs.argv).forEach(key=>{
     }
 });
 
+let pipeInUse = false;
+let pipeData = '';
 config.files = yargs.argv._;
+config.pipedData = null;
 config.showHelp = yargs.showHelp;
 config.pattern = pattern;
 config.replacement = replacement;
 
 
-rexreplace(config);
+if (Boolean(process.stdin.isTTY)) {
+	rexreplace(config);
+} else {
+	process.stdin.setEncoding(config.encoding);
+
+	process.stdin.on('readable', ()=>{
+		let chunk = process.stdin.read();
+		
+		if(null !== chunk){
+			pipeInUse = true;
+			pipeData += chunk;
+			while((chunk = process.stdin.read())){
+				pipeData += chunk;
+			}
+		}
+	});
+
+	process.stdin.on('end', ()=>{
+		if(pipeInUse){
+			if(yargs.argv.trimPipe){
+				pipeData = pipeData.trim();
+			}
+			config.pipedData = pipeData;
+		}
+		rexreplace(config);
+	});
+
+}
+

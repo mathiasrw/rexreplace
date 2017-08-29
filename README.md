@@ -124,6 +124,10 @@ Print rexreplace version (can be given as only argument) [boolean]
 ####  -I, --void-ignore-case  
 Void case insensitive search pattern.        [boolean]
 
+
+####  -G, --void-global 
+Void global search (work only with first match).
+ 
 ####  -M, --void-multiline   
  Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.
                                                                        [boolean]
@@ -156,35 +160,39 @@ Print debug info                             [boolean]
 Void having '€' as alias for '$' in pattern and
                           replacement                                  [boolean]
 
-#### -J, --replacement-js  
-Replacement is javascript source code. Output from
-                          last statement will be used as final replacement.
-                          Purposefully implemented the most insecure way
-                          possible to remove _any_ incentive to consider
-                          running code from an untrusted person - that be anyone
-                          that is not yourself.                        [boolean]
-
-
-###  -j, --replacement-js-dynamic  
+####  -j, --replacement-js-dynamic  
 Replacement is javascript source code. Will run
-multiple times as the output from last
-                                statement will become replacement for each
-                                match. Has impact on peformance so be wise and
-                                use 'J' flag if captured groups are not being
-                                used. The full match will be avaiable as a
-                                javascript _variable_ named $0 while each
-                                captured group will be avaiable as $1, $2, $3,
-                                ... and so on. At some point the $ char _will_
-                                give you a headache when used in commandlines,
-                                so use €0, €1, €2 €3... instead. Purposefully
-                                implemented the most insecure way possible to
-                                remove _any_ incentive to consider running code
-                                from an untrusted person - that be anyone that
-                                is not yourself. [boolean]
+                                once for each match. Last statement will become
+                                replacement for this match. The full
+                                match will be avaiable as a javascript
+                                _variable_ named $0 while each captured group
+                                will be avaiable as $1, $2, $3, ... and so on.
+                                At some point the $ char _will_ give you a
+                                headache when used in commandlines, so use €0,
+                                €1, €2, €3 ... instead. Purposefully implemented
+                                the most insecure way possible to remove _any_
+                                incentive to consider running code from an
+                                untrusted person - that be anyone that is not
+                                yourself.                              [boolean]
+
+
+####  -J, --replacement-js   
+       
+Same as -j flag but Will run
+                                _once_ and the output from last statement will
+                                become replacement for all matches.
+                                        [boolean]
+
+####  -T, --trim-pipe               
+Trim piped data before processing. If piped
+                                data only consists of chars that can be trimmed
+                                (new line, space, tabs...) it will be
+                                considered an empty string .           [boolean]
 
 #### -h, --help    
 Display manual. (can be given as only argument)
                                                                        [boolean]                                                               
+
 
 ## Good to know 
 
@@ -198,7 +206,7 @@ Display manual. (can be given as only argument)
 
 ### Limitations
 - RexReplace reads each file fully into memory, so working on your 4Gb log files will probably not be ideal.
-- For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
+- For versions of Node prior to 6, please use version 2.2.x. For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
 
 ### Quirks
 - Per default `€` is treated as an alias for `$` in the CLI input. The main reason is for you not to worry about how command line tools often have a special relationship with the `$` char. Your can escape your way out of this old love story, but it often pops up in unexpected ways. Use the `-€` flag if you need to search or replace the actual euro char. 
@@ -283,11 +291,9 @@ _.oO(What should "sed" have looked like by now?)_
 
 ### Future ideas
 
-- Run replacement JS code once foe each match (not just once for each run) see [this issue](https://github.com/mathiasrw/rexreplace/issues/1)
 - Test-run with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
-- Piped data while no globs = this is content to be searched (will always output) (when no -rp flags)
 - Piped data while having 1 globs = output is to be stored in this file (when no -rpo flags). Hmm. Could create misunderstandings. Might be better just to demand a `>`
 - Piped data while having 2+ globs = error (when no -rpg flags)
 - Let pattern, replacement, globs be piped
@@ -295,14 +301,14 @@ _.oO(What should "sed" have looked like by now?)_
 - Let pattern, replacement, and glob be javascript code returning string as result
 - Error != warning
 - Debug != all debug
-- Flag for sync or async read file handling. Test if async or sync is best.
+- Flag for sync or async read file handling. 
+- Test if async or sync is best.
 - Flag for simple string search (all other chars than [\n\r\t])
 - Flag for plain string search litteral (no regex, no special chars, no escape chars)
 - Check if https://github.com/eugeneware/replacestream is good to rely on
 - Check if regex engine from spidermonkey can be wrapped in something that does not need node
 - Implement in go, so all platforms can be supported with no need for node (might be based on)
 - let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
-- Output only matched groups
 - Expand speed test to compare all related projects
 - Build step options into readme (`"[\s\S]+\nOptions:\n([\s\S]+?)\nExamples:[\s\S]+"`)
 - Check if modular + compile is slower than minimonolit + require fs

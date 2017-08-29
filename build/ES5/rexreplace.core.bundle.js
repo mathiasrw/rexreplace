@@ -3431,7 +3431,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.3.0';
+    var version = '2.4.0';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3448,7 +3448,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       config.regex = getFinalRegex(config);
 
+      // data is piped in and will always be printed - but must be ignored if files are also given
+      if (null !== config.pipedData) {
+        if (config.files.length) {
+          error('Ignoring piped data as file/glob was also given.');
+        } else {
+          debug('Outputting result from piped data');
+          return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));
+        }
+      }
+
       config.files = globs.sync(config.files);
+
+      debug(config.files.length + ' files found');
 
       config.files
       // Correct filepath
@@ -3474,7 +3486,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (config.output) {
             debug('Outputting result from: ' + file);
             return process.stdout.write(result);
-            //return console.log(result);
           }
 
           // Nothing replaced = no need for writing file again 
@@ -3517,14 +3528,33 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
 
+        if (config.outputMatch) {
+          if ('6' > process.versions.node) {
+            return die('outputMatch is only supported in node 6+');
+          }
+          return function () {
+            process.stdout.write(arguments[0]);
+            return '';
+          };
+        }
+
+        if (config.replacementJsDynamic && !/\$\d/.test(config.replacement)) {
+          config.replacementJsDynamic = false;
+          config.replacementJs = true;
+        }
+
+        if (config.replacementJs && /\$\d/.test(config.replacement)) {
+          info('Use the -J flag to use captured groups dynamically in the replacement');
+        }
+
         if (config.replacementJs) {
-          return eval(config.replacement); // Todo: make a bit more scoped
+          return eval(config.replacement); // Todo: make a bit more scoped?
         }
 
         if (config.replacementJsDynamic) {
 
           if ('6' > process.versions.node) {
-            return kill('replacementJsDynamic is only supported in node 6+');
+            return die('replacementJsDynamic is only supported in node 6+');
           }
 
           var code = config.replacement;
@@ -3566,7 +3596,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFlags(config) {
-        var flags = 'g';
+        var flags = '';
+
+        if (!config.voidGlobal) {
+          flags += 'g';
+        }
 
         if (!config.voidIgnoreCase) {
           flags += 'i';
@@ -3604,7 +3638,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (config.quiet || config.quietTotal) {
           return;
         }
-        console.log(font.green(msg), data);
+        console.error(font.green(msg), data);
       };
 
       me.die = function (msg) {

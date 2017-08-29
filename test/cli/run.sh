@@ -20,6 +20,7 @@ source $DIR/aserta.sh
 # assert_end "example"
 
 reset() {
+		echo 'Resetting testdata'
         echo 'foobar' > myfile
 }
 
@@ -40,6 +41,10 @@ rexreplace '^(.+)$' '- $1' myfile
 rexreplace '- f' '_' myfile
 assert		 		"cat myfile"    "_oobar"
 
+# Piped data
+reset
+assert		 		"cat myfile | rexreplace Foo xxx"    "xxxbar"
+
 # -v
 reset
 assert_success		"rexreplace -version"
@@ -58,12 +63,30 @@ reset
 assert		 		"rexreplace o x myfile --output"    "fxxbar"
 
 
+
 # -I
 reset
 assert		 		"rexreplace Foo xxx myfile -o"    "xxxbar"
 
 reset
 assert		 		"rexreplace Foo xxx myfile -o --void-ignore-case"    "foobar"
+
+
+
+# -G
+reset
+assert		 		"rexreplace o x myfile -o --void-global"    "fxobar"
+
+
+# -O
+reset
+assert		 		"rexreplace [fb]. _ myfile --output-match"    "foba"
+
+
+# -GO
+reset
+assert		 		"rexreplace [fb]. _ myfile --output-match --voidGlobal"    "fo"
+
 
 
 # -M
@@ -110,6 +133,7 @@ assert		 		"rexreplace 'foo' 'var i = 2; i + 2' myfile -o --replacement-js"    '
 
 reset
 assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' myfile -o --replacement-js-dynamic"    'OoAr'
+
 
 
 

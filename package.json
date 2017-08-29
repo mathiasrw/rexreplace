@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Flexible CLI regex replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
@@ -20,7 +20,8 @@
     "postbuild": "babel build/ES6 -d build/ES5",
     "test-js": "echo todo: async mocha",
     "test-cli": "npm -g install ./ && bash test/cli/run.sh",
-    "test-speed": "bash test/speed/run.sh"
+    "test-speed": "bash test/speed/run.sh",
+    "publish": "git pull && npm test && npm publish && git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag"
   },
   "keywords": [
     "replace",
