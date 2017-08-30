@@ -132,7 +132,7 @@ Flag | Option name | Effect
 `-h` | `--help` | Display help.                          [boolean]                                                           
 
 
-See the [release note](https://github.com/mathiasrw/rexreplace/releases) for log of changes. 
+See the [release note](https://github.com/mathiasrw/rexreplace/releases) for log of changes. Descriptions are on latest patch version. 
 
 ## Good to know 
 
