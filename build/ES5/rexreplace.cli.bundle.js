@@ -14375,7 +14375,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         `'_name' is the filename of the active file being searched with no extension, `+
         `'_ext' is the filename of the active file being searched with no extension, `+
         `'_content' is the full content of the active file being searched or.`+
-        */'').boolean('J').alias('J', 'replacement-js').describe('J', "Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. " + '').conflicts('j').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . " + '').boolean('r').alias('r', 'replacement-pipe').describe('r', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '')
+        */'').boolean('J').alias('J', 'replacement-js').describe('J', "Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. " + '').conflicts('j').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . " + '').boolean('R').alias('R', 'replacement-pipe').describe('R', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '')
 
     /*    .boolean('P')
             .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -14487,7 +14487,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.5.0';
+    var version = '2.5.2';
 
     module.exports = function (config) {
       var _require2 = require('./output')(config),

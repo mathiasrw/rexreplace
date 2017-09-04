@@ -15302,9 +15302,9 @@ const yargs = require('yargs')
        		''
         )
 
-        .boolean('r')
-        .alias('r', 'replacement-pipe')
-        .describe('r',    
+        .boolean('R')
+        .alias('R', 'replacement-pipe')
+        .describe('R',    
             `Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.`+
        		''
         )
@@ -15439,7 +15439,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.5.0';
+const version = '2.5.2';
 
 module.exports = function(config){
 

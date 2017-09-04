@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.5.0';
+const version = '2.5.2';
 
 module.exports = function(config){
 
