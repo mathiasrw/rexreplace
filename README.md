@@ -11,8 +11,7 @@
 
 [![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
-[![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](https://open-oss.com)
-[![ghit.me](https://ghit.me/badge.svg?repo=mathiasrw/rexreplace)](https://ghit.me/repo/mathiasrw/rexreplace)
+[![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
 [![bitHound Overall Score](https://www.bithound.io/github/mathiasrw/rexreplace/badges/score.svg)](https://www.bithound.io/github/mathiasrw/rexreplace)
 [![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace)
 
@@ -72,7 +71,7 @@ Let all markdown files in the `docs/` dir get headlines moved one level deeper
 ```
  
 ----
-Let the version number from package.json get into your distribution js files (use the string `VERSION_NUMER` in your source files).
+Let the version number from package.json get into your distribution js files (use the string `VERSION_NUMBER` in your source files).
    
 ```bash
 > rexreplace 'VERSION_NUMBER' 'require('package.json').version' -J dist/*.js 
@@ -135,7 +134,6 @@ Flag | Option name | Effect
 
 
 
-
 ## Good to know 
 
 ### Features 
@@ -145,7 +143,7 @@ Flag | Option name | Effect
 - Supports regex lookaheads in pattern 
 - Supports backreference to matching groups in the replacement 
 - Data to be treated can be piped in 
-- See the [release note](https://github.com/mathiasrw/rexreplace/releases) for log of changes. 
+- See the [release note](https://github.com/mathiasrw/rexreplace/releases) for log of changes. Descriptions are on latest patch version. 
 
 
 ### Limitations
