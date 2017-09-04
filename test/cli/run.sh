@@ -45,6 +45,8 @@ assert		 		"cat myfile"    "_oobar"
 reset
 assert		 		"cat myfile | rexreplace Foo xxx"    "xxxbar"
 
+
+
 # -v
 reset
 assert_success		"rexreplace -version"
@@ -132,16 +134,23 @@ assert		 		"rexreplace 'foo' '2+2' myfile -o --replacement-js"    '4bar'
 reset
 assert		 		"rexreplace 'foo' 'var i = 2; i + 2' myfile -o --replacement-js"    '4bar'
 
-
-
+# -j
 reset
 assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' myfile -o --replacement-js-dynamic"    'OoAr'
+
+# Access to js variables
+reset
+assert		 		"printf x | rexreplace '[fb]' '_pipe;' myfile -o --replacement-js"    'xooxar'
+
+
+# -R
+reset
+assert		 		"printf x | rexreplace 'b' _ myfile -o --replacement-pipe"    'fooxar'
 
 
 
 
 # # -P
-# # -R
 # reset
 # echo '.€' > pattern.txt
 # echo '€' > replacement.txt

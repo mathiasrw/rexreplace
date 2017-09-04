@@ -3431,12 +3431,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.4.1';
+    var version = '2.5.0';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
           step = _require.step,
           debug = _require.debug,
+          chat = _require.chat,
           info = _require.info,
           error = _require.error,
           die = _require.die,
@@ -3449,9 +3450,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       config.regex = getFinalRegex(config);
 
       // data is piped in and will always be printed - but must be ignored if files are also given
-      if (null !== config.pipedData) {
+      if (null !== config.pipedData && !config.replacementPipe) {
         if (config.files.length) {
-          error('Ignoring piped data as file/glob was also given.');
+          chat('Ignoring piped data as file/glob was also given.');
         } else {
           debug('Outputting result from piped data');
           return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));
@@ -3527,6 +3528,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         /*if(config.replacementFile){
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
+
+        var _pipe = config.pipedData;
 
         if (config.outputMatch) {
           if ('6' > process.versions.node) {
@@ -3638,7 +3641,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (config.quiet || config.quietTotal) {
           return;
         }
-        console.error(font.green(msg), data);
+        console.error(font.gray(msg), data);
+      };
+
+      me.chat = function (msg) {
+        var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
+        if (config.verbose) {
+          me.info(msg, data);
+        }
       };
 
       me.die = function (msg) {
@@ -3648,7 +3659,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (displayHelp && !config.quietTotal) {
           config.showHelp();
         }
-        error(msg, data);
+        me.error(msg, data);
         me.kill();
       };
 

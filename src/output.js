@@ -12,14 +12,20 @@ module.exports = function(config){
 		if(config.quiet || config.quietTotal){
 			return;
 		}
-		console.error(font.green(msg), data);	
+		console.error(font.gray(msg), data);	
+	};
+
+	me.chat = function(msg, data=''){
+		if(config.verbose){
+			me.info(msg, data);
+		}
 	};
 
 	me.die = function(msg, data='', displayHelp=false){
 		if(displayHelp && !config.quietTotal){
 			config.showHelp();
 		}
-		error(msg, data);
+		me.error(msg, data);
 		me.kill();
 	};
 

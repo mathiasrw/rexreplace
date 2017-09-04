@@ -15199,6 +15199,11 @@ const yargs = require('yargs')
     .version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version)
         .alias('v', 'version')
 
+     .boolean('V')
+        .describe('V', "More chatty output")
+        .alias('V', 'verbose')
+    
+
     .boolean('I')
         .describe('I', 'Void case insensitive search pattern.')
         .alias('I', 'void-ignore-case')
@@ -15246,13 +15251,13 @@ const yargs = require('yargs')
         .alias('d', 'debug')
 
     .boolean('€')
-        .describe('€', "Void having '€' as alias for '$' in pattern and replacement")
+        .describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
         .alias('€', 'void-euro')
 
 
 
 
-        .boolean('j')
+       .boolean('j')
         .alias('j', 'replacement-js-dynamic')
         .describe('j',    
             `Replacement is javascript source code. `+
@@ -15260,6 +15265,10 @@ const yargs = require('yargs')
             `Use 'J' flag if captured groups are not being used. `+
             `The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
             `At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. `+
+            `The code has access to the following variables: `+
+          	`'fs' from node, `+
+            `'globs' from npm, `+
+            `'_pipe' is piped data (null if no data). `+
             `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
         /*    
             `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
@@ -15292,6 +15301,13 @@ const yargs = require('yargs')
             `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . `+
        		''
         )
+
+        .boolean('r')
+        .alias('r', 'replacement-pipe')
+        .describe('r',    
+            `Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.`+
+       		''
+        )
     
 /*    .boolean('P')
         .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -15315,10 +15331,7 @@ const yargs = require('yargs')
     .boolean('step')
         .describe('step', "Print debug step info")
 
-    .boolean('v')
-        .describe('v', "More chatty output")
-        .alias('v', 'verbose')
-
+   
     .boolean('G')
         .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
         .alias('G', 'globs-file')
@@ -15347,10 +15360,14 @@ const yargs = require('yargs')
     
 ;
 
-if(needHelp){
-    yargs.showHelp();
+function backOut(){
+	yargs.showHelp();
     process.exitCode = 1;
     return;
+}
+
+if(needHelp){
+    backOut();
 }
 
 // CLI interface default has € as alias for $
@@ -15379,6 +15396,9 @@ config.replacement = replacement;
 
 
 if (Boolean(process.stdin.isTTY)) {
+	if(config.replacementPipe){
+		backOut();
+	}
 	rexreplace(config);
 } else {
 	process.stdin.setEncoding(config.encoding);
@@ -15401,6 +15421,11 @@ if (Boolean(process.stdin.isTTY)) {
 				pipeData = pipeData.trim();
 			}
 			config.pipedData = pipeData;
+
+			if(config.replacementPipe){
+				config.replacement = config.pipedData;
+				config.pipedData = null;
+			}
 		}
 		rexreplace(config);
 	});
@@ -15414,11 +15439,11 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.4.1';
+const version = '2.5.0';
 
 module.exports = function(config){
 
-	let {step, debug, info, error, die, kill} = require('./output')(config);
+	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
 
 	config.pattern = getFinalPattern(config);
 
@@ -15427,9 +15452,9 @@ module.exports = function(config){
 	config.regex = getFinalRegex(config);
 
 	// data is piped in and will always be printed - but must be ignored if files are also given
-	if(null !== config.pipedData){		
+	if(null !== config.pipedData && !config.replacementPipe){		
 		if(config.files.length){
-			error('Ignoring piped data as file/glob was also given.');
+			chat('Ignoring piped data as file/glob was also given.');
 		} else {
 			debug('Outputting result from piped data');
 			return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));			
@@ -15509,6 +15534,8 @@ module.exports = function(config){
 		/*if(config.replacementFile){
 			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
+
+		let _pipe = config.pipedData;
 
 		if(config.outputMatch){
 			if('6'>process.versions.node){
@@ -15622,14 +15649,20 @@ module.exports = function(config){
 		if(config.quiet || config.quietTotal){
 			return;
 		}
-		console.error(font.green(msg), data);	
+		console.error(font.gray(msg), data);	
+	};
+
+	me.chat = function(msg, data=''){
+		if(config.verbose){
+			me.info(msg, data);
+		}
 	};
 
 	me.die = function(msg, data='', displayHelp=false){
 		if(displayHelp && !config.quietTotal){
 			config.showHelp();
 		}
-		error(msg, data);
+		me.error(msg, data);
 		me.kill();
 	};
 

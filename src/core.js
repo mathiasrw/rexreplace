@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.4.1';
+const version = '2.5.0';
 
 module.exports = function(config){
 
-	let {step, debug, info, error, die, kill} = require('./output')(config);
+	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
 
 	config.pattern = getFinalPattern(config);
 
@@ -16,9 +16,9 @@ module.exports = function(config){
 	config.regex = getFinalRegex(config);
 
 	// data is piped in and will always be printed - but must be ignored if files are also given
-	if(null !== config.pipedData){		
+	if(null !== config.pipedData && !config.replacementPipe){		
 		if(config.files.length){
-			error('Ignoring piped data as file/glob was also given.');
+			chat('Ignoring piped data as file/glob was also given.');
 		} else {
 			debug('Outputting result from piped data');
 			return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));			
@@ -98,6 +98,8 @@ module.exports = function(config){
 		/*if(config.replacementFile){
 			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
+
+		let _pipe = config.pipedData;
 
 		if(config.outputMatch){
 			if('6'>process.versions.node){

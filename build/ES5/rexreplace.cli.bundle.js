@@ -14361,7 +14361,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       replacement = _process$argv$splice2[1];
     }
 
-    var yargs = require('yargs').strict().usage('RexReplace ' + rexreplace.version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' + '> rexreplace pattern replacement [fileGlob|option]+').example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'").example('').example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'").example('').example("> rexreplace '(f?(o))o(.*)' '$3$1\u20AC2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper").version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version).alias('v', 'version').boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('G').describe('G', 'Void global search (work only with first match).').alias('G', 'void-global').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files/piped data.').boolean('o').describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement have taken place.').alias('o', 'output').conflicts('O').boolean('O').describe('O', 'Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.').alias('O', 'output-match').boolean('q').describe('q', "Only display erros (no other info)").alias('q', 'quiet').boolean('Q').describe('Q', "Never display erros or info").alias('Q', 'quiet-total').boolean('H').describe('H', "Halt on first error").alias('H', 'halt').default('H', false).boolean('d').describe('d', "Print debug info").alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement").alias('€', 'void-euro').boolean('j').alias('j', 'replacement-js-dynamic').describe('j', "Replacement is javascript source code. " + "Will run once for each match. Last statement will become replacement for this match. " + "Use 'J' flag if captured groups are not being used. " + "The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. " + "At some point the $ char _will_ give you a headache when used in commandlines, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
+    var yargs = require('yargs').strict().usage('RexReplace ' + rexreplace.version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' + '> rexreplace pattern replacement [fileGlob|option]+').example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'").example('').example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'").example('').example("> rexreplace '(f?(o))o(.*)' '$3$1\u20AC2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper").version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version).alias('v', 'version').boolean('V').describe('V', "More chatty output").alias('V', 'verbose').boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('G').describe('G', 'Void global search (work only with first match).').alias('G', 'void-global').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files/piped data.').boolean('o').describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement have taken place.').alias('o', 'output').conflicts('O').boolean('O').describe('O', 'Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.').alias('O', 'output-match').boolean('q').describe('q', "Only display erros (no other info)").alias('q', 'quiet').boolean('Q').describe('Q', "Never display erros or info").alias('Q', 'quiet-total').boolean('H').describe('H', "Halt on first error").alias('H', 'halt').default('H', false).boolean('d').describe('d', "Print debug info").alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters").alias('€', 'void-euro').boolean('j').alias('j', 'replacement-js-dynamic').describe('j', "Replacement is javascript source code. " + "Will run once for each match. Last statement will become replacement for this match. " + "Use 'J' flag if captured groups are not being used. " + "The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. " + "At some point the $ char _will_ give you a headache when used in commandlines, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "The code has access to the following variables: " + "'fs' from node, " + "'globs' from npm, " + "'_pipe' is piped data (null if no data). " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
     /*    
         `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
         `The code has access to the following predefined values: `+
@@ -14375,7 +14375,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         `'_name' is the filename of the active file being searched with no extension, `+
         `'_ext' is the filename of the active file being searched with no extension, `+
         `'_content' is the full content of the active file being searched or.`+
-        */'').boolean('J').alias('J', 'replacement-js').describe('J', "Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. " + '').conflicts('j').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . " + '')
+        */'').boolean('J').alias('J', 'replacement-js').describe('J', "Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. " + '').conflicts('j').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . " + '').boolean('r').alias('r', 'replacement-pipe').describe('r', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '')
 
     /*    .boolean('P')
             .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -14396,10 +14396,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         .alias('n', 'name')
      .boolean('step')
         .describe('step', "Print debug step info")
-     .boolean('v')
-        .describe('v', "More chatty output")
-        .alias('v', 'verbose')
-     .boolean('G')
+    
+    .boolean('G')
         .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
         .alias('G', 'globs-file')
      .boolean('g')
@@ -14414,10 +14412,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     .help('h').describe('h', "Display help.").alias('h', 'help').epilog("Inspiration: .oO(What should 'sed' have been by now?)");
 
-    if (needHelp) {
+    function backOut() {
       yargs.showHelp();
       process.exitCode = 1;
       return;
+    }
+
+    if (needHelp) {
+      backOut();
     }
 
     // CLI interface default has € as alias for $
@@ -14445,6 +14447,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     config.replacement = replacement;
 
     if (Boolean(process.stdin.isTTY)) {
+      if (config.replacementPipe) {
+        backOut();
+      }
       rexreplace(config);
     } else {
       process.stdin.setEncoding(config.encoding);
@@ -14467,6 +14472,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             pipeData = pipeData.trim();
           }
           config.pipedData = pipeData;
+
+          if (config.replacementPipe) {
+            config.replacement = config.pipedData;
+            config.pipedData = null;
+          }
         }
         rexreplace(config);
       });
@@ -14477,12 +14487,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.4.1';
+    var version = '2.5.0';
 
     module.exports = function (config) {
       var _require2 = require('./output')(config),
           step = _require2.step,
           debug = _require2.debug,
+          chat = _require2.chat,
           info = _require2.info,
           error = _require2.error,
           die = _require2.die,
@@ -14495,9 +14506,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       config.regex = getFinalRegex(config);
 
       // data is piped in and will always be printed - but must be ignored if files are also given
-      if (null !== config.pipedData) {
+      if (null !== config.pipedData && !config.replacementPipe) {
         if (config.files.length) {
-          error('Ignoring piped data as file/glob was also given.');
+          chat('Ignoring piped data as file/glob was also given.');
         } else {
           debug('Outputting result from piped data');
           return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));
@@ -14573,6 +14584,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         /*if(config.replacementFile){
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
+
+        var _pipe = config.pipedData;
 
         if (config.outputMatch) {
           if ('6' > process.versions.node) {
@@ -14684,7 +14697,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (config.quiet || config.quietTotal) {
           return;
         }
-        console.error(font.green(msg), data);
+        console.error(font.gray(msg), data);
+      };
+
+      me.chat = function (msg) {
+        var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
+        if (config.verbose) {
+          me.info(msg, data);
+        }
       };
 
       me.die = function (msg) {
@@ -14694,7 +14715,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (displayHelp && !config.quietTotal) {
           config.showHelp();
         }
-        error(msg, data);
+        me.error(msg, data);
         me.kill();
       };
 
