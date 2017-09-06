@@ -55,7 +55,7 @@ Let 'foobar' in myfile.md become 'xxxbar'
 > rexreplace 'Foo' 'xxx' myfile.md
 ```
 
-Short version of same command
+Hard for your fingers to write on your keyboard? We got you covered with the `rr` alias for `rexreplace`. Short version of same command:
 
 ```bash
 > rr Foo xxx myfile.md
@@ -104,7 +104,7 @@ RexReplace normally treat `€` as an alias for `$` so the following will do the
 > rexreplace pattern replacement [fileGlob|option]+
 ```
 
-Hard for your fingers to write on your keyboard? We got you covered with the `rr` alias for `rexreplace`. 
+
 
 
 
