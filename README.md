@@ -55,7 +55,7 @@ Let 'foobar' in myfile.md become 'xxxbar'
 > rexreplace 'Foo' 'xxx' myfile.md
 ```
 
-Hard for your fingers to write on your keyboard? We got you covered with the `rr` alias for `rexreplace`. Short version of same command:
+Hard for your fingers to write on your keyboard? We got you covered with the `rr` alias for `rexreplace`:
 
 ```bash
 > rr Foo xxx myfile.md
