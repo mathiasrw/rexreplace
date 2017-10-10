@@ -3665,17 +3665,17 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.5.2';
+const version = '2.5.3-dev';
 
 module.exports = function(config){
 
 	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
 
-	config.pattern = getFinalPattern(config);
+	config.pattern = getFinalPattern(config)||'';
 
-	config.replacement = getFinalReplacement(config);	
+	config.replacement = getFinalReplacement(config)||'';	
 
-	config.regex = getFinalRegex(config);
+	config.regex = getFinalRegex(config)||'';
 
 	// data is piped in and will always be printed - but must be ignored if files are also given
 	if(null !== config.pipedData && !config.replacementPipe){		

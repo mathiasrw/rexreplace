@@ -14487,7 +14487,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.5.2';
+    var version = '2.5.3-dev';
 
     module.exports = function (config) {
       var _require2 = require('./output')(config),
@@ -14499,11 +14499,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           die = _require2.die,
           kill = _require2.kill;
 
-      config.pattern = getFinalPattern(config);
+      config.pattern = getFinalPattern(config) || '';
 
-      config.replacement = getFinalReplacement(config);
+      config.replacement = getFinalReplacement(config) || '';
 
-      config.regex = getFinalRegex(config);
+      config.regex = getFinalRegex(config) || '';
 
       // data is piped in and will always be printed - but must be ignored if files are also given
       if (null !== config.pipedData && !config.replacementPipe) {
