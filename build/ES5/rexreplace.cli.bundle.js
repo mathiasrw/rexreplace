@@ -14620,7 +14620,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
           return function () {
             for (var i = 0; i < arguments.length - 2; i++) {
-              eval('var $' + i + '="' + arguments[i] + '";'); // we are already using eval - so wth...
+              eval('var $' + i + '=' + JSON.stringify(arguments[i]) + ';'); // we are already using eval - so wth...
             }
             return eval(code);
           };
