@@ -22,7 +22,7 @@
     "test-cli": "npm -g install ./ && bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
     "prepack": "git pull && npm test ",
-    "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
+    "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag $(git log -1 --pretty=%B | head -1) && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "QQQoptions.md":"rr -h | rr '^[\\s\\S]*Options:([\\s\\S]*)Examples:[\\s\\S]*$' '$1' | rr '\n {32}' ' '  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | `€2` | ' | rr '(---- . ---- . ----\n)[\\s\\S]*?(?=\n## Good to know)' 'console.log(€1 + _pipe + €2)' readme.md -RoJQ",
     "options.md":"rr -h | rr '^[\\s\\S]*Options:([\\s\\S]*)Examples:[\\s\\S]*$' '$1' | rr '\n {32}' ' '  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | `€2` | ' -o"
   },
