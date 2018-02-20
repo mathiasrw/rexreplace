@@ -82,7 +82,7 @@ assert		 		"rexreplace o x myfile -o --void-global"    "fxobar"
 
 # -O
 reset
-assert		 		"rexreplace [fb]. _ myfile --output-match"    "foba"
+assert		 		"rexreplace [fb]. _ myfile --output-match"    "fo\\nba"
 
 
 # -GO

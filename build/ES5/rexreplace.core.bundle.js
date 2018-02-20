@@ -3431,7 +3431,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.5.3-dev';
+    var version = '2.5.3';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3536,7 +3536,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             return die('outputMatch is only supported in node 6+');
           }
           return function () {
-            process.stdout.write(arguments[0]);
+            process.stdout.write(arguments[0] + "\n");
             return '';
           };
         }

@@ -15439,7 +15439,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.5.3-dev';
+const version = '2.5.3';
 
 module.exports = function(config){
 
@@ -15542,7 +15542,7 @@ module.exports = function(config){
 				return die('outputMatch is only supported in node 6+');
 			}
 			return function(){
-								process.stdout.write(arguments[0]);
+								process.stdout.write(arguments[0]+"\n");
 								return '';
 							}; 
 		}

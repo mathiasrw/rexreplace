@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "2.5.3",
+  "version": "2.6.0",
   "description": "Flexible CLI regex replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "rr": "build/multiversion.cli.js"
   },
   "scripts": {
-    "test": "npm run test-js && npm run build && npm run test-cli",
+    "test": "npm run build && npm run test-cli && npm run test-js",
     "prebuild": "rm -fr build && mkdir build build/ES6 && cp src/multiversion.core.js build/multiversion.core.js && cp src/multiversion.cli.js build/multiversion.cli.js && node -e \"file='src/core.js';fs = require('fs');fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/(const version = \\')[^\\']+/m,'\\$1'+require('./package.json').version))\"",
     "build": "browserify --node src/cli.js -o build/ES6/rexreplace.cli.bundle.js && browserify --node src/core.js  -o build/ES6/rexreplace.core.bundle.js",
     "postbuild": "babel build/ES6 -d build/ES5",
