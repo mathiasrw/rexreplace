@@ -198,6 +198,10 @@ function backOut(){
     return;
 }
 
+function unescapeString(str){
+	return eval("'"+str.replace(/'/g,"\\'")+"'");
+}
+
 if(needHelp){
     backOut();
 }
@@ -223,8 +227,8 @@ let pipeData = '';
 config.files = yargs.argv._;
 config.pipedData = null;
 config.showHelp = yargs.showHelp;
-config.pattern = pattern;
-config.replacement = replacement;
+config.pattern = unescapeString(pattern);
+config.replacement = unescapeString(replacement);
 
 
 if (Boolean(process.stdin.isTTY)) {

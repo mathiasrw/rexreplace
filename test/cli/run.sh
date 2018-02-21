@@ -35,15 +35,21 @@ reset
 rexreplace o x myfile
 assert		 		"cat myfile"    "fxxbar"
 
+reset
+rexreplace "b" "\n" myfile
+assert		 		"cat myfile"    "foo\nar"
+
+
 # rr can handle a pattern and replcaement starting with '-'
 reset
 rexreplace '^(.+)$' '- $1' myfile
 rexreplace '- f' '_' myfile
 assert		 		"cat myfile"    "_oobar"
 
+
 # Piped data
 reset
-assert		 		"cat myfile | rexreplace Foo xxx"    "xxxbar"
+assert		 		"cat myfile | rexreplace foo xxx"    "xxxbar"
 
 
 
