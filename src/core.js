@@ -30,6 +30,8 @@ module.exports = function(config){
 
 	debug(config.files.length+' files found');
 
+	step(config);
+
 	config.files
 		// Correct filepath
 		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
@@ -42,11 +44,12 @@ module.exports = function(config){
 
 
 	function treatFile(file,config){
+		chat('Starting to read: '+file);
 		fs.readFile(file, config.encoding, function (err,data) {
 			if (err) {
 				return error(err);
 			}
-			debug('About to replace in: '+file);
+			debug('Starting to work on: '+file);
 			const result = data.replace(config.regex, config.replacement);
 
 			if(config.output){
@@ -56,7 +59,11 @@ module.exports = function(config){
 
 			// Nothing replaced = no need for writing file again 
 			if(result === data){
-				debug('Nothing changed in: '+file);
+				chat('Nothing changed in: '+file);
+				return;
+			}
+
+			if(config.outputMatch){
 				return;
 			}
 
@@ -108,7 +115,7 @@ module.exports = function(config){
 			return function(){
 								process.stdout.write(arguments[0]+"\n");
 								return '';
-							}; 
+							};
 		}
 
 		if(config.replacementJsDynamic && !(/\$\d/.test(config.replacement))){

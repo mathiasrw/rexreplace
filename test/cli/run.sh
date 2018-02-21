@@ -29,7 +29,7 @@ reset() {
 # Plain usage
 reset
 rexreplace x x myfile
-assert		 		"cat myfile "    "foobar"
+assert		 		"cat myfile"    "foobar"
 
 reset
 rexreplace o x myfile

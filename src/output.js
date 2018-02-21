@@ -18,6 +18,8 @@ module.exports = function(config){
 	me.chat = function(msg, data=''){
 		if(config.verbose){
 			me.info(msg, data);
+		} else {
+			me.debug(msg+' '+data);
 		}
 	};
 

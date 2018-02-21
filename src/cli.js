@@ -14,6 +14,8 @@ if(process.argv.length<4){
     [pattern, replacement] = process.argv.splice(2,2);
 }
 
+
+
 const yargs = require('yargs')
     .strict()
 
@@ -34,6 +36,8 @@ const yargs = require('yargs')
      .boolean('V')
         .describe('V', "More chatty output")
         .alias('V', 'verbose')
+        //.conflicts('V', 'q')
+        //.conflicts('V', 'Q')
     
 
     .boolean('I')
@@ -59,7 +63,7 @@ const yargs = require('yargs')
     .boolean('o')
         .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement have taken place.')
         .alias('o', 'output')
-        .conflicts('O')
+        //.conflicts('o','O')
 
     .boolean('O')
         .describe('O', 'Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.')
@@ -134,6 +138,14 @@ const yargs = require('yargs')
        		''
         )
 
+        .boolean('N')
+        .alias('N', 'void-newline')
+        .describe('N',    
+            `Avoid having newline when outputting data (or when piping). `+
+            `Normally . `+
+       		''
+        )
+
         .boolean('R')
         .alias('R', 'replacement-pipe')
         .describe('R',    
@@ -160,8 +172,12 @@ const yargs = require('yargs')
         .describe('n', "Do replacement on file names instead of file content (rename the files)")
         .alias('n', 'name')
 
-    .boolean('step')
-        .describe('step', "Print debug step info")
+	// https://github.com/eugeneware/replacestream
+    .integer('m')
+        .describe('m', "Maximum length of match. Set this value only if any single file of your ")
+        .alias('m', 'max-match-len')
+        .default('m', false)
+
 
    
     .boolean('G')
