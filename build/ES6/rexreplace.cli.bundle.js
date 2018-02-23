@@ -15182,6 +15182,8 @@ if(process.argv.length<4){
     [pattern, replacement] = process.argv.splice(2,2);
 }
 
+
+
 const yargs = require('yargs')
     .strict()
 
@@ -15202,6 +15204,8 @@ const yargs = require('yargs')
      .boolean('V')
         .describe('V', "More chatty output")
         .alias('V', 'verbose')
+        //.conflicts('V', 'q')
+        //.conflicts('V', 'Q')
     
 
     .boolean('I')
@@ -15209,7 +15213,7 @@ const yargs = require('yargs')
         .alias('I', 'void-ignore-case')
     
     .boolean('G')
-        .describe('G', 'Void global search (work only with first match).')
+        .describe('G', 'Void global search (work only with first the match).')
         .alias('G', 'void-global')
 
     .boolean('M')
@@ -15224,21 +15228,12 @@ const yargs = require('yargs')
         .alias('e', 'encoding')
         .describe('e', 'Encoding of files/piped data.')
 
-    .boolean('o')
-        .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement have taken place.')
-        .alias('o', 'output')
-        .conflicts('O')
-
-    .boolean('O')
-        .describe('O', 'Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.')
-        .alias('O', 'output-match')
-
     .boolean('q')
-        .describe('q', "Only display erros (no other info)")
+        .describe('q', "Only display errors (no other info)")
         .alias('q', 'quiet')
 
     .boolean('Q')
-        .describe('Q', "Never display erros or info")
+        .describe('Q', "Never display errors or info")
         .alias('Q', 'quiet-total')
 
     .boolean('H')
@@ -15254,60 +15249,91 @@ const yargs = require('yargs')
         .describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
         .alias('€', 'void-euro')
 
+    .boolean('o')
+        .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.')
+        .alias('o', 'output')
+        //.conflicts('o','O')
 
-
-
-       .boolean('j')
-        .alias('j', 'replacement-js-dynamic')
-        .describe('j',    
-            `Replacement is javascript source code. `+
-            `Will run once for each match. Last statement will become replacement for this match. `+
-            `Use 'J' flag if captured groups are not being used. `+
-            `The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
-            `At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. `+
-            `The code has access to the following variables: `+
-          	`'fs' from node, `+
-            `'globs' from npm, `+
-            `'_pipe' is piped data (null if no data). `+
-            `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
-        /*    
-            `The sources runs once for each file to be searched, so you can make the replacement file specific. `+
-            `The code has access to the following predefined values: `+
-            `'fs' from node, `+
-            `'globs' from npm, `+
-            `'_pattern' is the final pattern. `+
-            `The following values are also available but if content is being piped they are all set to an empty string: `+
-            `'_file' is the full path of the active file being searched (including fiename), `+
-            `'_path' is the full path without file name of the active file being searched, `+
-            `'_filename' is the filename of the active file being searched, `+
-            `'_name' is the filename of the active file being searched with no extension, `+
-            `'_ext' is the filename of the active file being searched with no extension, `+
-            `'_content' is the full content of the active file being searched or.`+
-            */''
-        )
-
-        .boolean('J')
-        .alias('J', 'replacement-js')
-        .describe('J',    
-            `Same as -j option but will run only _once_ so output from last statement will become replacement for all matches. `+
+    .boolean('A')
+        .alias('A', 'void-async')
+        .describe('A',    
+            `Handle files in a synchronous flow. Good to limit memory usage when handling large files. `+
        		''
         )
-        .conflicts('j')
 
-        .boolean('T')
+    .boolean('B')
+        .describe('B', "Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory and you will lose the content if the process is abrupted.")
+        .alias('B', 'void-backup')
+
+
+    .boolean('b')
+        .describe('b', "Keep a backup file of the original content.")
+        .alias('b', 'keep-backup')
+
+
+    .boolean('m')
+        .describe('m', 
+        	`Output each match on a new line. `+
+            `Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. `+
+        	`If search pattern does not contain matching groups the full match will be outputted. `+
+        	`If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). `+
+            ``)
+        .alias('m', 'output-match')
+
+    .boolean('T')
         .alias('T', 'trim-pipe')
         .describe('T',    
             `Trim piped data before processing. `+
-            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string . `+
+            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string. `+
        		''
         )
-
-        .boolean('R')
+    
+    .boolean('R')
         .alias('R', 'replacement-pipe')
         .describe('R',    
             `Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.`+
        		''
         )
+
+    .boolean('j')
+        .alias('j', 'replacement-js')
+        .describe('j',    
+            `Treat replacement as javascript source code. `+
+            `The statement from the last expression will become the replacement string. `+
+            `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
+            `The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
+            `At some point the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. `+
+            `If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. `+
+            `The code has access to the following variables: `+
+          	`'_fs' from node, `+
+            `'_globs' from npm, `+
+            `'_pipe' is the piped data into the command (null if no piped data), `+
+            `'_find' is the final pattern searched for. `+
+            `'_text' is the full text being searched (Corresponds to file contents or piped data).`+
+            `The following values are also available if working on a file (if data is being piped they are all set to an empty string): `+
+            `'_file' is the full path of the active file being searched (including full filename), `+
+            `'_path' is the full path without filename of the active file being searched, `+
+            `'_filename' is the full filename of the active file being searched, `+
+            `'_name' is the filename of the active file being searched with no extension, `+
+            `'_ext' is the extension of the filename including leading dot. `+
+            ''
+        )
+
+
+
+/*
+        .boolean('N')
+        .alias('N', 'void-newline')
+        .describe('N',    
+            `Avoid having newline when outputting data (or when piping). `+
+            `Normally . `+
+       		''
+        )
+*/
+
+
+
+
     
 /*    .boolean('P')
         .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
@@ -15328,8 +15354,12 @@ const yargs = require('yargs')
         .describe('n', "Do replacement on file names instead of file content (rename the files)")
         .alias('n', 'name')
 
-    .boolean('step')
-        .describe('step', "Print debug step info")
+	// https://github.com/eugeneware/replacestream
+    .integer('M')
+        .describe('M', "Maximum length of match. Set this value only if any single file of your ")
+        .alias('M', 'max-match-len')
+        .default('M', false)
+
 
    
     .boolean('G')
@@ -15363,75 +15393,82 @@ const yargs = require('yargs')
 function backOut(){
 	yargs.showHelp();
     process.exitCode = 1;
-    return;
 }
 
-if(needHelp){
-    backOut();
+function unescapeString(str){
+	return eval("'"+str.replace(/'/g,"\\'")+"'");
 }
 
-// CLI interface default has € as alias for $
-if(!yargs.argv.voidEuro){
-    pattern = pattern.replace(/€/g,'$');
-    replacement = replacement.replace(/€/g,'$');
-}
-
-// All options into one big config object for the rexreplace core
-let config = {};
-
-// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
-Object.keys(yargs.argv).forEach(key=>{
-    if(1<key.length && key.indexOf('-')<0){
-        config[key] = yargs.argv[key];
-    }
-});
-
-let pipeInUse = false;
-let pipeData = '';
-config.files = yargs.argv._;
-config.pipedData = null;
-config.showHelp = yargs.showHelp;
-config.pattern = pattern;
-config.replacement = replacement;
-
-
-if (Boolean(process.stdin.isTTY)) {
-	if(config.replacementPipe){
-		backOut();
+(function(){
+	if(needHelp){
+	    return backOut();
 	}
-	rexreplace(config);
-} else {
-	process.stdin.setEncoding(config.encoding);
 
-	process.stdin.on('readable', ()=>{
-		let chunk = process.stdin.read();
-		
-		if(null !== chunk){
-			pipeInUse = true;
-			pipeData += chunk;
-			while((chunk = process.stdin.read())){
-				pipeData += chunk;
-			}
-		}
+	// CLI interface default has € as alias for $
+	if(!yargs.argv.voidEuro){
+	    pattern 	=     pattern.replace(/€/g,'$');
+	    replacement = replacement.replace(/€/g,'$');
+	}
+
+	// All options into one big config object for the rexreplace core
+	let config = {};
+
+	// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+	Object.keys(yargs.argv).forEach(key=>{
+	    if(1<key.length && key.indexOf('-')<0){
+	        config[key] = yargs.argv[key];
+	    }
 	});
 
-	process.stdin.on('end', ()=>{
-		if(pipeInUse){
-			if(yargs.argv.trimPipe){
-				pipeData = pipeData.trim();
-			}
-			config.pipedData = pipeData;
+	let pipeInUse = false;
+	let pipeData = '';
+	config.files = yargs.argv._;
+	config.pipedData = null;
+	config.showHelp = yargs.showHelp;
+	config.pattern = pattern;
+	if(config.replacementJs){
+		config.replacement = replacement;
+	} else {
+		config.replacement = unescapeString(replacement);
+	}
 
-			if(config.replacementPipe){
-				config.replacement = config.pipedData;
-				config.pipedData = null;
-			}
+	/*if(Boolean(process.stdout.isTTY)){
+		config.output = true;
+	}*/
+
+	if (Boolean(process.stdin.isTTY)) {
+		if(config.replacementPipe){
+			return backOut();
 		}
 		rexreplace(config);
-	});
+	} else {
+		process.stdin.setEncoding(config.encoding);
 
-}
+		process.stdin.on('readable', ()=>{
+			let chunk = process.stdin.read();
+			
+			if(null !== chunk){
+				pipeInUse = true;
+				pipeData += chunk;
+				while((chunk = process.stdin.read())){
+					pipeData += chunk;
+				}
+			}
+		});
 
+		process.stdin.on('end', ()=>{
+			if(pipeInUse){
+				if(yargs.argv.trimPipe){
+					pipeData = pipeData.trim();
+				}
+				config.pipedData = pipeData;
+
+			}
+			rexreplace(config);
+		});
+
+	}
+})();
 
 },{"./core":94,"yargs":81}],94:[function(require,module,exports){
 
@@ -15439,11 +15476,14 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '2.5.3';
+const version = '3.0.0';
 
 module.exports = function(config){
 
 	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
+
+	step("Displaying steps for:");
+	step(config);
 
 	config.pattern = getFinalPattern(config)||'';
 
@@ -15451,20 +15491,21 @@ module.exports = function(config){
 
 	config.regex = getFinalRegex(config)||'';
 
-	// data is piped in and will always be printed - but must be ignored if files are also given
-	if(null !== config.pipedData && !config.replacementPipe){		
-		if(config.files.length){
-			chat('Ignoring piped data as file/glob was also given.');
-		} else {
-			debug('Outputting result from piped data');
-			return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));			
-		}
-	
+	step(config);
+
+	if(handlePipedData(config)){
+		return doReplacement("Piped data", config, config.pipedData);
 	}
 
 	config.files = globs.sync(config.files);
 
-	debug(config.files.length+' files found');
+	if(!config.files.length){
+		return error(config.files.length+' files found');
+	}
+
+	chat(config.files.length+' files found');
+
+	step(config);
 
 	config.files
 		// Correct filepath
@@ -15473,52 +15514,171 @@ module.exports = function(config){
 		.filter(filepath=>fs.existsSync(filepath)?true:error('File not found:',filepath))
 
 		// Do the replacement 
-		.forEach(filepath=>treatFile(filepath,config))
+		.forEach(filepath=>openFile(filepath,config))
 	;
 
 
-	function treatFile(file,config){
-		fs.readFile(file, config.encoding, function (err,data) {
-			if (err) {
-				return error(err);
-			}
-			debug('About to replace in: '+file);
-			const result = data.replace(config.regex, config.replacement);
+	function openFile(file,config){
+		if(config.voidAsync){
+			chat('Open sync: '+file);
+			var data = fs.readFileSync(file, config.encoding);
+			return doReplacement(file, config, data);
+		} else {
+			chat('Open async: '+file);
+			fs.readFile(file, config.encoding, function (err,data) {
+				if (err) {
+					return error(err);
+				}
 
-			if(config.output){
-				debug('Outputting result from: '+file);
-				return process.stdout.write(result);
-			}
+				return doReplacement(file, config, data);
+			});
+		}
 
-			// Nothing replaced = no need for writing file again 
-			if(result === data){
-				debug('Nothing changed in: '+file);
-				return;
-			}
+	}
 
-			debug('About to write to: '+file);
-			fs.writeFile(file, result, config.encoding, function (err) {
+
+
+	// postfix argument names to limit the probabillity of user inputted javascript accidently using same values
+	function doReplacement(_file_rr, _config_rr, _data_rr){
+		
+		debug('Work on content from: '+_file_rr);
+
+
+		// Variables to be accessible from js. 
+		if(_config_rr.replacementJs){
+			const _pipe 	= _config_rr.pipedData;
+			const _text 	= _data_rr;
+			const _fs 		= fs;
+			const _globs 	= globs;
+			const _find 	= _config_rr.pattern;
+			const code_rr 	= _config_rr.replacement;
+			let _file 		= '',
+				_pathinfo 	= '',
+				_path 		= '',
+				_filename 	= '',
+				_name 		= '',
+				_ext 		= '';
+			if(!_config_rr.dataIsPiped){
+				_file 		= path.normalize(path.join(process.cwd(),_file_rr));
+				_pathInfo 	= path.parse(_file);
+				_path 		= _pathInfo.dir;
+				_filename 	= _pathInfo.base;
+				_name 		= _pathInfo.name;
+				_ext 		= _pathInfo.ext;
+			}
+			
+			// Run only once if no captured groups (replacement cant change)
+			if(!(/\$\d/.test(_config_rr.replacement))){
+				_config_rr.replacement = eval(code_rr); 
+			} else {
+				// Captures groups present, so need to run once per match
+				_config_rr.replacement = function(){
+					step(arguments);
+					for(var i = 0; i<arguments.length-2 ; i++){
+						eval('var $'+i+'='+JSON.stringify(arguments[i])+';'); 
+					}
+					return eval(code_rr);
+				}; 
+			}
+		}
+
+		// Main regexp of the whole thing
+		const result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
+
+		// The output of matched strings is done from the replacement, so no need to continue
+		if(_config_rr.outputMatch){
+			return;
+		}
+
+		if(_config_rr.output){
+			debug('Output result from: '+_file_rr);
+			return process.stdout.write(result);
+		}
+
+		// Nothing replaced = no need for writing file again 
+		if(result === _data_rr){
+			chat('Nothing changed in: '+_file_rr);
+			return;
+		}
+
+		// Release the memory while storing files
+		_data_rr = undefined;
+
+		debug('Write new content to: '+_file_rr);
+
+		// Write directly to the same file (if the process is killed all new and old data is lost)
+		if(_config_rr.voidBackup){
+			return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
 				if (err){
 					return error(err);
 				}
-				info(file);
+				info(_file_rr);
+			});
+		}
+
+
+		//Make sure data is always on disk
+		const oriFile = path.normalize(path.join(process.cwd(),_file_rr));
+		const salt = new Date().toISOString().toString().replace(/:/g,'_').replace('Z', '');
+		const backupFile = oriFile+"."+salt+".backup";
+
+		if(_config_rr.voidAsync){
+			try{
+				fs.renameSync(oriFile, backupFile);
+				fs.writeFileSync(oriFile, result, _config_rr.encoding);
+				if(!_config_rr.keepBackup){
+					fs.unlinkSync(backupFile);
+				}
+			} catch(e){
+				return error(e);
+			}
+			return info(_file_rr);	
+		}
+			
+		// Let me know when fs gets promise'fied
+		fs.rename(oriFile, backupFile, err=>{
+			if (err){return error(err);}
+
+			fs.writeFile(oriFile, result, _config_rr.encoding, err=>{
+				if (err){return error(err);}
+
+				if(!_config_rr.keepBackup){
+					fs.unlink(backupFile, err=>{
+						if (err){return error(err);}
+						info(_file_rr);		
+					});
+				} else {
+					info(_file_rr);		
+				}
 			});
 		});
 	}
 
-	/*function evalJs(jsString, explode=false){
-		let result, source = 
-				`function(){
 
+	function handlePipedData(config){
+		step("Check Piped Data");
 
-				}`
+		if(config.files.length){
 
-	}*/
+			if(!config.replacementJs){
+				chat('Piped data never used.');
+			}
+			
+			return false;
+		}
 
+		if(null !== config.pipedData && !config.pipedDataUsed){
+			config.dataIsPiped = true;
+			config.output = true;
+			return true;
+		}
 
+		return false;
+	}
 
 
 	function getFinalPattern(config){
+		step("Get final pattern");
 		let pattern = config.pattern;
 
 		if(config.patternFile){
@@ -15526,55 +15686,56 @@ module.exports = function(config){
 			pattern = oneLinerFromFile(pattern);
 		}
 
+		step(pattern)
 		return pattern;
 	}
 
 	function getFinalReplacement(config){
-
+		step("Get final replacement");
 		/*if(config.replacementFile){
 			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
 
-		let _pipe = config.pipedData;
+		if(config.replacementPipe){
+			step("Piping replacement");
+			config.pipedDataUsed = true;
+			if(null===config.pipedData){
+				return die("No data piped into replacement");
+			}	
+			config.replacement = config.pipedData;
+		}
 
 		if(config.outputMatch){
+			step("Output match");
+
 			if('6'>process.versions.node){
 				return die('outputMatch is only supported in node 6+');
 			}
 			return function(){
-								process.stdout.write(arguments[0]+"\n");
-								return '';
-							}; 
+				step(arguments);
+
+				if(arguments.length===3){
+					step('Printing full match');
+					process.stdout.write(arguments[0]+"\n");
+					return '';
+				}
+
+				for (var i = 1; i < arguments.length-2; i++) {
+					process.stdout.write(arguments[i]);
+				}
+				process.stdout.write("\n");
+				return '';
+			};
 		}
 
-		if(config.replacementJsDynamic && !(/\$\d/.test(config.replacement))){
-			config.replacementJsDynamic = false;
-			config.replacementJs = true; 
+
+
+		// If captured groups then run dynamicly
+		if(config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node<'6'){
+			return die('Captured groups for javascript replacement is only supported in node 6+');
 		}
 
-		if(config.replacementJs && /\$\d/.test(config.replacement)){
-			info('Use the -J flag to use captured groups dynamically in the replacement'); 
-		}
-
-		if(config.replacementJs){
-			return eval(config.replacement); // Todo: make a bit more scoped?
-		}  
-
-		if(config.replacementJsDynamic){
-
-			if('6'>process.versions.node){
-				return die('replacementJsDynamic is only supported in node 6+');
-			}
-
-			let code = config.replacement;
-
-			return function(){
-								for(var i = 0;i<arguments.length-2;i++){
-									eval('var $'+i+'='+JSON.stringify(arguments[i])+';'); // we are already using eval - so wth...
-								}
-								return eval(code);
-							}; 
-		} 
+		step(config.replacement);
 
 		return config.replacement;
 	}
@@ -15591,6 +15752,8 @@ module.exports = function(config){
 */
 
 	function getFinalRegex(config){
+		step("Get final regex");
+
 		let regex = null;	
 
 		let flags = getFlags(config);
@@ -15601,11 +15764,15 @@ module.exports = function(config){
 			die('Wrongly formatted regex pattern', err);
 		}
 
+		step(regex);
+
 		return regex;
 
 	}
 
 	function getFlags(config){
+		step("Get flags");
+		
 		let flags = '';
 
 		if(!config.voidGlobal){
@@ -15655,6 +15822,8 @@ module.exports = function(config){
 	me.chat = function(msg, data=''){
 		if(config.verbose){
 			me.info(msg, data);
+		} else {
+			me.debug(msg+' '+data);
 		}
 	};
 
@@ -15663,7 +15832,7 @@ module.exports = function(config){
 			config.showHelp();
 		}
 		me.error(msg, data);
-		me.kill();
+		me.kill(msg);
 	};
 
 	me.error = function(msg, data=''){
@@ -15671,7 +15840,7 @@ module.exports = function(config){
 			console.error(font.red(msg), data);
 		}
 		if(config.halt){
-			me.kill();
+			me.kill(msg);
 		}
 		return false;
 	};
@@ -15688,8 +15857,9 @@ module.exports = function(config){
 		}
 	};
 
-	me.kill = function(error=1){
+	me.kill = function(msg='', error=1){
 		process.exitCode = error;
+		throw new Error(msg);
 	};
 
 	return me;

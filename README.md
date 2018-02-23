@@ -21,9 +21,6 @@
 
 # RexReplace
 
-
-
-
 RexReplace is a versatile tool for doing search-and-replaces in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts.     
 
 Key features:
@@ -67,28 +64,28 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 Let all markdown files in the `docs/` dir get headlines moved one level deeper
 
 ```bash
-> rexreplace '^#' '##' docs/*.md			
+> rexreplace '^#' '##' docs/*.md            
 ```
  
 ----
 Let the version number from package.json get into your distribution js files (use the string `VERSION_NUMBER` in your source files).
    
 ```bash
-> rexreplace 'VERSION_NUMBER' 'require('package.json').version' -J dist/*.js 
+> rexreplace 'VERSION_NUMBER' 'require('package.json').version' -j dist/*.js 
 ```
 
 
 
 ----
 
-Let 'foobar' in myfile.md become 'barfoo' (backreferences to matching group) 
+Let 'foobar' in myfile.md become 'barfoo' (backreferences to a matching group) 
 
 ```bash
 > rexreplace '(foo)(.*)' '$2$1' myfile.md
 ```
 
 
-RexReplace normally treat `€` as an alias for `$` so the following will do the exact same
+RexReplace normally treats `€` as an alias for `$` so the following will do the same as the previus example
 
 ```bash
 > rexreplace '(foo)(.*)' '€2€1' myfile.md  
@@ -106,34 +103,33 @@ RexReplace normally treat `€` as an alias for `$` so the following will do the
 
 
 
-
+Please update to version 3 as several flags have been altered (for the better) since version 2. Most noticeable: the `-J` flag has merged into the `j` flag.
 
 
 
 Flag | Option name | Effect
 ---- | ---- | ----
-`-v` | `--version` | Print rexreplace version (can be given as only argument)                              [boolean]
-`-V` | `--verbose` | More chatty output                     [boolean]
-`-I` | `--void-ignore-case` | Void case insensitive search pattern.  [boolean]
-`-G` | `--void-global` | Void global search (work only with first match).                                        [boolean]
-`-M` | `--void-multiline` | Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.                             [boolean]
-`-u` | `--unicode` | Treat pattern as a sequence of unicode code points.                                [boolean]
-`-e` | `--encoding` | Encoding of files/piped data.  [default: "utf8"]
-`-o` | `--output` | Output the final result instead of saving to file. Will also output content even if no replacement have taken place.          [boolean]
-`-O` | `--output-match` | Output each match. Will not replace any content (but you still need to provide a replacement parameter). Is not affected by capturing groups.                                        [boolean]
-`-q` | `--quiet` | Only display erros (no other info)     [boolean]
-`-Q` | `--quiet-total` | Never display erros or info            [boolean]
-`-H` | `--halt` | Halt on first error   [boolean] [default: false]
-`-d` | `--debug` | Print debug info                       [boolean]
-`-€` | `--void-euro` | Void having '€' as alias for '$' in pattern and replacement parameters                 [boolean]
-`-j` | `--replacement-js-dynamic` | Replacement is javascript source code. Will run once for each match. Last statement will become replacement for this match. Use 'J' flag if captured groups are not being used. The full match will be avaiable as a javascript _variable_ named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. At some point the $ char _will_ give you a headache when used in commandlines, so use €0, €1, €2 €3 ... instead. The code has access to the following variables: 'fs' from node, 'globs' from npm, '_pipe' is piped data (null if no data). Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself.                                        [boolean]
-`-J` | `--replacement-js` | Same as -j option but will run only _once_ so output from last statement will become replacement for all matches.           [boolean]
-`-T` | `--trim-pipe` | Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string .           [boolean]
-`-r` | `--replacement-pipe` | Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.                             [boolean]
-`-h` | `--help` | Display help.                          [boolean]                                                        
-
-
-
+`-v` | `--version` | Print rexreplace version (can be given as only argument)                                    [boolean]
+`-V` | `--verbose` | More chatty output                           [boolean]
+`-I` | `--void-ignore-case` | Void case insensitive search pattern.        [boolean]
+`-G` | `--void-global` | Void global search (work only with first the match). [boolean]
+`-M` | `--void-multiline` | Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line. [boolean]
+`-u` | `--unicode` | Treat pattern as a sequence of unicode code points. [boolean]
+`-e` | `--encoding` | Encoding of files/piped data.        [default: "utf8"]
+`-q` | `--quiet` | Only display errors (no other info)          [boolean]
+`-Q` | `--quiet-total` | Never display errors or info                 [boolean]
+`-H` | `--halt` | Halt on first error         [boolean] [default: false]
+`-d` | `--debug` | Print debug info                             [boolean]
+`-€` | `--void-euro` | Void having '€' as alias for '$' in pattern and replacement parameters                       [boolean]
+`-o` | `--output` | Output the final result instead of saving to file. Will also output content even if no replacement has taken place.                                 [boolean]
+`-A` | `--void-async` | Handle files in a synchronous flow. Good to limit memory usage when handling large files.      [boolean]
+`-B` | `--void-backup` | Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory and you will lose the content if the process is abrupted. [boolean]
+`-b` | `--keep-backup` | Keep a backup file of the original content.  [boolean]
+`-m` | `--output-match` | Output each match on a new line. Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. If search pattern does not contain matching groups the full match will be outputted. If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter).     [boolean]
+`-T` | `--trim-pipe` | Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string.                                      [boolean]
+`-R` | `--replacement-pipe` | Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.                                   [boolean]
+`-j` | `--replacement-js` | Treat replacement as javascript source code. The statement from the last expression will become the replacement string. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. At some point the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. The code has access to the following variables: '_fs' from node, '_globs' from npm, '_pipe' is the piped data into the command (null if no piped data), '_find' is the final pattern searched for. '_text' is the full text being searched (Corresponds to file contents or piped data).The following values are also available if working on a file (if data is being piped they are all set to an empty string): '_file' is the full path of the active file being searched (including full filename), '_path' is the full path without filename of the active file being searched, '_filename' is the full filename of the active file being searched, '_name' is the filename of the active file being searched with no extension, '_ext' is the extension of the filename including leading dot.       [boolean]
+`-h` | `--help` | Display help.                                [boolean]
 ## Good to know 
 
 ### Features 
@@ -143,7 +139,7 @@ Flag | Option name | Effect
 - Supports regex lookaheads in pattern 
 - Supports backreference to matching groups in the replacement 
 - Data to be treated can be piped in 
-- See the [release note](https://github.com/mathiasrw/rexreplace/releases) for log of changes. Descriptions are on latest patch version. 
+- See the [release note](https://github.com/mathiasrw/rexreplace/releases) for a log of changes. Descriptions are given in latest patch version. 
 
 
 ### Limitations
@@ -155,15 +151,13 @@ Flag | Option name | Effect
 
 - Options can only be set after the replacement parameter. "_But I like to put my options as the first thing, so I know what I am doing_" I agree, but we must sometimes sacrifice habits for consistency.
 
-- Piped data will be ignored if file/globs given.
-
 
 
 ### Priorities
 - Flexibility regarding text pattern matching 
 - Easy to filter what files to be treated
 - Helpful interface
-- Tests (if you know how to do a test cover report on javascript code  ran via the command line, please open an issue to let me know)
+- Tests (if you know how to do a test cover report on javascript code ran via the command line, please let me know)
 
 
 ### Not a priority
@@ -183,7 +177,7 @@ rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 ## Test 
 
 ### Regression
-All CLI end to end tests are defined in [test.sh](https://github.com/mathiasrw/rexreplace/blob/master/test/cli/run.sh) and all unit test are described in [`test/*.js`](https://github.com/mathiasrw/rexreplace/tree/master/test). After `git clone`'ing the repo and `npm install`'ing you can invoke them with:
+All CLI end to end tests are defined in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/master/test/cli/run.sh) and all unit test are described in [`test/*.js`](https://github.com/mathiasrw/rexreplace/tree/master/test). After `git clone`'ing the repo and `npm install`'ing you can invoke them with:
 
 ```bash
 > npm test
@@ -224,7 +218,7 @@ Bytes    sed    rr    Time it took longer (seconds)
 
 So even though the speed evolves very differently, there is only little practical use of the focus on speed for most use cases. Replacing in 10000 small files? Use RexReplace and go get a cup of coffee - or spend half an hour getting `sed` to work as you want it to and enjoy the thrilling few seconds it takes to do its magic.  
 
-Please note that speeds might look very different when files get as large as the memory avaiable. 
+Please note that speeds might look very different when files get as large as the memory available. 
 
 ## Rumours
 
@@ -238,24 +232,18 @@ _.oO(What should "sed" have looked like by now?)_
 - Test-run with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
-- Piped data while having 1 globs = output is to be stored in this file (when no -rpo flags). Hmm. Could create misunderstandings. Might be better just to demand a `>`
-- Piped data while having 2+ globs = error (when no -rpg flags)
-- Let pattern, replacement, globs be piped
+- Let pattern and globs be piped
 - Let Pattern, replacement, and globs come from file
-- Let pattern, replacement, and glob be javascript code returning string as result
+- Let pattern and glob be javascript code returning string as result
 - Error != warning
-- Debug != all debug
-- Flag for sync or async read file handling. 
-- Test if async or sync is best.
 - Flag for simple string search (all other chars than [\n\r\t])
-- Flag for plain string search litteral (no regex, no special chars, no escape chars)
+- Flag for plain string search literal (no regex, no special chars, no escape chars)
 - Check if https://github.com/eugeneware/replacestream is good to rely on
-- Check if regex engine from spidermonkey can be wrapped in something that does not need node
-- Implement in go, so all platforms can be supported with no need for node (might be based on)
-- let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
+- Check if regex engine from spider monkey can be wrapped in something that does not need node 
+- Implement in go so that all platforms can be supported with no need for node (might be based on)
+- Let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
 - Expand speed test to compare all related projects
-- Build step options into readme (`"[\s\S]+\nOptions:\n([\s\S]+?)\nExamples:[\s\S]+"`)
-- Check if modular + compile is slower than minimonolit + require fs
+- Check if modular + compile is slower than mini monolith + require fs
 
 
 ## Related projects
