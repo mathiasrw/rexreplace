@@ -71,7 +71,7 @@ Let all markdown files in the `docs/` dir get headlines moved one level deeper
 Let the version number from package.json get into your distribution js files (use the string `VERSION_NUMBER` in your source files).
    
 ```bash
-> rexreplace 'VERSION_NUMBER' 'require('package.json').version' -j dist/*.js 
+> rexreplace 'VERSION_NUMBER' 'require("package.json").version' -j dist/*.js 
 ```
 
 
