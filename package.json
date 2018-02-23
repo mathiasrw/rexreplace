@@ -23,7 +23,7 @@
     "test-speed": "bash test/speed/run.sh",
     "prepack": "git pull && npm test ",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
-    "options":"rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' '  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | `€2` | ' | rr '(---- . ---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT"
+    "options":"rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | `€2` | ' | rr '(---- . ---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT"
   },
   "keywords": [
     "replace",

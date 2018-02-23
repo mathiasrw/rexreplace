@@ -141,7 +141,7 @@ const yargs = require('yargs')
             `'_globs' from npm, `+
             `'_pipe' is the piped data into the command (null if no piped data), `+
             `'_find' is the final pattern searched for. `+
-            `'_text' is the full text being searched (Corresponds to file contents or piped data).`+
+            `'_text' is the full text being searched (= file contents or piped data). `+
             `The following values are also available if working on a file (if data is being piped they are all set to an empty string): `+
             `'_file' is the full path of the active file being searched (including full filename), `+
             `'_path' is the full path without filename of the active file being searched, `+
