@@ -21,29 +21,35 @@ source $DIR/aserta.sh
 
 reset() {
 		echo 'Resetting testdata'
-        echo 'foobar' > myfile
+        echo 'foobar' > my.file
 }
 
 
 
 # Plain usage
 reset
-rexreplace x x myfile
-assert		 		"cat myfile "    "foobar"
+rexreplace x x my.file
+assert		 		"cat my.file"    "foobar"
 
 reset
-rexreplace o x myfile
-assert		 		"cat myfile"    "fxxbar"
+rexreplace o x my.file
+assert		 		"cat my.file"    "fxxbar"
+
+reset
+rexreplace "b" "\n" my.file
+assert		 		"cat my.file"    "foo\nar"
+
 
 # rr can handle a pattern and replcaement starting with '-'
 reset
-rexreplace '^(.+)$' '- $1' myfile
-rexreplace '- f' '_' myfile
-assert		 		"cat myfile"    "_oobar"
+rexreplace '^(.+)$' '- $1' my.file
+rexreplace '- f' '_' my.file
+assert		 		"cat my.file"    "_oobar"
+
 
 # Piped data
 reset
-assert		 		"cat myfile | rexreplace Foo xxx"    "xxxbar"
+assert		 		"cat my.file | rexreplace foo xxx"    "xxxbar"
 
 
 
@@ -59,54 +65,61 @@ assert_success		"rexreplace -help"
 
 # -o
 reset
-assert		 		"rexreplace x x myfile --output"    "foobar"
+assert		 		"rexreplace x x my.file --output"    "foobar"
 
 reset
-assert		 		"rexreplace o x myfile --output"    "fxxbar"
+assert		 		"rexreplace o x my.file --output"    "fxxbar"
 
 
+# -b
+reset
+rexreplace o x my.file --keep-backup
+assert		 		"cat my.file"    "fxxbar"
+assert		 		"cat my.file.*"  "foobar"
+rm my.file.*
 
 # -I
 reset
-assert		 		"rexreplace Foo xxx myfile -o"    "xxxbar"
+assert		 		"rexreplace Foo xxx my.file -o"    "xxxbar"
 
 reset
-assert		 		"rexreplace Foo xxx myfile -o --void-ignore-case"    "foobar"
-
+assert		 		"rexreplace Foo xxx my.file -o --void-ignore-case"    "foobar"
 
 
 # -G
 reset
-assert		 		"rexreplace o x myfile -o --void-global"    "fxobar"
+assert		 		"rexreplace o x my.file -o --void-global"    "fxobar"
 
 
 # -O
 reset
-assert		 		"rexreplace [fb]. _ myfile --output-match"    "fo\\nba"
+assert		 		"rexreplace [fb]. _ my.file --output-match"    "fo\\nba"
 
+reset
+assert		 		"rexreplace '([fb](.))' _ my.file --output-match"    "foo\\nbaa"
 
 # -GO
 reset
-assert		 		"rexreplace [fb]. _ myfile --output-match --voidGlobal"    "fo"
+assert		 		"rexreplace [fb]. _ my.file --output-match --voidGlobal"    "fo"
 
 
 
 # -M
 reset
-echo foobar >> myfile
-assert		 		"rexreplace '^.' 'x' myfile -o"    "xoobar\nxoobar"
+echo foobar >> my.file
+assert		 		"rexreplace '^.' 'x' my.file -o"    "xoobar\nxoobar"
 
 reset
-echo foobar >> myfile
-assert		 		"rexreplace '^.' 'x' myfile -o --void-multiline"    "xoobar\nfoobar"
+echo foobar >> my.file
+assert		 		"rexreplace '^.' 'x' my.file -o --void-multiline"    "xoobar\nfoobar"
 
 
 # back reference
 reset
-assert		 		"rexreplace '(f?(o))o(.*)' '\$3\$1\$2' myfile -o"    "barfoo"
+assert		 		"rexreplace '(f?(o))o(.*)' '\$3\$1\$2' my.file -o"    "barfoo"
 
 reset
-assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' myfile -o"    "barfoo"
+assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' my.file -o"    "barfoo"
 
 
 # globs
@@ -118,34 +131,42 @@ rm my_file
 
 # -€
 reset
-assert		 		"rexreplace '.$' '$' myfile -o"    'fooba$'
+assert		 		"rexreplace '.$' '$' my.file -o"    'fooba$'
 
 reset
-assert		 		"rexreplace '.€' '€' myfile -o"    'fooba$'
+assert		 		"rexreplace '.€' '€' my.file -o"    'fooba$'
 
 reset
-assert		 		"rexreplace '.€' '€' myfile -o --void-euro"    'foobar'
+assert		 		"rexreplace '.€' '€' my.file -o --void-euro"    'foobar'
 
-
-# -J
-reset
-assert		 		"rexreplace 'foo' '2+2' myfile -o --replacement-js"    '4bar'
-
-reset
-assert		 		"rexreplace 'foo' 'var i = 2; i + 2' myfile -o --replacement-js"    '4bar'
 
 # -j
 reset
-assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' myfile -o --replacement-js-dynamic"    'OoAr'
+assert		 		"rexreplace 'foo' '2+2' my.file -o --replacement-js"    '4bar'
+
+reset
+assert		 		"rexreplace 'foo' 'var i = 2; i + 2' my.file -o --replacement-js"    '4bar'
+
+reset
+assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' my.file -o --replacement-js"    'OoAr'
+
 
 # Access to js variables
 reset
-assert		 		"printf x | rexreplace '[fb]' '_pipe;' myfile -o --replacement-js"    'xooxar'
+assert		 		"rexreplace 'fo(o)bar' '[!!_fs,!!_globs,_find,_text.trim()].join(\":\")' my.file -o --replacement-js"    'true:true:fo(o)bar:foobar'
+
+
+reset
+assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+_file,'path:'+_path,'filename:'+_filename,'name:'+_name,'ext:'+_ext,'text:'+_text].join(':')\" -o --replacement-js"    'file::path::filename::name::ext::text:foobar'
+
+
+reset
+assert		 		"rexreplace 'foobar' \"['filename:'+_filename,'name:'+_name,'ext:'+_ext,'text:'+_text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
 
 
 # -R
 reset
-assert		 		"printf x | rexreplace 'b' _ myfile -o --replacement-pipe"    'fooxar'
+assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
 
 
 
@@ -154,7 +175,7 @@ assert		 		"printf x | rexreplace 'b' _ myfile -o --replacement-pipe"    'fooxar
 # reset
 # echo '.€' > pattern.txt
 # echo '€' > replacement.txt
-# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' myfile -o --pattern-file --replacement-file"    'fooba$'
+# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' my.file -o --pattern-file --replacement-file"    'fooba$'
 # rm pattern.txt
 # rm replacement.txt
 
@@ -162,17 +183,17 @@ assert		 		"printf x | rexreplace 'b' _ myfile -o --replacement-pipe"    'fooxar
 # reset
 # echo " . \n € " > pattern.txt
 # echo " €\n " > replacement.txt
-# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' myfile -o --pattern-file --replacement-file"    'fooba$'
+# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' my.file -o --pattern-file --replacement-file"    'fooba$'
 # rm pattern.txt
 # rm replacement.txt
 
 
 # # Ssinge line file (with space)
 # reset
-# echo 'fooba r' > myfile
+# echo 'fooba r' > my.file
 # echo ' .€' > pattern.txt
 # echo ' €' > replacement.txt
-# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' myfile -o --pattern-file --replacement-file"    'fooba $'
+# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' my.file -o --pattern-file --replacement-file"    'fooba $'
 # rm pattern.txt
 # rm replacement.txt
 
@@ -180,26 +201,26 @@ assert		 		"printf x | rexreplace 'b' _ myfile -o --replacement-pipe"    'fooxar
 
 
 # Todo: test -e
-# assert		 		"rexreplace ??? ??? myfile -e"    "foobar"
+# assert		 		"rexreplace ??? ??? my.file -e"    "foobar"
 # reset
 
 # Todo: test -q
-# assert		 		"rexreplace ??? ??? myfile -q"    "foobar"
+# assert		 		"rexreplace ??? ??? my.file -q"    "foobar"
 # reset
 
 # Todo: test -Q
-# assert		 		"rexreplace ??? ??? myfile -Q"    "foobar"
+# assert		 		"rexreplace ??? ??? my.file -Q"    "foobar"
 # reset
 
 # Todo: test -H
-# assert		 		"rexreplace ??? ??? myfile -H"    "foobar"
+# assert		 		"rexreplace ??? ??? my.file -H"    "foobar"
 # reset
 
 # Todo: test -d
-# assert		 		"rexreplace ??? ??? myfile -d"    "foobar"
+# assert		 		"rexreplace ??? ??? my.file -d"    "foobar"
 # reset
 
-rm myfile
+rm my.file
 
 assert_end 			"rexreplace"
 

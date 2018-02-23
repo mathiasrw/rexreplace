@@ -3431,7 +3431,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.5.3';
+    var version = '3.0.0';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3443,25 +3443,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           die = _require.die,
           kill = _require.kill;
 
+      step("Displaying steps for:");
+      step(config);
+
       config.pattern = getFinalPattern(config) || '';
 
       config.replacement = getFinalReplacement(config) || '';
 
       config.regex = getFinalRegex(config) || '';
 
-      // data is piped in and will always be printed - but must be ignored if files are also given
-      if (null !== config.pipedData && !config.replacementPipe) {
-        if (config.files.length) {
-          chat('Ignoring piped data as file/glob was also given.');
-        } else {
-          debug('Outputting result from piped data');
-          return process.stdout.write(config.pipedData.replace(config.regex, config.replacement));
-        }
+      step(config);
+
+      if (handlePipedData(config)) {
+        return doReplacement("Piped data", config, config.pipedData);
       }
 
       config.files = globs.sync(config.files);
 
-      debug(config.files.length + ' files found');
+      if (!config.files.length) {
+        return error(config.files.length + ' files found');
+      }
+
+      chat(config.files.length + ' files found');
+
+      step(config);
 
       config.files
       // Correct filepath
@@ -3473,46 +3478,169 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       // Do the replacement 
       .forEach(function (filepath) {
-        return treatFile(filepath, config);
+        return openFile(filepath, config);
       });
 
-      function treatFile(file, config) {
-        fs.readFile(file, config.encoding, function (err, data) {
-          if (err) {
-            return error(err);
-          }
-          debug('About to replace in: ' + file);
-          var result = data.replace(config.regex, config.replacement);
-
-          if (config.output) {
-            debug('Outputting result from: ' + file);
-            return process.stdout.write(result);
-          }
-
-          // Nothing replaced = no need for writing file again 
-          if (result === data) {
-            debug('Nothing changed in: ' + file);
-            return;
-          }
-
-          debug('About to write to: ' + file);
-          fs.writeFile(file, result, config.encoding, function (err) {
+      function openFile(file, config) {
+        if (config.voidAsync) {
+          chat('Open sync: ' + file);
+          var data = fs.readFileSync(file, config.encoding);
+          return doReplacement(file, config, data);
+        } else {
+          chat('Open async: ' + file);
+          fs.readFile(file, config.encoding, function (err, data) {
             if (err) {
               return error(err);
             }
-            info(file);
+
+            return doReplacement(file, config, data);
+          });
+        }
+      }
+
+      // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
+      function doReplacement(_file_rr, _config_rr, _data_rr) {
+
+        debug('Work on content from: ' + _file_rr);
+
+        // Variables to be accessible from js. 
+        if (_config_rr.replacementJs) {
+          var _pipe = _config_rr.pipedData;
+          var _text = _data_rr;
+          var _fs = fs;
+          var _globs = globs;
+          var _find = _config_rr.pattern;
+          var code_rr = _config_rr.replacement;
+          var _file = '',
+              _pathinfo = '',
+              _path = '',
+              _filename = '',
+              _name = '',
+              _ext = '';
+          if (!_config_rr.dataIsPiped) {
+            _file = path.normalize(path.join(process.cwd(), _file_rr));
+            _pathInfo = path.parse(_file);
+            _path = _pathInfo.dir;
+            _filename = _pathInfo.base;
+            _name = _pathInfo.name;
+            _ext = _pathInfo.ext;
+          }
+
+          // Run only once if no captured groups (replacement cant change)
+          if (!/\$\d/.test(_config_rr.replacement)) {
+            _config_rr.replacement = eval(code_rr);
+          } else {
+            // Captures groups present, so need to run once per match
+            _config_rr.replacement = function () {
+              step(arguments);
+              for (var i = 0; i < arguments.length - 2; i++) {
+                eval('var $' + i + '=' + JSON.stringify(arguments[i]) + ';');
+              }
+              return eval(code_rr);
+            };
+          }
+        }
+
+        // Main regexp of the whole thing
+        var result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
+
+        // The output of matched strings is done from the replacement, so no need to continue
+        if (_config_rr.outputMatch) {
+          return;
+        }
+
+        if (_config_rr.output) {
+          debug('Output result from: ' + _file_rr);
+          return process.stdout.write(result);
+        }
+
+        // Nothing replaced = no need for writing file again 
+        if (result === _data_rr) {
+          chat('Nothing changed in: ' + _file_rr);
+          return;
+        }
+
+        // Release the memory while storing files
+        _data_rr = undefined;
+
+        debug('Write new content to: ' + _file_rr);
+
+        // Write directly to the same file (if the process is killed all new and old data is lost)
+        if (_config_rr.voidBackup) {
+          return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
+            if (err) {
+              return error(err);
+            }
+            info(_file_rr);
+          });
+        }
+
+        //Make sure data is always on disk
+        var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+        var salt = new Date().toISOString().toString().replace(/:/g, '_').replace('Z', '');
+        var backupFile = oriFile + "." + salt + ".backup";
+
+        if (_config_rr.voidAsync) {
+          try {
+            fs.renameSync(oriFile, backupFile);
+            fs.writeFileSync(oriFile, result, _config_rr.encoding);
+            if (!_config_rr.keepBackup) {
+              fs.unlinkSync(backupFile);
+            }
+          } catch (e) {
+            return error(e);
+          }
+          return info(_file_rr);
+        }
+
+        // Let me know when fs gets promise'fied
+        fs.rename(oriFile, backupFile, function (err) {
+          if (err) {
+            return error(err);
+          }
+
+          fs.writeFile(oriFile, result, _config_rr.encoding, function (err) {
+            if (err) {
+              return error(err);
+            }
+
+            if (!_config_rr.keepBackup) {
+              fs.unlink(backupFile, function (err) {
+                if (err) {
+                  return error(err);
+                }
+                info(_file_rr);
+              });
+            } else {
+              info(_file_rr);
+            }
           });
         });
       }
 
-      /*function evalJs(jsString, explode=false){
-      	let result, source = 
-      			`function(){
-      
-      			}`
-      	}*/
+      function handlePipedData(config) {
+        step("Check Piped Data");
+
+        if (config.files.length) {
+
+          if (!config.replacementJs) {
+            chat('Piped data never used.');
+          }
+
+          return false;
+        }
+
+        if (null !== config.pipedData && !config.pipedDataUsed) {
+          config.dataIsPiped = true;
+          config.output = true;
+          return true;
+        }
+
+        return false;
+      }
 
       function getFinalPattern(config) {
+        step("Get final pattern");
         var pattern = config.pattern;
 
         if (config.patternFile) {
@@ -3520,55 +3648,54 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           pattern = oneLinerFromFile(pattern);
         }
 
+        step(pattern);
         return pattern;
       }
 
       function getFinalReplacement(config) {
-
+        step("Get final replacement");
         /*if(config.replacementFile){
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
 
-        var _pipe = config.pipedData;
+        if (config.replacementPipe) {
+          step("Piping replacement");
+          config.pipedDataUsed = true;
+          if (null === config.pipedData) {
+            return die("No data piped into replacement");
+          }
+          config.replacement = config.pipedData;
+        }
 
         if (config.outputMatch) {
+          step("Output match");
+
           if ('6' > process.versions.node) {
             return die('outputMatch is only supported in node 6+');
           }
           return function () {
-            process.stdout.write(arguments[0] + "\n");
+            step(arguments);
+
+            if (arguments.length === 3) {
+              step('Printing full match');
+              process.stdout.write(arguments[0] + "\n");
+              return '';
+            }
+
+            for (var i = 1; i < arguments.length - 2; i++) {
+              process.stdout.write(arguments[i]);
+            }
+            process.stdout.write("\n");
             return '';
           };
         }
 
-        if (config.replacementJsDynamic && !/\$\d/.test(config.replacement)) {
-          config.replacementJsDynamic = false;
-          config.replacementJs = true;
+        // If captured groups then run dynamicly
+        if (config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node < '6') {
+          return die('Captured groups for javascript replacement is only supported in node 6+');
         }
 
-        if (config.replacementJs && /\$\d/.test(config.replacement)) {
-          info('Use the -J flag to use captured groups dynamically in the replacement');
-        }
-
-        if (config.replacementJs) {
-          return eval(config.replacement); // Todo: make a bit more scoped?
-        }
-
-        if (config.replacementJsDynamic) {
-
-          if ('6' > process.versions.node) {
-            return die('replacementJsDynamic is only supported in node 6+');
-          }
-
-          var code = config.replacement;
-
-          return function () {
-            for (var i = 0; i < arguments.length - 2; i++) {
-              eval('var $' + i + '=' + JSON.stringify(arguments[i]) + ';'); // we are already using eval - so wth...
-            }
-            return eval(code);
-          };
-        }
+        step(config.replacement);
 
         return config.replacement;
       }
@@ -3585,6 +3712,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       */
 
       function getFinalRegex(config) {
+        step("Get final regex");
+
         var regex = null;
 
         var flags = getFlags(config);
@@ -3595,10 +3724,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           die('Wrongly formatted regex pattern', err);
         }
 
+        step(regex);
+
         return regex;
       }
 
       function getFlags(config) {
+        step("Get flags");
+
         var flags = '';
 
         if (!config.voidGlobal) {
@@ -3649,6 +3782,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         if (config.verbose) {
           me.info(msg, data);
+        } else {
+          me.debug(msg + ' ' + data);
         }
       };
 
@@ -3660,7 +3795,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           config.showHelp();
         }
         me.error(msg, data);
-        me.kill();
+        me.kill(msg);
       };
 
       me.error = function (msg) {
@@ -3670,7 +3805,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           console.error(font.red(msg), data);
         }
         if (config.halt) {
-          me.kill();
+          me.kill(msg);
         }
         return false;
       };
@@ -3688,9 +3823,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       };
 
       me.kill = function () {
-        var error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+        var msg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+        var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
 
         process.exitCode = error;
+        throw new Error(msg);
       };
 
       return me;

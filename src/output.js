@@ -18,6 +18,8 @@ module.exports = function(config){
 	me.chat = function(msg, data=''){
 		if(config.verbose){
 			me.info(msg, data);
+		} else {
+			me.debug(msg+' '+data);
 		}
 	};
 
@@ -26,7 +28,7 @@ module.exports = function(config){
 			config.showHelp();
 		}
 		me.error(msg, data);
-		me.kill();
+		me.kill(msg);
 	};
 
 	me.error = function(msg, data=''){
@@ -34,7 +36,7 @@ module.exports = function(config){
 			console.error(font.red(msg), data);
 		}
 		if(config.halt){
-			me.kill();
+			me.kill(msg);
 		}
 		return false;
 	};
@@ -51,8 +53,9 @@ module.exports = function(config){
 		}
 	};
 
-	me.kill = function(error=1){
+	me.kill = function(msg='', error=1){
 		process.exitCode = error;
+		throw new Error(msg);
 	};
 
 	return me;
