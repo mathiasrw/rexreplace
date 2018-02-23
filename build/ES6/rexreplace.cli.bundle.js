@@ -7880,6 +7880,9 @@ exports.SEMVER_SPEC_VERSION = '2.0.0';
 var MAX_LENGTH = 256;
 var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
 
+// Max safe segment length for coercion.
+var MAX_SAFE_COMPONENT_LENGTH = 16;
+
 // The actual regexps go on exports.re
 var re = exports.re = [];
 var src = exports.src = [];
@@ -8014,6 +8017,15 @@ var XRANGE = R++;
 src[XRANGE] = '^' + src[GTLT] + '\\s*' + src[XRANGEPLAIN] + '$';
 var XRANGELOOSE = R++;
 src[XRANGELOOSE] = '^' + src[GTLT] + '\\s*' + src[XRANGEPLAINLOOSE] + '$';
+
+// Coercion.
+// Extract anything that could conceivably be a part of a valid semver
+var COERCE = R++;
+src[COERCE] = '(?:^|[^\\d])' +
+              '(\\d{1,' + MAX_SAFE_COMPONENT_LENGTH + '})' +
+              '(?:\\.(\\d{1,' + MAX_SAFE_COMPONENT_LENGTH + '}))?' +
+              '(?:\\.(\\d{1,' + MAX_SAFE_COMPONENT_LENGTH + '}))?' +
+              '(?:$|[^\\d])';
 
 // Tilde ranges.
 // Meaning is "reasonably at or greater than"
@@ -9152,6 +9164,22 @@ function intersects(r1, r2, loose) {
   r1 = new Range(r1, loose)
   r2 = new Range(r2, loose)
   return r1.intersects(r2)
+}
+
+exports.coerce = coerce;
+function coerce(version) {
+  if (version instanceof SemVer)
+    return version;
+
+  if (typeof version !== 'string')
+    return null;
+
+  var match = version.match(re[COERCE]);
+
+  if (match == null)
+    return null;
+
+  return parse((match[1] || '0') + '.' + (match[2] || '0') + '.' + (match[3] || '0')); 
 }
 
 },{}],65:[function(require,module,exports){
@@ -15284,7 +15312,7 @@ const yargs = require('yargs')
         .alias('T', 'trim-pipe')
         .describe('T',    
             `Trim piped data before processing. `+
-            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string. `+
+            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be become an empty string. `+
        		''
         )
     
@@ -15304,18 +15332,18 @@ const yargs = require('yargs')
             `The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
             `At some point the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. `+
             `If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. `+
-            `The code has access to the following variables: `+
-          	`'_fs' from node, `+
-            `'_globs' from npm, `+
-            `'_pipe' is the piped data into the command (null if no piped data), `+
-            `'_find' is the final pattern searched for. `+
-            `'_text' is the full text being searched (Corresponds to file contents or piped data).`+
-            `The following values are also available if working on a file (if data is being piped they are all set to an empty string): `+
-            `'_file' is the full path of the active file being searched (including full filename), `+
-            `'_path' is the full path without filename of the active file being searched, `+
-            `'_filename' is the full filename of the active file being searched, `+
-            `'_name' is the filename of the active file being searched with no extension, `+
-            `'_ext' is the extension of the filename including leading dot. `+
+            `\nThe code has access to the following variables: `+
+          	`\n'_fs' from node, `+
+            `\n'_globs' from npm, `+
+            `\n'_pipe' is the piped data into the command (null if no piped data), `+
+            `\n'_find' is the final pattern searched for. `+
+            `\n'_text' is the full text being searched (= file contents or piped data). `+
+            `\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): `+
+            `\n'_file' is the full path of the active file being searched (including full filename), `+
+            `\n'_path' is the full path without filename of the active file being searched, `+
+            `\n'_filename' is the full filename of the active file being searched, `+
+            `\n'_name' is the filename of the active file being searched with no extension, `+
+            `\n'_ext' is the extension of the filename including leading dot. `+
             ''
         )
 
@@ -15476,7 +15504,7 @@ const fs = require('fs');
 const path = require('path'); 
 const globs = require('globs');
 
-const version = '3.0.0';
+const version = '3.0.1';
 
 module.exports = function(config){
 

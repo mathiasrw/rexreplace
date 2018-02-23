@@ -7412,6 +7412,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var MAX_LENGTH = 256;
     var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
 
+    // Max safe segment length for coercion.
+    var MAX_SAFE_COMPONENT_LENGTH = 16;
+
     // The actual regexps go on exports.re
     var re = exports.re = [];
     var src = exports.src = [];
@@ -7519,6 +7522,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     src[XRANGE] = '^' + src[GTLT] + '\\s*' + src[XRANGEPLAIN] + '$';
     var XRANGELOOSE = R++;
     src[XRANGELOOSE] = '^' + src[GTLT] + '\\s*' + src[XRANGEPLAINLOOSE] + '$';
+
+    // Coercion.
+    // Extract anything that could conceivably be a part of a valid semver
+    var COERCE = R++;
+    src[COERCE] = '(?:^|[^\\d])' + '(\\d{1,' + MAX_SAFE_COMPONENT_LENGTH + '})' + '(?:\\.(\\d{1,' + MAX_SAFE_COMPONENT_LENGTH + '}))?' + '(?:\\.(\\d{1,' + MAX_SAFE_COMPONENT_LENGTH + '}))?' + '(?:$|[^\\d])';
 
     // Tilde ranges.
     // Meaning is "reasonably at or greater than"
@@ -8514,6 +8522,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       r1 = new Range(r1, loose);
       r2 = new Range(r2, loose);
       return r1.intersects(r2);
+    }
+
+    exports.coerce = coerce;
+    function coerce(version) {
+      if (version instanceof SemVer) return version;
+
+      if (typeof version !== 'string') return null;
+
+      var match = version.match(re[COERCE]);
+
+      if (match == null) return null;
+
+      return parse((match[1] || '0') + '.' + (match[2] || '0') + '.' + (match[3] || '0'));
     }
   }, {}], 65: [function (require, module, exports) {
     module.exports = function (blocking) {
@@ -14369,7 +14390,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     .boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('G').describe('G', 'Void global search (work only with first the match).').alias('G', 'void-global').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files/piped data.').boolean('q').describe('q', "Only display errors (no other info)").alias('q', 'quiet').boolean('Q').describe('Q', "Never display errors or info").alias('Q', 'quiet-total').boolean('H').describe('H', "Halt on first error").alias('H', 'halt').default('H', false).boolean('d').describe('d', "Print debug info").alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters").alias('€', 'void-euro').boolean('o').describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.').alias('o', 'output')
     //.conflicts('o','O')
 
-    .boolean('A').alias('A', 'void-async').describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. " + '').boolean('B').describe('B', "Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory and you will lose the content if the process is abrupted.").alias('B', 'void-backup').boolean('b').describe('b', "Keep a backup file of the original content.").alias('b', 'keep-backup').boolean('m').describe('m', "Output each match on a new line. " + "Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. " + "If search pattern does not contain matching groups the full match will be outputted. " + "If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). " + "").alias('m', 'output-match').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be considered an empty string. " + '').boolean('R').alias('R', 'replacement-pipe').describe('R', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '').boolean('j').alias('j', 'replacement-js').describe('j', "Treat replacement as javascript source code. " + "The statement from the last expression will become the replacement string. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " + "The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. " + "At some point the $ char _will_ give you a headache when used from the command line, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. " + "The code has access to the following variables: " + "'_fs' from node, " + "'_globs' from npm, " + "'_pipe' is the piped data into the command (null if no piped data), " + "'_find' is the final pattern searched for. " + "'_text' is the full text being searched (Corresponds to file contents or piped data)." + "The following values are also available if working on a file (if data is being piped they are all set to an empty string): " + "'_file' is the full path of the active file being searched (including full filename), " + "'_path' is the full path without filename of the active file being searched, " + "'_filename' is the full filename of the active file being searched, " + "'_name' is the filename of the active file being searched with no extension, " + "'_ext' is the extension of the filename including leading dot. " + '')
+    .boolean('A').alias('A', 'void-async').describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. " + '').boolean('B').describe('B', "Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory and you will lose the content if the process is abrupted.").alias('B', 'void-backup').boolean('b').describe('b', "Keep a backup file of the original content.").alias('b', 'keep-backup').boolean('m').describe('m', "Output each match on a new line. " + "Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. " + "If search pattern does not contain matching groups the full match will be outputted. " + "If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). " + "").alias('m', 'output-match').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be become an empty string. " + '').boolean('R').alias('R', 'replacement-pipe').describe('R', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '').boolean('j').alias('j', 'replacement-js').describe('j', "Treat replacement as javascript source code. " + "The statement from the last expression will become the replacement string. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " + "The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. " + "At some point the $ char _will_ give you a headache when used from the command line, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. " + "\nThe code has access to the following variables: " + "\n'_fs' from node, " + "\n'_globs' from npm, " + "\n'_pipe' is the piped data into the command (null if no piped data), " + "\n'_find' is the final pattern searched for. " + "\n'_text' is the full text being searched (= file contents or piped data). " + "\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): " + "\n'_file' is the full path of the active file being searched (including full filename), " + "\n'_path' is the full path without filename of the active file being searched, " + "\n'_filename' is the full filename of the active file being searched, " + "\n'_name' is the filename of the active file being searched with no extension, " + "\n'_ext' is the extension of the filename including leading dot. " + '')
 
     /*
             .boolean('N')
@@ -14502,7 +14523,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '3.0.0';
+    var version = '3.0.1';
 
     module.exports = function (config) {
       var _require2 = require('./output')(config),

@@ -3431,7 +3431,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '3.0.0';
+    var version = '3.0.1';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
