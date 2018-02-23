@@ -101,10 +101,7 @@ RexReplace normally treats `€` as an alias for `$` so the following will do th
 > rexreplace pattern replacement [fileGlob|option]+
 ```
 
-
-
-Please update to version 3 as several flags have been altered (for the better) since version 2. Most noticeable: the `-J` flag has merged into the `j` flag.
-
+Please update to version 3 as several flags have been altered (for the better) since version 2. Most noticeable: the `-J` flag has merged into the `-j` flag and the function of `-O` must now be obtained via `-m`.
 
 
 Flag | Option name | Effect
