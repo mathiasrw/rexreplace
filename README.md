@@ -232,8 +232,10 @@ _.oO(What should "sed" have looked like by now?)_
 - Let pattern and globs be piped
 - Let Pattern, replacement, and globs come from file
 - Let pattern and glob be javascript code returning string as result
-- Error != warning
 - Flag for simple string search (all other chars than [\n\r\t])
+- Auto string search / replace if no regex magic is used (and verify that speed is better)
+- Make `echo 'a\"b' | rr '\"' '"'` work (needs `rr '\\"' '"'` = not intuitive)
+- Error != warning
 - Flag for plain string search literal (no regex, no special chars, no escape chars)
 - Check if https://github.com/eugeneware/replacestream is good to rely on
 - Check if regex engine from spider monkey can be wrapped in something that does not need node 
