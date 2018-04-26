@@ -116,7 +116,7 @@ const yargs = require('yargs')
         .alias('T', 'trim-pipe')
         .describe('T',    
             `Trim piped data before processing. `+
-            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be become an empty string. `+
+            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. `+
        		''
         )
     
