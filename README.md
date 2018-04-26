@@ -36,7 +36,7 @@ To use RexReplace from your command line
 > npm install -g rexreplace
 ```
 
-To use RexReplace from a npm build script
+To use RexReplace from a npm build script:
 
 ```bash
 > npm install rexreplace --save-dev
@@ -85,7 +85,7 @@ Let 'foobar' in myfile.md become 'barfoo' (backreferences to a matching group)
 ```
 
 
-RexReplace normally treats `€` as an alias for `$` so the following will do the same as the previus example
+RexReplace normally treats `€` as an alias for `$` so the following will do the same as the previous example
 
 ```bash
 > rexreplace '(foo)(.*)' '€2€1' myfile.md  
@@ -123,9 +123,9 @@ Flag |  Effect
 `-B` | **`--void-backup`** Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory and you will lose the content if the process is abrupted. [boolean]
 `-b` | **`--keep-backup`** Keep a backup file of the original content.  [boolean]
 `-m` | **`--output-match`** Output each match on a new line. Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. If search pattern does not contain matching groups the full match will be outputted. If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter).     [boolean]
-`-T` | **`--trim-pipe`** Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be become an empty string. [boolean]
+`-T` | **`--trim-pipe`** Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. [boolean]
 `-R` | **`--replacement-pipe`** Replacement will be piped in. You still need to provide a dummy value (like `_`) as replacement parameter.                                   [boolean]
-`-j` | **`--replacement-js`** Treat replacement as javascript source code. The statement from the last expression will become the replacement string. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. At some point the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. The code has access to the following variables: `_fs` from node, `_globs` from npm, `_pipe` is the piped data into the command (null if no piped data), `_find` is the final pattern searched for. `_text` is the full text being searched (= file contents or piped data). The following values are also available if working on a file (if data is being piped they are all set to an empty string): `_file` is the full path of the active file being searched (including full filename), `_path` is the full path without filename of the active file being searched, `_filename` is the full filename of the active file being searched, `_name` is the filename of the active file being searched with no extension, `_ext` is the extension of the filename including leading dot.                                 [boolean]
+`-j` | **`--replacement-js`** Treat replacement as javascript source code. The statement from the last expression will become the replacement string. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. At some point the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. If the javascript source code references to the full match or a captured group, the code will run once per match. Otherwise, it will run once per file. The code has access to the following variables: `_fs` from node, `_globs` from npm, `_pipe` is the piped data into the command (null if no piped data), `_find` is the final pattern searched for. `_text` is the full text being searched (= file contents or piped data). The following values are also available if working on a file (if data is being piped they are all set to an empty string): `_file` is the full path of the active file being searched (including full filename), `_path` is the full path without filename of the active file being searched, `_filename` is the full filename of the active file being searched, `_name` is the filename of the active file being searched with no extension, `_ext` is the extension of the filename including leading dot.                                 [boolean]
 `-h` | **`--help`** Display help.                                [boolean]
 ## Good to know 
 
@@ -133,7 +133,7 @@ Flag |  Effect
 
 - Patterns are described as javascript notation regex
 - Pattern defaults to global multiline case-insensitive search
-- Supports regex lookaheads in pattern 
+- Supports regex lookaheads in the pattern 
 - Supports backreference to matching groups in the replacement 
 - Data to be treated can be piped in 
 - See the [release note](https://github.com/mathiasrw/rexreplace/releases) for a log of changes. Descriptions are given in latest patch version. 
@@ -185,7 +185,7 @@ All CLI end to end tests are defined in [test/cli/run.sh](https://github.com/mat
 _**tl;dr**:_ 
 _Files over 5 Mb are faster with `rr` than with `sed` - but - it does not matter as any file under 25 Mb has less than 0.7 seconds in difference._
 
-The speed test is initiated by `npm run test-speed`. The test takes files in different sizes and compares the processing time for RexReplace (`rr`) and the Unix tool `sed`. The test uses the sources of a website displaying [the book _1984_ by George Orwell](http://1984.surge.sh). The task for the tests is to remove all HTML tags by search-and-replace so only the final text is left. The source is 888Kb, so all files up to 500Kb are generated directly from the source, while larger files are created by combining the first 500Kb several times. Each test runs 10 times to even out any temporary workload fluctuations. 
+The speed test is initiated by `npm run test-speed`. The test takes files in different sizes and compares the processing time for RexReplace (`rr`) and the Unix tool `sed`. The test uses the sources of a website displaying [the book _1984_ by George Orwell](http://1984.surge.sh). The task for the tests is to remove all HTML tags by search-and-replace, so only the final text is left. The source is 888Kb, so all files up to 500Kb are generated directly from the source, while larger files are created by combining the first 500Kb several times. Each test runs 10 times to even out any temporary workload fluctuations. 
 Results from latest test run can always be seen in the [speed test log](https://github.com/mathiasrw/rexreplace/blob/master/test/speed/testlog.speed.md). 
 
 <p align="center">
@@ -213,7 +213,7 @@ Bytes    sed    rr    Time it took longer (seconds)
 100000     3     1    3,3    <= rr is 3x faster
 ```
 
-So even though the speed evolves very differently, there is only little practical use of the focus on speed for most use cases. Replacing in 10000 small files? Use RexReplace and go get a cup of coffee - or spend half an hour getting `sed` to work as you want it to and enjoy the thrilling few seconds it takes to do its magic.  
+So even though the speed evolves very differently, there is only little practical use of the focus on speed for most use cases. Replacing in 10000 small files? Use RexReplace and get yourself a cup of coffee - or spend half an hour getting `sed` to work as you want it to and enjoy the thrilling few seconds it takes to do its magic.  
 
 Please note that speeds might look very different when files get as large as the memory available. 
 
@@ -230,8 +230,8 @@ _.oO(What should "sed" have looked like by now?)_
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
 - Let pattern and globs be piped
-- Let Pattern, replacement, and globs come from file
-- Let pattern and glob be javascript code returning string as result
+- Let Pattern, replacement, and globs come from a file
+- Let pattern and glob be javascript code returning a string as the result
 - Flag for simple string search (all other chars than [\n\r\t])
 - Auto string search / replace if no regex magic is used (and verify that speed is better)
 - Make `echo 'a\"b' | rr '\"' '"'` work (needs `rr '\\"' '"'` = not intuitive)
@@ -242,12 +242,12 @@ _.oO(What should "sed" have looked like by now?)_
 - Implement in go so that all platforms can be supported with no need for node (might be based on)
 - Let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
 - Expand speed test to compare all related projects
-- Check if modular + compile is slower than mini monolith + require fs
+- Check if modular + compile is slower than mini-monolith + require fs
 
 
 ## Related projects
 
-There are many projects seeking to solve the same problem as RexReplace. Most lack the flexible CLI interface or are limited in how diverse the replacement can be. If our way does not suit you, we suggest you have a look at:
+Many projects are seeking to solve the same problem as RexReplace. Most lack the flexible CLI interface or are limited in how diverse the replacement can be. If our way does not suit you, we suggest you have a look at:
 
 - [replace-in-file](https://www.npmjs.com/package/replace-in-file)
 - [replace](https://www.npmjs.com/package/replace)
