@@ -7,4 +7,5 @@ node_js:
   - "6"
 
 script:
+  - npm run test-format
   - npm run test-cli

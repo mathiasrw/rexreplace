@@ -15202,7 +15202,7 @@ const rexreplace = require('./core');
 let pattern, replacement;
 
 
-// To avoid problems with patterns or replcements starting with '-' the two first arguments can not contain flags and is removed before yargs does it magic - but we still need to handle -version and -help
+// To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = false;
 if(process.argv.length<4){
     needHelp = true;
@@ -15286,11 +15286,11 @@ const yargs = require('yargs')
         .alias('A', 'void-async')
         .describe('A',    
             `Handle files in a synchronous flow. Good to limit memory usage when handling large files. `+
-       		''
+               ''
         )
 
     .boolean('B')
-        .describe('B', "Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory and you will lose the content if the process is abrupted.")
+        .describe('B', "Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted.")
         .alias('B', 'void-backup')
 
 
@@ -15301,10 +15301,10 @@ const yargs = require('yargs')
 
     .boolean('m')
         .describe('m', 
-        	`Output each match on a new line. `+
+            `Output each match on a new line. `+
             `Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. `+
-        	`If search pattern does not contain matching groups the full match will be outputted. `+
-        	`If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). `+
+            `If search pattern does not contain matching groups the full match will be outputted. `+
+            `If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). `+
             ``)
         .alias('m', 'output-match')
 
@@ -15312,15 +15312,15 @@ const yargs = require('yargs')
         .alias('T', 'trim-pipe')
         .describe('T',    
             `Trim piped data before processing. `+
-            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will be become an empty string. `+
-       		''
+            `If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. `+
+               ''
         )
     
     .boolean('R')
         .alias('R', 'replacement-pipe')
         .describe('R',    
             `Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.`+
-       		''
+               ''
         )
 
     .boolean('j')
@@ -15329,11 +15329,11 @@ const yargs = require('yargs')
             `Treat replacement as javascript source code. `+
             `The statement from the last expression will become the replacement string. `+
             `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. `+
-            `The full match will be available as a javascript variable named $0 while each captured group will be avaiable as $1, $2, $3, ... and so on. `+
-            `At some point the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. `+
-            `If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise it will run once per file. `+
+            `The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. `+
+            `At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. `+
+            `If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. `+
             `\nThe code has access to the following variables: `+
-          	`\n'_fs' from node, `+
+              `\n'_fs' from node, `+
             `\n'_globs' from npm, `+
             `\n'_pipe' is the piped data into the command (null if no piped data), `+
             `\n'_find' is the final pattern searched for. `+
@@ -15355,7 +15355,7 @@ const yargs = require('yargs')
         .describe('N',    
             `Avoid having newline when outputting data (or when piping). `+
             `Normally . `+
-       		''
+               ''
         )
 */
 
@@ -15382,7 +15382,7 @@ const yargs = require('yargs')
         .describe('n', "Do replacement on file names instead of file content (rename the files)")
         .alias('n', 'name')
 
-	// https://github.com/eugeneware/replacestream
+    // https://github.com/eugeneware/replacestream
     .integer('M')
         .describe('M', "Maximum length of match. Set this value only if any single file of your ")
         .alias('M', 'max-match-len')
@@ -15419,83 +15419,83 @@ const yargs = require('yargs')
 ;
 
 function backOut(){
-	yargs.showHelp();
+    yargs.showHelp();
     process.exitCode = 1;
 }
 
 function unescapeString(str){
-	return eval("'"+str.replace(/'/g,"\\'")+"'");
+    return eval("'"+str.replace(/'/g,"\\'")+"'");
 }
 
 (function(){
-	if(needHelp){
-	    return backOut();
-	}
+    if(needHelp){
+        return backOut();
+    }
 
-	// CLI interface default has € as alias for $
-	if(!yargs.argv.voidEuro){
-	    pattern 	=     pattern.replace(/€/g,'$');
-	    replacement = replacement.replace(/€/g,'$');
-	}
+    // CLI interface default has € as alias for $
+    if(!yargs.argv.voidEuro){
+        pattern     =     pattern.replace(/€/g,'$');
+        replacement = replacement.replace(/€/g,'$');
+    }
 
-	// All options into one big config object for the rexreplace core
-	let config = {};
+    // All options into one big config object for the rexreplace core
+    let config = {};
 
-	// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
-	Object.keys(yargs.argv).forEach(key=>{
-	    if(1<key.length && key.indexOf('-')<0){
-	        config[key] = yargs.argv[key];
-	    }
-	});
+    // Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+    Object.keys(yargs.argv).forEach(key=>{
+        if(1<key.length && key.indexOf('-')<0){
+            config[key] = yargs.argv[key];
+        }
+    });
 
-	let pipeInUse = false;
-	let pipeData = '';
-	config.files = yargs.argv._;
-	config.pipedData = null;
-	config.showHelp = yargs.showHelp;
-	config.pattern = pattern;
-	if(config.replacementJs){
-		config.replacement = replacement;
-	} else {
-		config.replacement = unescapeString(replacement);
-	}
+    let pipeInUse = false;
+    let pipeData = '';
+    config.files = yargs.argv._;
+    config.pipedData = null;
+    config.showHelp = yargs.showHelp;
+    config.pattern = pattern;
+    if(config.replacementJs){
+        config.replacement = replacement;
+    } else {
+        config.replacement = unescapeString(replacement);
+    }
 
-	/*if(Boolean(process.stdout.isTTY)){
-		config.output = true;
-	}*/
+    /*if(Boolean(process.stdout.isTTY)){
+        config.output = true;
+    }*/
 
-	if (Boolean(process.stdin.isTTY)) {
-		if(config.replacementPipe){
-			return backOut();
-		}
-		rexreplace(config);
-	} else {
-		process.stdin.setEncoding(config.encoding);
+    if (Boolean(process.stdin.isTTY)) {
+        if(config.replacementPipe){
+            return backOut();
+        }
+        rexreplace(config);
+    } else {
+        process.stdin.setEncoding(config.encoding);
 
-		process.stdin.on('readable', ()=>{
-			let chunk = process.stdin.read();
-			
-			if(null !== chunk){
-				pipeInUse = true;
-				pipeData += chunk;
-				while((chunk = process.stdin.read())){
-					pipeData += chunk;
-				}
-			}
-		});
+        process.stdin.on('readable', ()=>{
+            let chunk = process.stdin.read();
+            
+            if(null !== chunk){
+                pipeInUse = true;
+                pipeData += chunk;
+                while((chunk = process.stdin.read())){
+                    pipeData += chunk;
+                }
+            }
+        });
 
-		process.stdin.on('end', ()=>{
-			if(pipeInUse){
-				if(yargs.argv.trimPipe){
-					pipeData = pipeData.trim();
-				}
-				config.pipedData = pipeData;
+        process.stdin.on('end', ()=>{
+            if(pipeInUse){
+                if(yargs.argv.trimPipe){
+                    pipeData = pipeData.trim();
+                }
+                config.pipedData = pipeData;
 
-			}
-			rexreplace(config);
-		});
+            }
+            rexreplace(config);
+        });
 
-	}
+    }
 })();
 
 },{"./core":94,"yargs":81}],94:[function(require,module,exports){
