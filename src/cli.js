@@ -50,7 +50,7 @@ const yargs = require('yargs')
 	.alias('I', 'void-ignore-case')
 
 	.boolean('G')
-	.describe('G', 'Void global search (work only with first the match).')
+	.describe('G', 'Void global search (stop looking after first match).')
 	.alias('G', 'void-global')
 
 	.boolean('M')
@@ -177,6 +177,10 @@ const yargs = require('yargs')
             `Normally . `+
                ''
         )
+	
+	
+	-E (Expect there to be no match and return exit 1 if found)
+	-e (Expect there to be batch and return exit 1 if not found)
 */
 
 	/*    .boolean('P')
