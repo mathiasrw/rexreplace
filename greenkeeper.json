@@ -1,0 +1,10 @@
+{
+  "groups": {
+    "default": {
+      "packages": [
+        "legacy/package.json",
+        "package.json"
+      ]
+    }
+  }
+}
