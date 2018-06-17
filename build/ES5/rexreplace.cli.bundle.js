@@ -4,19 +4,21 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-(function e(t, n, r) {
-  function s(o, u) {
-    if (!n[o]) {
-      if (!t[o]) {
-        var a = typeof require == "function" && require;if (!u && a) return a(o, !0);if (i) return i(o, !0);var f = new Error("Cannot find module '" + o + "'");throw f.code = "MODULE_NOT_FOUND", f;
-      }var l = n[o] = { exports: {} };t[o][0].call(l.exports, function (e) {
-        var n = t[o][1][e];return s(n ? n : e);
-      }, l, l.exports, e, t, n, r);
-    }return n[o].exports;
-  }var i = typeof require == "function" && require;for (var o = 0; o < r.length; o++) {
-    s(r[o]);
-  }return s;
-})({ 1: [function (require, module, exports) {
+(function () {
+  function r(e, n, t) {
+    function o(i, f) {
+      if (!n[i]) {
+        if (!e[i]) {
+          var c = "function" == typeof require && require;if (!f && c) return c(i, !0);if (u) return u(i, !0);var a = new Error("Cannot find module '" + i + "'");throw a.code = "MODULE_NOT_FOUND", a;
+        }var p = n[i] = { exports: {} };e[i][0].call(p.exports, function (r) {
+          var n = e[i][1][r];return o(n || r);
+        }, p, p.exports, r, e, n, t);
+      }return n[i].exports;
+    }for (var u = "function" == typeof require && require, i = 0; i < t.length; i++) {
+      o(t[i]);
+    }return o;
+  }return r;
+})()({ 1: [function (require, module, exports) {
     'use strict';
 
     module.exports = function () {
@@ -329,7 +331,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return expansions;
     }
-  }, { "balanced-match": 3, "concat-map": 10 }], 5: [function (require, module, exports) {
+  }, { "balanced-match": 3, "concat-map": 11 }], 5: [function (require, module, exports) {
     'use strict';
 
     var blacklist = ['freelist', 'sys'];
@@ -509,7 +511,54 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports.hasColor = hasAnsi;
     module.exports.stripColor = stripAnsi;
     module.exports.supportsColor = supportsColor;
-  }, { "ansi-styles": 2, "escape-string-regexp": 13, "has-ansi": 26, "strip-ansi": 71, "supports-color": 73 }], 8: [function (require, module, exports) {
+  }, { "ansi-styles": 2, "escape-string-regexp": 14, "has-ansi": 27, "strip-ansi": 75, "supports-color": 8 }], 8: [function (require, module, exports) {
+    'use strict';
+
+    var argv = process.argv;
+
+    var terminator = argv.indexOf('--');
+    var hasFlag = function hasFlag(flag) {
+      flag = '--' + flag;
+      var pos = argv.indexOf(flag);
+      return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
+    };
+
+    module.exports = function () {
+      if ('FORCE_COLOR' in process.env) {
+        return true;
+      }
+
+      if (hasFlag('no-color') || hasFlag('no-colors') || hasFlag('color=false')) {
+        return false;
+      }
+
+      if (hasFlag('color') || hasFlag('colors') || hasFlag('color=true') || hasFlag('color=always')) {
+        return true;
+      }
+
+      if (process.stdout && !process.stdout.isTTY) {
+        return false;
+      }
+
+      if (process.platform === 'win32') {
+        return true;
+      }
+
+      if ('COLORTERM' in process.env) {
+        return true;
+      }
+
+      if (process.env.TERM === 'dumb') {
+        return false;
+      }
+
+      if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
+        return true;
+      }
+
+      return false;
+    }();
+  }, {}], 9: [function (require, module, exports) {
     var stringWidth = require('string-width');
     var stripAnsi = require('strip-ansi');
     var wrap = require('wrap-ansi');
@@ -820,7 +869,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         wrap: typeof opts.wrap === 'boolean' ? opts.wrap : true
       });
     };
-  }, { "string-width": 70, "strip-ansi": 71, "wrap-ansi": 76 }], 9: [function (require, module, exports) {
+  }, { "string-width": 74, "strip-ansi": 75, "wrap-ansi": 79 }], 10: [function (require, module, exports) {
     /* eslint-disable babel/new-cap, xo/throw-new-error */
     'use strict';
 
@@ -854,7 +903,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return first;
     };
-  }, {}], 10: [function (require, module, exports) {
+  }, {}], 11: [function (require, module, exports) {
     module.exports = function (xs, fn) {
       var res = [];
       for (var i = 0; i < xs.length; i++) {
@@ -867,7 +916,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var isArray = Array.isArray || function (xs) {
       return Object.prototype.toString.call(xs) === '[object Array]';
     };
-  }, {}], 11: [function (require, module, exports) {
+  }, {}], 12: [function (require, module, exports) {
     'use strict';
 
     module.exports = function (str, sep) {
@@ -879,7 +928,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return str.replace(/([a-z\d])([A-Z])/g, '$1' + sep + '$2').replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + sep + '$2').toLowerCase();
     };
-  }, {}], 12: [function (require, module, exports) {
+  }, {}], 13: [function (require, module, exports) {
     'use strict';
 
     var util = require('util');
@@ -1009,7 +1058,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     module.exports = errorEx;
-  }, { "is-arrayish": 34, "util": undefined }], 13: [function (require, module, exports) {
+  }, { "is-arrayish": 35, "util": undefined }], 14: [function (require, module, exports) {
     'use strict';
 
     var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
@@ -1021,7 +1070,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return str.replace(matchOperatorsRe, '\\$&');
     };
-  }, {}], 14: [function (require, module, exports) {
+  }, {}], 15: [function (require, module, exports) {
     'use strict';
 
     var path = require('path');
@@ -1076,7 +1125,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return null;
     };
-  }, { "path": undefined, "path-exists": 54, "pinkie-promise": 58 }], 15: [function (require, module, exports) {
+  }, { "path": undefined, "path-exists": 55, "pinkie-promise": 59 }], 16: [function (require, module, exports) {
     module.exports = realpath;
     realpath.realpath = realpath;
     realpath.sync = realpathSync;
@@ -1139,7 +1188,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       fs.realpath = origRealpath;
       fs.realpathSync = origRealpathSync;
     }
-  }, { "./old.js": 16, "fs": undefined }], 16: [function (require, module, exports) {
+  }, { "./old.js": 17, "fs": undefined }], 17: [function (require, module, exports) {
     // Copyright Joyent, Inc. and other Node contributors.
     //
     // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1437,7 +1486,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         start();
       }
     };
-  }, { "fs": undefined, "path": undefined }], 17: [function (require, module, exports) {
+  }, { "fs": undefined, "path": undefined }], 18: [function (require, module, exports) {
     'use strict';
 
     // Call this function in a another function to find out the file from
@@ -1460,7 +1509,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       // stack[2] holds the file we're interested in
       return stack[position] ? stack[position].getFileName() : undefined;
     };
-  }, {}], 18: [function (require, module, exports) {
+  }, {}], 19: [function (require, module, exports) {
     exports.alphasort = alphasort;
     exports.alphasorti = alphasorti;
     exports.setopts = setopts;
@@ -1677,7 +1726,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return !!(item.gmatcher && item.gmatcher.match(path));
       });
     }
-  }, { "minimatch": 41, "path": undefined, "path-is-absolute": 55 }], 19: [function (require, module, exports) {
+  }, { "minimatch": 42, "path": undefined, "path-is-absolute": 56 }], 20: [function (require, module, exports) {
     // Approach:
     //
     // 1. Get the minimatch set
@@ -2380,7 +2429,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return cb(null, c, stat);
     };
-  }, { "./common.js": 18, "./sync.js": 20, "assert": undefined, "events": undefined, "fs": undefined, "fs.realpath": 15, "inflight": 30, "inherits": 31, "minimatch": 41, "once": 49, "path": undefined, "path-is-absolute": 55, "util": undefined }], 20: [function (require, module, exports) {
+  }, { "./common.js": 19, "./sync.js": 21, "assert": undefined, "events": undefined, "fs": undefined, "fs.realpath": 16, "inflight": 31, "inherits": 32, "minimatch": 42, "once": 50, "path": undefined, "path-is-absolute": 56, "util": undefined }], 21: [function (require, module, exports) {
     module.exports = globSync;
     globSync.GlobSync = GlobSync;
 
@@ -2807,7 +2856,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     GlobSync.prototype._makeAbs = function (f) {
       return common.makeAbs(this, f);
     };
-  }, { "./common.js": 18, "./glob.js": 19, "assert": undefined, "fs": undefined, "fs.realpath": 15, "minimatch": 41, "path": undefined, "path-is-absolute": 55, "util": undefined }], 21: [function (require, module, exports) {
+  }, { "./common.js": 19, "./glob.js": 20, "assert": undefined, "fs": undefined, "fs.realpath": 16, "minimatch": 42, "path": undefined, "path-is-absolute": 56, "util": undefined }], 22: [function (require, module, exports) {
     'use strict';
 
     var glob = require('glob');
@@ -2907,7 +2956,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return groups;
     };
-  }, { "glob": 19 }], 22: [function (require, module, exports) {
+  }, { "glob": 20 }], 23: [function (require, module, exports) {
     'use strict';
 
     var fs = require('fs');
@@ -2925,7 +2974,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return copy;
     }
-  }, { "fs": undefined }], 23: [function (require, module, exports) {
+  }, { "fs": undefined }], 24: [function (require, module, exports) {
     var fs = require('fs');
     var polyfills = require('./polyfills.js');
     var legacy = require('./legacy-streams.js');
@@ -3157,7 +3206,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         elem[0].apply(null, elem[1]);
       }
     }
-  }, { "./fs.js": 22, "./legacy-streams.js": 24, "./polyfills.js": 25, "assert": undefined, "fs": undefined, "util": undefined }], 24: [function (require, module, exports) {
+  }, { "./fs.js": 23, "./legacy-streams.js": 25, "./polyfills.js": 26, "assert": undefined, "fs": undefined, "util": undefined }], 25: [function (require, module, exports) {
     var Stream = require('stream').Stream;
 
     module.exports = legacy;
@@ -3276,7 +3325,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       }
     }
-  }, { "stream": undefined }], 25: [function (require, module, exports) {
+  }, { "stream": undefined }], 26: [function (require, module, exports) {
     var fs = require('./fs.js');
     var constants = require('constants');
 
@@ -3598,13 +3647,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return false;
     }
-  }, { "./fs.js": 22, "constants": undefined }], 26: [function (require, module, exports) {
+  }, { "./fs.js": 23, "constants": undefined }], 27: [function (require, module, exports) {
     'use strict';
 
     var ansiRegex = require('ansi-regex');
     var re = new RegExp(ansiRegex().source); // remove the `g` flag
     module.exports = re.test.bind(re);
-  }, { "ansi-regex": 1 }], 27: [function (require, module, exports) {
+  }, { "ansi-regex": 1 }], 28: [function (require, module, exports) {
     'use strict';
 
     var gitHosts = module.exports = {
@@ -3643,11 +3692,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         'sshtemplate': 'git@{domain}:/{project}.git{#committish}',
         'sshurltemplate': 'git+ssh://git@{domain}/{project}.git{#committish}',
         'browsetemplate': 'https://{domain}/{project}{/committish}',
+        'browsefiletemplate': 'https://{domain}/{project}{/committish}{#path}',
         'docstemplate': 'https://{domain}/{project}{/committish}',
         'httpstemplate': 'git+https://{domain}/{project}.git{#committish}',
         'shortcuttemplate': '{type}:{project}{#committish}',
         'pathtemplate': '{project}{#committish}',
-        'tarballtemplate': 'https://{domain}/{user}/{project}/archive/{committish}.tar.gz'
+        'tarballtemplate': 'https://{domain}/{user}/{project}/archive/{committish}.tar.gz',
+        'hashformat': function hashformat(fragment) {
+          return 'file-' + formatHashFragment(fragment);
+        }
       }
     };
 
@@ -3655,12 +3708,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       'sshtemplate': 'git@{domain}:{user}/{project}.git{#committish}',
       'sshurltemplate': 'git+ssh://git@{domain}/{user}/{project}.git{#committish}',
       'browsetemplate': 'https://{domain}/{user}/{project}{/tree/committish}',
+      'browsefiletemplate': 'https://{domain}/{user}/{project}/{treepath}/{committish}/{path}{#fragment}',
       'docstemplate': 'https://{domain}/{user}/{project}{/tree/committish}#readme',
       'httpstemplate': 'git+https://{auth@}{domain}/{user}/{project}.git{#committish}',
       'filetemplate': 'https://{domain}/{user}/{project}/raw/{committish}/{path}',
       'shortcuttemplate': '{type}:{user}/{project}{#committish}',
       'pathtemplate': '{user}/{project}{#committish}',
-      'pathmatch': /^[/]([^/]+)[/]([^/]+?)(?:[.]git|[/])?$/
+      'pathmatch': /^[/]([^/]+)[/]([^/]+?)(?:[.]git|[/])?$/,
+      'hashformat': formatHashFragment
     };
 
     Object.keys(gitHosts).forEach(function (name) {
@@ -3672,11 +3727,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return protocol.replace(/([\\+*{}()[\]$^|])/g, '\\$1');
       }).join('|') + '):$');
     });
-  }, {}], 28: [function (require, module, exports) {
+
+    function formatHashFragment(fragment) {
+      return fragment.toLowerCase().replace(/^\W+|\/|\W+$/g, '').replace(/\W+/g, '-');
+    }
+  }, {}], 29: [function (require, module, exports) {
     'use strict';
 
     var gitHosts = require('./git-host-info.js');
-    var extend = Object.assign || require('util')._extend;
 
     var GitHost = module.exports = function (type, user, auth, project, committish, defaultRepresentation, opts) {
       var gitHostInfo = this;
@@ -3699,18 +3757,25 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     GitHost.prototype._fill = function (template, opts) {
       if (!template) return;
-      var vars = extend({}, opts);
-      opts = extend(extend({}, this.opts), opts);
+      var vars = Object.assign({}, opts);
+      vars.path = vars.path ? vars.path.replace(/^[/]+/g, '') : '';
+      opts = Object.assign({}, this.opts, opts);
       var self = this;
       Object.keys(this).forEach(function (key) {
         if (self[key] != null && vars[key] == null) vars[key] = self[key];
       });
       var rawAuth = vars.auth;
       var rawComittish = vars.committish;
+      var rawFragment = vars.fragment;
+      var rawPath = vars.path;
       Object.keys(vars).forEach(function (key) {
         vars[key] = encodeURIComponent(vars[key]);
       });
       vars['auth@'] = rawAuth ? rawAuth + '@' : '';
+      vars['#fragment'] = rawFragment ? '#' + this.hashformat(rawFragment) : '';
+      vars.fragment = vars.fragment ? vars.fragment : '';
+      vars['#path'] = rawPath ? '#' + this.hashformat(rawPath) : '';
+      vars['/path'] = vars.path ? '/' + vars.path : '';
       if (opts.noCommittish) {
         vars['#committish'] = '';
         vars['/tree/committish'] = '';
@@ -3741,8 +3806,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return this._fill(this.sshurltemplate, opts);
     };
 
-    GitHost.prototype.browse = function (opts) {
-      return this._fill(this.browsetemplate, opts);
+    GitHost.prototype.browse = function (P, F, opts) {
+      if (typeof P === 'string') {
+        if (typeof F !== 'string') {
+          opts = F;
+          F = null;
+        }
+        return this._fill(this.browsefiletemplate, Object.assign({
+          fragment: F,
+          path: P
+        }, opts));
+      } else {
+        return this._fill(this.browsetemplate, P);
+      }
     };
 
     GitHost.prototype.docs = function (opts) {
@@ -3774,9 +3850,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     GitHost.prototype.file = function (P, opts) {
-      return this._fill(this.filetemplate, extend({
-        path: P.replace(/^[/]+/g, '')
-      }, opts));
+      return this._fill(this.filetemplate, Object.assign({ path: P }, opts));
     };
 
     GitHost.prototype.getDefaultRepresentation = function () {
@@ -3786,7 +3860,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     GitHost.prototype.toString = function (opts) {
       return (this[this.default] || this.sshurl).call(this, opts);
     };
-  }, { "./git-host-info.js": 27, "util": undefined }], 29: [function (require, module, exports) {
+  }, { "./git-host-info.js": 28 }], 30: [function (require, module, exports) {
     'use strict';
 
     var url = require('url');
@@ -3909,7 +3983,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         href: 'git+ssh://' + matched[1] + '@' + matched[2] + '/' + matched[3] + (matched[4] || '')
       };
     }
-  }, { "./git-host-info.js": 27, "./git-host.js": 28, "url": undefined }], 30: [function (require, module, exports) {
+  }, { "./git-host-info.js": 28, "./git-host.js": 29, "url": undefined }], 31: [function (require, module, exports) {
     var wrappy = require('wrappy');
     var reqs = Object.create(null);
     var once = require('once');
@@ -3965,7 +4039,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         array[i] = args[i];
       }return array;
     }
-  }, { "once": 49, "wrappy": 77 }], 31: [function (require, module, exports) {
+  }, { "once": 50, "wrappy": 80 }], 32: [function (require, module, exports) {
     try {
       var util = require('util');
       if (typeof util.inherits !== 'function') throw '';
@@ -3973,7 +4047,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     } catch (e) {
       module.exports = require('./inherits_browser.js');
     }
-  }, { "./inherits_browser.js": 32, "util": undefined }], 32: [function (require, module, exports) {
+  }, { "./inherits_browser.js": 33, "util": undefined }], 33: [function (require, module, exports) {
     if (typeof Object.create === 'function') {
       // implementation from standard node.js 'util' module
       module.exports = function inherits(ctor, superCtor) {
@@ -3997,7 +4071,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         ctor.prototype.constructor = ctor;
       };
     }
-  }, {}], 33: [function (require, module, exports) {
+  }, {}], 34: [function (require, module, exports) {
     'use strict';
 
     module.exports = function (obj) {
@@ -4014,7 +4088,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return ret;
     };
-  }, {}], 34: [function (require, module, exports) {
+  }, {}], 35: [function (require, module, exports) {
     'use strict';
 
     module.exports = function isArrayish(obj) {
@@ -4024,7 +4098,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return obj instanceof Array || Array.isArray(obj) || obj.length >= 0 && obj.splice instanceof Function;
     };
-  }, {}], 35: [function (require, module, exports) {
+  }, {}], 36: [function (require, module, exports) {
     'use strict';
 
     var builtinModules = require('builtin-modules');
@@ -4036,7 +4110,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return builtinModules.indexOf(str) !== -1;
     };
-  }, { "builtin-modules": 5 }], 36: [function (require, module, exports) {
+  }, { "builtin-modules": 5 }], 37: [function (require, module, exports) {
     'use strict';
 
     var numberIsNan = require('number-is-nan');
@@ -4082,7 +4156,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return false;
     };
-  }, { "number-is-nan": 48 }], 37: [function (require, module, exports) {
+  }, { "number-is-nan": 49 }], 38: [function (require, module, exports) {
 
     exports = module.exports = function (bytes) {
       var i = 0;
@@ -4120,7 +4194,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return true;
     };
-  }, {}], 38: [function (require, module, exports) {
+  }, {}], 39: [function (require, module, exports) {
     'use strict';
 
     var invertKv = require('invert-kv');
@@ -4144,7 +4218,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     exports.all = all;
-  }, { "./lcid.json": 39, "invert-kv": 33 }], 39: [function (require, module, exports) {
+  }, { "./lcid.json": 40, "invert-kv": 34 }], 40: [function (require, module, exports) {
     module.exports = {
       "af_ZA": 1078,
       "am_ET": 1118,
@@ -4348,7 +4422,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       "zh_TW": 1028,
       "zu_ZA": 1077
     };
-  }, {}], 40: [function (require, module, exports) {
+  }, {}], 41: [function (require, module, exports) {
     'use strict';
 
     var path = require('path');
@@ -4371,7 +4445,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports.sync = function (fp) {
       return parse(fs.readFileSync(fp, 'utf8'), fp);
     };
-  }, { "graceful-fs": 23, "parse-json": 51, "path": undefined, "pify": 57, "pinkie-promise": 58, "strip-bom": 72 }], 41: [function (require, module, exports) {
+  }, { "graceful-fs": 24, "parse-json": 52, "path": undefined, "pify": 58, "pinkie-promise": 59, "strip-bom": 76 }], 42: [function (require, module, exports) {
     module.exports = minimatch;
     minimatch.Minimatch = Minimatch;
 
@@ -5273,7 +5347,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     function regExpEscape(s) {
       return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
     }
-  }, { "brace-expansion": 4, "path": undefined }], 42: [function (require, module, exports) {
+  }, { "brace-expansion": 4, "path": undefined }], 43: [function (require, module, exports) {
     module.exports = extractDescription;
 
     // Extracts description from contents of a readme file in markdown format
@@ -5288,7 +5362,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       for (var e = s + 1; e < l && d[e].trim(); e++) {}
       return d.slice(s, e).join(' ').trim();
     }
-  }, {}], 43: [function (require, module, exports) {
+  }, {}], 44: [function (require, module, exports) {
     var semver = require("semver");
     var validateLicense = require('validate-npm-package-license');
     var hostedGitInfo = require("hosted-git-info");
@@ -5673,7 +5747,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       });
     }
-  }, { "./extract_description": 42, "./typos.json": 46, "hosted-git-info": 29, "is-builtin-module": 35, "semver": 64, "url": undefined, "validate-npm-package-license": 74 }], 44: [function (require, module, exports) {
+  }, { "./extract_description": 43, "./typos.json": 47, "hosted-git-info": 30, "is-builtin-module": 36, "semver": 65, "url": undefined, "validate-npm-package-license": 77 }], 45: [function (require, module, exports) {
     var util = require("util");
     var messages = require("./warning_messages.json");
 
@@ -5696,7 +5770,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       return util.format(messages.typo, providedName, probableName);
     }
-  }, { "./warning_messages.json": 47, "util": undefined }], 45: [function (require, module, exports) {
+  }, { "./warning_messages.json": 48, "util": undefined }], 46: [function (require, module, exports) {
     module.exports = normalize;
 
     var fixer = require("./fixer");
@@ -5735,7 +5809,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     function ucFirst(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     }
-  }, { "./fixer": 43, "./make_warning": 44 }], 46: [function (require, module, exports) {
+  }, { "./fixer": 44, "./make_warning": 45 }], 47: [function (require, module, exports) {
     module.exports = {
       "topLevel": {
         "dependancies": "dependencies",
@@ -5761,7 +5835,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       "bugs": { "web": "url", "name": "url" },
       "script": { "server": "start", "tests": "test" }
     };
-  }, {}], 47: [function (require, module, exports) {
+  }, {}], 48: [function (require, module, exports) {
     module.exports = {
       "repositories": "'repositories' (plural) Not supported. Please pick one as the 'repository' field",
       "missingRepository": "No repository field.",
@@ -5792,13 +5866,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       "invalidLicense": "license should be a valid SPDX license expression",
       "typo": "%s should probably be %s."
     };
-  }, {}], 48: [function (require, module, exports) {
+  }, {}], 49: [function (require, module, exports) {
     'use strict';
 
     module.exports = Number.isNaN || function (x) {
       return x !== x;
     };
-  }, {}], 49: [function (require, module, exports) {
+  }, {}], 50: [function (require, module, exports) {
     var wrappy = require('wrappy');
     module.exports = wrappy(once);
     module.exports.strict = wrappy(onceStrict);
@@ -5840,7 +5914,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       f.called = false;
       return f;
     }
-  }, { "wrappy": 77 }], 50: [function (require, module, exports) {
+  }, { "wrappy": 80 }], 51: [function (require, module, exports) {
     'use strict';
 
     var childProcess = require('child_process');
@@ -5969,7 +6043,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       cache = getLocale(res);
       return cache;
     };
-  }, { "child_process": undefined, "lcid": 38 }], 51: [function (require, module, exports) {
+  }, { "child_process": undefined, "lcid": 39 }], 52: [function (require, module, exports) {
     'use strict';
 
     var errorEx = require('error-ex');
@@ -6006,7 +6080,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         throw jsonErr;
       }
     };
-  }, { "./vendor/parse": 52, "error-ex": 12 }], 52: [function (require, module, exports) {
+  }, { "./vendor/parse": 53, "error-ex": 13 }], 53: [function (require, module, exports) {
     /*
      * Author: Alex Kocharin <alex@kocharin.ru>
      * GIT: https://github.com/rlidwka/jju
@@ -6707,7 +6781,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       tokens.data = module.exports.parse(input, options);
       return tokens;
     };
-  }, { "./unicode": 53 }], 53: [function (require, module, exports) {
+  }, { "./unicode": 54 }], 54: [function (require, module, exports) {
 
     // This is autogenerated with esprima tools, see:
     // https://github.com/ariya/esprima/blob/master/esprima.js
@@ -6756,7 +6830,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     // ECMAScript 5.1/Unicode v6.3.0 NonAsciiIdentifierPart:
 
     module.exports.NonAsciiIdentifierPart = /[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u0527\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0\u08A2-\u08AC\u08E4-\u08FE\u0900-\u0963\u0966-\u096F\u0971-\u0977\u0979-\u097F\u0981-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C01-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C82\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D02\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191C\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1D00-\u1DE6\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA697\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA827\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A\uAA7B\uAA80-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE26\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]/;
-  }, {}], 54: [function (require, module, exports) {
+  }, {}], 55: [function (require, module, exports) {
     'use strict';
 
     var fs = require('fs');
@@ -6782,7 +6856,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return false;
       }
     };
-  }, { "fs": undefined, "pinkie-promise": 58 }], 55: [function (require, module, exports) {
+  }, { "fs": undefined, "pinkie-promise": 59 }], 56: [function (require, module, exports) {
     'use strict';
 
     function posix(path) {
@@ -6803,7 +6877,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports = process.platform === 'win32' ? win32 : posix;
     module.exports.posix = posix;
     module.exports.win32 = win32;
-  }, {}], 56: [function (require, module, exports) {
+  }, {}], 57: [function (require, module, exports) {
     'use strict';
 
     var fs = require('graceful-fs');
@@ -6834,7 +6908,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     exports.fileSync = typeSync.bind(null, 'statSync', 'isFile');
     exports.dirSync = typeSync.bind(null, 'statSync', 'isDirectory');
     exports.symlinkSync = typeSync.bind(null, 'lstatSync', 'isSymbolicLink');
-  }, { "graceful-fs": 23, "pify": 57, "pinkie-promise": 58 }], 57: [function (require, module, exports) {
+  }, { "graceful-fs": 24, "pify": 58, "pinkie-promise": 59 }], 58: [function (require, module, exports) {
     'use strict';
 
     var processFn = function processFn(fn, P, opts) {
@@ -6903,11 +6977,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     pify.all = pify;
-  }, {}], 58: [function (require, module, exports) {
+  }, {}], 59: [function (require, module, exports) {
     'use strict';
 
     module.exports = typeof Promise === 'function' ? Promise : require('pinkie');
-  }, { "pinkie": 59 }], 59: [function (require, module, exports) {
+  }, { "pinkie": 60 }], 60: [function (require, module, exports) {
     'use strict';
 
     var PENDING = 'pending';
@@ -7200,7 +7274,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     module.exports = Promise;
-  }, {}], 60: [function (require, module, exports) {
+  }, {}], 61: [function (require, module, exports) {
     'use strict';
 
     var findUp = require('find-up');
@@ -7233,7 +7307,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         path: fp
       };
     };
-  }, { "find-up": 14, "read-pkg": 61 }], 61: [function (require, module, exports) {
+  }, { "find-up": 15, "read-pkg": 62 }], 62: [function (require, module, exports) {
     'use strict';
 
     var path = require('path');
@@ -7281,7 +7355,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return x;
     };
-  }, { "load-json-file": 40, "normalize-package-data": 45, "path": undefined, "path-type": 56 }], 62: [function (require, module, exports) {
+  }, { "load-json-file": 41, "normalize-package-data": 46, "path": undefined, "path-type": 57 }], 63: [function (require, module, exports) {
     'use strict';
 
     var fs = require('fs'),
@@ -7368,7 +7442,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     module.exports = requireDirectory;
     module.exports.defaults = defaultOptions;
-  }, { "fs": undefined, "path": undefined }], 63: [function (require, module, exports) {
+  }, { "fs": undefined, "path": undefined }], 64: [function (require, module, exports) {
     module.exports = function (_require) {
       _require = _require || require;
       var main = _require.main;
@@ -7387,7 +7461,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return main.children[0].filename;
       }
     }
-  }, {}], 64: [function (require, module, exports) {
+  }, {}], 65: [function (require, module, exports) {
     exports = module.exports = SemVer;
 
     // The debug function is excluded entirely from the minified version.
@@ -8536,7 +8610,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return parse((match[1] || '0') + '.' + (match[2] || '0') + '.' + (match[3] || '0'));
     }
-  }, {}], 65: [function (require, module, exports) {
+  }, {}], 66: [function (require, module, exports) {
     module.exports = function (blocking) {
       [process.stdout, process.stderr].forEach(function (stream) {
         if (stream._handle && stream.isTTY && typeof stream._handle.setBlocking === 'function') {
@@ -8544,11 +8618,32 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       });
     };
-  }, {}], 66: [function (require, module, exports) {
-    var licenseIDs = require('spdx-license-ids');
+  }, {}], 67: [function (require, module, exports) {
+    /*
+    Copyright 2015 Kyle E. Mitchell
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+       http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+    */
+    var parse = require('spdx-expression-parse');
+    var spdxLicenseIds = require('spdx-license-ids');
 
     function valid(string) {
-      return licenseIDs.indexOf(string) > -1;
+      try {
+        parse(string);
+        return true;
+      } catch (error) {
+        return false;
+      }
     }
 
     // Common transpositions of license identifier acronyms
@@ -8611,9 +8706,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     function (argument) {
       return argument.replace(/\s*V\s*(\d)/, '-$1').replace(/(\d)$/, '$1.0');
     },
+    // e.g. 'GPL-2.0', 'GPL-3.0'
+    function (argument) {
+      if (argument.indexOf('3.0') !== -1) {
+        return argument + '-or-later';
+      } else {
+        return argument + '-only';
+      }
+    },
     // e.g. 'GPL-2.0-'
     function (argument) {
-      return argument.slice(0, argument.length - 1);
+      return argument + 'only';
     },
     // e.g. 'GPL2'
     function (argument) {
@@ -8644,16 +8747,41 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return 'CC-' + argument.replace('Attribution', 'BY').replace('NonCommercial', 'NC').replace('NoDerivatives', 'ND').replace(/ (\d)/, '-$1').replace(/ ?International/, '') + '-4.0';
     }];
 
+    var licensesWithVersions = spdxLicenseIds.map(function (id) {
+      var match = /^(.*)-\d+\.\d+$/.exec(id);
+      return match ? [match[0], match[1]] : [id, null];
+    }).reduce(function (objectMap, item) {
+      var key = item[1];
+      objectMap[key] = objectMap[key] || [];
+      objectMap[key].push(item[0]);
+      return objectMap;
+    }, {});
+
+    var licensesWithOneVersion = Object.keys(licensesWithVersions).map(function makeEntries(key) {
+      return [key, licensesWithVersions[key]];
+    }).filter(function identifySoleVersions(item) {
+      return (
+        // Licenses has just one valid version suffix.
+        item[1].length === 1 && item[0] !== null &&
+        // APL will be considered Apache, rather than APL-1.0
+        item[0] !== 'APL'
+      );
+    }).map(function createLastResorts(item) {
+      return [item[0], item[1][0]];
+    });
+
+    licensesWithVersions = undefined;
+
     // If all else fails, guess that strings containing certain substrings
     // meant to identify certain licenses.
-    var lastResorts = [['UNLI', 'Unlicense'], ['WTF', 'WTFPL'], ['2 CLAUSE', 'BSD-2-Clause'], ['2-CLAUSE', 'BSD-2-Clause'], ['3 CLAUSE', 'BSD-3-Clause'], ['3-CLAUSE', 'BSD-3-Clause'], ['AFFERO', 'AGPL-3.0'], ['AGPL', 'AGPL-3.0'], ['APACHE', 'Apache-2.0'], ['ARTISTIC', 'Artistic-2.0'], ['Affero', 'AGPL-3.0'], ['BEER', 'Beerware'], ['BOOST', 'BSL-1.0'], ['BSD', 'BSD-2-Clause'], ['ECLIPSE', 'EPL-1.0'], ['FUCK', 'WTFPL'], ['GNU', 'GPL-3.0'], ['LGPL', 'LGPL-3.0'], ['GPL', 'GPL-3.0'], ['MIT', 'MIT'], ['MPL', 'MPL-2.0'], ['X11', 'X11'], ['ZLIB', 'Zlib']];
+    var lastResorts = [['UNLI', 'Unlicense'], ['WTF', 'WTFPL'], ['2 CLAUSE', 'BSD-2-Clause'], ['2-CLAUSE', 'BSD-2-Clause'], ['3 CLAUSE', 'BSD-3-Clause'], ['3-CLAUSE', 'BSD-3-Clause'], ['AFFERO', 'AGPL-3.0-or-later'], ['AGPL', 'AGPL-3.0-or-later'], ['APACHE', 'Apache-2.0'], ['ARTISTIC', 'Artistic-2.0'], ['Affero', 'AGPL-3.0-or-later'], ['BEER', 'Beerware'], ['BOOST', 'BSL-1.0'], ['BSD', 'BSD-2-Clause'], ['CDDL', 'CDDL-1.1'], ['ECLIPSE', 'EPL-1.0'], ['FUCK', 'WTFPL'], ['GNU', 'GPL-3.0-or-later'], ['LGPL', 'LGPL-3.0-or-later'], ['GPLV1', 'GPL-1.0-only'], ['GPLV2', 'GPL-2.0-only'], ['GPL', 'GPL-3.0-or-later'], ['MIT +NO-FALSE-ATTRIBS', 'MITNFA'], ['MIT', 'MIT'], ['MPL', 'MPL-2.0'], ['X11', 'X11'], ['ZLIB', 'Zlib']].concat(licensesWithOneVersion);
 
     var SUBSTRING = 0;
     var IDENTIFIER = 1;
 
     var validTransformation = function validTransformation(identifier) {
       for (var i = 0; i < transforms.length; i++) {
-        var transformed = transforms[i](identifier);
+        var transformed = transforms[i](identifier).trim();
         if (transformed !== identifier && valid(transformed)) {
           return transformed;
         }
@@ -8688,13 +8816,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     module.exports = function (identifier) {
-      identifier = identifier.replace(/\+$/, '');
+      var validArugment = typeof identifier === 'string' && identifier.trim().length !== 0;
+      if (!validArugment) {
+        throw Error('Invalid argument. Expected non-empty string.');
+      }
+      identifier = identifier.replace(/\+$/, '').trim();
       if (valid(identifier)) {
-        return identifier;
+        return upgradeGPLs(identifier);
       }
       var transformed = validTransformation(identifier);
       if (transformed !== null) {
-        return transformed;
+        return upgradeGPLs(transformed);
       }
       transformed = anyCorrection(identifier, function (argument) {
         if (valid(argument)) {
@@ -8703,1760 +8835,303 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return validTransformation(argument);
       });
       if (transformed !== null) {
-        return transformed;
+        return upgradeGPLs(transformed);
       }
       transformed = validLastResort(identifier);
       if (transformed !== null) {
-        return transformed;
+        return upgradeGPLs(transformed);
       }
       transformed = anyCorrection(identifier, validLastResort);
       if (transformed !== null) {
-        return transformed;
+        return upgradeGPLs(transformed);
       }
       return null;
     };
-  }, { "spdx-license-ids": 69 }], 67: [function (require, module, exports) {
-    var parser = require('./parser').parser;
 
-    module.exports = function (argument) {
-      return parser.parse(argument);
-    };
-  }, { "./parser": 68 }], 68: [function (require, module, exports) {
-    /* parser generated by jison 0.4.17 */
-    /*
-      Returns a Parser object of the following structure:
-    
-      Parser: {
-        yy: {}
-      }
-    
-      Parser.prototype: {
-        yy: {},
-        trace: function(),
-        symbols_: {associative list: name ==> number},
-        terminals_: {associative list: number ==> name},
-        productions_: [...],
-        performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate, $$, _$),
-        table: [...],
-        defaultActions: {...},
-        parseError: function(str, hash),
-        parse: function(input),
-    
-        lexer: {
-            EOF: 1,
-            parseError: function(str, hash),
-            setInput: function(input),
-            input: function(),
-            unput: function(str),
-            more: function(),
-            less: function(n),
-            pastInput: function(),
-            upcomingInput: function(),
-            showPosition: function(),
-            test_match: function(regex_match_array, rule_index),
-            next: function(),
-            lex: function(),
-            begin: function(condition),
-            popState: function(),
-            _currentRules: function(),
-            topState: function(),
-            pushState: function(condition),
-    
-            options: {
-                ranges: boolean           (optional: true ==> token location info will include a .range[] member)
-                flex: boolean             (optional: true ==> flex-like lexing behaviour where the rules are tested exhaustively to find the longest match)
-                backtrack_lexer: boolean  (optional: true ==> lexer regexes are tested in order and for each matching regex the action code is invoked; the lexer terminates the scan when a token is returned by the action code)
-            },
-    
-            performAction: function(yy, yy_, $avoiding_name_collisions, YY_START),
-            rules: [...],
-            conditions: {associative list: name ==> set},
-        }
-      }
-    
-    
-      token location info (@$, _$, etc.): {
-        first_line: n,
-        last_line: n,
-        first_column: n,
-        last_column: n,
-        range: [start_number, end_number]       (where the numbers are indexes into the input string, regular zero-based)
-      }
-    
-    
-      the parseError function receives a 'hash' object with these members for lexer and parser errors: {
-        text:        (matched text)
-        token:       (the produced terminal token, if any)
-        line:        (yylineno)
-      }
-      while parser (grammar) errors will also provide these members, i.e. parser errors deliver a superset of attributes: {
-        loc:         (yylloc)
-        expected:    (string describing the set of expected tokens)
-        recoverable: (boolean: TRUE when the parser has a error recovery rule available for this particular error)
-      }
-    */
-    var spdxparse = function () {
-      var o = function o(k, v, _o, l) {
-        for (_o = _o || {}, l = k.length; l--; _o[k[l]] = v) {}return _o;
-      },
-          $V0 = [1, 5],
-          $V1 = [1, 6],
-          $V2 = [1, 7],
-          $V3 = [1, 4],
-          $V4 = [1, 9],
-          $V5 = [1, 10],
-          $V6 = [5, 14, 15, 17],
-          $V7 = [5, 12, 14, 15, 17];
-      var parser = { trace: function trace() {},
-        yy: {},
-        symbols_: { "error": 2, "start": 3, "expression": 4, "EOS": 5, "simpleExpression": 6, "LICENSE": 7, "PLUS": 8, "LICENSEREF": 9, "DOCUMENTREF": 10, "COLON": 11, "WITH": 12, "EXCEPTION": 13, "AND": 14, "OR": 15, "OPEN": 16, "CLOSE": 17, "$accept": 0, "$end": 1 },
-        terminals_: { 2: "error", 5: "EOS", 7: "LICENSE", 8: "PLUS", 9: "LICENSEREF", 10: "DOCUMENTREF", 11: "COLON", 12: "WITH", 13: "EXCEPTION", 14: "AND", 15: "OR", 16: "OPEN", 17: "CLOSE" },
-        productions_: [0, [3, 2], [6, 1], [6, 2], [6, 1], [6, 3], [4, 1], [4, 3], [4, 3], [4, 3], [4, 3]],
-        performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
-          /* this == yyval */
-
-          var $0 = $$.length - 1;
-          switch (yystate) {
-            case 1:
-              return this.$ = $$[$0 - 1];
-              break;
-            case 2:case 4:case 5:
-              this.$ = { license: yytext };
-              break;
-            case 3:
-              this.$ = { license: $$[$0 - 1], plus: true };
-              break;
-            case 6:
-              this.$ = $$[$0];
-              break;
-            case 7:
-              this.$ = { exception: $$[$0] };
-              this.$.license = $$[$0 - 2].license;
-              if ($$[$0 - 2].hasOwnProperty('plus')) {
-                this.$.plus = $$[$0 - 2].plus;
-              }
-              break;
-            case 8:
-              this.$ = { conjunction: 'and', left: $$[$0 - 2], right: $$[$0] };
-              break;
-            case 9:
-              this.$ = { conjunction: 'or', left: $$[$0 - 2], right: $$[$0] };
-              break;
-            case 10:
-              this.$ = $$[$0 - 1];
-              break;
-          }
-        },
-        table: [{ 3: 1, 4: 2, 6: 3, 7: $V0, 9: $V1, 10: $V2, 16: $V3 }, { 1: [3] }, { 5: [1, 8], 14: $V4, 15: $V5 }, o($V6, [2, 6], { 12: [1, 11] }), { 4: 12, 6: 3, 7: $V0, 9: $V1, 10: $V2, 16: $V3 }, o($V7, [2, 2], { 8: [1, 13] }), o($V7, [2, 4]), { 11: [1, 14] }, { 1: [2, 1] }, { 4: 15, 6: 3, 7: $V0, 9: $V1, 10: $V2, 16: $V3 }, { 4: 16, 6: 3, 7: $V0, 9: $V1, 10: $V2, 16: $V3 }, { 13: [1, 17] }, { 14: $V4, 15: $V5, 17: [1, 18] }, o($V7, [2, 3]), { 9: [1, 19] }, o($V6, [2, 8]), o([5, 15, 17], [2, 9], { 14: $V4 }), o($V6, [2, 7]), o($V6, [2, 10]), o($V7, [2, 5])],
-        defaultActions: { 8: [2, 1] },
-        parseError: function parseError(str, hash) {
-          if (hash.recoverable) {
-            this.trace(str);
-          } else {
-            var _parseError = function _parseError(msg, hash) {
-              this.message = msg;
-              this.hash = hash;
-            };
-
-            _parseError.prototype = Error;
-
-            throw new _parseError(str, hash);
-          }
-        },
-        parse: function parse(input) {
-          var self = this,
-              stack = [0],
-              tstack = [],
-              vstack = [null],
-              lstack = [],
-              table = this.table,
-              yytext = '',
-              yylineno = 0,
-              yyleng = 0,
-              recovering = 0,
-              TERROR = 2,
-              EOF = 1;
-          var args = lstack.slice.call(arguments, 1);
-          var lexer = Object.create(this.lexer);
-          var sharedState = { yy: {} };
-          for (var k in this.yy) {
-            if (Object.prototype.hasOwnProperty.call(this.yy, k)) {
-              sharedState.yy[k] = this.yy[k];
-            }
-          }
-          lexer.setInput(input, sharedState.yy);
-          sharedState.yy.lexer = lexer;
-          sharedState.yy.parser = this;
-          if (typeof lexer.yylloc == 'undefined') {
-            lexer.yylloc = {};
-          }
-          var yyloc = lexer.yylloc;
-          lstack.push(yyloc);
-          var ranges = lexer.options && lexer.options.ranges;
-          if (typeof sharedState.yy.parseError === 'function') {
-            this.parseError = sharedState.yy.parseError;
-          } else {
-            this.parseError = Object.getPrototypeOf(this).parseError;
-          }
-          function popStack(n) {
-            stack.length = stack.length - 2 * n;
-            vstack.length = vstack.length - n;
-            lstack.length = lstack.length - n;
-          }
-          _token_stack: var lex = function lex() {
-            var token;
-            token = lexer.lex() || EOF;
-            if (typeof token !== 'number') {
-              token = self.symbols_[token] || token;
-            }
-            return token;
-          };
-          var symbol,
-              preErrorSymbol,
-              state,
-              action,
-              a,
-              r,
-              yyval = {},
-              p,
-              len,
-              newState,
-              expected;
-          while (true) {
-            state = stack[stack.length - 1];
-            if (this.defaultActions[state]) {
-              action = this.defaultActions[state];
-            } else {
-              if (symbol === null || typeof symbol == 'undefined') {
-                symbol = lex();
-              }
-              action = table[state] && table[state][symbol];
-            }
-            if (typeof action === 'undefined' || !action.length || !action[0]) {
-              var errStr = '';
-              expected = [];
-              for (p in table[state]) {
-                if (this.terminals_[p] && p > TERROR) {
-                  expected.push('\'' + this.terminals_[p] + '\'');
-                }
-              }
-              if (lexer.showPosition) {
-                errStr = 'Parse error on line ' + (yylineno + 1) + ':\n' + lexer.showPosition() + '\nExpecting ' + expected.join(', ') + ', got \'' + (this.terminals_[symbol] || symbol) + '\'';
-              } else {
-                errStr = 'Parse error on line ' + (yylineno + 1) + ': Unexpected ' + (symbol == EOF ? 'end of input' : '\'' + (this.terminals_[symbol] || symbol) + '\'');
-              }
-              this.parseError(errStr, {
-                text: lexer.match,
-                token: this.terminals_[symbol] || symbol,
-                line: lexer.yylineno,
-                loc: yyloc,
-                expected: expected
-              });
-            }
-            if (action[0] instanceof Array && action.length > 1) {
-              throw new Error('Parse Error: multiple actions possible at state: ' + state + ', token: ' + symbol);
-            }
-            switch (action[0]) {
-              case 1:
-                stack.push(symbol);
-                vstack.push(lexer.yytext);
-                lstack.push(lexer.yylloc);
-                stack.push(action[1]);
-                symbol = null;
-                if (!preErrorSymbol) {
-                  yyleng = lexer.yyleng;
-                  yytext = lexer.yytext;
-                  yylineno = lexer.yylineno;
-                  yyloc = lexer.yylloc;
-                  if (recovering > 0) {
-                    recovering--;
-                  }
-                } else {
-                  symbol = preErrorSymbol;
-                  preErrorSymbol = null;
-                }
-                break;
-              case 2:
-                len = this.productions_[action[1]][1];
-                yyval.$ = vstack[vstack.length - len];
-                yyval._$ = {
-                  first_line: lstack[lstack.length - (len || 1)].first_line,
-                  last_line: lstack[lstack.length - 1].last_line,
-                  first_column: lstack[lstack.length - (len || 1)].first_column,
-                  last_column: lstack[lstack.length - 1].last_column
-                };
-                if (ranges) {
-                  yyval._$.range = [lstack[lstack.length - (len || 1)].range[0], lstack[lstack.length - 1].range[1]];
-                }
-                r = this.performAction.apply(yyval, [yytext, yyleng, yylineno, sharedState.yy, action[1], vstack, lstack].concat(args));
-                if (typeof r !== 'undefined') {
-                  return r;
-                }
-                if (len) {
-                  stack = stack.slice(0, -1 * len * 2);
-                  vstack = vstack.slice(0, -1 * len);
-                  lstack = lstack.slice(0, -1 * len);
-                }
-                stack.push(this.productions_[action[1]][0]);
-                vstack.push(yyval.$);
-                lstack.push(yyval._$);
-                newState = table[stack[stack.length - 2]][stack[stack.length - 1]];
-                stack.push(newState);
-                break;
-              case 3:
-                return true;
-            }
-          }
-          return true;
-        } };
-      /* generated by jison-lex 0.3.4 */
-      var lexer = function () {
-        var lexer = {
-
-          EOF: 1,
-
-          parseError: function parseError(str, hash) {
-            if (this.yy.parser) {
-              this.yy.parser.parseError(str, hash);
-            } else {
-              throw new Error(str);
-            }
-          },
-
-          // resets the lexer, sets new input
-          setInput: function setInput(input, yy) {
-            this.yy = yy || this.yy || {};
-            this._input = input;
-            this._more = this._backtrack = this.done = false;
-            this.yylineno = this.yyleng = 0;
-            this.yytext = this.matched = this.match = '';
-            this.conditionStack = ['INITIAL'];
-            this.yylloc = {
-              first_line: 1,
-              first_column: 0,
-              last_line: 1,
-              last_column: 0
-            };
-            if (this.options.ranges) {
-              this.yylloc.range = [0, 0];
-            }
-            this.offset = 0;
-            return this;
-          },
-
-          // consumes and returns one char from the input
-          input: function input() {
-            var ch = this._input[0];
-            this.yytext += ch;
-            this.yyleng++;
-            this.offset++;
-            this.match += ch;
-            this.matched += ch;
-            var lines = ch.match(/(?:\r\n?|\n).*/g);
-            if (lines) {
-              this.yylineno++;
-              this.yylloc.last_line++;
-            } else {
-              this.yylloc.last_column++;
-            }
-            if (this.options.ranges) {
-              this.yylloc.range[1]++;
-            }
-
-            this._input = this._input.slice(1);
-            return ch;
-          },
-
-          // unshifts one char (or a string) into the input
-          unput: function unput(ch) {
-            var len = ch.length;
-            var lines = ch.split(/(?:\r\n?|\n)/g);
-
-            this._input = ch + this._input;
-            this.yytext = this.yytext.substr(0, this.yytext.length - len);
-            //this.yyleng -= len;
-            this.offset -= len;
-            var oldLines = this.match.split(/(?:\r\n?|\n)/g);
-            this.match = this.match.substr(0, this.match.length - 1);
-            this.matched = this.matched.substr(0, this.matched.length - 1);
-
-            if (lines.length - 1) {
-              this.yylineno -= lines.length - 1;
-            }
-            var r = this.yylloc.range;
-
-            this.yylloc = {
-              first_line: this.yylloc.first_line,
-              last_line: this.yylineno + 1,
-              first_column: this.yylloc.first_column,
-              last_column: lines ? (lines.length === oldLines.length ? this.yylloc.first_column : 0) + oldLines[oldLines.length - lines.length].length - lines[0].length : this.yylloc.first_column - len
-            };
-
-            if (this.options.ranges) {
-              this.yylloc.range = [r[0], r[0] + this.yyleng - len];
-            }
-            this.yyleng = this.yytext.length;
-            return this;
-          },
-
-          // When called from action, caches matched text and appends it on next action
-          more: function more() {
-            this._more = true;
-            return this;
-          },
-
-          // When called from action, signals the lexer that this rule fails to match the input, so the next matching rule (regex) should be tested instead.
-          reject: function reject() {
-            if (this.options.backtrack_lexer) {
-              this._backtrack = true;
-            } else {
-              return this.parseError('Lexical error on line ' + (this.yylineno + 1) + '. You can only invoke reject() in the lexer when the lexer is of the backtracking persuasion (options.backtrack_lexer = true).\n' + this.showPosition(), {
-                text: "",
-                token: null,
-                line: this.yylineno
-              });
-            }
-            return this;
-          },
-
-          // retain first n characters of the match
-          less: function less(n) {
-            this.unput(this.match.slice(n));
-          },
-
-          // displays already matched input, i.e. for error messages
-          pastInput: function pastInput() {
-            var past = this.matched.substr(0, this.matched.length - this.match.length);
-            return (past.length > 20 ? '...' : '') + past.substr(-20).replace(/\n/g, "");
-          },
-
-          // displays upcoming input, i.e. for error messages
-          upcomingInput: function upcomingInput() {
-            var next = this.match;
-            if (next.length < 20) {
-              next += this._input.substr(0, 20 - next.length);
-            }
-            return (next.substr(0, 20) + (next.length > 20 ? '...' : '')).replace(/\n/g, "");
-          },
-
-          // displays the character position where the lexing error occurred, i.e. for error messages
-          showPosition: function showPosition() {
-            var pre = this.pastInput();
-            var c = new Array(pre.length + 1).join("-");
-            return pre + this.upcomingInput() + "\n" + c + "^";
-          },
-
-          // test the lexed token: return FALSE when not a match, otherwise return token
-          test_match: function test_match(match, indexed_rule) {
-            var token, lines, backup;
-
-            if (this.options.backtrack_lexer) {
-              // save context
-              backup = {
-                yylineno: this.yylineno,
-                yylloc: {
-                  first_line: this.yylloc.first_line,
-                  last_line: this.last_line,
-                  first_column: this.yylloc.first_column,
-                  last_column: this.yylloc.last_column
-                },
-                yytext: this.yytext,
-                match: this.match,
-                matches: this.matches,
-                matched: this.matched,
-                yyleng: this.yyleng,
-                offset: this.offset,
-                _more: this._more,
-                _input: this._input,
-                yy: this.yy,
-                conditionStack: this.conditionStack.slice(0),
-                done: this.done
-              };
-              if (this.options.ranges) {
-                backup.yylloc.range = this.yylloc.range.slice(0);
-              }
-            }
-
-            lines = match[0].match(/(?:\r\n?|\n).*/g);
-            if (lines) {
-              this.yylineno += lines.length;
-            }
-            this.yylloc = {
-              first_line: this.yylloc.last_line,
-              last_line: this.yylineno + 1,
-              first_column: this.yylloc.last_column,
-              last_column: lines ? lines[lines.length - 1].length - lines[lines.length - 1].match(/\r?\n?/)[0].length : this.yylloc.last_column + match[0].length
-            };
-            this.yytext += match[0];
-            this.match += match[0];
-            this.matches = match;
-            this.yyleng = this.yytext.length;
-            if (this.options.ranges) {
-              this.yylloc.range = [this.offset, this.offset += this.yyleng];
-            }
-            this._more = false;
-            this._backtrack = false;
-            this._input = this._input.slice(match[0].length);
-            this.matched += match[0];
-            token = this.performAction.call(this, this.yy, this, indexed_rule, this.conditionStack[this.conditionStack.length - 1]);
-            if (this.done && this._input) {
-              this.done = false;
-            }
-            if (token) {
-              return token;
-            } else if (this._backtrack) {
-              // recover context
-              for (var k in backup) {
-                this[k] = backup[k];
-              }
-              return false; // rule action called reject() implying the next rule should be tested instead.
-            }
-            return false;
-          },
-
-          // return next match in input
-          next: function next() {
-            if (this.done) {
-              return this.EOF;
-            }
-            if (!this._input) {
-              this.done = true;
-            }
-
-            var token, match, tempMatch, index;
-            if (!this._more) {
-              this.yytext = '';
-              this.match = '';
-            }
-            var rules = this._currentRules();
-            for (var i = 0; i < rules.length; i++) {
-              tempMatch = this._input.match(this.rules[rules[i]]);
-              if (tempMatch && (!match || tempMatch[0].length > match[0].length)) {
-                match = tempMatch;
-                index = i;
-                if (this.options.backtrack_lexer) {
-                  token = this.test_match(tempMatch, rules[i]);
-                  if (token !== false) {
-                    return token;
-                  } else if (this._backtrack) {
-                    match = false;
-                    continue; // rule action called reject() implying a rule MISmatch.
-                  } else {
-                    // else: this is a lexer rule which consumes input without producing a token (e.g. whitespace)
-                    return false;
-                  }
-                } else if (!this.options.flex) {
-                  break;
-                }
-              }
-            }
-            if (match) {
-              token = this.test_match(match, rules[index]);
-              if (token !== false) {
-                return token;
-              }
-              // else: this is a lexer rule which consumes input without producing a token (e.g. whitespace)
-              return false;
-            }
-            if (this._input === "") {
-              return this.EOF;
-            } else {
-              return this.parseError('Lexical error on line ' + (this.yylineno + 1) + '. Unrecognized text.\n' + this.showPosition(), {
-                text: "",
-                token: null,
-                line: this.yylineno
-              });
-            }
-          },
-
-          // return next match that has a token
-          lex: function lex() {
-            var r = this.next();
-            if (r) {
-              return r;
-            } else {
-              return this.lex();
-            }
-          },
-
-          // activates a new lexer condition state (pushes the new lexer condition state onto the condition stack)
-          begin: function begin(condition) {
-            this.conditionStack.push(condition);
-          },
-
-          // pop the previously active lexer condition state off the condition stack
-          popState: function popState() {
-            var n = this.conditionStack.length - 1;
-            if (n > 0) {
-              return this.conditionStack.pop();
-            } else {
-              return this.conditionStack[0];
-            }
-          },
-
-          // produce the lexer rule set which is active for the currently active lexer condition state
-          _currentRules: function _currentRules() {
-            if (this.conditionStack.length && this.conditionStack[this.conditionStack.length - 1]) {
-              return this.conditions[this.conditionStack[this.conditionStack.length - 1]].rules;
-            } else {
-              return this.conditions["INITIAL"].rules;
-            }
-          },
-
-          // return the currently active lexer condition state; when an index argument is provided it produces the N-th previous condition state, if available
-          topState: function topState(n) {
-            n = this.conditionStack.length - 1 - Math.abs(n || 0);
-            if (n >= 0) {
-              return this.conditionStack[n];
-            } else {
-              return "INITIAL";
-            }
-          },
-
-          // alias for begin(condition)
-          pushState: function pushState(condition) {
-            this.begin(condition);
-          },
-
-          // return the number of states currently on the stack
-          stateStackSize: function stateStackSize() {
-            return this.conditionStack.length;
-          },
-          options: {},
-          performAction: function anonymous(yy, yy_, $avoiding_name_collisions, YY_START) {
-            var YYSTATE = YY_START;
-            switch ($avoiding_name_collisions) {
-              case 0:
-                return 5;
-                break;
-              case 1:
-                /* skip whitespace */
-                break;
-              case 2:
-                return 8;
-                break;
-              case 3:
-                return 16;
-                break;
-              case 4:
-                return 17;
-                break;
-              case 5:
-                return 11;
-                break;
-              case 6:
-                return 10;
-                break;
-              case 7:
-                return 9;
-                break;
-              case 8:
-                return 14;
-                break;
-              case 9:
-                return 15;
-                break;
-              case 10:
-                return 12;
-                break;
-              case 11:
-                return 7;
-                break;
-              case 12:
-                return 7;
-                break;
-              case 13:
-                return 7;
-                break;
-              case 14:
-                return 7;
-                break;
-              case 15:
-                return 7;
-                break;
-              case 16:
-                return 7;
-                break;
-              case 17:
-                return 7;
-                break;
-              case 18:
-                return 7;
-                break;
-              case 19:
-                return 7;
-                break;
-              case 20:
-                return 7;
-                break;
-              case 21:
-                return 7;
-                break;
-              case 22:
-                return 7;
-                break;
-              case 23:
-                return 7;
-                break;
-              case 24:
-                return 13;
-                break;
-              case 25:
-                return 13;
-                break;
-              case 26:
-                return 13;
-                break;
-              case 27:
-                return 13;
-                break;
-              case 28:
-                return 13;
-                break;
-              case 29:
-                return 13;
-                break;
-              case 30:
-                return 13;
-                break;
-              case 31:
-                return 13;
-                break;
-              case 32:
-                return 7;
-                break;
-              case 33:
-                return 13;
-                break;
-              case 34:
-                return 7;
-                break;
-              case 35:
-                return 13;
-                break;
-              case 36:
-                return 7;
-                break;
-              case 37:
-                return 13;
-                break;
-              case 38:
-                return 13;
-                break;
-              case 39:
-                return 7;
-                break;
-              case 40:
-                return 13;
-                break;
-              case 41:
-                return 13;
-                break;
-              case 42:
-                return 13;
-                break;
-              case 43:
-                return 13;
-                break;
-              case 44:
-                return 13;
-                break;
-              case 45:
-                return 7;
-                break;
-              case 46:
-                return 13;
-                break;
-              case 47:
-                return 7;
-                break;
-              case 48:
-                return 7;
-                break;
-              case 49:
-                return 7;
-                break;
-              case 50:
-                return 7;
-                break;
-              case 51:
-                return 7;
-                break;
-              case 52:
-                return 7;
-                break;
-              case 53:
-                return 7;
-                break;
-              case 54:
-                return 7;
-                break;
-              case 55:
-                return 7;
-                break;
-              case 56:
-                return 7;
-                break;
-              case 57:
-                return 7;
-                break;
-              case 58:
-                return 7;
-                break;
-              case 59:
-                return 7;
-                break;
-              case 60:
-                return 7;
-                break;
-              case 61:
-                return 7;
-                break;
-              case 62:
-                return 7;
-                break;
-              case 63:
-                return 13;
-                break;
-              case 64:
-                return 7;
-                break;
-              case 65:
-                return 7;
-                break;
-              case 66:
-                return 13;
-                break;
-              case 67:
-                return 7;
-                break;
-              case 68:
-                return 7;
-                break;
-              case 69:
-                return 7;
-                break;
-              case 70:
-                return 7;
-                break;
-              case 71:
-                return 7;
-                break;
-              case 72:
-                return 7;
-                break;
-              case 73:
-                return 13;
-                break;
-              case 74:
-                return 7;
-                break;
-              case 75:
-                return 13;
-                break;
-              case 76:
-                return 7;
-                break;
-              case 77:
-                return 7;
-                break;
-              case 78:
-                return 7;
-                break;
-              case 79:
-                return 7;
-                break;
-              case 80:
-                return 7;
-                break;
-              case 81:
-                return 7;
-                break;
-              case 82:
-                return 7;
-                break;
-              case 83:
-                return 7;
-                break;
-              case 84:
-                return 7;
-                break;
-              case 85:
-                return 7;
-                break;
-              case 86:
-                return 7;
-                break;
-              case 87:
-                return 7;
-                break;
-              case 88:
-                return 7;
-                break;
-              case 89:
-                return 7;
-                break;
-              case 90:
-                return 7;
-                break;
-              case 91:
-                return 7;
-                break;
-              case 92:
-                return 7;
-                break;
-              case 93:
-                return 7;
-                break;
-              case 94:
-                return 7;
-                break;
-              case 95:
-                return 7;
-                break;
-              case 96:
-                return 7;
-                break;
-              case 97:
-                return 7;
-                break;
-              case 98:
-                return 7;
-                break;
-              case 99:
-                return 7;
-                break;
-              case 100:
-                return 7;
-                break;
-              case 101:
-                return 7;
-                break;
-              case 102:
-                return 7;
-                break;
-              case 103:
-                return 7;
-                break;
-              case 104:
-                return 7;
-                break;
-              case 105:
-                return 7;
-                break;
-              case 106:
-                return 7;
-                break;
-              case 107:
-                return 7;
-                break;
-              case 108:
-                return 7;
-                break;
-              case 109:
-                return 7;
-                break;
-              case 110:
-                return 7;
-                break;
-              case 111:
-                return 7;
-                break;
-              case 112:
-                return 7;
-                break;
-              case 113:
-                return 7;
-                break;
-              case 114:
-                return 7;
-                break;
-              case 115:
-                return 7;
-                break;
-              case 116:
-                return 7;
-                break;
-              case 117:
-                return 7;
-                break;
-              case 118:
-                return 7;
-                break;
-              case 119:
-                return 7;
-                break;
-              case 120:
-                return 7;
-                break;
-              case 121:
-                return 7;
-                break;
-              case 122:
-                return 7;
-                break;
-              case 123:
-                return 7;
-                break;
-              case 124:
-                return 7;
-                break;
-              case 125:
-                return 7;
-                break;
-              case 126:
-                return 7;
-                break;
-              case 127:
-                return 7;
-                break;
-              case 128:
-                return 7;
-                break;
-              case 129:
-                return 7;
-                break;
-              case 130:
-                return 7;
-                break;
-              case 131:
-                return 7;
-                break;
-              case 132:
-                return 7;
-                break;
-              case 133:
-                return 7;
-                break;
-              case 134:
-                return 7;
-                break;
-              case 135:
-                return 7;
-                break;
-              case 136:
-                return 7;
-                break;
-              case 137:
-                return 7;
-                break;
-              case 138:
-                return 7;
-                break;
-              case 139:
-                return 7;
-                break;
-              case 140:
-                return 7;
-                break;
-              case 141:
-                return 7;
-                break;
-              case 142:
-                return 7;
-                break;
-              case 143:
-                return 7;
-                break;
-              case 144:
-                return 7;
-                break;
-              case 145:
-                return 7;
-                break;
-              case 146:
-                return 7;
-                break;
-              case 147:
-                return 7;
-                break;
-              case 148:
-                return 7;
-                break;
-              case 149:
-                return 7;
-                break;
-              case 150:
-                return 7;
-                break;
-              case 151:
-                return 7;
-                break;
-              case 152:
-                return 7;
-                break;
-              case 153:
-                return 7;
-                break;
-              case 154:
-                return 7;
-                break;
-              case 155:
-                return 7;
-                break;
-              case 156:
-                return 7;
-                break;
-              case 157:
-                return 7;
-                break;
-              case 158:
-                return 7;
-                break;
-              case 159:
-                return 7;
-                break;
-              case 160:
-                return 7;
-                break;
-              case 161:
-                return 7;
-                break;
-              case 162:
-                return 7;
-                break;
-              case 163:
-                return 7;
-                break;
-              case 164:
-                return 7;
-                break;
-              case 165:
-                return 7;
-                break;
-              case 166:
-                return 7;
-                break;
-              case 167:
-                return 7;
-                break;
-              case 168:
-                return 7;
-                break;
-              case 169:
-                return 7;
-                break;
-              case 170:
-                return 7;
-                break;
-              case 171:
-                return 7;
-                break;
-              case 172:
-                return 7;
-                break;
-              case 173:
-                return 7;
-                break;
-              case 174:
-                return 7;
-                break;
-              case 175:
-                return 7;
-                break;
-              case 176:
-                return 7;
-                break;
-              case 177:
-                return 7;
-                break;
-              case 178:
-                return 7;
-                break;
-              case 179:
-                return 7;
-                break;
-              case 180:
-                return 7;
-                break;
-              case 181:
-                return 7;
-                break;
-              case 182:
-                return 7;
-                break;
-              case 183:
-                return 7;
-                break;
-              case 184:
-                return 7;
-                break;
-              case 185:
-                return 7;
-                break;
-              case 186:
-                return 7;
-                break;
-              case 187:
-                return 7;
-                break;
-              case 188:
-                return 7;
-                break;
-              case 189:
-                return 7;
-                break;
-              case 190:
-                return 7;
-                break;
-              case 191:
-                return 7;
-                break;
-              case 192:
-                return 7;
-                break;
-              case 193:
-                return 7;
-                break;
-              case 194:
-                return 7;
-                break;
-              case 195:
-                return 7;
-                break;
-              case 196:
-                return 7;
-                break;
-              case 197:
-                return 7;
-                break;
-              case 198:
-                return 7;
-                break;
-              case 199:
-                return 7;
-                break;
-              case 200:
-                return 7;
-                break;
-              case 201:
-                return 7;
-                break;
-              case 202:
-                return 7;
-                break;
-              case 203:
-                return 7;
-                break;
-              case 204:
-                return 7;
-                break;
-              case 205:
-                return 7;
-                break;
-              case 206:
-                return 7;
-                break;
-              case 207:
-                return 7;
-                break;
-              case 208:
-                return 7;
-                break;
-              case 209:
-                return 7;
-                break;
-              case 210:
-                return 7;
-                break;
-              case 211:
-                return 7;
-                break;
-              case 212:
-                return 7;
-                break;
-              case 213:
-                return 7;
-                break;
-              case 214:
-                return 7;
-                break;
-              case 215:
-                return 7;
-                break;
-              case 216:
-                return 7;
-                break;
-              case 217:
-                return 7;
-                break;
-              case 218:
-                return 7;
-                break;
-              case 219:
-                return 7;
-                break;
-              case 220:
-                return 7;
-                break;
-              case 221:
-                return 7;
-                break;
-              case 222:
-                return 7;
-                break;
-              case 223:
-                return 7;
-                break;
-              case 224:
-                return 7;
-                break;
-              case 225:
-                return 7;
-                break;
-              case 226:
-                return 7;
-                break;
-              case 227:
-                return 7;
-                break;
-              case 228:
-                return 7;
-                break;
-              case 229:
-                return 7;
-                break;
-              case 230:
-                return 7;
-                break;
-              case 231:
-                return 7;
-                break;
-              case 232:
-                return 7;
-                break;
-              case 233:
-                return 7;
-                break;
-              case 234:
-                return 7;
-                break;
-              case 235:
-                return 7;
-                break;
-              case 236:
-                return 7;
-                break;
-              case 237:
-                return 7;
-                break;
-              case 238:
-                return 7;
-                break;
-              case 239:
-                return 7;
-                break;
-              case 240:
-                return 7;
-                break;
-              case 241:
-                return 7;
-                break;
-              case 242:
-                return 7;
-                break;
-              case 243:
-                return 7;
-                break;
-              case 244:
-                return 7;
-                break;
-              case 245:
-                return 7;
-                break;
-              case 246:
-                return 7;
-                break;
-              case 247:
-                return 7;
-                break;
-              case 248:
-                return 7;
-                break;
-              case 249:
-                return 7;
-                break;
-              case 250:
-                return 7;
-                break;
-              case 251:
-                return 7;
-                break;
-              case 252:
-                return 7;
-                break;
-              case 253:
-                return 7;
-                break;
-              case 254:
-                return 7;
-                break;
-              case 255:
-                return 7;
-                break;
-              case 256:
-                return 7;
-                break;
-              case 257:
-                return 7;
-                break;
-              case 258:
-                return 7;
-                break;
-              case 259:
-                return 7;
-                break;
-              case 260:
-                return 7;
-                break;
-              case 261:
-                return 7;
-                break;
-              case 262:
-                return 7;
-                break;
-              case 263:
-                return 7;
-                break;
-              case 264:
-                return 7;
-                break;
-              case 265:
-                return 7;
-                break;
-              case 266:
-                return 7;
-                break;
-              case 267:
-                return 7;
-                break;
-              case 268:
-                return 7;
-                break;
-              case 269:
-                return 7;
-                break;
-              case 270:
-                return 7;
-                break;
-              case 271:
-                return 7;
-                break;
-              case 272:
-                return 7;
-                break;
-              case 273:
-                return 7;
-                break;
-              case 274:
-                return 7;
-                break;
-              case 275:
-                return 7;
-                break;
-              case 276:
-                return 7;
-                break;
-              case 277:
-                return 7;
-                break;
-              case 278:
-                return 7;
-                break;
-              case 279:
-                return 7;
-                break;
-              case 280:
-                return 7;
-                break;
-              case 281:
-                return 7;
-                break;
-              case 282:
-                return 7;
-                break;
-              case 283:
-                return 7;
-                break;
-              case 284:
-                return 7;
-                break;
-              case 285:
-                return 7;
-                break;
-              case 286:
-                return 7;
-                break;
-              case 287:
-                return 7;
-                break;
-              case 288:
-                return 7;
-                break;
-              case 289:
-                return 7;
-                break;
-              case 290:
-                return 7;
-                break;
-              case 291:
-                return 7;
-                break;
-              case 292:
-                return 7;
-                break;
-              case 293:
-                return 7;
-                break;
-              case 294:
-                return 7;
-                break;
-              case 295:
-                return 7;
-                break;
-              case 296:
-                return 7;
-                break;
-              case 297:
-                return 7;
-                break;
-              case 298:
-                return 7;
-                break;
-              case 299:
-                return 7;
-                break;
-              case 300:
-                return 7;
-                break;
-              case 301:
-                return 7;
-                break;
-              case 302:
-                return 7;
-                break;
-              case 303:
-                return 7;
-                break;
-              case 304:
-                return 7;
-                break;
-              case 305:
-                return 7;
-                break;
-              case 306:
-                return 7;
-                break;
-              case 307:
-                return 7;
-                break;
-              case 308:
-                return 7;
-                break;
-              case 309:
-                return 7;
-                break;
-              case 310:
-                return 7;
-                break;
-              case 311:
-                return 7;
-                break;
-              case 312:
-                return 7;
-                break;
-              case 313:
-                return 7;
-                break;
-              case 314:
-                return 7;
-                break;
-              case 315:
-                return 7;
-                break;
-              case 316:
-                return 7;
-                break;
-              case 317:
-                return 7;
-                break;
-              case 318:
-                return 7;
-                break;
-              case 319:
-                return 7;
-                break;
-              case 320:
-                return 7;
-                break;
-              case 321:
-                return 7;
-                break;
-              case 322:
-                return 7;
-                break;
-              case 323:
-                return 7;
-                break;
-              case 324:
-                return 7;
-                break;
-              case 325:
-                return 7;
-                break;
-              case 326:
-                return 7;
-                break;
-              case 327:
-                return 7;
-                break;
-              case 328:
-                return 7;
-                break;
-              case 329:
-                return 7;
-                break;
-              case 330:
-                return 7;
-                break;
-              case 331:
-                return 7;
-                break;
-              case 332:
-                return 7;
-                break;
-              case 333:
-                return 7;
-                break;
-              case 334:
-                return 7;
-                break;
-              case 335:
-                return 7;
-                break;
-              case 336:
-                return 7;
-                break;
-              case 337:
-                return 7;
-                break;
-              case 338:
-                return 7;
-                break;
-              case 339:
-                return 7;
-                break;
-              case 340:
-                return 7;
-                break;
-              case 341:
-                return 7;
-                break;
-              case 342:
-                return 7;
-                break;
-              case 343:
-                return 7;
-                break;
-              case 344:
-                return 7;
-                break;
-              case 345:
-                return 7;
-                break;
-              case 346:
-                return 7;
-                break;
-              case 347:
-                return 7;
-                break;
-              case 348:
-                return 7;
-                break;
-              case 349:
-                return 7;
-                break;
-              case 350:
-                return 7;
-                break;
-              case 351:
-                return 7;
-                break;
-              case 352:
-                return 7;
-                break;
-              case 353:
-                return 7;
-                break;
-              case 354:
-                return 7;
-                break;
-              case 355:
-                return 7;
-                break;
-              case 356:
-                return 7;
-                break;
-              case 357:
-                return 7;
-                break;
-              case 358:
-                return 7;
-                break;
-              case 359:
-                return 7;
-                break;
-              case 360:
-                return 7;
-                break;
-              case 361:
-                return 7;
-                break;
-              case 362:
-                return 7;
-                break;
-              case 363:
-                return 7;
-                break;
-              case 364:
-                return 7;
-                break;
-            }
-          },
-          rules: [/^(?:$)/, /^(?:\s+)/, /^(?:\+)/, /^(?:\()/, /^(?:\))/, /^(?::)/, /^(?:DocumentRef-([0-9A-Za-z-+.]+))/, /^(?:LicenseRef-([0-9A-Za-z-+.]+))/, /^(?:AND)/, /^(?:OR)/, /^(?:WITH)/, /^(?:BSD-3-Clause-No-Nuclear-License-2014)/, /^(?:BSD-3-Clause-No-Nuclear-Warranty)/, /^(?:GPL-2\.0-with-classpath-exception)/, /^(?:GPL-3\.0-with-autoconf-exception)/, /^(?:GPL-2\.0-with-autoconf-exception)/, /^(?:BSD-3-Clause-No-Nuclear-License)/, /^(?:MPL-2\.0-no-copyleft-exception)/, /^(?:GPL-2\.0-with-bison-exception)/, /^(?:GPL-2\.0-with-font-exception)/, /^(?:GPL-2\.0-with-GCC-exception)/, /^(?:CNRI-Python-GPL-Compatible)/, /^(?:GPL-3\.0-with-GCC-exception)/, /^(?:BSD-3-Clause-Attribution)/, /^(?:Classpath-exception-2\.0)/, /^(?:WxWindows-exception-3\.1)/, /^(?:freertos-exception-2\.0)/, /^(?:Autoconf-exception-3\.0)/, /^(?:i2p-gpl-java-exception)/, /^(?:gnu-javamail-exception)/, /^(?:Nokia-Qt-exception-1\.1)/, /^(?:Autoconf-exception-2\.0)/, /^(?:BSD-2-Clause-FreeBSD)/, /^(?:u-boot-exception-2\.0)/, /^(?:zlib-acknowledgement)/, /^(?:Bison-exception-2\.2)/, /^(?:BSD-2-Clause-NetBSD)/, /^(?:CLISP-exception-2\.0)/, /^(?:eCos-exception-2\.0)/, /^(?:BSD-3-Clause-Clear)/, /^(?:Font-exception-2\.0)/, /^(?:FLTK-exception-2\.0)/, /^(?:GCC-exception-2\.0)/, /^(?:Qwt-exception-1\.0)/, /^(?:Libtool-exception)/, /^(?:BSD-3-Clause-LBNL)/, /^(?:GCC-exception-3\.1)/, /^(?:Artistic-1\.0-Perl)/, /^(?:Artistic-1\.0-cl8)/, /^(?:CC-BY-NC-SA-2\.5)/, /^(?:MIT-advertising)/, /^(?:BSD-Source-Code)/, /^(?:CC-BY-NC-SA-4\.0)/, /^(?:LiLiQ-Rplus-1\.1)/, /^(?:CC-BY-NC-SA-3\.0)/, /^(?:BSD-4-Clause-UC)/, /^(?:CC-BY-NC-SA-2\.0)/, /^(?:CC-BY-NC-SA-1\.0)/, /^(?:CC-BY-NC-ND-4\.0)/, /^(?:CC-BY-NC-ND-3\.0)/, /^(?:CC-BY-NC-ND-2\.5)/, /^(?:CC-BY-NC-ND-2\.0)/, /^(?:CC-BY-NC-ND-1\.0)/, /^(?:LZMA-exception)/, /^(?:BitTorrent-1\.1)/, /^(?:CrystalStacker)/, /^(?:FLTK-exception)/, /^(?:SugarCRM-1\.1\.3)/, /^(?:BSD-Protection)/, /^(?:BitTorrent-1\.0)/, /^(?:HaskellReport)/, /^(?:Interbase-1\.0)/, /^(?:StandardML-NJ)/, /^(?:mif-exception)/, /^(?:Frameworx-1\.0)/, /^(?:389-exception)/, /^(?:CC-BY-NC-2\.0)/, /^(?:CC-BY-NC-2\.5)/, /^(?:CC-BY-NC-3\.0)/, /^(?:CC-BY-NC-4\.0)/, /^(?:W3C-19980720)/, /^(?:CC-BY-SA-1\.0)/, /^(?:CC-BY-SA-2\.0)/, /^(?:CC-BY-SA-2\.5)/, /^(?:CC-BY-ND-2\.0)/, /^(?:CC-BY-SA-4\.0)/, /^(?:CC-BY-SA-3\.0)/, /^(?:Artistic-1\.0)/, /^(?:Artistic-2\.0)/, /^(?:CC-BY-ND-2\.5)/, /^(?:CC-BY-ND-3\.0)/, /^(?:CC-BY-ND-4\.0)/, /^(?:CC-BY-ND-1\.0)/, /^(?:BSD-4-Clause)/, /^(?:BSD-3-Clause)/, /^(?:BSD-2-Clause)/, /^(?:CC-BY-NC-1\.0)/, /^(?:bzip2-1\.0\.6)/, /^(?:Unicode-TOU)/, /^(?:CNRI-Jython)/, /^(?:ImageMagick)/, /^(?:Adobe-Glyph)/, /^(?:CUA-OPL-1\.0)/, /^(?:OLDAP-2\.2\.2)/, /^(?:LiLiQ-R-1\.1)/, /^(?:bzip2-1\.0\.5)/, /^(?:LiLiQ-P-1\.1)/, /^(?:OLDAP-2\.0\.1)/, /^(?:OLDAP-2\.2\.1)/, /^(?:CNRI-Python)/, /^(?:XFree86-1\.1)/, /^(?:OSET-PL-2\.1)/, /^(?:Apache-2\.0)/, /^(?:Watcom-1\.0)/, /^(?:PostgreSQL)/, /^(?:Python-2\.0)/, /^(?:RHeCos-1\.1)/, /^(?:EUDatagrid)/, /^(?:Spencer-99)/, /^(?:Intel-ACPI)/, /^(?:CECILL-1\.0)/, /^(?:CECILL-1\.1)/, /^(?:JasPer-2\.0)/, /^(?:CECILL-2\.0)/, /^(?:CECILL-2\.1)/, /^(?:gSOAP-1\.3b)/, /^(?:Spencer-94)/, /^(?:Apache-1\.1)/, /^(?:Spencer-86)/, /^(?:Apache-1\.0)/, /^(?:ClArtistic)/, /^(?:TORQUE-1\.1)/, /^(?:CATOSL-1\.1)/, /^(?:Adobe-2006)/, /^(?:Zimbra-1\.4)/, /^(?:Zimbra-1\.3)/, /^(?:Condor-1\.1)/, /^(?:CC-BY-3\.0)/, /^(?:CC-BY-2\.5)/, /^(?:OLDAP-2\.4)/, /^(?:SGI-B-1\.1)/, /^(?:SISSL-1\.2)/, /^(?:SGI-B-1\.0)/, /^(?:OLDAP-2\.3)/, /^(?:CC-BY-4\.0)/, /^(?:Crossword)/, /^(?:SimPL-2\.0)/, /^(?:OLDAP-2\.2)/, /^(?:OLDAP-2\.1)/, /^(?:ErlPL-1\.1)/, /^(?:LPPL-1\.3a)/, /^(?:LPPL-1\.3c)/, /^(?:OLDAP-2\.0)/, /^(?:Leptonica)/, /^(?:CPOL-1\.02)/, /^(?:OLDAP-1\.4)/, /^(?:OLDAP-1\.3)/, /^(?:CC-BY-2\.0)/, /^(?:Unlicense)/, /^(?:OLDAP-2\.8)/, /^(?:OLDAP-1\.2)/, /^(?:MakeIndex)/, /^(?:OLDAP-2\.7)/, /^(?:OLDAP-1\.1)/, /^(?:Sleepycat)/, /^(?:D-FSL-1\.0)/, /^(?:CC-BY-1\.0)/, /^(?:OLDAP-2\.6)/, /^(?:WXwindows)/, /^(?:NPOSL-3\.0)/, /^(?:FreeImage)/, /^(?:SGI-B-2\.0)/, /^(?:OLDAP-2\.5)/, /^(?:Beerware)/, /^(?:Newsletr)/, /^(?:NBPL-1\.0)/, /^(?:NASA-1\.3)/, /^(?:NLOD-1\.0)/, /^(?:AGPL-1\.0)/, /^(?:OCLC-2\.0)/, /^(?:ODbL-1\.0)/, /^(?:PDDL-1\.0)/, /^(?:Motosoto)/, /^(?:Afmparse)/, /^(?:ANTLR-PD)/, /^(?:LPL-1\.02)/, /^(?:Abstyles)/, /^(?:eCos-2\.0)/, /^(?:APSL-1\.0)/, /^(?:LPPL-1\.2)/, /^(?:LPPL-1\.1)/, /^(?:LPPL-1\.0)/, /^(?:APSL-1\.1)/, /^(?:APSL-2\.0)/, /^(?:Info-ZIP)/, /^(?:Zend-2\.0)/, /^(?:IBM-pibs)/, /^(?:LGPL-2\.0)/, /^(?:LGPL-3\.0)/, /^(?:LGPL-2\.1)/, /^(?:GFDL-1\.3)/, /^(?:PHP-3\.01)/, /^(?:GFDL-1\.2)/, /^(?:GFDL-1\.1)/, /^(?:AGPL-3\.0)/, /^(?:Giftware)/, /^(?:EUPL-1\.1)/, /^(?:RPSL-1\.0)/, /^(?:EUPL-1\.0)/, /^(?:MIT-enna)/, /^(?:CECILL-B)/, /^(?:diffmark)/, /^(?:CECILL-C)/, /^(?:CDDL-1\.0)/, /^(?:Sendmail)/, /^(?:CDDL-1\.1)/, /^(?:CPAL-1\.0)/, /^(?:APSL-1\.2)/, /^(?:NPL-1\.1)/, /^(?:AFL-1\.2)/, /^(?:Caldera)/, /^(?:AFL-2\.0)/, /^(?:FSFULLR)/, /^(?:AFL-2\.1)/, /^(?:VSL-1\.0)/, /^(?:VOSTROM)/, /^(?:UPL-1\.0)/, /^(?:Dotseqn)/, /^(?:CPL-1\.0)/, /^(?:dvipdfm)/, /^(?:EPL-1\.0)/, /^(?:OCCT-PL)/, /^(?:ECL-1\.0)/, /^(?:Latex2e)/, /^(?:ECL-2\.0)/, /^(?:GPL-1\.0)/, /^(?:GPL-2\.0)/, /^(?:GPL-3\.0)/, /^(?:AFL-3\.0)/, /^(?:LAL-1\.2)/, /^(?:LAL-1\.3)/, /^(?:EFL-1\.0)/, /^(?:EFL-2\.0)/, /^(?:gnuplot)/, /^(?:Aladdin)/, /^(?:LPL-1\.0)/, /^(?:libtiff)/, /^(?:Entessa)/, /^(?:AMDPLPA)/, /^(?:IPL-1\.0)/, /^(?:OPL-1\.0)/, /^(?:OSL-1\.0)/, /^(?:OSL-1\.1)/, /^(?:OSL-2\.0)/, /^(?:OSL-2\.1)/, /^(?:OSL-3\.0)/, /^(?:OpenSSL)/, /^(?:ZPL-2\.1)/, /^(?:PHP-3\.0)/, /^(?:ZPL-2\.0)/, /^(?:ZPL-1\.1)/, /^(?:CC0-1\.0)/, /^(?:SPL-1\.0)/, /^(?:psutils)/, /^(?:MPL-1\.0)/, /^(?:QPL-1\.0)/, /^(?:MPL-1\.1)/, /^(?:MPL-2\.0)/, /^(?:APL-1\.0)/, /^(?:RPL-1\.1)/, /^(?:RPL-1\.5)/, /^(?:MIT-CMU)/, /^(?:Multics)/, /^(?:Eurosym)/, /^(?:BSL-1\.0)/, /^(?:MIT-feh)/, /^(?:Saxpath)/, /^(?:Borceux)/, /^(?:OFL-1\.1)/, /^(?:OFL-1\.0)/, /^(?:AFL-1\.1)/, /^(?:YPL-1\.1)/, /^(?:YPL-1\.0)/, /^(?:NPL-1\.0)/, /^(?:iMatix)/, /^(?:mpich2)/, /^(?:APAFML)/, /^(?:Bahyph)/, /^(?:RSA-MD)/, /^(?:psfrag)/, /^(?:Plexus)/, /^(?:eGenix)/, /^(?:Glulxe)/, /^(?:SAX-PD)/, /^(?:Imlib2)/, /^(?:Wsuipa)/, /^(?:LGPLLR)/, /^(?:Libpng)/, /^(?:xinetd)/, /^(?:MITNFA)/, /^(?:NetCDF)/, /^(?:Naumen)/, /^(?:SMPPL)/, /^(?:Nunit)/, /^(?:FSFUL)/, /^(?:GL2PS)/, /^(?:SMLNJ)/, /^(?:Rdisc)/, /^(?:Noweb)/, /^(?:Nokia)/, /^(?:SISSL)/, /^(?:Qhull)/, /^(?:Intel)/, /^(?:Glide)/, /^(?:Xerox)/, /^(?:AMPAS)/, /^(?:WTFPL)/, /^(?:MS-PL)/, /^(?:XSkat)/, /^(?:MS-RL)/, /^(?:MirOS)/, /^(?:RSCPL)/, /^(?:TMate)/, /^(?:OGTSL)/, /^(?:FSFAP)/, /^(?:NCSA)/, /^(?:Zlib)/, /^(?:SCEA)/, /^(?:SNIA)/, /^(?:NGPL)/, /^(?:NOSL)/, /^(?:ADSL)/, /^(?:MTLL)/, /^(?:NLPL)/, /^(?:Ruby)/, /^(?:JSON)/, /^(?:Barr)/, /^(?:0BSD)/, /^(?:Xnet)/, /^(?:Cube)/, /^(?:curl)/, /^(?:DSDP)/, /^(?:Fair)/, /^(?:HPND)/, /^(?:TOSL)/, /^(?:IJG)/, /^(?:SWL)/, /^(?:Vim)/, /^(?:FTL)/, /^(?:ICU)/, /^(?:OML)/, /^(?:NRL)/, /^(?:DOC)/, /^(?:TCL)/, /^(?:W3C)/, /^(?:NTP)/, /^(?:IPA)/, /^(?:ISC)/, /^(?:X11)/, /^(?:AAL)/, /^(?:AML)/, /^(?:xpp)/, /^(?:Zed)/, /^(?:MIT)/, /^(?:Mup)/],
-          conditions: { "INITIAL": { "rules": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364], "inclusive": true } }
-        };
-        return lexer;
-      }();
-      parser.lexer = lexer;
-      function Parser() {
-        this.yy = {};
-      }
-      Parser.prototype = parser;parser.Parser = Parser;
-      return new Parser();
-    }();
-
-    if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
-      exports.parser = spdxparse;
-      exports.Parser = spdxparse.Parser;
-      exports.parse = function () {
-        return spdxparse.parse.apply(spdxparse, arguments);
-      };
-      exports.main = function commonjsMain(args) {
-        if (!args[1]) {
-          console.log('Usage: ' + args[0] + ' FILE');
-          process.exit(1);
-        }
-        var source = require('fs').readFileSync(require('path').normalize(args[1]), "utf8");
-        return exports.parser.parse(source);
-      };
-      if (typeof module !== 'undefined' && require.main === module) {
-        exports.main(process.argv.slice(1));
+    function upgradeGPLs(value) {
+      if (['GPL-1.0', 'LGPL-1.0', 'AGPL-1.0', 'GPL-2.0', 'LGPL-2.0', 'AGPL-2.0', 'LGPL-2.1'].indexOf(value) !== -1) {
+        return value + '-only';
+      } else if (['GPL-3.0', 'LGPL-3.0', 'AGPL-3.0'].indexOf(value) !== -1) {
+        return value + '-or-later';
+      } else {
+        return value;
       }
     }
-  }, { "fs": undefined, "path": undefined }], 69: [function (require, module, exports) {
-    module.exports = ["Glide", "Abstyles", "AFL-1.1", "AFL-1.2", "AFL-2.0", "AFL-2.1", "AFL-3.0", "AMPAS", "APL-1.0", "Adobe-Glyph", "APAFML", "Adobe-2006", "AGPL-1.0", "Afmparse", "Aladdin", "ADSL", "AMDPLPA", "ANTLR-PD", "Apache-1.0", "Apache-1.1", "Apache-2.0", "AML", "APSL-1.0", "APSL-1.1", "APSL-1.2", "APSL-2.0", "Artistic-1.0", "Artistic-1.0-Perl", "Artistic-1.0-cl8", "Artistic-2.0", "AAL", "Bahyph", "Barr", "Beerware", "BitTorrent-1.0", "BitTorrent-1.1", "BSL-1.0", "Borceux", "BSD-2-Clause", "BSD-2-Clause-FreeBSD", "BSD-2-Clause-NetBSD", "BSD-3-Clause", "BSD-3-Clause-Clear", "BSD-4-Clause", "BSD-Protection", "BSD-Source-Code", "BSD-3-Clause-Attribution", "0BSD", "BSD-4-Clause-UC", "bzip2-1.0.5", "bzip2-1.0.6", "Caldera", "CECILL-1.0", "CECILL-1.1", "CECILL-2.0", "CECILL-2.1", "CECILL-B", "CECILL-C", "ClArtistic", "MIT-CMU", "CNRI-Jython", "CNRI-Python", "CNRI-Python-GPL-Compatible", "CPOL-1.02", "CDDL-1.0", "CDDL-1.1", "CPAL-1.0", "CPL-1.0", "CATOSL-1.1", "Condor-1.1", "CC-BY-1.0", "CC-BY-2.0", "CC-BY-2.5", "CC-BY-3.0", "CC-BY-4.0", "CC-BY-ND-1.0", "CC-BY-ND-2.0", "CC-BY-ND-2.5", "CC-BY-ND-3.0", "CC-BY-ND-4.0", "CC-BY-NC-1.0", "CC-BY-NC-2.0", "CC-BY-NC-2.5", "CC-BY-NC-3.0", "CC-BY-NC-4.0", "CC-BY-NC-ND-1.0", "CC-BY-NC-ND-2.0", "CC-BY-NC-ND-2.5", "CC-BY-NC-ND-3.0", "CC-BY-NC-ND-4.0", "CC-BY-NC-SA-1.0", "CC-BY-NC-SA-2.0", "CC-BY-NC-SA-2.5", "CC-BY-NC-SA-3.0", "CC-BY-NC-SA-4.0", "CC-BY-SA-1.0", "CC-BY-SA-2.0", "CC-BY-SA-2.5", "CC-BY-SA-3.0", "CC-BY-SA-4.0", "CC0-1.0", "Crossword", "CrystalStacker", "CUA-OPL-1.0", "Cube", "curl", "D-FSL-1.0", "diffmark", "WTFPL", "DOC", "Dotseqn", "DSDP", "dvipdfm", "EPL-1.0", "ECL-1.0", "ECL-2.0", "eGenix", "EFL-1.0", "EFL-2.0", "MIT-advertising", "MIT-enna", "Entessa", "ErlPL-1.1", "EUDatagrid", "EUPL-1.0", "EUPL-1.1", "Eurosym", "Fair", "MIT-feh", "Frameworx-1.0", "FreeImage", "FTL", "FSFAP", "FSFUL", "FSFULLR", "Giftware", "GL2PS", "Glulxe", "AGPL-3.0", "GFDL-1.1", "GFDL-1.2", "GFDL-1.3", "GPL-1.0", "GPL-2.0", "GPL-3.0", "LGPL-2.1", "LGPL-3.0", "LGPL-2.0", "gnuplot", "gSOAP-1.3b", "HaskellReport", "HPND", "IBM-pibs", "IPL-1.0", "ICU", "ImageMagick", "iMatix", "Imlib2", "IJG", "Info-ZIP", "Intel-ACPI", "Intel", "Interbase-1.0", "IPA", "ISC", "JasPer-2.0", "JSON", "LPPL-1.0", "LPPL-1.1", "LPPL-1.2", "LPPL-1.3a", "LPPL-1.3c", "Latex2e", "BSD-3-Clause-LBNL", "Leptonica", "LGPLLR", "Libpng", "libtiff", "LAL-1.2", "LAL-1.3", "LiLiQ-P-1.1", "LiLiQ-Rplus-1.1", "LiLiQ-R-1.1", "LPL-1.02", "LPL-1.0", "MakeIndex", "MTLL", "MS-PL", "MS-RL", "MirOS", "MITNFA", "MIT", "Motosoto", "MPL-1.0", "MPL-1.1", "MPL-2.0", "MPL-2.0-no-copyleft-exception", "mpich2", "Multics", "Mup", "NASA-1.3", "Naumen", "NBPL-1.0", "NetCDF", "NGPL", "NOSL", "NPL-1.0", "NPL-1.1", "Newsletr", "NLPL", "Nokia", "NPOSL-3.0", "NLOD-1.0", "Noweb", "NRL", "NTP", "Nunit", "OCLC-2.0", "ODbL-1.0", "PDDL-1.0", "OCCT-PL", "OGTSL", "OLDAP-2.2.2", "OLDAP-1.1", "OLDAP-1.2", "OLDAP-1.3", "OLDAP-1.4", "OLDAP-2.0", "OLDAP-2.0.1", "OLDAP-2.1", "OLDAP-2.2", "OLDAP-2.2.1", "OLDAP-2.3", "OLDAP-2.4", "OLDAP-2.5", "OLDAP-2.6", "OLDAP-2.7", "OLDAP-2.8", "OML", "OPL-1.0", "OSL-1.0", "OSL-1.1", "OSL-2.0", "OSL-2.1", "OSL-3.0", "OpenSSL", "OSET-PL-2.1", "PHP-3.0", "PHP-3.01", "Plexus", "PostgreSQL", "psfrag", "psutils", "Python-2.0", "QPL-1.0", "Qhull", "Rdisc", "RPSL-1.0", "RPL-1.1", "RPL-1.5", "RHeCos-1.1", "RSCPL", "RSA-MD", "Ruby", "SAX-PD", "Saxpath", "SCEA", "SWL", "SMPPL", "Sendmail", "SGI-B-1.0", "SGI-B-1.1", "SGI-B-2.0", "OFL-1.0", "OFL-1.1", "SimPL-2.0", "Sleepycat", "SNIA", "Spencer-86", "Spencer-94", "Spencer-99", "SMLNJ", "SugarCRM-1.1.3", "SISSL", "SISSL-1.2", "SPL-1.0", "Watcom-1.0", "TCL", "Unlicense", "TMate", "TORQUE-1.1", "TOSL", "Unicode-TOU", "UPL-1.0", "NCSA", "Vim", "VOSTROM", "VSL-1.0", "W3C-19980720", "W3C", "Wsuipa", "Xnet", "X11", "Xerox", "XFree86-1.1", "xinetd", "xpp", "XSkat", "YPL-1.0", "YPL-1.1", "Zed", "Zend-2.0", "Zimbra-1.3", "Zimbra-1.4", "Zlib", "zlib-acknowledgement", "ZPL-1.1", "ZPL-2.0", "ZPL-2.1", "BSD-3-Clause-No-Nuclear-License", "BSD-3-Clause-No-Nuclear-Warranty", "BSD-3-Clause-No-Nuclear-License-2014", "eCos-2.0", "GPL-2.0-with-autoconf-exception", "GPL-2.0-with-bison-exception", "GPL-2.0-with-classpath-exception", "GPL-2.0-with-font-exception", "GPL-2.0-with-GCC-exception", "GPL-3.0-with-autoconf-exception", "GPL-3.0-with-GCC-exception", "StandardML-NJ", "WXwindows"];
-  }, {}], 70: [function (require, module, exports) {
+  }, { "spdx-expression-parse": 69, "spdx-license-ids": 73 }], 68: [function (require, module, exports) {
+    module.exports = ["389-exception", "Autoconf-exception-2.0", "Autoconf-exception-3.0", "Bison-exception-2.2", "Bootloader-exception", "CLISP-exception-2.0", "Classpath-exception-2.0", "DigiRule-FOSS-exception", "FLTK-exception", "Fawkes-Runtime-exception", "Font-exception-2.0", "GCC-exception-2.0", "GCC-exception-3.1", "LZMA-exception", "Libtool-exception", "Linux-syscall-note", "Nokia-Qt-exception-1.1", "OCCT-exception-1.0", "Qwt-exception-1.0", "WxWindows-exception-3.1", "eCos-exception-2.0", "freertos-exception-2.0", "gnu-javamail-exception", "i2p-gpl-java-exception", "mif-exception", "openvpn-openssl-exception", "u-boot-exception-2.0"];
+  }, {}], 69: [function (require, module, exports) {
+    'use strict';
+
+    var scan = require('./scan');
+    var parse = require('./parse');
+
+    module.exports = function (source) {
+      return parse(scan(source));
+    };
+  }, { "./parse": 70, "./scan": 71 }], 70: [function (require, module, exports) {
+    'use strict';
+
+    // The ABNF grammar in the spec is totally ambiguous.
+    //
+    // This parser follows the operator precedence defined in the
+    // `Order of Precedence and Parentheses` section.
+
+    module.exports = function (tokens) {
+      var index = 0;
+
+      function hasMore() {
+        return index < tokens.length;
+      }
+
+      function token() {
+        return hasMore() ? tokens[index] : null;
+      }
+
+      function next() {
+        if (!hasMore()) {
+          throw new Error();
+        }
+        index++;
+      }
+
+      function parseOperator(operator) {
+        var t = token();
+        if (t && t.type === 'OPERATOR' && operator === t.string) {
+          next();
+          return t.string;
+        }
+      }
+
+      function parseWith() {
+        if (parseOperator('WITH')) {
+          var t = token();
+          if (t && t.type === 'EXCEPTION') {
+            next();
+            return t.string;
+          }
+          throw new Error('Expected exception after `WITH`');
+        }
+      }
+
+      function parseLicenseRef() {
+        // TODO: Actually, everything is concatenated into one string
+        // for backward-compatibility but it could be better to return
+        // a nice structure.
+        var begin = index;
+        var string = '';
+        var t = token();
+        if (t.type === 'DOCUMENTREF') {
+          next();
+          string += 'DocumentRef-' + t.string + ':';
+          if (!parseOperator(':')) {
+            throw new Error('Expected `:` after `DocumentRef-...`');
+          }
+        }
+        t = token();
+        if (t.type === 'LICENSEREF') {
+          next();
+          string += 'LicenseRef-' + t.string;
+          return { license: string };
+        }
+        index = begin;
+      }
+
+      function parseLicense() {
+        var t = token();
+        if (t && t.type === 'LICENSE') {
+          next();
+          var node = { license: t.string };
+          if (parseOperator('+')) {
+            node.plus = true;
+          }
+          var exception = parseWith();
+          if (exception) {
+            node.exception = exception;
+          }
+          return node;
+        }
+      }
+
+      function parseParenthesizedExpression() {
+        var left = parseOperator('(');
+        if (!left) {
+          return;
+        }
+
+        var expr = parseExpression();
+
+        if (!parseOperator(')')) {
+          throw new Error('Expected `)`');
+        }
+
+        return expr;
+      }
+
+      function parseAtom() {
+        return parseParenthesizedExpression() || parseLicenseRef() || parseLicense();
+      }
+
+      function makeBinaryOpParser(operator, nextParser) {
+        return function parseBinaryOp() {
+          var left = nextParser();
+          if (!left) {
+            return;
+          }
+
+          if (!parseOperator(operator)) {
+            return left;
+          }
+
+          var right = parseBinaryOp();
+          if (!right) {
+            throw new Error('Expected expression');
+          }
+          return {
+            left: left,
+            conjunction: operator.toLowerCase(),
+            right: right
+          };
+        };
+      }
+
+      var parseAnd = makeBinaryOpParser('AND', parseAtom);
+      var parseExpression = makeBinaryOpParser('OR', parseAnd);
+
+      var node = parseExpression();
+      if (!node || hasMore()) {
+        throw new Error('Syntax error');
+      }
+      return node;
+    };
+  }, {}], 71: [function (require, module, exports) {
+    'use strict';
+
+    var licenses = [].concat(require('spdx-license-ids')).concat(require('spdx-license-ids/deprecated'));
+    var exceptions = require('spdx-exceptions');
+
+    module.exports = function (source) {
+      var index = 0;
+
+      function hasMore() {
+        return index < source.length;
+      }
+
+      // `value` can be a regexp or a string.
+      // If it is recognized, the matching source string is returned and
+      // the index is incremented. Otherwise `undefined` is returned.
+      function read(value) {
+        if (value instanceof RegExp) {
+          var chars = source.slice(index);
+          var match = chars.match(value);
+          if (match) {
+            index += match[0].length;
+            return match[0];
+          }
+        } else {
+          if (source.indexOf(value, index) === index) {
+            index += value.length;
+            return value;
+          }
+        }
+      }
+
+      function skipWhitespace() {
+        read(/[ ]*/);
+      }
+
+      function operator() {
+        var string;
+        var possibilities = ['WITH', 'AND', 'OR', '(', ')', ':', '+'];
+        for (var i = 0; i < possibilities.length; i++) {
+          string = read(possibilities[i]);
+          if (string) {
+            break;
+          }
+        }
+
+        if (string === '+' && index > 1 && source[index - 2] === ' ') {
+          throw new Error('Space before `+`');
+        }
+
+        return string && {
+          type: 'OPERATOR',
+          string: string
+        };
+      }
+
+      function idstring() {
+        return read(/[A-Za-z0-9-.]+/);
+      }
+
+      function expectIdstring() {
+        var string = idstring();
+        if (!string) {
+          throw new Error('Expected idstring at offset ' + index);
+        }
+        return string;
+      }
+
+      function documentRef() {
+        if (read('DocumentRef-')) {
+          var string = expectIdstring();
+          return { type: 'DOCUMENTREF', string: string };
+        }
+      }
+
+      function licenseRef() {
+        if (read('LicenseRef-')) {
+          var string = expectIdstring();
+          return { type: 'LICENSEREF', string: string };
+        }
+      }
+
+      function identifier() {
+        var begin = index;
+        var string = idstring();
+
+        if (licenses.indexOf(string) !== -1) {
+          return {
+            type: 'LICENSE',
+            string: string
+          };
+        } else if (exceptions.indexOf(string) !== -1) {
+          return {
+            type: 'EXCEPTION',
+            string: string
+          };
+        }
+
+        index = begin;
+      }
+
+      // Tries to read the next token. Returns `undefined` if no token is
+      // recognized.
+      function parseToken() {
+        // Ordering matters
+        return operator() || documentRef() || licenseRef() || identifier();
+      }
+
+      var tokens = [];
+      while (hasMore()) {
+        skipWhitespace();
+        if (!hasMore()) {
+          break;
+        }
+
+        var token = parseToken();
+        if (!token) {
+          throw new Error('Unexpected `' + source[index] + '` at offset ' + index);
+        }
+
+        tokens.push(token);
+      }
+      return tokens;
+    };
+  }, { "spdx-exceptions": 68, "spdx-license-ids": 73, "spdx-license-ids/deprecated": 72 }], 72: [function (require, module, exports) {
+    module.exports = ["AGPL-3.0", "eCos-2.0", "GFDL-1.1", "GFDL-1.2", "GFDL-1.3", "GPL-1.0", "GPL-2.0-with-autoconf-exception", "GPL-2.0-with-bison-exception", "GPL-2.0-with-classpath-exception", "GPL-2.0-with-font-exception", "GPL-2.0-with-GCC-exception", "GPL-2.0", "GPL-3.0-with-autoconf-exception", "GPL-3.0-with-GCC-exception", "GPL-3.0", "LGPL-2.0", "LGPL-2.1", "LGPL-3.0", "Nunit", "StandardML-NJ", "wxWindows"];
+  }, {}], 73: [function (require, module, exports) {
+    module.exports = ["0BSD", "AAL", "Abstyles", "Adobe-2006", "Adobe-Glyph", "ADSL", "AFL-1.1", "AFL-1.2", "AFL-2.0", "AFL-2.1", "AFL-3.0", "Afmparse", "AGPL-1.0", "AGPL-3.0-only", "AGPL-3.0-or-later", "Aladdin", "AMDPLPA", "AML", "AMPAS", "ANTLR-PD", "Apache-1.0", "Apache-1.1", "Apache-2.0", "APAFML", "APL-1.0", "APSL-1.0", "APSL-1.1", "APSL-1.2", "APSL-2.0", "Artistic-1.0-cl8", "Artistic-1.0-Perl", "Artistic-1.0", "Artistic-2.0", "Bahyph", "Barr", "Beerware", "BitTorrent-1.0", "BitTorrent-1.1", "Borceux", "BSD-1-Clause", "BSD-2-Clause-FreeBSD", "BSD-2-Clause-NetBSD", "BSD-2-Clause-Patent", "BSD-2-Clause", "BSD-3-Clause-Attribution", "BSD-3-Clause-Clear", "BSD-3-Clause-LBNL", "BSD-3-Clause-No-Nuclear-License-2014", "BSD-3-Clause-No-Nuclear-License", "BSD-3-Clause-No-Nuclear-Warranty", "BSD-3-Clause", "BSD-4-Clause-UC", "BSD-4-Clause", "BSD-Protection", "BSD-Source-Code", "BSL-1.0", "bzip2-1.0.5", "bzip2-1.0.6", "Caldera", "CATOSL-1.1", "CC-BY-1.0", "CC-BY-2.0", "CC-BY-2.5", "CC-BY-3.0", "CC-BY-4.0", "CC-BY-NC-1.0", "CC-BY-NC-2.0", "CC-BY-NC-2.5", "CC-BY-NC-3.0", "CC-BY-NC-4.0", "CC-BY-NC-ND-1.0", "CC-BY-NC-ND-2.0", "CC-BY-NC-ND-2.5", "CC-BY-NC-ND-3.0", "CC-BY-NC-ND-4.0", "CC-BY-NC-SA-1.0", "CC-BY-NC-SA-2.0", "CC-BY-NC-SA-2.5", "CC-BY-NC-SA-3.0", "CC-BY-NC-SA-4.0", "CC-BY-ND-1.0", "CC-BY-ND-2.0", "CC-BY-ND-2.5", "CC-BY-ND-3.0", "CC-BY-ND-4.0", "CC-BY-SA-1.0", "CC-BY-SA-2.0", "CC-BY-SA-2.5", "CC-BY-SA-3.0", "CC-BY-SA-4.0", "CC0-1.0", "CDDL-1.0", "CDDL-1.1", "CDLA-Permissive-1.0", "CDLA-Sharing-1.0", "CECILL-1.0", "CECILL-1.1", "CECILL-2.0", "CECILL-2.1", "CECILL-B", "CECILL-C", "ClArtistic", "CNRI-Jython", "CNRI-Python-GPL-Compatible", "CNRI-Python", "Condor-1.1", "CPAL-1.0", "CPL-1.0", "CPOL-1.02", "Crossword", "CrystalStacker", "CUA-OPL-1.0", "Cube", "curl", "D-FSL-1.0", "diffmark", "DOC", "Dotseqn", "DSDP", "dvipdfm", "ECL-1.0", "ECL-2.0", "EFL-1.0", "EFL-2.0", "eGenix", "Entessa", "EPL-1.0", "EPL-2.0", "ErlPL-1.1", "EUDatagrid", "EUPL-1.0", "EUPL-1.1", "EUPL-1.2", "Eurosym", "Fair", "Frameworx-1.0", "FreeImage", "FSFAP", "FSFUL", "FSFULLR", "FTL", "GFDL-1.1-only", "GFDL-1.1-or-later", "GFDL-1.2-only", "GFDL-1.2-or-later", "GFDL-1.3-only", "GFDL-1.3-or-later", "Giftware", "GL2PS", "Glide", "Glulxe", "gnuplot", "GPL-1.0-only", "GPL-1.0-or-later", "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later", "gSOAP-1.3b", "HaskellReport", "HPND", "IBM-pibs", "ICU", "IJG", "ImageMagick", "iMatix", "Imlib2", "Info-ZIP", "Intel-ACPI", "Intel", "Interbase-1.0", "IPA", "IPL-1.0", "ISC", "JasPer-2.0", "JSON", "LAL-1.2", "LAL-1.3", "Latex2e", "Leptonica", "LGPL-2.0-only", "LGPL-2.0-or-later", "LGPL-2.1-only", "LGPL-2.1-or-later", "LGPL-3.0-only", "LGPL-3.0-or-later", "LGPLLR", "Libpng", "libtiff", "LiLiQ-P-1.1", "LiLiQ-R-1.1", "LiLiQ-Rplus-1.1", "LPL-1.0", "LPL-1.02", "LPPL-1.0", "LPPL-1.1", "LPPL-1.2", "LPPL-1.3a", "LPPL-1.3c", "MakeIndex", "MirOS", "MIT-advertising", "MIT-CMU", "MIT-enna", "MIT-feh", "MIT", "MITNFA", "Motosoto", "mpich2", "MPL-1.0", "MPL-1.1", "MPL-2.0-no-copyleft-exception", "MPL-2.0", "MS-PL", "MS-RL", "MTLL", "Multics", "Mup", "NASA-1.3", "Naumen", "NBPL-1.0", "NCSA", "Net-SNMP", "NetCDF", "Newsletr", "NGPL", "NLOD-1.0", "NLPL", "Nokia", "NOSL", "Noweb", "NPL-1.0", "NPL-1.1", "NPOSL-3.0", "NRL", "NTP", "OCCT-PL", "OCLC-2.0", "ODbL-1.0", "OFL-1.0", "OFL-1.1", "OGTSL", "OLDAP-1.1", "OLDAP-1.2", "OLDAP-1.3", "OLDAP-1.4", "OLDAP-2.0.1", "OLDAP-2.0", "OLDAP-2.1", "OLDAP-2.2.1", "OLDAP-2.2.2", "OLDAP-2.2", "OLDAP-2.3", "OLDAP-2.4", "OLDAP-2.5", "OLDAP-2.6", "OLDAP-2.7", "OLDAP-2.8", "OML", "OpenSSL", "OPL-1.0", "OSET-PL-2.1", "OSL-1.0", "OSL-1.1", "OSL-2.0", "OSL-2.1", "OSL-3.0", "PDDL-1.0", "PHP-3.0", "PHP-3.01", "Plexus", "PostgreSQL", "psfrag", "psutils", "Python-2.0", "Qhull", "QPL-1.0", "Rdisc", "RHeCos-1.1", "RPL-1.1", "RPL-1.5", "RPSL-1.0", "RSA-MD", "RSCPL", "Ruby", "SAX-PD", "Saxpath", "SCEA", "Sendmail", "SGI-B-1.0", "SGI-B-1.1", "SGI-B-2.0", "SimPL-2.0", "SISSL-1.2", "SISSL", "Sleepycat", "SMLNJ", "SMPPL", "SNIA", "Spencer-86", "Spencer-94", "Spencer-99", "SPL-1.0", "SugarCRM-1.1.3", "SWL", "TCL", "TCP-wrappers", "TMate", "TORQUE-1.1", "TOSL", "Unicode-DFS-2015", "Unicode-DFS-2016", "Unicode-TOU", "Unlicense", "UPL-1.0", "Vim", "VOSTROM", "VSL-1.0", "W3C-19980720", "W3C-20150513", "W3C", "Watcom-1.0", "Wsuipa", "WTFPL", "X11", "Xerox", "XFree86-1.1", "xinetd", "Xnet", "xpp", "XSkat", "YPL-1.0", "YPL-1.1", "Zed", "Zend-2.0", "Zimbra-1.3", "Zimbra-1.4", "zlib-acknowledgement", "Zlib", "ZPL-1.1", "ZPL-2.0", "ZPL-2.1"];
+  }, {}], 74: [function (require, module, exports) {
     'use strict';
 
     var stripAnsi = require('strip-ansi');
@@ -10495,7 +9170,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return width;
     };
-  }, { "code-point-at": 9, "is-fullwidth-code-point": 36, "strip-ansi": 71 }], 71: [function (require, module, exports) {
+  }, { "code-point-at": 10, "is-fullwidth-code-point": 37, "strip-ansi": 75 }], 75: [function (require, module, exports) {
     'use strict';
 
     var ansiRegex = require('ansi-regex')();
@@ -10503,7 +9178,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports = function (str) {
       return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
     };
-  }, { "ansi-regex": 1 }], 72: [function (require, module, exports) {
+  }, { "ansi-regex": 1 }], 76: [function (require, module, exports) {
     'use strict';
 
     var isUtf8 = require('is-utf8');
@@ -10521,54 +9196,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return x;
     };
-  }, { "is-utf8": 37 }], 73: [function (require, module, exports) {
-    'use strict';
-
-    var argv = process.argv;
-
-    var terminator = argv.indexOf('--');
-    var hasFlag = function hasFlag(flag) {
-      flag = '--' + flag;
-      var pos = argv.indexOf(flag);
-      return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
-    };
-
-    module.exports = function () {
-      if ('FORCE_COLOR' in process.env) {
-        return true;
-      }
-
-      if (hasFlag('no-color') || hasFlag('no-colors') || hasFlag('color=false')) {
-        return false;
-      }
-
-      if (hasFlag('color') || hasFlag('colors') || hasFlag('color=true') || hasFlag('color=always')) {
-        return true;
-      }
-
-      if (process.stdout && !process.stdout.isTTY) {
-        return false;
-      }
-
-      if (process.platform === 'win32') {
-        return true;
-      }
-
-      if ('COLORTERM' in process.env) {
-        return true;
-      }
-
-      if (process.env.TERM === 'dumb') {
-        return false;
-      }
-
-      if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
-        return true;
-      }
-
-      return false;
-    }();
-  }, {}], 74: [function (require, module, exports) {
+  }, { "is-utf8": 38 }], 77: [function (require, module, exports) {
     var parse = require('spdx-expression-parse');
     var correct = require('spdx-correct');
 
@@ -10637,7 +9265,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         };
       }
     };
-  }, { "spdx-correct": 66, "spdx-expression-parse": 67 }], 75: [function (require, module, exports) {
+  }, { "spdx-correct": 67, "spdx-expression-parse": 69 }], 78: [function (require, module, exports) {
     'use strict';
 
     module.exports = function whichModule(exported) {
@@ -10647,7 +9275,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       return null;
     };
-  }, {}], 76: [function (require, module, exports) {
+  }, {}], 79: [function (require, module, exports) {
     'use strict';
 
     var stringWidth = require('string-width');
@@ -10814,7 +9442,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return exec(substr, cols, opts);
       }).join('\n');
     };
-  }, { "string-width": 70, "strip-ansi": 71 }], 77: [function (require, module, exports) {
+  }, { "string-width": 74, "strip-ansi": 75 }], 80: [function (require, module, exports) {
     // Returns a wrapper function that returns a wrapped callback
     // The wrapper function should do some stuff, and return a
     // presumably different callback function.
@@ -10847,7 +9475,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return ret;
       }
     }
-  }, {}], 78: [function (require, module, exports) {
+  }, {}], 81: [function (require, module, exports) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -11018,7 +9646,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return y18n;
     };
-  }, { "fs": undefined, "path": undefined, "util": undefined }], 79: [function (require, module, exports) {
+  }, { "fs": undefined, "path": undefined, "util": undefined }], 82: [function (require, module, exports) {
     var camelCase = require('camelcase');
     var path = require('path');
     var tokenizeArgString = require('./lib/tokenize-arg-string');
@@ -11744,7 +10372,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     module.exports = Parser;
-  }, { "./lib/tokenize-arg-string": 80, "camelcase": 6, "path": undefined, "util": undefined }], 80: [function (require, module, exports) {
+  }, { "./lib/tokenize-arg-string": 83, "camelcase": 6, "path": undefined, "util": undefined }], 83: [function (require, module, exports) {
     // take an un-split argv string and tokenize it.
     module.exports = function (argString) {
       if (Array.isArray(argString)) return argString;
@@ -11779,7 +10407,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return args;
     };
-  }, {}], 81: [function (require, module, exports) {
+  }, {}], 84: [function (require, module, exports) {
     // classic singleton yargs API, to use yargs
     // without running as a singleton do:
     // require('yargs/yargs')(process.argv.slice(2))
@@ -11811,7 +10439,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       });
     }
-  }, { "./yargs": 92 }], 82: [function (require, module, exports) {
+  }, { "./yargs": 95 }], 85: [function (require, module, exports) {
     var fs = require('fs');
     var path = require('path');
     var assign = require('./assign');
@@ -11853,7 +10481,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 
     module.exports = applyExtends;
-  }, { "./assign": 84, "./yerror": 91, "fs": undefined, "path": undefined }], 83: [function (require, module, exports) {
+  }, { "./assign": 87, "./yerror": 94, "fs": undefined, "path": undefined }], 86: [function (require, module, exports) {
     var command = require('./command')();
     var YError = require('./yerror');
 
@@ -11924,7 +10552,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     function argumentTypeError(observedType, allowedTypes, position, optional) {
       throw new YError('Invalid ' + (positionName[position] || 'manyith') + ' argument.' + ' Expected ' + allowedTypes.join(' or ') + ' but received ' + observedType + '.');
     }
-  }, { "./command": 85, "./yerror": 91 }], 84: [function (require, module, exports) {
+  }, { "./command": 88, "./yerror": 94 }], 87: [function (require, module, exports) {
     // lazy Object.assign logic that only works for merging
     // two objects; eventually we should replace this with Object.assign.
     module.exports = function assign(defaults, configuration) {
@@ -11940,7 +10568,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return o;
     };
-  }, {}], 85: [function (require, module, exports) {
+  }, {}], 88: [function (require, module, exports) {
     var path = require('path');
     var inspect = require('util').inspect;
     var camelCase = require('camelcase');
@@ -12273,7 +10901,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return self;
     };
-  }, { "camelcase": 6, "path": undefined, "require-directory": 62, "util": undefined, "which-module": 75 }], 86: [function (require, module, exports) {
+  }, { "camelcase": 6, "path": undefined, "require-directory": 63, "util": undefined, "which-module": 78 }], 89: [function (require, module, exports) {
     (function (__dirname) {
       var fs = require('fs');
       var path = require('path');
@@ -12380,7 +11008,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return self;
       };
     }).call(this, "/Users/mrw/git/rr/node_modules/yargs/lib");
-  }, { "fs": undefined, "path": undefined }], 87: [function (require, module, exports) {
+  }, { "fs": undefined, "path": undefined }], 90: [function (require, module, exports) {
     /*
     Copyright (c) 2011 Andrei Mackenzie
     
@@ -12428,7 +11056,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return matrix[b.length][a.length];
     };
-  }, {}], 88: [function (require, module, exports) {
+  }, {}], 91: [function (require, module, exports) {
     module.exports = function (original, filter) {
       var obj = {};
       filter = filter || function (k, v) {
@@ -12441,7 +11069,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       return obj;
     };
-  }, {}], 89: [function (require, module, exports) {
+  }, {}], 92: [function (require, module, exports) {
     // this file handles outputting usage instructions,
     // failures, etc. keeps logging in one place.
     var stringWidth = require('string-width');
@@ -12902,7 +11530,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return self;
     };
-  }, { "./obj-filter": 88, "./yerror": 91, "cliui": 8, "decamelize": 11, "set-blocking": 65, "string-width": 70 }], 90: [function (require, module, exports) {
+  }, { "./obj-filter": 91, "./yerror": 94, "cliui": 9, "decamelize": 12, "set-blocking": 66, "string-width": 74 }], 93: [function (require, module, exports) {
     var objFilter = require('./obj-filter');
 
     // validation-type-stuff, missing params,
@@ -13233,7 +11861,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return self;
     };
-  }, { "./levenshtein": 87, "./obj-filter": 88 }], 91: [function (require, module, exports) {
+  }, { "./levenshtein": 90, "./obj-filter": 91 }], 94: [function (require, module, exports) {
     function YError(msg) {
       this.name = 'YError';
       this.message = msg || 'yargs error';
@@ -13244,7 +11872,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     YError.prototype.constructor = YError;
 
     module.exports = YError;
-  }, {}], 92: [function (require, module, exports) {
+  }, {}], 95: [function (require, module, exports) {
     (function (__dirname) {
       var argsert = require('./lib/argsert');
       var assign = require('./lib/assign');
@@ -14360,8 +12988,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return path.relative(base, dir);
       }
     }).call(this, "/Users/mrw/git/rr/node_modules/yargs");
-  }, { "./lib/apply-extends": 82, "./lib/argsert": 83, "./lib/assign": 84, "./lib/command": 85, "./lib/completion": 86, "./lib/obj-filter": 88, "./lib/usage": 89, "./lib/validation": 90, "./lib/yerror": 91, "get-caller-file": 17, "os-locale": 50, "path": undefined, "read-pkg-up": 60, "require-main-filename": 63, "set-blocking": 65, "y18n": 78, "yargs-parser": 79 }], 93: [function (require, module, exports) {
-
+  }, { "./lib/apply-extends": 85, "./lib/argsert": 86, "./lib/assign": 87, "./lib/command": 88, "./lib/completion": 89, "./lib/obj-filter": 91, "./lib/usage": 92, "./lib/validation": 93, "./lib/yerror": 94, "get-caller-file": 18, "os-locale": 51, "path": undefined, "read-pkg-up": 61, "require-main-filename": 64, "set-blocking": 66, "y18n": 81, "yargs-parser": 82 }], 96: [function (require, module, exports) {
     // CLI interface for rexreplace
 
     var rexreplace = require('./core');
@@ -14382,63 +13009,64 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       replacement = _process$argv$splice2[1];
     }
 
-    var yargs = require('yargs').strict().usage('RexReplace ' + rexreplace.version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' + '> rexreplace pattern replacement [fileGlob|option]+').example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'").example('').example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'").example('').example("> rexreplace '(f?(o))o(.*)' '$3$1\u20AC2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper").version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version).alias('v', 'version').boolean('V').describe('V', "More chatty output").alias('V', 'verbose')
+    var yargs = require('yargs').strict().usage('RexReplace ' + rexreplace.version + ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' + '> rexreplace pattern replacement [fileGlob|option]+').example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'").example('').example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'").example('').example("> rexreplace '(f?(o))o(.*)' '$3$1\u20AC2' myfile.md", "'foobar' in myfile.md will become 'barfoo'").example('').example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper").version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version).alias('v', 'version').boolean('V').describe('V', 'More chatty output').alias('V', 'verbose')
     //.conflicts('V', 'q')
     //.conflicts('V', 'Q')
 
-
-    .boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('G').describe('G', 'Void global search (work only with first the match).').alias('G', 'void-global').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files/piped data.').boolean('q').describe('q', "Only display errors (no other info)").alias('q', 'quiet').boolean('Q').describe('Q', "Never display errors or info").alias('Q', 'quiet-total').boolean('H').describe('H', "Halt on first error").alias('H', 'halt').default('H', false).boolean('d').describe('d', "Print debug info").alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters").alias('€', 'void-euro').boolean('o').describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.').alias('o', 'output')
+    .boolean('I').describe('I', 'Void case insensitive search pattern.').alias('I', 'void-ignore-case').boolean('G').describe('G', 'Void global search (work only with first the match).').alias('G', 'void-global').boolean('M').describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.').alias('M', 'void-multiline').boolean('u').describe('u', 'Treat pattern as a sequence of unicode code points.').alias('u', 'unicode').default('e', 'utf8').alias('e', 'encoding').describe('e', 'Encoding of files/piped data.').boolean('q').describe('q', 'Only display errors (no other info)').alias('q', 'quiet').boolean('Q').describe('Q', 'Never display errors or info').alias('Q', 'quiet-total').boolean('H').describe('H', 'Halt on first error').alias('H', 'halt').default('H', false).boolean('d').describe('d', 'Print debug info').alias('d', 'debug').boolean('€').describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters").alias('€', 'void-euro').boolean('o').describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.').alias('o', 'output')
     //.conflicts('o','O')
 
-    .boolean('A').alias('A', 'void-async').describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. " + '').boolean('B').describe('B', "Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted.").alias('B', 'void-backup').boolean('b').describe('b', "Keep a backup file of the original content.").alias('b', 'keep-backup').boolean('m').describe('m', "Output each match on a new line. " + "Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. " + "If search pattern does not contain matching groups the full match will be outputted. " + "If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). " + "").alias('m', 'output-match').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. " + '').boolean('R').alias('R', 'replacement-pipe').describe('R', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '').boolean('j').alias('j', 'replacement-js').describe('j', "Treat replacement as javascript source code. " + "The statement from the last expression will become the replacement string. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " + "The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. " + "At some point, the $ char _will_ give you a headache when used from the command line, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. " + "\nThe code has access to the following variables: " + "\n'_fs' from node, " + "\n'_globs' from npm, " + "\n'_pipe' is the piped data into the command (null if no piped data), " + "\n'_find' is the final pattern searched for. " + "\n'_text' is the full text being searched (= file contents or piped data). " + "\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): " + "\n'_file' is the full path of the active file being searched (including full filename), " + "\n'_path' is the full path without filename of the active file being searched, " + "\n'_filename' is the full filename of the active file being searched, " + "\n'_name' is the filename of the active file being searched with no extension, " + "\n'_ext' is the extension of the filename including leading dot. " + '')
+    .boolean('A').alias('A', 'void-async').describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. " + '').boolean('B').describe('B', 'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted.').alias('B', 'void-backup').boolean('b').describe('b', 'Keep a backup file of the original content.').alias('b', 'keep-backup').boolean('m').describe('m', "Output each match on a new line. " + "Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. " + "If search pattern does not contain matching groups the full match will be outputted. " + "If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). " + "").alias('m', 'output-match').boolean('T').alias('T', 'trim-pipe').describe('T', "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. " + '').boolean('R').alias('R', 'replacement-pipe').describe('R', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." + '').boolean('j').alias('j', 'replacement-js').describe('j', "Treat replacement as javascript source code. " + "The statement from the last expression will become the replacement string. " + "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " + "The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. " + "At some point, the $ char _will_ give you a headache when used from the command line, so use \u20AC0, \u20AC1, \u20AC2 \u20AC3 ... instead. " + "If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. " + "\nThe code has access to the following variables: " + "\n'_fs' from node, " + "\n'_globs' from npm, " + "\n'_pipe' is the piped data into the command (null if no piped data), " + "\n'_find' is the final pattern searched for. " + "\n'_text' is the full text being searched (= file contents or piped data). " + "\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): " + "\n'_file' is the full path of the active file being searched (including full filename), " + "\n'_path' is the full path without filename of the active file being searched, " + "\n'_filename' is the full filename of the active file being searched, " + "\n'_name' is the filename of the active file being searched with no extension, " + "\n'_ext' is the extension of the filename including leading dot. " + '')
 
     /*
-            .boolean('N')
-            .alias('N', 'void-newline')
-            .describe('N',    
-                `Avoid having newline when outputting data (or when piping). `+
-                `Normally . `+
-                   ''
-            )
+           .boolean('N')
+           .alias('N', 'void-newline')
+           .describe('N',    
+               `Avoid having newline when outputting data (or when piping). `+
+               `Normally . `+
+                  ''
+           )
     */
 
     /*    .boolean('P')
-            .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
-            .alias('P', 'pattern-file')
-    
+           .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
+           .alias('P', 'pattern-file')
         .boolean('R')
-            .alias('R', 'replacement-file')
-            .describe('R',     
-                `Replacement is a filename from where the replacement will be generated. ` +
-                `If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
-            )
-    
+           .alias('R', 'replacement-file')
+           .describe('R',     
+               `Replacement is a filename from where the replacement will be generated. ` +
+               `If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
+           )
         */
 
     /* // Ideas
-     .boolean('n')
-        .describe('n', "Do replacement on file names instead of file content (rename the files)")
-        .alias('n', 'name')
-     // https://github.com/eugeneware/replacestream
-    .integer('M')
-        .describe('M', "Maximum length of match. Set this value only if any single file of your ")
-        .alias('M', 'max-match-len')
-        .default('M', false)
-     
-    .boolean('G')
-        .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
-        .alias('G', 'globs-file')
-     .boolean('g')
-        .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
-        .alias('g', 'glob-pipe')
-      .boolean('j')
-        .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
-        .alias('j', 'pattern-js')
-      .boolean('glob-js')
-        .describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
-      */
+        .boolean('n')
+           .describe('n', "Do replacement on file names instead of file content (rename the files)")
+           .alias('n', 'name')
+        // https://github.com/eugeneware/replacestream
+       .integer('M')
+           .describe('M', "Maximum length of match. Set this value only if any single file of your ")
+           .alias('M', 'max-match-len')
+           .default('M', false)
+    
+      
+       .boolean('G')
+           .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
+           .alias('G', 'globs-file')
+        .boolean('g')
+           .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
+           .alias('g', 'glob-pipe')
+    
+       .boolean('j')
+           .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
+           .alias('j', 'pattern-js')
+    
+       .boolean('glob-js')
+           .describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
+    
+       */
 
-    .help('h').describe('h', "Display help.").alias('h', 'help').epilog("Inspiration: .oO(What should 'sed' have been by now?)");
+    .help('h').describe('h', 'Display help.').alias('h', 'help').epilog("Inspiration: .oO(What should 'sed' have been by now?)");
 
     function backOut() {
       yargs.showHelp();
@@ -14483,8 +13111,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       /*if(Boolean(process.stdout.isTTY)){
-          config.output = true;
-      }*/
+             config.output = true;
+         }*/
 
       if (Boolean(process.stdin.isTTY)) {
         if (config.replacementPipe) {
@@ -14517,13 +13145,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
       }
     })();
-  }, { "./core": 94, "yargs": 81 }], 94: [function (require, module, exports) {
-
+  }, { "./core": 97, "yargs": 84 }], 97: [function (require, module, exports) {
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
 
-    var version = '3.0.1';
+    var version = '3.0.2-dev';
 
     module.exports = function (config) {
       var _require2 = require('./output')(config),
@@ -14535,7 +13162,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           die = _require2.die,
           kill = _require2.kill;
 
-      step("Displaying steps for:");
+      step('Displaying steps for:');
       step(config);
 
       config.pattern = getFinalPattern(config) || '';
@@ -14547,7 +13174,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       step(config);
 
       if (handlePipedData(config)) {
-        return doReplacement("Piped data", config, config.pipedData);
+        return doReplacement('Piped data', config, config.pipedData);
       }
 
       config.files = globs.sync(config.files);
@@ -14562,13 +13189,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       config.files
       // Correct filepath
-      //.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
+      //.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
       // Find out if any filepaths are invalid
       .filter(function (filepath) {
         return fs.existsSync(filepath) ? true : error('File not found:', filepath);
       })
 
-      // Do the replacement 
+      // Do the replacement
       .forEach(function (filepath) {
         return openFile(filepath, config);
       });
@@ -14592,10 +13219,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
       function doReplacement(_file_rr, _config_rr, _data_rr) {
-
         debug('Work on content from: ' + _file_rr);
 
-        // Variables to be accessible from js. 
+        // Variables to be accessible from js.
         if (_config_rr.replacementJs) {
           var _pipe = _config_rr.pipedData;
           var _text = _data_rr;
@@ -14646,7 +13272,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           return process.stdout.write(result);
         }
 
-        // Nothing replaced = no need for writing file again 
+        // Nothing replaced = no need for writing file again
         if (result === _data_rr) {
           chat('Nothing changed in: ' + _file_rr);
           return;
@@ -14670,7 +13296,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         //Make sure data is always on disk
         var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
         var salt = new Date().toISOString().toString().replace(/:/g, '_').replace('Z', '');
-        var backupFile = oriFile + "." + salt + ".backup";
+        var backupFile = oriFile + '.' + salt + '.backup';
 
         if (_config_rr.voidAsync) {
           try {
@@ -14711,10 +13337,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function handlePipedData(config) {
-        step("Check Piped Data");
+        step('Check Piped Data');
 
         if (config.files.length) {
-
           if (!config.replacementJs) {
             chat('Piped data never used.');
           }
@@ -14732,7 +13357,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFinalPattern(config) {
-        step("Get final pattern");
+        step('Get final pattern');
         var pattern = config.pattern;
 
         if (config.patternFile) {
@@ -14745,22 +13370,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFinalReplacement(config) {
-        step("Get final replacement");
+        step('Get final replacement');
         /*if(config.replacementFile){
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
 
         if (config.replacementPipe) {
-          step("Piping replacement");
+          step('Piping replacement');
           config.pipedDataUsed = true;
           if (null === config.pipedData) {
-            return die("No data piped into replacement");
+            return die('No data piped into replacement');
           }
           config.replacement = config.pipedData;
         }
 
         if (config.outputMatch) {
-          step("Output match");
+          step('Output match');
 
           if ('6' > process.versions.node) {
             return die('outputMatch is only supported in node 6+');
@@ -14770,14 +13395,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
             if (arguments.length === 3) {
               step('Printing full match');
-              process.stdout.write(arguments[0] + "\n");
+              process.stdout.write(arguments[0] + '\n');
               return '';
             }
 
             for (var i = 1; i < arguments.length - 2; i++) {
               process.stdout.write(arguments[i]);
             }
-            process.stdout.write("\n");
+            process.stdout.write('\n');
             return '';
           };
         }
@@ -14792,19 +13417,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return config.replacement;
       }
       /*
-      	function oneLinerFromFile(str){
-      		var lines = str.split("\n");
-      		if(liens.length===1){
-      			return str;
-      		}
-      		return lines.map(function (line) {
-      			return line.trim();
-      		}).join(' ');
+      function oneLinerFromFile(str){
+      	var lines = str.split("\n");
+      	if(liens.length===1){
+      		return str;
       	}
+      	return lines.map(function (line) {
+      		return line.trim();
+      	}).join(' ');
+      }
       */
 
       function getFinalRegex(config) {
-        step("Get final regex");
+        step('Get final regex');
 
         var regex = null;
 
@@ -14822,7 +13447,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFlags(config) {
-        step("Get flags");
+        step('Get flags');
 
         var flags = '';
 
@@ -14849,15 +13474,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     module.exports.version = version;
-  }, { "./output": 95, "fs": undefined, "globs": 21, "path": undefined }], 95: [function (require, module, exports) {
-
+  }, { "./output": 98, "fs": undefined, "globs": 22, "path": undefined }], 98: [function (require, module, exports) {
     // let font = {};
     // font.red = font.green = font.gray = str=>str;
-    // check for node version supporting chalk - if so overwrite `font` 
+    // check for node version supporting chalk - if so overwrite `font`
     var font = require('chalk');
 
     module.exports = function (config) {
-
       var me = {};
 
       me.info = function (msg) {
@@ -14924,4 +13547,4 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return me;
     };
-  }, { "chalk": 7 }] }, {}, [93]);
+  }, { "chalk": 7 }] }, {}, [96]);

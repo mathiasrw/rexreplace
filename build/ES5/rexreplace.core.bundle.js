@@ -2,19 +2,21 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-(function e(t, n, r) {
-  function s(o, u) {
-    if (!n[o]) {
-      if (!t[o]) {
-        var a = typeof require == "function" && require;if (!u && a) return a(o, !0);if (i) return i(o, !0);var f = new Error("Cannot find module '" + o + "'");throw f.code = "MODULE_NOT_FOUND", f;
-      }var l = n[o] = { exports: {} };t[o][0].call(l.exports, function (e) {
-        var n = t[o][1][e];return s(n ? n : e);
-      }, l, l.exports, e, t, n, r);
-    }return n[o].exports;
-  }var i = typeof require == "function" && require;for (var o = 0; o < r.length; o++) {
-    s(r[o]);
-  }return s;
-})({ 1: [function (require, module, exports) {
+(function () {
+  function r(e, n, t) {
+    function o(i, f) {
+      if (!n[i]) {
+        if (!e[i]) {
+          var c = "function" == typeof require && require;if (!f && c) return c(i, !0);if (u) return u(i, !0);var a = new Error("Cannot find module '" + i + "'");throw a.code = "MODULE_NOT_FOUND", a;
+        }var p = n[i] = { exports: {} };e[i][0].call(p.exports, function (r) {
+          var n = e[i][1][r];return o(n || r);
+        }, p, p.exports, r, e, n, t);
+      }return n[i].exports;
+    }for (var u = "function" == typeof require && require, i = 0; i < t.length; i++) {
+      o(t[i]);
+    }return o;
+  }return r;
+})()({ 1: [function (require, module, exports) {
     'use strict';
 
     module.exports = function () {
@@ -327,7 +329,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return expansions;
     }
-  }, { "balanced-match": 3, "concat-map": 6 }], 5: [function (require, module, exports) {
+  }, { "balanced-match": 3, "concat-map": 7 }], 5: [function (require, module, exports) {
     'use strict';
 
     var escapeStringRegexp = require('escape-string-regexp');
@@ -445,7 +447,54 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports.hasColor = hasAnsi;
     module.exports.stripColor = stripAnsi;
     module.exports.supportsColor = supportsColor;
-  }, { "ansi-styles": 2, "escape-string-regexp": 7, "has-ansi": 14, "strip-ansi": 21, "supports-color": 22 }], 6: [function (require, module, exports) {
+  }, { "ansi-styles": 2, "escape-string-regexp": 8, "has-ansi": 15, "strip-ansi": 22, "supports-color": 6 }], 6: [function (require, module, exports) {
+    'use strict';
+
+    var argv = process.argv;
+
+    var terminator = argv.indexOf('--');
+    var hasFlag = function hasFlag(flag) {
+      flag = '--' + flag;
+      var pos = argv.indexOf(flag);
+      return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
+    };
+
+    module.exports = function () {
+      if ('FORCE_COLOR' in process.env) {
+        return true;
+      }
+
+      if (hasFlag('no-color') || hasFlag('no-colors') || hasFlag('color=false')) {
+        return false;
+      }
+
+      if (hasFlag('color') || hasFlag('colors') || hasFlag('color=true') || hasFlag('color=always')) {
+        return true;
+      }
+
+      if (process.stdout && !process.stdout.isTTY) {
+        return false;
+      }
+
+      if (process.platform === 'win32') {
+        return true;
+      }
+
+      if ('COLORTERM' in process.env) {
+        return true;
+      }
+
+      if (process.env.TERM === 'dumb') {
+        return false;
+      }
+
+      if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
+        return true;
+      }
+
+      return false;
+    }();
+  }, {}], 7: [function (require, module, exports) {
     module.exports = function (xs, fn) {
       var res = [];
       for (var i = 0; i < xs.length; i++) {
@@ -458,7 +507,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var isArray = Array.isArray || function (xs) {
       return Object.prototype.toString.call(xs) === '[object Array]';
     };
-  }, {}], 7: [function (require, module, exports) {
+  }, {}], 8: [function (require, module, exports) {
     'use strict';
 
     var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
@@ -470,7 +519,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return str.replace(matchOperatorsRe, '\\$&');
     };
-  }, {}], 8: [function (require, module, exports) {
+  }, {}], 9: [function (require, module, exports) {
     module.exports = realpath;
     realpath.realpath = realpath;
     realpath.sync = realpathSync;
@@ -533,7 +582,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       fs.realpath = origRealpath;
       fs.realpathSync = origRealpathSync;
     }
-  }, { "./old.js": 9, "fs": undefined }], 9: [function (require, module, exports) {
+  }, { "./old.js": 10, "fs": undefined }], 10: [function (require, module, exports) {
     // Copyright Joyent, Inc. and other Node contributors.
     //
     // Permission is hereby granted, free of charge, to any person obtaining a
@@ -831,7 +880,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         start();
       }
     };
-  }, { "fs": undefined, "path": undefined }], 10: [function (require, module, exports) {
+  }, { "fs": undefined, "path": undefined }], 11: [function (require, module, exports) {
     exports.alphasort = alphasort;
     exports.alphasorti = alphasorti;
     exports.setopts = setopts;
@@ -1048,7 +1097,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return !!(item.gmatcher && item.gmatcher.match(path));
       });
     }
-  }, { "minimatch": 18, "path": undefined, "path-is-absolute": 20 }], 11: [function (require, module, exports) {
+  }, { "minimatch": 19, "path": undefined, "path-is-absolute": 21 }], 12: [function (require, module, exports) {
     // Approach:
     //
     // 1. Get the minimatch set
@@ -1751,7 +1800,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return cb(null, c, stat);
     };
-  }, { "./common.js": 10, "./sync.js": 12, "assert": undefined, "events": undefined, "fs": undefined, "fs.realpath": 8, "inflight": 15, "inherits": 16, "minimatch": 18, "once": 19, "path": undefined, "path-is-absolute": 20, "util": undefined }], 12: [function (require, module, exports) {
+  }, { "./common.js": 11, "./sync.js": 13, "assert": undefined, "events": undefined, "fs": undefined, "fs.realpath": 9, "inflight": 16, "inherits": 17, "minimatch": 19, "once": 20, "path": undefined, "path-is-absolute": 21, "util": undefined }], 13: [function (require, module, exports) {
     module.exports = globSync;
     globSync.GlobSync = GlobSync;
 
@@ -2178,7 +2227,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     GlobSync.prototype._makeAbs = function (f) {
       return common.makeAbs(this, f);
     };
-  }, { "./common.js": 10, "./glob.js": 11, "assert": undefined, "fs": undefined, "fs.realpath": 8, "minimatch": 18, "path": undefined, "path-is-absolute": 20, "util": undefined }], 13: [function (require, module, exports) {
+  }, { "./common.js": 11, "./glob.js": 12, "assert": undefined, "fs": undefined, "fs.realpath": 9, "minimatch": 19, "path": undefined, "path-is-absolute": 21, "util": undefined }], 14: [function (require, module, exports) {
     'use strict';
 
     var glob = require('glob');
@@ -2278,13 +2327,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return groups;
     };
-  }, { "glob": 11 }], 14: [function (require, module, exports) {
+  }, { "glob": 12 }], 15: [function (require, module, exports) {
     'use strict';
 
     var ansiRegex = require('ansi-regex');
     var re = new RegExp(ansiRegex().source); // remove the `g` flag
     module.exports = re.test.bind(re);
-  }, { "ansi-regex": 1 }], 15: [function (require, module, exports) {
+  }, { "ansi-regex": 1 }], 16: [function (require, module, exports) {
     var wrappy = require('wrappy');
     var reqs = Object.create(null);
     var once = require('once');
@@ -2340,7 +2389,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         array[i] = args[i];
       }return array;
     }
-  }, { "once": 19, "wrappy": 23 }], 16: [function (require, module, exports) {
+  }, { "once": 20, "wrappy": 23 }], 17: [function (require, module, exports) {
     try {
       var util = require('util');
       if (typeof util.inherits !== 'function') throw '';
@@ -2348,7 +2397,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     } catch (e) {
       module.exports = require('./inherits_browser.js');
     }
-  }, { "./inherits_browser.js": 17, "util": undefined }], 17: [function (require, module, exports) {
+  }, { "./inherits_browser.js": 18, "util": undefined }], 18: [function (require, module, exports) {
     if (typeof Object.create === 'function') {
       // implementation from standard node.js 'util' module
       module.exports = function inherits(ctor, superCtor) {
@@ -2372,7 +2421,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         ctor.prototype.constructor = ctor;
       };
     }
-  }, {}], 18: [function (require, module, exports) {
+  }, {}], 19: [function (require, module, exports) {
     module.exports = minimatch;
     minimatch.Minimatch = Minimatch;
 
@@ -3274,7 +3323,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     function regExpEscape(s) {
       return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
     }
-  }, { "brace-expansion": 4, "path": undefined }], 19: [function (require, module, exports) {
+  }, { "brace-expansion": 4, "path": undefined }], 20: [function (require, module, exports) {
     var wrappy = require('wrappy');
     module.exports = wrappy(once);
     module.exports.strict = wrappy(onceStrict);
@@ -3316,7 +3365,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       f.called = false;
       return f;
     }
-  }, { "wrappy": 23 }], 20: [function (require, module, exports) {
+  }, { "wrappy": 23 }], 21: [function (require, module, exports) {
     'use strict';
 
     function posix(path) {
@@ -3337,7 +3386,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports = process.platform === 'win32' ? win32 : posix;
     module.exports.posix = posix;
     module.exports.win32 = win32;
-  }, {}], 21: [function (require, module, exports) {
+  }, {}], 22: [function (require, module, exports) {
     'use strict';
 
     var ansiRegex = require('ansi-regex')();
@@ -3345,54 +3394,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     module.exports = function (str) {
       return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
     };
-  }, { "ansi-regex": 1 }], 22: [function (require, module, exports) {
-    'use strict';
-
-    var argv = process.argv;
-
-    var terminator = argv.indexOf('--');
-    var hasFlag = function hasFlag(flag) {
-      flag = '--' + flag;
-      var pos = argv.indexOf(flag);
-      return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
-    };
-
-    module.exports = function () {
-      if ('FORCE_COLOR' in process.env) {
-        return true;
-      }
-
-      if (hasFlag('no-color') || hasFlag('no-colors') || hasFlag('color=false')) {
-        return false;
-      }
-
-      if (hasFlag('color') || hasFlag('colors') || hasFlag('color=true') || hasFlag('color=always')) {
-        return true;
-      }
-
-      if (process.stdout && !process.stdout.isTTY) {
-        return false;
-      }
-
-      if (process.platform === 'win32') {
-        return true;
-      }
-
-      if ('COLORTERM' in process.env) {
-        return true;
-      }
-
-      if (process.env.TERM === 'dumb') {
-        return false;
-      }
-
-      if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
-        return true;
-      }
-
-      return false;
-    }();
-  }, {}], 23: [function (require, module, exports) {
+  }, { "ansi-regex": 1 }], 23: [function (require, module, exports) {
     // Returns a wrapper function that returns a wrapped callback
     // The wrapper function should do some stuff, and return a
     // presumably different callback function.
@@ -3426,12 +3428,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     }
   }, {}], 24: [function (require, module, exports) {
-
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
 
-    var version = '3.0.1';
+    var version = '3.0.2-dev';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3443,7 +3444,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           die = _require.die,
           kill = _require.kill;
 
-      step("Displaying steps for:");
+      step('Displaying steps for:');
       step(config);
 
       config.pattern = getFinalPattern(config) || '';
@@ -3455,7 +3456,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       step(config);
 
       if (handlePipedData(config)) {
-        return doReplacement("Piped data", config, config.pipedData);
+        return doReplacement('Piped data', config, config.pipedData);
       }
 
       config.files = globs.sync(config.files);
@@ -3470,13 +3471,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       config.files
       // Correct filepath
-      //.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
+      //.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
       // Find out if any filepaths are invalid
       .filter(function (filepath) {
         return fs.existsSync(filepath) ? true : error('File not found:', filepath);
       })
 
-      // Do the replacement 
+      // Do the replacement
       .forEach(function (filepath) {
         return openFile(filepath, config);
       });
@@ -3500,10 +3501,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
       function doReplacement(_file_rr, _config_rr, _data_rr) {
-
         debug('Work on content from: ' + _file_rr);
 
-        // Variables to be accessible from js. 
+        // Variables to be accessible from js.
         if (_config_rr.replacementJs) {
           var _pipe = _config_rr.pipedData;
           var _text = _data_rr;
@@ -3554,7 +3554,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           return process.stdout.write(result);
         }
 
-        // Nothing replaced = no need for writing file again 
+        // Nothing replaced = no need for writing file again
         if (result === _data_rr) {
           chat('Nothing changed in: ' + _file_rr);
           return;
@@ -3578,7 +3578,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         //Make sure data is always on disk
         var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
         var salt = new Date().toISOString().toString().replace(/:/g, '_').replace('Z', '');
-        var backupFile = oriFile + "." + salt + ".backup";
+        var backupFile = oriFile + '.' + salt + '.backup';
 
         if (_config_rr.voidAsync) {
           try {
@@ -3619,10 +3619,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function handlePipedData(config) {
-        step("Check Piped Data");
+        step('Check Piped Data');
 
         if (config.files.length) {
-
           if (!config.replacementJs) {
             chat('Piped data never used.');
           }
@@ -3640,7 +3639,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFinalPattern(config) {
-        step("Get final pattern");
+        step('Get final pattern');
         var pattern = config.pattern;
 
         if (config.patternFile) {
@@ -3653,22 +3652,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFinalReplacement(config) {
-        step("Get final replacement");
+        step('Get final replacement');
         /*if(config.replacementFile){
         	return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
 
         if (config.replacementPipe) {
-          step("Piping replacement");
+          step('Piping replacement');
           config.pipedDataUsed = true;
           if (null === config.pipedData) {
-            return die("No data piped into replacement");
+            return die('No data piped into replacement');
           }
           config.replacement = config.pipedData;
         }
 
         if (config.outputMatch) {
-          step("Output match");
+          step('Output match');
 
           if ('6' > process.versions.node) {
             return die('outputMatch is only supported in node 6+');
@@ -3678,14 +3677,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
             if (arguments.length === 3) {
               step('Printing full match');
-              process.stdout.write(arguments[0] + "\n");
+              process.stdout.write(arguments[0] + '\n');
               return '';
             }
 
             for (var i = 1; i < arguments.length - 2; i++) {
               process.stdout.write(arguments[i]);
             }
-            process.stdout.write("\n");
+            process.stdout.write('\n');
             return '';
           };
         }
@@ -3700,19 +3699,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return config.replacement;
       }
       /*
-      	function oneLinerFromFile(str){
-      		var lines = str.split("\n");
-      		if(liens.length===1){
-      			return str;
-      		}
-      		return lines.map(function (line) {
-      			return line.trim();
-      		}).join(' ');
+      function oneLinerFromFile(str){
+      	var lines = str.split("\n");
+      	if(liens.length===1){
+      		return str;
       	}
+      	return lines.map(function (line) {
+      		return line.trim();
+      	}).join(' ');
+      }
       */
 
       function getFinalRegex(config) {
-        step("Get final regex");
+        step('Get final regex');
 
         var regex = null;
 
@@ -3730,7 +3729,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       function getFlags(config) {
-        step("Get flags");
+        step('Get flags');
 
         var flags = '';
 
@@ -3757,15 +3756,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     module.exports.version = version;
-  }, { "./output": 25, "fs": undefined, "globs": 13, "path": undefined }], 25: [function (require, module, exports) {
-
+  }, { "./output": 25, "fs": undefined, "globs": 14, "path": undefined }], 25: [function (require, module, exports) {
     // let font = {};
     // font.red = font.green = font.gray = str=>str;
-    // check for node version supporting chalk - if so overwrite `font` 
+    // check for node version supporting chalk - if so overwrite `font`
     var font = require('chalk');
 
     module.exports = function (config) {
-
       var me = {};
 
       me.info = function (msg) {

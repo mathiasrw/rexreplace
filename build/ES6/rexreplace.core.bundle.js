@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
 module.exports = function () {
 	return /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
@@ -335,7 +335,7 @@ function expand(str, isTop) {
 }
 
 
-},{"balanced-match":3,"concat-map":6}],5:[function(require,module,exports){
+},{"balanced-match":3,"concat-map":7}],5:[function(require,module,exports){
 'use strict';
 var escapeStringRegexp = require('escape-string-regexp');
 var ansiStyles = require('ansi-styles');
@@ -453,7 +453,59 @@ module.exports.hasColor = hasAnsi;
 module.exports.stripColor = stripAnsi;
 module.exports.supportsColor = supportsColor;
 
-},{"ansi-styles":2,"escape-string-regexp":7,"has-ansi":14,"strip-ansi":21,"supports-color":22}],6:[function(require,module,exports){
+},{"ansi-styles":2,"escape-string-regexp":8,"has-ansi":15,"strip-ansi":22,"supports-color":6}],6:[function(require,module,exports){
+'use strict';
+var argv = process.argv;
+
+var terminator = argv.indexOf('--');
+var hasFlag = function (flag) {
+	flag = '--' + flag;
+	var pos = argv.indexOf(flag);
+	return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
+};
+
+module.exports = (function () {
+	if ('FORCE_COLOR' in process.env) {
+		return true;
+	}
+
+	if (hasFlag('no-color') ||
+		hasFlag('no-colors') ||
+		hasFlag('color=false')) {
+		return false;
+	}
+
+	if (hasFlag('color') ||
+		hasFlag('colors') ||
+		hasFlag('color=true') ||
+		hasFlag('color=always')) {
+		return true;
+	}
+
+	if (process.stdout && !process.stdout.isTTY) {
+		return false;
+	}
+
+	if (process.platform === 'win32') {
+		return true;
+	}
+
+	if ('COLORTERM' in process.env) {
+		return true;
+	}
+
+	if (process.env.TERM === 'dumb') {
+		return false;
+	}
+
+	if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
+		return true;
+	}
+
+	return false;
+})();
+
+},{}],7:[function(require,module,exports){
 module.exports = function (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -468,7 +520,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
@@ -481,7 +533,7 @@ module.exports = function (str) {
 	return str.replace(matchOperatorsRe, '\\$&');
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = realpath
 realpath.realpath = realpath
 realpath.sync = realpathSync
@@ -549,7 +601,7 @@ function unmonkeypatch () {
   fs.realpathSync = origRealpathSync
 }
 
-},{"./old.js":9,"fs":undefined}],9:[function(require,module,exports){
+},{"./old.js":10,"fs":undefined}],10:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -854,7 +906,7 @@ exports.realpath = function realpath(p, cache, cb) {
   }
 };
 
-},{"fs":undefined,"path":undefined}],10:[function(require,module,exports){
+},{"fs":undefined,"path":undefined}],11:[function(require,module,exports){
 exports.alphasort = alphasort
 exports.alphasorti = alphasorti
 exports.setopts = setopts
@@ -1096,7 +1148,7 @@ function childrenIgnored (self, path) {
   })
 }
 
-},{"minimatch":18,"path":undefined,"path-is-absolute":20}],11:[function(require,module,exports){
+},{"minimatch":19,"path":undefined,"path-is-absolute":21}],12:[function(require,module,exports){
 // Approach:
 //
 // 1. Get the minimatch set
@@ -1888,7 +1940,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
   return cb(null, c, stat)
 }
 
-},{"./common.js":10,"./sync.js":12,"assert":undefined,"events":undefined,"fs":undefined,"fs.realpath":8,"inflight":15,"inherits":16,"minimatch":18,"once":19,"path":undefined,"path-is-absolute":20,"util":undefined}],12:[function(require,module,exports){
+},{"./common.js":11,"./sync.js":13,"assert":undefined,"events":undefined,"fs":undefined,"fs.realpath":9,"inflight":16,"inherits":17,"minimatch":19,"once":20,"path":undefined,"path-is-absolute":21,"util":undefined}],13:[function(require,module,exports){
 module.exports = globSync
 globSync.GlobSync = GlobSync
 
@@ -2376,7 +2428,7 @@ GlobSync.prototype._makeAbs = function (f) {
   return common.makeAbs(this, f)
 }
 
-},{"./common.js":10,"./glob.js":11,"assert":undefined,"fs":undefined,"fs.realpath":8,"minimatch":18,"path":undefined,"path-is-absolute":20,"util":undefined}],13:[function(require,module,exports){
+},{"./common.js":11,"./glob.js":12,"assert":undefined,"fs":undefined,"fs.realpath":9,"minimatch":19,"path":undefined,"path-is-absolute":21,"util":undefined}],14:[function(require,module,exports){
 'use strict';
 
 var glob = require('glob');
@@ -2477,13 +2529,13 @@ globs.sync = function (patterns, options) {
   return groups;
 };
 
-},{"glob":11}],14:[function(require,module,exports){
+},{"glob":12}],15:[function(require,module,exports){
 'use strict';
 var ansiRegex = require('ansi-regex');
 var re = new RegExp(ansiRegex().source); // remove the `g` flag
 module.exports = re.test.bind(re);
 
-},{"ansi-regex":1}],15:[function(require,module,exports){
+},{"ansi-regex":1}],16:[function(require,module,exports){
 var wrappy = require('wrappy')
 var reqs = Object.create(null)
 var once = require('once')
@@ -2539,7 +2591,7 @@ function slice (args) {
   return array
 }
 
-},{"once":19,"wrappy":23}],16:[function(require,module,exports){
+},{"once":20,"wrappy":23}],17:[function(require,module,exports){
 try {
   var util = require('util');
   if (typeof util.inherits !== 'function') throw '';
@@ -2548,7 +2600,7 @@ try {
   module.exports = require('./inherits_browser.js');
 }
 
-},{"./inherits_browser.js":17,"util":undefined}],17:[function(require,module,exports){
+},{"./inherits_browser.js":18,"util":undefined}],18:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2573,7 +2625,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
@@ -3498,7 +3550,7 @@ function regExpEscape (s) {
   return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 }
 
-},{"brace-expansion":4,"path":undefined}],19:[function(require,module,exports){
+},{"brace-expansion":4,"path":undefined}],20:[function(require,module,exports){
 var wrappy = require('wrappy')
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
@@ -3542,7 +3594,7 @@ function onceStrict (fn) {
   return f
 }
 
-},{"wrappy":23}],20:[function(require,module,exports){
+},{"wrappy":23}],21:[function(require,module,exports){
 'use strict';
 
 function posix(path) {
@@ -3564,7 +3616,7 @@ module.exports = process.platform === 'win32' ? win32 : posix;
 module.exports.posix = posix;
 module.exports.win32 = win32;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 var ansiRegex = require('ansi-regex')();
 
@@ -3572,59 +3624,7 @@ module.exports = function (str) {
 	return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
 };
 
-},{"ansi-regex":1}],22:[function(require,module,exports){
-'use strict';
-var argv = process.argv;
-
-var terminator = argv.indexOf('--');
-var hasFlag = function (flag) {
-	flag = '--' + flag;
-	var pos = argv.indexOf(flag);
-	return pos !== -1 && (terminator !== -1 ? pos < terminator : true);
-};
-
-module.exports = (function () {
-	if ('FORCE_COLOR' in process.env) {
-		return true;
-	}
-
-	if (hasFlag('no-color') ||
-		hasFlag('no-colors') ||
-		hasFlag('color=false')) {
-		return false;
-	}
-
-	if (hasFlag('color') ||
-		hasFlag('colors') ||
-		hasFlag('color=true') ||
-		hasFlag('color=always')) {
-		return true;
-	}
-
-	if (process.stdout && !process.stdout.isTTY) {
-		return false;
-	}
-
-	if (process.platform === 'win32') {
-		return true;
-	}
-
-	if ('COLORTERM' in process.env) {
-		return true;
-	}
-
-	if (process.env.TERM === 'dumb') {
-		return false;
-	}
-
-	if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(process.env.TERM)) {
-		return true;
-	}
-
-	return false;
-})();
-
-},{}],23:[function(require,module,exports){
+},{"ansi-regex":1}],23:[function(require,module,exports){
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
 // presumably different callback function.
@@ -3660,61 +3660,57 @@ function wrappy (fn, cb) {
 }
 
 },{}],24:[function(require,module,exports){
-
 const fs = require('fs');
-const path = require('path'); 
+const path = require('path');
 const globs = require('globs');
 
-const version = '3.0.1';
+const version = '3.0.2-dev';
 
-module.exports = function(config){
-
+module.exports = function(config) {
 	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
 
-	step("Displaying steps for:");
+	step('Displaying steps for:');
 	step(config);
 
-	config.pattern = getFinalPattern(config)||'';
+	config.pattern = getFinalPattern(config) || '';
 
-	config.replacement = getFinalReplacement(config)||'';	
+	config.replacement = getFinalReplacement(config) || '';
 
-	config.regex = getFinalRegex(config)||'';
+	config.regex = getFinalRegex(config) || '';
 
 	step(config);
 
-	if(handlePipedData(config)){
-		return doReplacement("Piped data", config, config.pipedData);
+	if (handlePipedData(config)) {
+		return doReplacement('Piped data', config, config.pipedData);
 	}
 
 	config.files = globs.sync(config.files);
 
-	if(!config.files.length){
-		return error(config.files.length+' files found');
+	if (!config.files.length) {
+		return error(config.files.length + ' files found');
 	}
 
-	chat(config.files.length+' files found');
+	chat(config.files.length + ' files found');
 
 	step(config);
 
 	config.files
 		// Correct filepath
-		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))	
+		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
 		// Find out if any filepaths are invalid
-		.filter(filepath=>fs.existsSync(filepath)?true:error('File not found:',filepath))
+		.filter((filepath) => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
 
-		// Do the replacement 
-		.forEach(filepath=>openFile(filepath,config))
-	;
+		// Do the replacement
+		.forEach((filepath) => openFile(filepath, config));
 
-
-	function openFile(file,config){
-		if(config.voidAsync){
-			chat('Open sync: '+file);
+	function openFile(file, config) {
+		if (config.voidAsync) {
+			chat('Open sync: ' + file);
 			var data = fs.readFileSync(file, config.encoding);
 			return doReplacement(file, config, data);
 		} else {
-			chat('Open async: '+file);
-			fs.readFile(file, config.encoding, function (err,data) {
+			chat('Open async: ' + file);
+			fs.readFile(file, config.encoding, function(err, data) {
 				if (err) {
 					return error(err);
 				}
@@ -3722,52 +3718,47 @@ module.exports = function(config){
 				return doReplacement(file, config, data);
 			});
 		}
-
 	}
 
-
-
 	// postfix argument names to limit the probabillity of user inputted javascript accidently using same values
-	function doReplacement(_file_rr, _config_rr, _data_rr){
-		
-		debug('Work on content from: '+_file_rr);
+	function doReplacement(_file_rr, _config_rr, _data_rr) {
+		debug('Work on content from: ' + _file_rr);
 
-
-		// Variables to be accessible from js. 
-		if(_config_rr.replacementJs){
-			const _pipe 	= _config_rr.pipedData;
-			const _text 	= _data_rr;
-			const _fs 		= fs;
-			const _globs 	= globs;
-			const _find 	= _config_rr.pattern;
-			const code_rr 	= _config_rr.replacement;
-			let _file 		= '',
-				_pathinfo 	= '',
-				_path 		= '',
-				_filename 	= '',
-				_name 		= '',
-				_ext 		= '';
-			if(!_config_rr.dataIsPiped){
-				_file 		= path.normalize(path.join(process.cwd(),_file_rr));
-				_pathInfo 	= path.parse(_file);
-				_path 		= _pathInfo.dir;
-				_filename 	= _pathInfo.base;
-				_name 		= _pathInfo.name;
-				_ext 		= _pathInfo.ext;
+		// Variables to be accessible from js.
+		if (_config_rr.replacementJs) {
+			const _pipe = _config_rr.pipedData;
+			const _text = _data_rr;
+			const _fs = fs;
+			const _globs = globs;
+			const _find = _config_rr.pattern;
+			const code_rr = _config_rr.replacement;
+			let _file = '',
+				_pathinfo = '',
+				_path = '',
+				_filename = '',
+				_name = '',
+				_ext = '';
+			if (!_config_rr.dataIsPiped) {
+				_file = path.normalize(path.join(process.cwd(), _file_rr));
+				_pathInfo = path.parse(_file);
+				_path = _pathInfo.dir;
+				_filename = _pathInfo.base;
+				_name = _pathInfo.name;
+				_ext = _pathInfo.ext;
 			}
-			
+
 			// Run only once if no captured groups (replacement cant change)
-			if(!(/\$\d/.test(_config_rr.replacement))){
-				_config_rr.replacement = eval(code_rr); 
+			if (!/\$\d/.test(_config_rr.replacement)) {
+				_config_rr.replacement = eval(code_rr);
 			} else {
 				// Captures groups present, so need to run once per match
-				_config_rr.replacement = function(){
+				_config_rr.replacement = function() {
 					step(arguments);
-					for(var i = 0; i<arguments.length-2 ; i++){
-						eval('var $'+i+'='+JSON.stringify(arguments[i])+';'); 
+					for (var i = 0; i < arguments.length - 2; i++) {
+						eval('var $' + i + '=' + JSON.stringify(arguments[i]) + ';');
 					}
 					return eval(code_rr);
-				}; 
+				};
 			}
 		}
 
@@ -3775,88 +3766,95 @@ module.exports = function(config){
 		const result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
 
 		// The output of matched strings is done from the replacement, so no need to continue
-		if(_config_rr.outputMatch){
+		if (_config_rr.outputMatch) {
 			return;
 		}
 
-		if(_config_rr.output){
-			debug('Output result from: '+_file_rr);
+		if (_config_rr.output) {
+			debug('Output result from: ' + _file_rr);
 			return process.stdout.write(result);
 		}
 
-		// Nothing replaced = no need for writing file again 
-		if(result === _data_rr){
-			chat('Nothing changed in: '+_file_rr);
+		// Nothing replaced = no need for writing file again
+		if (result === _data_rr) {
+			chat('Nothing changed in: ' + _file_rr);
 			return;
 		}
 
 		// Release the memory while storing files
 		_data_rr = undefined;
 
-		debug('Write new content to: '+_file_rr);
+		debug('Write new content to: ' + _file_rr);
 
 		// Write directly to the same file (if the process is killed all new and old data is lost)
-		if(_config_rr.voidBackup){
-			return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
-				if (err){
+		if (_config_rr.voidBackup) {
+			return fs.writeFile(_file_rr, result, _config_rr.encoding, function(err) {
+				if (err) {
 					return error(err);
 				}
 				info(_file_rr);
 			});
 		}
 
-
 		//Make sure data is always on disk
-		const oriFile = path.normalize(path.join(process.cwd(),_file_rr));
-		const salt = new Date().toISOString().toString().replace(/:/g,'_').replace('Z', '');
-		const backupFile = oriFile+"."+salt+".backup";
+		const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+		const salt = new Date()
+			.toISOString()
+			.toString()
+			.replace(/:/g, '_')
+			.replace('Z', '');
+		const backupFile = oriFile + '.' + salt + '.backup';
 
-		if(_config_rr.voidAsync){
-			try{
+		if (_config_rr.voidAsync) {
+			try {
 				fs.renameSync(oriFile, backupFile);
 				fs.writeFileSync(oriFile, result, _config_rr.encoding);
-				if(!_config_rr.keepBackup){
+				if (!_config_rr.keepBackup) {
 					fs.unlinkSync(backupFile);
 				}
-			} catch(e){
+			} catch (e) {
 				return error(e);
 			}
-			return info(_file_rr);	
+			return info(_file_rr);
 		}
-			
+
 		// Let me know when fs gets promise'fied
-		fs.rename(oriFile, backupFile, err=>{
-			if (err){return error(err);}
+		fs.rename(oriFile, backupFile, (err) => {
+			if (err) {
+				return error(err);
+			}
 
-			fs.writeFile(oriFile, result, _config_rr.encoding, err=>{
-				if (err){return error(err);}
+			fs.writeFile(oriFile, result, _config_rr.encoding, (err) => {
+				if (err) {
+					return error(err);
+				}
 
-				if(!_config_rr.keepBackup){
-					fs.unlink(backupFile, err=>{
-						if (err){return error(err);}
-						info(_file_rr);		
+				if (!_config_rr.keepBackup) {
+					fs.unlink(backupFile, (err) => {
+						if (err) {
+							return error(err);
+						}
+						info(_file_rr);
 					});
 				} else {
-					info(_file_rr);		
+					info(_file_rr);
 				}
 			});
 		});
 	}
 
+	function handlePipedData(config) {
+		step('Check Piped Data');
 
-	function handlePipedData(config){
-		step("Check Piped Data");
-
-		if(config.files.length){
-
-			if(!config.replacementJs){
+		if (config.files.length) {
+			if (!config.replacementJs) {
 				chat('Piped data never used.');
 			}
-			
+
 			return false;
 		}
 
-		if(null !== config.pipedData && !config.pipedDataUsed){
+		if (null !== config.pipedData && !config.pipedDataUsed) {
 			config.dataIsPiped = true;
 			config.output = true;
 			return true;
@@ -3865,62 +3863,59 @@ module.exports = function(config){
 		return false;
 	}
 
-
-	function getFinalPattern(config){
-		step("Get final pattern");
+	function getFinalPattern(config) {
+		step('Get final pattern');
 		let pattern = config.pattern;
 
-		if(config.patternFile){
-			pattern = fs.readFileSync(pattern,'utf8');
+		if (config.patternFile) {
+			pattern = fs.readFileSync(pattern, 'utf8');
 			pattern = oneLinerFromFile(pattern);
 		}
 
-		step(pattern)
+		step(pattern);
 		return pattern;
 	}
 
-	function getFinalReplacement(config){
-		step("Get final replacement");
+	function getFinalReplacement(config) {
+		step('Get final replacement');
 		/*if(config.replacementFile){
 			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
 
-		if(config.replacementPipe){
-			step("Piping replacement");
+		if (config.replacementPipe) {
+			step('Piping replacement');
 			config.pipedDataUsed = true;
-			if(null===config.pipedData){
-				return die("No data piped into replacement");
-			}	
+			if (null === config.pipedData) {
+				return die('No data piped into replacement');
+			}
 			config.replacement = config.pipedData;
 		}
 
-		if(config.outputMatch){
-			step("Output match");
+		if (config.outputMatch) {
+			step('Output match');
 
-			if('6'>process.versions.node){
+			if ('6' > process.versions.node) {
 				return die('outputMatch is only supported in node 6+');
 			}
-			return function(){
+			return function() {
 				step(arguments);
 
-				if(arguments.length===3){
+				if (arguments.length === 3) {
 					step('Printing full match');
-					process.stdout.write(arguments[0]+"\n");
+					process.stdout.write(arguments[0] + '\n');
 					return '';
 				}
 
-				for (var i = 1; i < arguments.length-2; i++) {
+				for (var i = 1; i < arguments.length - 2; i++) {
 					process.stdout.write(arguments[i]);
 				}
-				process.stdout.write("\n");
+				process.stdout.write('\n');
 				return '';
 			};
 		}
 
-
-
 		// If captured groups then run dynamicly
-		if(config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node<'6'){
+		if (config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node < '6') {
 			return die('Captured groups for javascript replacement is only supported in node 6+');
 		}
 
@@ -3928,7 +3923,7 @@ module.exports = function(config){
 
 		return config.replacement;
 	}
-/*
+	/*
 	function oneLinerFromFile(str){
 		var lines = str.split("\n");
 		if(liens.length===1){
@@ -3940,119 +3935,113 @@ module.exports = function(config){
 	}
 */
 
-	function getFinalRegex(config){
-		step("Get final regex");
+	function getFinalRegex(config) {
+		step('Get final regex');
 
-		let regex = null;	
+		let regex = null;
 
 		let flags = getFlags(config);
-		
-		try{
-			regex = new RegExp(config.pattern,flags);
-		} catch (err){
+
+		try {
+			regex = new RegExp(config.pattern, flags);
+		} catch (err) {
 			die('Wrongly formatted regex pattern', err);
 		}
 
 		step(regex);
 
 		return regex;
-
 	}
 
-	function getFlags(config){
-		step("Get flags");
-		
+	function getFlags(config) {
+		step('Get flags');
+
 		let flags = '';
 
-		if(!config.voidGlobal){
+		if (!config.voidGlobal) {
 			flags += 'g';
 		}
 
-		if(!config.voidIgnoreCase){
+		if (!config.voidIgnoreCase) {
 			flags += 'i';
 		}
 
-		if(!config.voidMultiline){
+		if (!config.voidMultiline) {
 			flags += 'm';
 		}
 
-		if(config.unicode){
+		if (config.unicode) {
 			flags += 'u';
 		}
 
 		step(flags);
-		
+
 		return flags;
 	}
-
-
 };
 
 module.exports.version = version;
 
-},{"./output":25,"fs":undefined,"globs":13,"path":undefined}],25:[function(require,module,exports){
-
+},{"./output":25,"fs":undefined,"globs":14,"path":undefined}],25:[function(require,module,exports){
 // let font = {};
 // font.red = font.green = font.gray = str=>str;
-// check for node version supporting chalk - if so overwrite `font` 
+// check for node version supporting chalk - if so overwrite `font`
 const font = require('chalk');
 
-module.exports = function(config){
-
+module.exports = function(config) {
 	let me = {};
 
-	me.info = function(msg, data=''){
-		if(config.quiet || config.quietTotal){
+	me.info = function(msg, data = '') {
+		if (config.quiet || config.quietTotal) {
 			return;
 		}
-		console.error(font.gray(msg), data);	
+		console.error(font.gray(msg), data);
 	};
 
-	me.chat = function(msg, data=''){
-		if(config.verbose){
+	me.chat = function(msg, data = '') {
+		if (config.verbose) {
 			me.info(msg, data);
 		} else {
-			me.debug(msg+' '+data);
+			me.debug(msg + ' ' + data);
 		}
 	};
 
-	me.die = function(msg, data='', displayHelp=false){
-		if(displayHelp && !config.quietTotal){
+	me.die = function(msg, data = '', displayHelp = false) {
+		if (displayHelp && !config.quietTotal) {
 			config.showHelp();
 		}
 		me.error(msg, data);
 		me.kill(msg);
 	};
 
-	me.error = function(msg, data=''){
-		if(!config.quiet && !config.quietTotal){
+	me.error = function(msg, data = '') {
+		if (!config.quiet && !config.quietTotal) {
 			console.error(font.red(msg), data);
 		}
-		if(config.halt){
+		if (config.halt) {
 			me.kill(msg);
 		}
 		return false;
 	};
 
-	me.debug = function(data){
-		if(config.debug){
-			console.error(font.gray(JSON.stringify(data, null,4)));
+	me.debug = function(data) {
+		if (config.debug) {
+			console.error(font.gray(JSON.stringify(data, null, 4)));
 		}
 	};
 
-	me.step = function(data){
-		if(config.verbose){
+	me.step = function(data) {
+		if (config.verbose) {
 			me.debug(data);
 		}
 	};
 
-	me.kill = function(msg='', error=1){
+	me.kill = function(msg = '', error = 1) {
 		process.exitCode = error;
 		throw new Error(msg);
 	};
 
 	return me;
 };
-
 
 },{"chalk":5}]},{},[24]);

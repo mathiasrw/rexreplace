@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const globs = require('globs');
 
-const version = '3.0.1';
+const version = '3.0.2-dev';
 
 module.exports = function(config) {
 	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
