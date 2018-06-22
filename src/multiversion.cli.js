@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+require('./ES5/rexreplace.bundle.js');
+
+/*
 if ('6' <= process.versions.node) {
 	require('./ES6/rexreplace.cli.bundle.js');
 } else if ('0.12' <= process.versions.node) {
@@ -10,3 +13,4 @@ if ('6' <= process.versions.node) {
 	);
 	require('../legacy/rreplace.js');
 }
+*/

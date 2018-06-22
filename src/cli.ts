@@ -1,6 +1,8 @@
+#!/usr/bin/env node
+
 // CLI interface for rexreplace
 
-const rexreplace = require('./core');
+import * as rexreplace from './engine';
 
 let pattern, replacement;
 
@@ -157,6 +159,7 @@ const yargs = require('yargs')
 			`\nThe code has access to the following variables: ` +
 			`\n'_fs' from node, ` +
 			`\n'_globs' from npm, ` +
+			`\n'_cwd' current working dir, ` +
 			`\n'_pipe' is the piped data into the command (null if no piped data), ` +
 			`\n'_find' is the final pattern searched for. ` +
 			`\n'_text' is the full text being searched (= file contents or piped data). ` +
@@ -242,7 +245,7 @@ function backOut() {
 }
 
 function unescapeString(str) {
-	return eval("'" + str.replace(/'/g, "\\'") + "'");
+	return new Function("return '" + str.replace(/'/g, "\\'") + "'")();
 }
 
 (function() {
@@ -257,7 +260,7 @@ function unescapeString(str) {
 	}
 
 	// All options into one big config object for the rexreplace core
-	let config = {};
+	let config: any = {};
 
 	// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
 	Object.keys(yargs.argv).forEach((key) => {
@@ -286,7 +289,7 @@ function unescapeString(str) {
 		if (config.replacementPipe) {
 			return backOut();
 		}
-		rexreplace(config);
+		rexreplace.engine(config);
 	} else {
 		process.stdin.setEncoding(config.encoding);
 
@@ -309,7 +312,7 @@ function unescapeString(str) {
 				}
 				config.pipedData = pipeData;
 			}
-			rexreplace(config);
+			rexreplace.engine(config);
 		});
 	}
 })();
