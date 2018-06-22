@@ -2,3 +2,4 @@ node_modules
 myfile
 *.log
 *.file
+.rpt2_cache
