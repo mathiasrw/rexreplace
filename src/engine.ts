@@ -1,11 +1,15 @@
 const fs = require('fs');
+
 const path = require('path');
+
 const globs = require('globs');
 
-const version = '3.0.2-dev';
+import {outputConfig, step, debug, chat, info, error, die} from './output';
 
-module.exports = function(config) {
-	let {step, debug, chat, info, error, die, kill} = require('./output')(config);
+export const version = 'PACKAGE_VERSION';
+
+export function engine(config) {
+	outputConfig(config);
 
 	step('Displaying steps for:');
 	step(config);
@@ -66,36 +70,88 @@ module.exports = function(config) {
 		if (_config_rr.replacementJs) {
 			const _pipe = _config_rr.pipedData;
 			const _text = _data_rr;
-			const _fs = fs;
-			const _globs = globs;
 			const _find = _config_rr.pattern;
 			const code_rr = _config_rr.replacement;
+			const _cwd = process.cwd();
 			let _file = '',
-				_pathinfo = '',
 				_path = '',
 				_filename = '',
 				_name = '',
-				_ext = '';
+				_ext = '',
+				dynamicContent = new Function(
+					'_fs',
+					'_globs',
+					'_pipe',
+					'_text',
+					'_find',
+					'_file',
+					'_path',
+					'_filename',
+					'_name',
+					'_ext',
+					'_cwd',
+					'code_rr',
+					'return eval(code_rr)'
+				);
 			if (!_config_rr.dataIsPiped) {
 				_file = path.normalize(path.join(process.cwd(), _file_rr));
-				_pathInfo = path.parse(_file);
-				_path = _pathInfo.dir;
-				_filename = _pathInfo.base;
-				_name = _pathInfo.name;
-				_ext = _pathInfo.ext;
+				let pathInfo = path.parse(_file);
+				_path = pathInfo.dir;
+				_filename = pathInfo.base;
+				_name = pathInfo.name;
+				_ext = pathInfo.ext;
 			}
 
 			// Run only once if no captured groups (replacement cant change)
 			if (!/\$\d/.test(_config_rr.replacement)) {
-				_config_rr.replacement = eval(code_rr);
+				_config_rr.replacement = dynamicContent(
+					fs,
+					globs,
+					_pipe,
+					_text,
+					_find,
+					_file,
+					_path,
+					_filename,
+					_name,
+					_ext,
+					_cwd,
+					code_rr
+				);
 			} else {
 				// Captures groups present, so need to run once per match
 				_config_rr.replacement = function() {
 					step(arguments);
+
+					const __pipe = _pipe,
+						__text = _text,
+						__find = _find,
+						__file = _file,
+						__path = _path,
+						__filename = _filename,
+						__name = _name,
+						__ext = _ext,
+						__cwd = _cwd,
+						__code_rr = code_rr;
+
+					var capturedGroups = '';
 					for (var i = 0; i < arguments.length - 2; i++) {
-						eval('var $' + i + '=' + JSON.stringify(arguments[i]) + ';');
+						capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
 					}
-					return eval(code_rr);
+					return dynamicContent(
+						fs,
+						globs,
+						__pipe,
+						__text,
+						__find,
+						__file,
+						__path,
+						__filename,
+						__name,
+						__ext,
+						__cwd,
+						capturedGroups + __code_rr
+					);
 				};
 			}
 		}
@@ -205,10 +261,10 @@ module.exports = function(config) {
 		step('Get final pattern');
 		let pattern = config.pattern;
 
-		if (config.patternFile) {
+		/*if (config.patternFile) {
 			pattern = fs.readFileSync(pattern, 'utf8');
-			pattern = oneLinerFromFile(pattern);
-		}
+			pattern = new Function('return '+pattern)();
+		}*/
 
 		step(pattern);
 		return pattern;
@@ -261,17 +317,16 @@ module.exports = function(config) {
 
 		return config.replacement;
 	}
-	/*
-	function oneLinerFromFile(str){
-		var lines = str.split("\n");
-		if(liens.length===1){
+
+	/*function oneLinerFromFile(str){
+		let lines = str.split("\n");
+		if(lines.length===1){
 			return str;
 		}
 		return lines.map(function (line) {
 			return line.trim();
 		}).join(' ');
-	}
-*/
+	}*/
 
 	function getFinalRegex(config) {
 		step('Get final regex');
@@ -316,6 +371,4 @@ module.exports = function(config) {
 
 		return flags;
 	}
-};
-
-module.exports.version = version;
+}
