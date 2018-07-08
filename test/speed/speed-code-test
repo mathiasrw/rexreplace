@@ -38,26 +38,31 @@ remove_testdata(){
 	rm 5Kb.file
 	rm 10Kb.file
 	rm 100Kb.file
-	rm 500Kb.file
-	rm 1Mb.file
-	rm 5Mb.file
-	rm 10Mb.file
-	rm 25Mb.file
-	rm 50Mb.file
-	rm 100Mb.file
+	# rm 500Kb.file
+	# rm 1Mb.file
+	# rm 5Mb.file
+	# rm 10Mb.file
+	# rm 25Mb.file
+	# rm 50Mb.file
+	# rm 100Mb.file
 
-	rm A0.txt
-	rm A1.txt
-	rm A2.txt
-	rm A3.txt
-	rm A4.txt
-	rm A5.txt
-	rm A6.txt
-	rm A7.txt
-	rm A8.txt
-	rm A9.txt
+	
 
 }
+
+
+run_rr(){
+
+	echo ''
+	printf " - RexReplace $2 on a %s file: \t" $1
+	time for i in {1..100}; do
+		$2 '<.*?>' '' "$1.file" -o > /dev/null
+	done 
+	echo ''
+
+}
+
+
 
 do_test(){
 
@@ -69,16 +74,37 @@ do_test(){
 	echo '_10 rounds of:_'
 	echo ''
 	printf " - sed on %s file:          \t" $1
-	time for i in {1..10}; do
+	time for i in {1..100}; do
 		cat "$1.file" | sed 's/<.*?>//g' > /dev/null
 	done 
 
-	echo ''
-	printf " - RexReplace on a %s file: \t" $1
-	time for i in {1..10}; do
-		rexreplace_ '<.*?>' '' "$1.file" -o > /dev/null
-	done 
-	echo ''
+	#run_rr $1 rr_3_m
+#	run_rr $1 rr_5_m
+	# run_rr $1 rr_6_m
+	#run_rr $1 rr_6_b
+	#run_rr $1 rr_6_b_u
+	#run_rr $1 rr_6_c
+	#run_rr $1 rr_6_c_js
+	#run_rr $1 rr_6
+	#run_rr $1 rr_6_b_c
+#	run_rr $1 rr_6_b_c_js
+	#run_rr $1 rr_6_b_u_c
+	#run_rr $1 rr_6_b_u_c_js
+
+
+# Total	1,977	98,141	94,509	95,242	96,773	95,887	95,728	97,053	94,747	94,314	95,418	96,743
+# Compination	sed	rr_3_m	rr_5_m	rr_6_b	rr_6_b_u	rr_6_c	rr_6_c_js	rr_6	rr_6_b_c	rr_6_b_c_js	rr_6_b_u_c	rr_6_b_u_c_js
+# 1kb	0,633	24,249	23,337	24,131	24,392	24,705	24,553	24,673	23,645	23,322	23,384	25,703
+# 5kb	0,498	26,377	23,582	23,448	25,37	23,79	23,734	24,218	23,792	23,895	23,559	23,768
+# 10kb	0,401	23,889	23,837	23,909	23,506	23,818	23,961	24,217	23,807	23,434	24,984	23,757
+# 100kb	0,445	23,626	23,753	23,754	23,505	23,574	23,48	23,945	23,503	23,663	23,491	23,515
+
+
+#	run_rr $1 rr_5_b
+#	run_rr $1 rr_5_b_c_js
+
+
+	run_rr $1 rr
 
 }
 
@@ -89,60 +115,15 @@ do_test '1Kb'
 do_test '5Kb'
 do_test '10Kb'
 do_test '100Kb'
-do_test '500Kb'
-do_test '1Mb'
-do_test '5Mb'
-do_test '10Mb'
-do_test '25Mb'
-do_test '50Mb'
-do_test '100Mb'
+# do_test '500Kb'
+# do_test '1Mb'
+# do_test '5Mb'
+# do_test '10Mb'
+# do_test '25Mb'
+# do_test '50Mb'
+# do_test '100Mb'
 
 
-
-echo ''
-echo ''
-echo '----'
-echo ''
-echo ''
-echo "## 10 files (10Kb each) - time for 10 rounds"
-cat 10Kb.file > A0.txt
-cat A0.txt > A1.txt
-cat A0.txt > A2.txt
-cat A0.txt > A3.txt
-cat A0.txt > A4.txt
-cat A0.txt > A5.txt	
-cat A0.txt > A6.txt
-cat A0.txt > A7.txt
-cat A0.txt > A8.txt
-cat A0.txt > A9.txt
-
-echo ''
-printf " - sed on 10 files: \t"
-time for i in {1..10}; do
-	cat A0.txt | sed 's/<.*>//g' > /dev/null
-	cat A1.txt | sed 's/<.*>//g' > /dev/null
-	cat A2.txt | sed 's/<.*>//g' > /dev/null
-	cat A3.txt | sed 's/<.*>//g' > /dev/null
-	cat A4.txt | sed 's/<.*>//g' > /dev/null
-	cat A5.txt | sed 's/<.*>//g' > /dev/null
-	cat A6.txt | sed 's/<.*>//g' > /dev/null
-	cat A7.txt | sed 's/<.*>//g' > /dev/null
-	cat A8.txt | sed 's/<.*>//g' > /dev/null
-	cat A9.txt | sed 's/<.*>//g' > /dev/null
-done 
-
-
-echo ''
-printf " - RexReplace on 10 files: \t"
-time for i in {1..10}; do
-	rexreplace '<.*>' '' -o A0.txt A1.txt A2.txt A3.txt A4.txt A5.txt A6.txt A7.txt A8.txt A9.txt > /dev/null
-done 
-
-echo ''
-printf " - RexReplace on 10 files given as one glob: \t"
-time for i in {1..10}; do
-	rexreplace '<.*>' '' -o A*.txt > /dev/null
-done 
 
 
 echo ''

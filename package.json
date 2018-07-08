@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Flexible CLI regex replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
@@ -10,17 +10,21 @@
     "url": "git+https://github.com/mathiasrw/rexreplace.git"
   },
   "bin": {
-    "rexreplace": "bin/rexreplace.cli.js",
-    "rr": "bin/rexreplace.cli.js"
+    "rexreplace": "bin/rexreplace.js",
+    "rr": "bin/rexreplace.js"
   },
   "scripts": {
+    "test-minify": "npm run build-minify && npm run test-cli && npm run test-js",
     "test": "npm run build && npm run test-cli && npm run test-js",
-    "build": "rollup -c",
+    "Qpostbuild": "cat bin/rexreplace.cli.js > bin/rexreplace.cli.min.js",
+    "build": "tsc src/cli --outDir bin/ES6 -t ES6 && rollup -c && echo '#!/usr/bin/env node' > bin/rexreplace.js && google-closure-compiler-js bin/rr.ES6.bundle.js >> bin/rexreplace.js",
+    "build-minify": "npm run build && npm run minify",
+    "minify": "echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && google-closure-compiler-js --compilationLevel SIMPLE --env CUSTOM bin/rexreplace.cli.js >> bin/rexreplace.cli.min.js",
     "prebuild": "npm run format && rm -fr bin",
     "test-js": "echo todo: async mocha",
     "test-cli": "npm uninstall -g rexreplace && npm -g install ./ && bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
-    "prepublishOnly": "git pull && npm test && npm run load-options",
+    "prepublishOnly": "git pull && npm test-minify && npm run load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
     "halt-on-changes": "bash -c \"[[ 0 == $(git diff --numstat -- ./src ':(exclude)package-lock.json' | wc -l | tr -d ' ') ]] && echo 'All good (No changes found)' && exit 0 || echo 'Oh! Changes found. Did you forget to ´npm run format´?' && git diff -- ./src ':(exclude)package-lock.json' | cat && exit 1\"",
@@ -36,6 +40,7 @@
   ],
   "devDependencies": {
     "assert": "^1.4.1",
+    "google-closure-compiler-js": "^20180610.0.0",
     "mocha": "^5.2.0",
     "prettier": "^1.12.1",
     "rollup": "^0.62.0",
@@ -51,7 +56,7 @@
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-typescript2": "^0.15.0",
     "rollup-plugin-uglify": "^4.0.0",
-    "typescript": "^2.9.2"  
+    "typescript": "^2.9.2"
   },
   "directories": {
     "test": "test"

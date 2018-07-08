@@ -158,13 +158,13 @@ Flag |  Effect
 
 
 ### Not a priority
-- Speed. Obviously, speed is important, but to what extent does a 21-millisecond command really satisfy the user compared to a 294-millisecond command? See _test->speed_ for more info. 
+- Speed. Obviously, speed is important, but to what extent does a 0,29-second command really satisfy the user compared to a 294-millisecond command? See _test->speed_ for more info. 
 
 ```bash
-> time cat README.md | sed 's/x/y/g'  > /dev/null
+> time cat README.md | sed 's/a/x/g'  > /dev/null
 cat myfile  0,00s user 0,00s system 45% cpu 0,011 total
 sed 's/x/y/g' > /dev/null  0,00s user 0,00s system 43% cpu 0,010 total
-> time rr x y README.md -o > /dev/null 
+> time rr a x README.md -o > /dev/null 
 rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 ```
 
@@ -200,17 +200,17 @@ Now, what is relevant to notice is how `sed` only takes 3.3 seconds longer for t
 Speed relative to fastest tool for each file size
 ---------------------------------------------------
 Bytes    sed    rr    Time it took longer (seconds)
-1          1    60    0,3    <= sed is 60x faster  
-5          1    44    0,3
-10         1    35    0,2
-100        1    24    0,2
-500        1     8    0,2
-1000       1     5    0,2
+1          1    39    0,5    <= sed is 39x faster  
+5          1    32    0,4	 
+10         1    27    0,4
+100        1    19    0,3
+500        1     7    0,3
+1000       1     4    0,3
 5000       1     1    0,0    <= same speed for 5Mb file
-10000      1     1    0,2
-25000      2     1    0,7
-50000      2     1    1,7
-100000     3     1    3,3    <= rr is 3x faster
+10000      2     1    0,3
+25000      2     1    1,1
+50000      3     1    3,1
+100000     3     1    4,9    <= rr 3.1.0 is 3x faster
 ```
 
 So even though the speed evolves very differently, there is only little practical use of the focus on speed for most use cases. Replacing in 10000 small files? Use RexReplace and get yourself a cup of coffee - or spend half an hour getting `sed` to work as you want it to and enjoy the thrilling few seconds it takes to do its magic.  

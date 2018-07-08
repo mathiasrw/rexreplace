@@ -160,7 +160,7 @@ const yargs = require('yargs')
 			`\n'_fs' from node, ` +
 			`\n'_globs' from npm, ` +
 			`\n'_cwd' current working dir, ` +
-			`\n'_pipe' is the piped data into the command (null if no piped data), ` +
+			`\n'_pipe' is the data piped into the command (null if no piped data), ` +
 			`\n'_find' is the final pattern searched for. ` +
 			`\n'_text' is the full text being searched (= file contents or piped data). ` +
 			`\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): ` +
