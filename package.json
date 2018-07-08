@@ -24,7 +24,7 @@
     "test-js": "echo todo: async mocha",
     "test-cli": "npm uninstall -g rexreplace && npm -g install ./ && bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
-    "prepublishOnly": "git pull && npm test-minify && npm run load-options",
+    "QprepublishOnly": "git pull && npm test-minify && npm run load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
     "halt-on-changes": "bash -c \"[[ 0 == $(git diff --numstat -- ./src ':(exclude)package-lock.json' | wc -l | tr -d ' ') ]] && echo 'All good (No changes found)' && exit 0 || echo 'Oh! Changes found. Did you forget to ´npm run format´?' && git diff -- ./src ':(exclude)package-lock.json' | cat && exit 1\"",
