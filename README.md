@@ -163,7 +163,7 @@ Flag |  Effect
 ```bash
 > time cat README.md | sed 's/a/x/g'  > /dev/null
 cat myfile  0,00s user 0,00s system 45% cpu 0,011 total
-sed 's/x/y/g' > /dev/null  0,00s user 0,00s system 43% cpu 0,010 total
+sed 's/a/x/g' > /dev/null  0,00s user 0,00s system 43% cpu 0,010 total
 > time rr a x README.md -o > /dev/null 
 rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 ```
