@@ -71,7 +71,7 @@ do_test(){
 	echo "## A single $1 file"
 	echo ''
 
-	echo '_10 rounds of:_'
+	echo '_100 rounds of:_'
 	echo ''
 	printf " - sed on %s file:          \t" $1
 	time for i in {1..100}; do

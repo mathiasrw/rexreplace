@@ -9,6 +9,7 @@ export function engine(config) {
     step(config);
     config.pattern = getFinalPattern(config) || '';
     config.replacement = getFinalReplacement(config) || '';
+    config.replacementOri = config.replacement;
     config.regex = getFinalRegex(config) || '';
     step(config);
     if (handlePipedData(config)) {
@@ -51,9 +52,11 @@ export function engine(config) {
             const _pipe = _config_rr.pipedData;
             const _text = _data_rr;
             const _find = _config_rr.pattern;
-            const code_rr = _config_rr.replacement;
+            const code_rr = _config_rr.replacementOri;
             const _cwd = process.cwd();
-            let _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function('_fs', '_globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', 'return eval(code_rr)');
+            let _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function(
+            //'require',
+            'fs', 'globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', 'return eval(code_rr)');
             if (!_config_rr.dataIsPiped) {
                 _file = path.normalize(path.join(process.cwd(), _file_rr));
                 let pathInfo = path.parse(_file);
@@ -64,7 +67,9 @@ export function engine(config) {
             }
             // Run only once if no captured groups (replacement cant change)
             if (!/\$\d/.test(_config_rr.replacement)) {
-                _config_rr.replacement = dynamicContent(fs, globs, _pipe, _text, _find, _file, _path, _filename, _name, _ext, _cwd, code_rr);
+                _config_rr.replacement = dynamicContent(
+                //require,
+                fs, globs, _pipe, _text, _find, _file, _path, _filename, _name, _ext, _cwd, code_rr);
             }
             else {
                 // Captures groups present, so need to run once per match
@@ -75,7 +80,9 @@ export function engine(config) {
                     for (var i = 0; i < arguments.length - 2; i++) {
                         capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
                     }
-                    return dynamicContent(fs, globs, __pipe, __text, __find, __file, __path, __filename, __name, __ext, __cwd, capturedGroups + __code_rr);
+                    return dynamicContent(
+                    //require,
+                    fs, globs, __pipe, __text, __find, __file, __path, __filename, __name, __ext, __cwd, capturedGroups + __code_rr);
                 };
             }
         }

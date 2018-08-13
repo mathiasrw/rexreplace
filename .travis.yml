@@ -6,7 +6,7 @@ node_js:
   - "7"
   - "6"
 
-
+install: npm install
 
 script:
   - npm run test-format # is formatting OK

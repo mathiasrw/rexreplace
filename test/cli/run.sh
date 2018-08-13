@@ -153,7 +153,7 @@ assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' my.file -o --replacement-
 
 # Access to js variables
 reset
-assert		 		"rexreplace 'fo(o)bar' '[!!_fs,!!_globs,_find,_text.trim()].join(\":\")' my.file -o --replacement-js"    'true:true:fo(o)bar:foobar'
+assert		 		"rexreplace 'fo(o)bar' '[!!fs,!!globs,_find,_text.trim()].join(\":\")' my.file -o --replacement-js"    'true:true:fo(o)bar:foobar'
 
 
 reset

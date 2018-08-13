@@ -18,6 +18,8 @@ export function engine(config) {
 
 	config.replacement = getFinalReplacement(config) || '';
 
+	config.replacementOri = config.replacement;
+
 	config.regex = getFinalRegex(config) || '';
 
 	step(config);
@@ -71,7 +73,7 @@ export function engine(config) {
 			const _pipe = _config_rr.pipedData;
 			const _text = _data_rr;
 			const _find = _config_rr.pattern;
-			const code_rr = _config_rr.replacement;
+			const code_rr = _config_rr.replacementOri;
 			const _cwd = process.cwd();
 			let _file = '',
 				_path = '',
@@ -79,8 +81,9 @@ export function engine(config) {
 				_name = '',
 				_ext = '',
 				dynamicContent = new Function(
-					'_fs',
-					'_globs',
+					//'require',
+					'fs',
+					'globs',
 					'_pipe',
 					'_text',
 					'_find',
@@ -105,6 +108,7 @@ export function engine(config) {
 			// Run only once if no captured groups (replacement cant change)
 			if (!/\$\d/.test(_config_rr.replacement)) {
 				_config_rr.replacement = dynamicContent(
+					//require,
 					fs,
 					globs,
 					_pipe,
@@ -139,6 +143,7 @@ export function engine(config) {
 						capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
 					}
 					return dynamicContent(
+						//require,
 						fs,
 						globs,
 						__pipe,

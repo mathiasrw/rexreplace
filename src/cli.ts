@@ -157,12 +157,13 @@ const yargs = require('yargs')
 			`At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. ` +
 			`If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. ` +
 			`\nThe code has access to the following variables: ` +
-			`\n'_fs' from node, ` +
-			`\n'_globs' from npm, ` +
+			`\n'require' from node, ` +
+			`\n'fs' from node, ` +
+			`\n'globs' from npm, ` +
 			`\n'_cwd' current working dir, ` +
 			`\n'_pipe' is the data piped into the command (null if no piped data), ` +
-			`\n'_find' is the final pattern searched for. ` +
-			`\n'_text' is the full text being searched (= file contents or piped data). ` +
+			`\n'_find' is the pattern searched for (the needle). ` +
+			`\n'_text' is the full text being searched i.e. file content or piped data (the haystack). ` +
 			`\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): ` +
 			`\n'_file' is the full path of the active file being searched (including full filename), ` +
 			`\n'_path' is the full path without filename of the active file being searched, ` +

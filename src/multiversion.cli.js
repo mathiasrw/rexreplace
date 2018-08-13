@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-
-
 if ('6' <= process.versions.node) {
 	require('./ES6/rexreplace.cli.bundle.js');
 } else if ('0.12' <= process.versions.node) {

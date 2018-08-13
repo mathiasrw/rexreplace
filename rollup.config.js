@@ -30,17 +30,18 @@ export default [
 		output: {
 			name: 'rexreplace',
 			//file: 'build/ES5/rexreplace.bundle.js',
-			file: 'bin/rr.ES6.bundle.js',
+			file: 'bin/rexreplace.cli.js',
 			format: 'iife'
 		},
 		plugins: [
 			hashbang(),			
 			//typescript(),
+			resolve(), 
+			buble(),
 			replace({
 				"PACKAGE_VERSION": require('./package.json').version
 			}),
-			resolve(), 
-    		buble(),
+
 			//progress(),
 			/*closure({
 				        languageIn: 'ECMASCRIPT6',
