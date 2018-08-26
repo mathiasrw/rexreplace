@@ -1,4 +1,3 @@
-
 <!--h3 align="center">
     <br>
 <img width="350" src="https://cloud.githubusercontent.com/assets/1063454/24127465/ed1a59a2-0e28-11e7-9546-160d7eb1d8b9.png" alt="RexReplace mascot Benny on the RexReplace logo" />
@@ -10,7 +9,8 @@
 
 
 [![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
-[![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) 
+[![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
+
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
 [![Greenkeeper badge](https://badges.greenkeeper.io/mathiasrw/rexreplace.svg)](https://greenkeeper.io/)
@@ -268,3 +268,7 @@ This means that individuals making significant and valuable contributions are gi
 
 
 _<small>Icon inspired by <a href="http://www.freepik.com">Freepik</a> from <a href="http://www.flaticon.com">www.flaticon.com</a></small>_
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_large)
