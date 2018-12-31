@@ -95,15 +95,15 @@ export function engine(config) {
 					'_cwd',
 					'code_rr',
 					`
-					var path = require('path')
-					var require_ = require
+					var path = require('path');
+					var require_ = require;
 					var r = function(file){
 						var result = null;
 						try{
 							result = require_(file);
 						} catch (e){
-							var dir = !!file.match(/^[\\\/]/) ? '' : _cwd
-							result = require_(path.resolve(dir, file))
+							var dir = !!file.match(/^[\\\/]/) ? '' : _cwd;
+							result = require_(path.resolve(dir, file));
 						}
 						return result;
 					}

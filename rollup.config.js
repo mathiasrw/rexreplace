@@ -2,7 +2,7 @@
 import commonjs from 'rollup-plugin-commonjs';
 import pkg from './package.json';
 import progress from 'rollup-plugin-progress';
-import typescript from 'rollup-plugin-typescript2';
+import typescript from 'rollup-plugin-typescript3';
 import closure from 'rollup-plugin-closure-compiler-js';
 import { uglify } from 'rollup-plugin-uglify';
 
