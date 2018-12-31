@@ -68,13 +68,17 @@ Let all markdown files in the `docs/` dir get headlines moved one level deeper
 ```
  
 ----
-Let the version number from package.json get into your distribution js files (use the string `VERSION_NUMBER` in your source files).
+Let the version number from package.json get into your distribution js files (use the string `VERSION` in your source files).
    
 ```bash
-> rexreplace 'VERSION_NUMBER' 'require("package.json").version' -j dist/*.js 
+> rexreplace 'VERSION' 'require("./package.json").version' -j dist/*.js 
 ```
 
+Require have expanded so it will understand if you try to reach a file with a relative path without the `./` part. You also have the alias `r` available instead of `require`. As the file extention is not needed you will get the same result writing: 
 
+```bash
+> rexreplace 'VERSION' 'r("package").version' -j dist/*.js 
+```
 
 ----
 
@@ -125,7 +129,7 @@ Flag |  Effect
 `-m` | **`--output-match`** Output each match on a new line. Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. If search pattern does not contain matching groups the full match will be outputted. If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter).     [boolean]
 `-T` | **`--trim-pipe`** Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. [boolean]
 `-R` | **`--replacement-pipe`** Replacement will be piped in. You still need to provide a dummy value (like `_`) as replacement parameter.                                   [boolean]
-`-j` | **`--replacement-js`** Treat replacement as javascript source code. The statement from the last expression will become the replacement string. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. The code has access to the following variables: `require` from node, `fs` from node, `globs` from npm, `_cwd` current working dir, `_pipe` is the data piped into the command (null if no piped data), `_find` is the pattern searched for (the needle). `_text` is the full text being searched i.e. file content or piped data (the haystack). The following values are also available if working on a file (if data is being piped they are all set to an empty string): `_file` is the full path of the active file being searched (including full filename), `_path` is the full path without filename of the active file being searched, `_filename` is the full filename of the active file being searched, `_name` is the filename of the active file being searched with no extension, `_ext` is the extension of the filename including leading dot.                                 [boolean]
+`-j` | **`--replacement-js`** Treat replacement as javascript source code. The statement from the last expression will become the replacement string. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. The code has access to the following variables: `require` with the alias `r` both expanded to understand relative path even if not starting with `./`, `fs` from node, `globs` from npm, `_cwd` current working dir, `_pipe` is the data piped into the command (null if no piped data), `_find` is the pattern searched for (the needle). `_text` is the full text being searched i.e. file content or piped data (the haystack). The following values are also available if working on a file (if data is being piped they are all set to an empty string): `_file` is the full path of the active file being searched (including full filename), `_path` is the full path without filename of the active file being searched, `_filename` is the full filename of the active file being searched, `_name` is the filename of the active file being searched with no extension, `_ext` is the extension of the filename including leading dot.                                 [boolean]
 `-h` | **`--help`** Display help.                                [boolean]
 ## Good to know 
 
@@ -226,6 +230,7 @@ _.oO(What should "sed" have looked like by now?)_
 
 ### Future ideas
 
+- Add support to reauire hjson, jsonh, yaml, ini? files directly
 - Test-run with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be withing the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)

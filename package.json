@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "Flexible CLI regex replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
@@ -11,9 +11,9 @@
   },
   "bin": {
     "rexreplace": "bin/rexreplace.cli.min.js",
-    "rr": "bin/rexreplace.cli.min.js"
+	"rr": "bin/rexreplace.cli.min.js"
   },
-  "scripts": { 
+  "scripts": {
     "test-minify": "npm run build-minify && npm run test-cli && npm run test-js",
     "test": "npm run build && npm run test-cli && npm run test-js",
     "postbuild": "cp bin/rexreplace.cli.js bin/rexreplace.cli.min.js",
@@ -29,7 +29,7 @@
     "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
     "halt-on-changes": "bash -c \"[[ 0 == $(git diff --numstat -- ./src ':(exclude)package-lock.json' | wc -l | tr -d ' ') ]] && echo 'All good (No changes found)' && exit 0 || echo 'Oh! Changes found. Did you forget to ´npm run format´?' && git diff -- ./src ':(exclude)package-lock.json' | cat && exit 1\"",
     "test-format": "npm run format && npm run halt-on-changes",
-    "format": "prettier './src/**/*.*s' --write"
+    "format": "prettier './src/**/*.{js,ts}' --write"
   },
   "keywords": [
     "replace",
@@ -65,7 +65,6 @@
   "dependencies": {
     "chalk": "^2.4.1",
     "globs": "^0.1.4",
-    "tsickle": "^0.32.0",
     "yargs": "^12.0.2"
   },
   "prettier": {

@@ -81,7 +81,7 @@ export function engine(config) {
 				_name = '',
 				_ext = '',
 				dynamicContent = new Function(
-					//'require',
+					'require',
 					'fs',
 					'globs',
 					'_pipe',
@@ -94,7 +94,22 @@ export function engine(config) {
 					'_ext',
 					'_cwd',
 					'code_rr',
-					'return eval(code_rr)'
+					`
+					var path = require('path')
+					var require_ = require
+					var r = function(file){
+						var result = null;
+						try{
+							result = require_(file);
+						} catch (e){
+							var dir = !!file.match(/^[\\\/]/) ? '' : _cwd
+							result = require_(path.resolve(dir, file))
+						}
+						return result;
+					}
+					require = r;
+					return eval(code_rr);					
+					`
 				);
 			if (!_config_rr.dataIsPiped) {
 				_file = path.normalize(path.join(process.cwd(), _file_rr));
@@ -108,7 +123,7 @@ export function engine(config) {
 			// Run only once if no captured groups (replacement cant change)
 			if (!/\$\d/.test(_config_rr.replacement)) {
 				_config_rr.replacement = dynamicContent(
-					//require,
+					require,
 					fs,
 					globs,
 					_pipe,
@@ -143,7 +158,7 @@ export function engine(config) {
 						capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
 					}
 					return dynamicContent(
-						//require,
+						require,
 						fs,
 						globs,
 						__pipe,
@@ -314,6 +329,7 @@ export function engine(config) {
 		}
 
 		// If captured groups then run dynamicly
+		//console.log(process);
 		if (config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node < '6') {
 			return die('Captured groups for javascript replacement is only supported in node 6+');
 		}
