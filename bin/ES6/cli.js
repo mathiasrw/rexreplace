@@ -76,7 +76,7 @@ const yargs = require('yargs')
     .alias('b', 'keep-backup')
     .boolean('m')
     .describe('m', `Output each match on a new line. ` +
-    `Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. ` +
+    `Will not replace any content but you still need to provide a dummy value (like \`_\`) as replacement parameter. ` +
     `If search pattern does not contain matching groups the full match will be outputted. ` +
     `If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). ` +
     ``)
@@ -88,7 +88,7 @@ const yargs = require('yargs')
     '')
     .boolean('R')
     .alias('R', 'replacement-pipe')
-    .describe('R', `Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter.` +
+    .describe('R', `Replacement will be piped in. You still need to provide a dummy value (like \`_\`) as replacement parameter.` +
     '')
     .boolean('j')
     .alias('j', 'replacement-js')
@@ -96,10 +96,10 @@ const yargs = require('yargs')
     `The statement from the last expression will become the replacement string. ` +
     `Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. ` +
     `The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. ` +
-    `At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. ` +
+    `At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. ` +
     `If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. ` +
     `\nThe code has access to the following variables: ` +
-    `\n'require' from node, ` +
+    `\n'require' with the alias \`r\` both expanded to understand relative path even if not starting with \`./\`, ` +
     `\n'fs' from node, ` +
     `\n'globs' from npm, ` +
     `\n'_cwd' current working dir, ` +

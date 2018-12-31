@@ -70,7 +70,7 @@
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
-    var version = '4.0.1';
+    var version = '4.1.1';
     function engine(config) {
         outputConfig(config);
         step('Displaying steps for:');
@@ -122,9 +122,7 @@
                 var _find = _config_rr.pattern;
                 var code_rr = _config_rr.replacementOri;
                 var _cwd = process.cwd();
-                var _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function(
-                //'require',
-                'fs', 'globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', 'return eval(code_rr)');
+                var _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function('require', 'fs', 'globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', "\n\t\t\t\t\tvar path = require('path')\n\t\t\t\t\tvar require_ = require\n\t\t\t\t\tvar r = function(file){\n\t\t\t\t\t\tvar result = null;\n\t\t\t\t\t\ttry{\n\t\t\t\t\t\t\tresult = require_(file);\n\t\t\t\t\t\t} catch (e){\n\t\t\t\t\t\t\tvar dir = !!file.match(/^[\\/]/) ? '' : _cwd\n\t\t\t\t\t\t\tresult = require_(path.resolve(dir, file))\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn result;\n\t\t\t\t\t}\n\t\t\t\t\trequire = r;\n\t\t\t\t\treturn eval(code_rr);\t\t\t\t\t\n\t\t\t\t\t");
                 if (!_config_rr.dataIsPiped) {
                     _file = path.normalize(path.join(process.cwd(), _file_rr));
                     var pathInfo = path.parse(_file);
@@ -135,9 +133,7 @@
                 }
                 // Run only once if no captured groups (replacement cant change)
                 if (!/\$\d/.test(_config_rr.replacement)) {
-                    _config_rr.replacement = dynamicContent(
-                    //require,
-                    fs, globs, _pipe, _text, _find, _file, _path, _filename, _name, _ext, _cwd, code_rr);
+                    _config_rr.replacement = dynamicContent(require, fs, globs, _pipe, _text, _find, _file, _path, _filename, _name, _ext, _cwd, code_rr);
                 }
                 else {
                     // Captures groups present, so need to run once per match
@@ -150,9 +146,7 @@
                         for (var i = 0; i < arguments.length - 2; i++) {
                             capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments$1[i]) + '; ';
                         }
-                        return dynamicContent(
-                        //require,
-                        fs, globs, __pipe, __text, __find, __file, __path, __filename, __name, __ext, __cwd, capturedGroups + __code_rr);
+                        return dynamicContent(require, fs, globs, __pipe, __text, __find, __file, __path, __filename, __name, __ext, __cwd, capturedGroups + __code_rr);
                     };
                 }
             }
@@ -287,6 +281,7 @@
                 };
             }
             // If captured groups then run dynamicly
+            //console.log(process);
             if (config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node < '6') {
                 return die('Captured groups for javascript replacement is only supported in node 6+');
             }
@@ -412,7 +407,7 @@
         .alias('b', 'keep-backup')
         .boolean('m')
         .describe('m', "Output each match on a new line. " +
-        "Will not replace any content but you still need to provide a dummy value (like '_') as replacement parameter. " +
+        "Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. " +
         "If search pattern does not contain matching groups the full match will be outputted. " +
         "If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). " +
         "")
@@ -424,7 +419,7 @@
         '')
         .boolean('R')
         .alias('R', 'replacement-pipe')
-        .describe('R', "Replacement will be piped in. You still need to provide a dummy value (like '_') as replacement parameter." +
+        .describe('R', "Replacement will be piped in. You still need to provide a dummy value (like `_`) as replacement parameter." +
         '')
         .boolean('j')
         .alias('j', 'replacement-js')
@@ -432,10 +427,10 @@
         "The statement from the last expression will become the replacement string. " +
         "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
         "The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. " +
-        "At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2 €3 ... instead. " +
+        "At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. " +
         "If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. " +
         "\nThe code has access to the following variables: " +
-        "\n'require' from node, " +
+        "\n'require' with the alias `r` both expanded to understand relative path even if not starting with `./`, " +
         "\n'fs' from node, " +
         "\n'globs' from npm, " +
         "\n'_cwd' current working dir, " +

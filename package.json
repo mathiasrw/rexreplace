@@ -1,7 +1,7 @@
 {
   "name": "rexreplace",
-  "version": "4.0.1",
-  "description": "Flexible CLI regex replace in files.",
+  "version": "4.1.1",
+  "description": "CLI search regexp and replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
   "main": "src/engine.js",
@@ -27,11 +27,13 @@
     "prepublishOnly": "git pull && npm run test-minify && npm run load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
-    "halt-on-changes": "bash -c \"[[ 0 == $(git diff --numstat -- ./src ':(exclude)package-lock.json' | wc -l | tr -d ' ') ]] && echo 'All good (No changes found)' && exit 0 || echo 'Oh! Changes found. Did you forget to ´npm run format´?' && git diff -- ./src ':(exclude)package-lock.json' | cat && exit 1\"",
-    "test-format": "npm run format && npm run halt-on-changes",
-    "format": "prettier './src/**/*.*s' --write"
+	"test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `npm run format` and try again.' && exit 1)",
+	"format": "yarn prettier --write",
+	"prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"
+
   },
   "keywords": [
+    "search",
     "replace",
     "regex",
     "regexp",
@@ -65,7 +67,7 @@
   "dependencies": {
     "chalk": "^2.4.1",
     "globs": "^0.1.4",
-    "yargs": "^12.0.1"
+    "yargs": "^12.0.2"
   },
   "prettier": {
     "useTabs": true,
