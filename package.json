@@ -11,7 +11,7 @@
   },
   "bin": {
     "rexreplace": "bin/rexreplace.cli.min.js",
-	"rr": "bin/rexreplace.cli.min.js"
+    "rr": "bin/rexreplace.cli.min.js"
   },
   "scripts": {
     "test-minify": "npm run build-minify && npm run test-cli && npm run test-js",
@@ -27,9 +27,9 @@
     "prepublishOnly": "git pull && npm run test-minify && npm run load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
-    "halt-on-changes": "bash -c \"[[ 0 == $(git diff --numstat -- ./src ':(exclude)package-lock.json' | wc -l | tr -d ' ') ]] && echo 'All good (No changes found)' && exit 0 || echo 'Oh! Changes found. Did you forget to ´npm run format´?' && git diff -- ./src ':(exclude)package-lock.json' | cat && exit 1\"",
-    "test-format": "npm run format && npm run halt-on-changes",
-    "format": "prettier './src/**/*.{js,ts}' --write"
+    "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `npm run format` and try again.' && exit 1)",
+    "format": "yarn prettier --write",
+    "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"
   },
   "keywords": [
     "search",
@@ -41,23 +41,23 @@
   ],
   "devDependencies": {
     "assert": "^1.4.1",
-    "google-closure-compiler-js": "^20180610.0.0",
+    "google-closure-compiler-js": "^20181210.0.0",
     "mocha": "^5.2.0",
     "prettier": "^1.12.1",
-    "rollup": "^0.63.0",
+    "rollup": "^0.65.0",
     "rollup-plugin-buble": "^0.19.2",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-commonjs": "^9.1.0",
-    "rollup-plugin-filesize": "^2.0.0",
+    "rollup-plugin-filesize": "^4.0.1",
     "rollup-plugin-hashbang": "^1.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-preserve-shebang": "^0.1.6",
     "rollup-plugin-progress": "^0.4.0",
     "rollup-plugin-re": "^1.0.7",
     "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-typescript2": "^0.16.0",
+    "rollup-plugin-typescript2": "^0.17.0",
     "rollup-plugin-uglify": "^4.0.0",
-    "typescript": "^2.9.2",
+    "typescript": "^3.0.3",
     "yarn": "^1.9.4"
   },
   "directories": {
