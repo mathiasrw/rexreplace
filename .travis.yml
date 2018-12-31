@@ -3,7 +3,7 @@ node_js:
   #- "node"
   - "9"
   - "8"
-  - "7"
+  #- "7" 7 cant build google closure (but should be OK as long as 6 is OK to run rexreplace)
   - "6"
 
 install: npm install
@@ -15,7 +15,7 @@ script:
 
 
 before_install:
-- '[[ $(node -v) =~ ^v9.*$ ]] || npm install -g npm@latest' # skipped when using node 9
-- npm install -g greenkeeper-lockfile@2
+  - '[[ $(node -v) =~ ^v9.*$ ]] || npm install -g npm@latest' # skipped when using node 9
+  - npm install -g greenkeeper-lockfile@2
 before_script: greenkeeper-lockfile-update
 after_script: greenkeeper-lockfile-upload
