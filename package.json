@@ -27,10 +27,9 @@
     "prepublishOnly": "git pull && npm run test-minify && npm run load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
-	"test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `npm run format` and try again.' && exit 1)",
-	"format": "yarn prettier --write",
-	"prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"
-
+    "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `npm run format` and try again.' && exit 1)",
+    "format": "yarn prettier --write",
+    "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"
   },
   "keywords": [
     "search",
@@ -42,7 +41,7 @@
   ],
   "devDependencies": {
     "assert": "^1.4.1",
-    "google-closure-compiler-js": "^20180610.0.0",
+    "google-closure-compiler-js": "^20181210.0.0",
     "mocha": "^5.2.0",
     "prettier": "^1.12.1",
     "rollup": "^0.65.0",
