@@ -70,7 +70,7 @@
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
-    var version = '4.1.0';
+    var version = '4.1.1';
     function engine(config) {
         outputConfig(config);
         step('Displaying steps for:');

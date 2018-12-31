@@ -1,7 +1,7 @@
 {
   "name": "rexreplace",
-  "version": "4.1.0",
-  "description": "Flexible CLI regex replace in files.",
+  "version": "4.1.1",
+  "description": "CLI search regexp and replace in files.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
   "main": "src/engine.js",
@@ -32,6 +32,7 @@
     "format": "prettier './src/**/*.{js,ts}' --write"
   },
   "keywords": [
+    "search",
     "replace",
     "regex",
     "regexp",
