@@ -20,15 +20,14 @@
 
 # RexReplace
 
-RexReplace is a versatile tool to search and replace text in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts.     
-
-_No more brute-forcing the right combination of `find`, `cat`, `sed`, `tr`, and `awk` to replace a text pattern in the right files._
+RexReplace is a versatile tool to search and replace text in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts. 
 
 **Key features**:
 
 - Easy and intuitive notation makes you trust what you are doing
 - Replacement can be javascript code - giving you Turing complete flexibility
 - Pinoint the exact files with [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl16a.html) (`docs/*.md` represents each markdown file in `docs/`)
+- _No more brute-forcing the right combination of `find`, `cat`, `sed`, `tr`, and `awk` to replace a text pattern in the right files._
 
 
 
