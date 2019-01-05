@@ -1,0 +1,159 @@
+#!/bin/bash
+
+DATETIME=`date '+%Y-%m-%d %H:%M'`
+RR_VERSION="v`rr -v`"
+NODE_VERSION=`NODE -v`
+DATAPOND="datapond.txt"
+echo ''
+echo "# RexReplace vs x speed test"
+printf "\n\t%s\n\t%s\n\t%s\n\n" "$DATETIME" "RexReplace $RR_VERSION" "Node $NODE_VERSION"
+
+echo "This test will remove p and div HTML tags from the HTML sorce of George Orwell's 1984."
+
+echo 'All testresults printed are the sum of 10 rounds given in seconds.'
+
+TIMEFORMAT=%R
+
+create_testdata(){
+	#return # for debug
+
+	#curl -s 1984.surge.sh > source.file
+	cat 1984.surge.sh.html > source.file
+	tail -c $((1*1024))  source.file > 1Kb.file
+	tail -c $((5*1024))  source.file > 5Kb.file
+	tail -c $((10*1024)) source.file > 10Kb.file
+	tail -c $((100*1024)) source.file > 100Kb.file
+	tail -c $((500*1024)) source.file > 500Kb.file
+	echo '' > 1Mb.file; for i in {1..2}; do cat 500Kb.file >> 1Mb.file; done
+	echo '' > 5Mb.file; for i in {1..5}; do cat 1Mb.file >> 5Mb.file; done
+	echo '' > 10Mb.file; for i in {1..10}; do cat 1Mb.file >> 10Mb.file; done
+	echo '' > 25Mb.file; for i in {1..25}; do cat 1Mb.file >> 25Mb.file; done
+	echo '' > 50Mb.file; for i in {1..50}; do cat 1Mb.file >> 50Mb.file; done
+	echo '' > 100Mb.file; for i in {1..100}; do cat 1Mb.file >> 100Mb.file; done
+
+	
+}
+
+remove_testdata(){
+	return # for debug
+
+	rm source.file
+	rm 1Kb.file
+	rm 5Kb.file
+	rm 10Kb.file
+	rm 100Kb.file
+	rm 500Kb.file
+	rm 1Mb.file
+	rm 5Mb.file
+	rm 10Mb.file
+	rm 25Mb.file
+	rm 50Mb.file
+	rm 100Mb.file
+	
+
+}
+
+
+run_hyperfine(){
+	echo ''
+	printf "## Running test on %s file\n" $1
+	echo ''
+	cp "$1.file" "test$1.file"
+	hyperfine								\
+		--time-unit second						\
+		--warmup 5 								\
+		--min-runs 10 							\
+		--prepare "cp $1.file test$1.file" 		\
+		"sed -i '' 's:$2:$3:g' test$1.file" 	\
+		"gsed -i -e 's/$2/$3/g' test$1.file" 	\
+		"rr '$2' '$3' test$1.file" 		\
+		"perl -pi -e 's/$2/$3/g' test$1.file" 	\
+		"awk '{gsub(/$2/,\"$3\")}' test$1.file" \
+		"replace-in-file '/$2/g' '$3' test$1.file --isRegex" 	\
+		"replace '$2' '$3' test$1.file" 		\
+		"replace-x '$2' '$3' test$1.file" 		\
+		"sd -i '$2' '$3' test$1.file" 				\
+		--export-csv output$1.csv					\
+		--export-json output$1.json 				\
+		--export-markdown output$1.md 			\
+		# --show-output
+	echo ''
+
+	echo '----'
+}
+
+
+run_hyperfine_specific(){
+	echo ''
+	printf "## Running test on %s file\n" $1
+	echo ''
+	cp "$1.file" "test$1.file"
+	echo hyperfine								\
+		--time-unit second						\
+		--warmup 5 								\
+		--min-runs 10 							\
+		--prepare "cp $1.file test$1.file" 		\
+		"sed -i '' 's:</*\(p\|span\|div\)[^>]*>:$3:g' test$1.file" 	\
+		"gsed -i -e 's:$2:$3:g' test$1.file" 	\
+		"rexreplace '$2' '$3' test$1.file" 		\
+		"perl -pi -e 's:$2:$3:g' test$1.file" 	\
+		"replace-in-file '/<\/*(p|span|div)[^>]*>/g' '$3' test$1.file --isRegex" 	\
+		"replace '$2' '$3' test$1.file" 		\
+		"replace-x '$2' '$3' test$1.file" 		\
+		"sd -i '$2' '$3' test$1.file" 				\
+		--export-csv output$1.csv					\
+		--export-json output$1.json 				\
+		--export-markdown output$1.md 			\
+		# --show-output
+		#"awk '{gsub(:$2:,\"$3\")}' test$1.file" \
+	echo ''
+
+	echo '----'
+	
+	echo '' >> "$DATAPOND"
+
+	echo `stat -f%z "$1.file"` >> "$DATAPOND"
+
+	alasql 'COLUMN OF SELECT mean from csv(?)' "output$1.csv" >> "$DATAPOND"
+}
+
+
+
+do_test(){
+
+	#run_hyperfine_specific $1 '</*(p|span|div)[^>]*>' 'foobar' 
+	run_hyperfine $1 'e' 'foobar' 
+
+}
+
+
+create_testdata
+
+echo '' > "$DATAPOND"
+
+do_test '1Kb'
+do_test '5Kb'
+do_test '10Kb'
+do_test '100Kb'
+do_test '500Kb'
+do_test '1Mb'
+do_test '5Mb'
+do_test '10Mb'
+do_test '25Mb'
+do_test '50Mb'
+do_test '100Mb'
+
+
+
+
+echo ''
+echo "_All tests completed_"
+
+
+alasql 'COLUMN OF SELECT command from csv(?)' output1kb.csv >> "$DATAPOND"
+
+rr '\[|\]|^\s+"?|[, ].*$' '' "$DATAPOND" -Q
+
+remove_testdata
+
+

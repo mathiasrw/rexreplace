@@ -49,51 +49,7 @@ export function engine(config) {
         debug('Work on content from: ' + _file_rr);
         // Variables to be accessible from js.
         if (_config_rr.replacementJs) {
-            const _pipe = _config_rr.pipedData;
-            const _text = _data_rr;
-            const _find = _config_rr.pattern;
-            const code_rr = _config_rr.replacementOri;
-            const _cwd = process.cwd();
-            let _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function('require', 'fs', 'globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', `
-					var path = require('path')
-					var require_ = require
-					var r = function(file){
-						var result = null;
-						try{
-							result = require_(file);
-						} catch (e){
-							var dir = !!file.match(/^[\\\/]/) ? '' : _cwd
-							result = require_(path.resolve(dir, file))
-						}
-						return result;
-					}
-					require = r;
-					return eval(code_rr);					
-					`);
-            if (!_config_rr.dataIsPiped) {
-                _file = path.normalize(path.join(process.cwd(), _file_rr));
-                let pathInfo = path.parse(_file);
-                _path = pathInfo.dir;
-                _filename = pathInfo.base;
-                _name = pathInfo.name;
-                _ext = pathInfo.ext;
-            }
-            // Run only once if no captured groups (replacement cant change)
-            if (!/\$\d/.test(_config_rr.replacement)) {
-                _config_rr.replacement = dynamicContent(require, fs, globs, _pipe, _text, _find, _file, _path, _filename, _name, _ext, _cwd, code_rr);
-            }
-            else {
-                // Captures groups present, so need to run once per match
-                _config_rr.replacement = function () {
-                    step(arguments);
-                    const __pipe = _pipe, __text = _text, __find = _find, __file = _file, __path = _path, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __code_rr = code_rr;
-                    var capturedGroups = '';
-                    for (var i = 0; i < arguments.length - 2; i++) {
-                        capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
-                    }
-                    return dynamicContent(require, fs, globs, __pipe, __text, __find, __file, __path, __filename, __name, __ext, __cwd, capturedGroups + __code_rr);
-                };
-            }
+            _config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
         }
         // Main regexp of the whole thing
         const result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
@@ -126,7 +82,6 @@ export function engine(config) {
         const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
         const salt = new Date()
             .toISOString()
-            .toString()
             .replace(/:/g, '_')
             .replace('Z', '');
         const backupFile = oriFile + '.' + salt + '.backup';
@@ -271,4 +226,72 @@ export function engine(config) {
         step(flags);
         return flags;
     }
+}
+function readableSize(size) {
+    if (1 === size) {
+        return '1 Byte';
+    }
+    const i = Math.floor(Math.log(size) / Math.log(1024));
+    return ((size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]);
+}
+function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
+    const _time_obj = new Date();
+    const _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time_obj.toISOString(), _time = _time_obj.toISOString(), _ = ' ';
+    // prettier-ignore
+    let _file = '', _file_rel = '', _dirpath = '', _dirpath_rel = '', _dirname = '', _filename = '', _name = '', _ext = '', _mtime = _now, _ctime = _now, _mtime_obj = _time_obj, _ctime_obj = _time_obj, _bytes = -1, _size = '0B', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', '_', '__code_rr', 'var path = require("path");' +
+        'var __require_ = require;' +
+        'var r = function(file){' +
+        'var result = null;' +
+        'try{' +
+        'result = __require_(file);' +
+        '} catch (e){' +
+        'var dir = /^[\\\/]/.test(file) ? "" : $cwd;' +
+        'result = __require_(path.resolve(dir, file));' +
+        '};' +
+        'return result;' +
+        '};' +
+        'require = r;' +
+        'return eval(__code_rr);');
+    const needsByteOrSize = /bytes|size/.test(_config_rr.replacement);
+    const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
+    if (!_config_rr.dataIsPiped) {
+        _file = path.normalize(path.join(_cwd, _file_rr));
+        _file_rel = path.relative(_cwd, _file);
+        const pathInfo = path.parse(_file);
+        _dirpath = pathInfo.dir;
+        _dirpath_rel = path.relative(_cwd, _dirpath);
+        _dirname = _file.match(/[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/)[1];
+        _filename = pathInfo.base;
+        _name = pathInfo.name;
+        _ext = pathInfo.ext;
+        if (betterToReadfromFile || /[mc]time/.test(_config_rr.replacement)) {
+            const fileStats = fs.statSync(_file);
+            _bytes = fileStats.size;
+            _size = readableSize(_bytes);
+            _mtime_obj = fileStats.mtime;
+            _ctime_obj = fileStats.ctime;
+            _mtime = _mtime_obj.toISOString();
+            _ctime = _ctime_obj.toISOString();
+            //console.log('filesize: ', fileStats.size);
+            //console.log('dataSize: ', _bytes);
+        }
+    }
+    if (needsByteOrSize && -1 === _bytes) {
+        _bytes = Buffer.from(_text).length;
+        _size = readableSize(_bytes);
+    }
+    // Run only once if no captured groups (replacement cant change)
+    if (!/\$\d/.test(_config_rr.replacement)) {
+        return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _, code_rr);
+    }
+    // Captures groups present, so need to run once per match
+    return function () {
+        step(arguments);
+        const __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __ = _, __code_rr = code_rr;
+        var capturedGroups = '';
+        for (var i = 0; i < arguments.length - 2; i++) {
+            capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
+        }
+        return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __, capturedGroups + __code_rr);
+    };
 }

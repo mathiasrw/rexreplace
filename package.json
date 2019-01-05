@@ -1,7 +1,7 @@
 {
   "name": "rexreplace",
   "version": "4.1.1",
-  "description": "CLI search regexp and replace in files.",
+  "description": "Smooth search & replace in files from CLI.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
   "main": "src/engine.js",
@@ -10,8 +10,10 @@
     "url": "git+https://github.com/mathiasrw/rexreplace.git"
   },
   "bin": {
+    "rr": "bin/rexreplace.cli.min.js",
     "rexreplace": "bin/rexreplace.cli.min.js",
-    "rr": "bin/rexreplace.cli.min.js"
+    "rexreplace_unmin": "bin/rexreplace.cli.js",
+    "rexreplace_ES6": "bin/ES6/cli.js"
   },
   "scripts": {
     "test-minify": "npm run build-minify && npm run test-cli && npm run test-js",
@@ -22,7 +24,8 @@
     "minify": "echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && google-closure-compiler-js bin/rexreplace.cli.js >> bin/rexreplace.cli.min.js",
     "prebuild": "rm -fr bin && npm run format",
     "test-js": "echo todo: async mocha",
-    "test-cli": "npm uninstall -g rexreplace && npm -g install ./ && bash test/cli/run.sh",
+	"test-cli": "npm uninstall -g rexreplace && npm -g install ./ && npm run test-cli-only",
+	"test-cli-only":"bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
     "prepublishOnly": "git pull && npm run test-minify && npm run load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
@@ -33,6 +36,7 @@
   },
   "keywords": [
     "search",
+    "find",
     "replace",
     "regex",
     "regexp",
@@ -45,6 +49,7 @@
     "mocha": "^5.2.0",
     "prettier": "^1.12.1",
     "rollup": "^1.0.0",
+    "rollup-plugin-typescript3": "^1.1.2",
     "rollup-plugin-buble": "^0.19.2",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-commonjs": "^9.1.0",
@@ -65,7 +70,6 @@
   "dependencies": {
     "chalk": "^2.4.1",
     "globs": "^0.1.4",
-    "rollup-plugin-typescript3": "^1.1.2",
     "yargs": "^12.0.2"
   },
   "prettier": {

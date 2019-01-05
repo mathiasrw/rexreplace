@@ -4,3 +4,5 @@ src/*
 gfx/*
 rollup.config.js
 greenkeeper.json
+tmp/*
+package-lock.json

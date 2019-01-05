@@ -117,38 +117,7 @@
             debug('Work on content from: ' + _file_rr);
             // Variables to be accessible from js.
             if (_config_rr.replacementJs) {
-                var _pipe = _config_rr.pipedData;
-                var _text = _data_rr;
-                var _find = _config_rr.pattern;
-                var code_rr = _config_rr.replacementOri;
-                var _cwd = process.cwd();
-                var _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function('require', 'fs', 'globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', "\n\t\t\t\t\tvar path = require('path')\n\t\t\t\t\tvar require_ = require\n\t\t\t\t\tvar r = function(file){\n\t\t\t\t\t\tvar result = null;\n\t\t\t\t\t\ttry{\n\t\t\t\t\t\t\tresult = require_(file);\n\t\t\t\t\t\t} catch (e){\n\t\t\t\t\t\t\tvar dir = !!file.match(/^[\\/]/) ? '' : _cwd\n\t\t\t\t\t\t\tresult = require_(path.resolve(dir, file))\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn result;\n\t\t\t\t\t}\n\t\t\t\t\trequire = r;\n\t\t\t\t\treturn eval(code_rr);\t\t\t\t\t\n\t\t\t\t\t");
-                if (!_config_rr.dataIsPiped) {
-                    _file = path.normalize(path.join(process.cwd(), _file_rr));
-                    var pathInfo = path.parse(_file);
-                    _path = pathInfo.dir;
-                    _filename = pathInfo.base;
-                    _name = pathInfo.name;
-                    _ext = pathInfo.ext;
-                }
-                // Run only once if no captured groups (replacement cant change)
-                if (!/\$\d/.test(_config_rr.replacement)) {
-                    _config_rr.replacement = dynamicContent(require, fs, globs, _pipe, _text, _find, _file, _path, _filename, _name, _ext, _cwd, code_rr);
-                }
-                else {
-                    // Captures groups present, so need to run once per match
-                    _config_rr.replacement = function () {
-                        var arguments$1 = arguments;
-
-                        step(arguments);
-                        var __pipe = _pipe, __text = _text, __find = _find, __file = _file, __path = _path, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __code_rr = code_rr;
-                        var capturedGroups = '';
-                        for (var i = 0; i < arguments.length - 2; i++) {
-                            capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments$1[i]) + '; ';
-                        }
-                        return dynamicContent(require, fs, globs, __pipe, __text, __find, __file, __path, __filename, __name, __ext, __cwd, capturedGroups + __code_rr);
-                    };
-                }
+                _config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
             }
             // Main regexp of the whole thing
             var result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
@@ -181,7 +150,6 @@
             var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
             var salt = new Date()
                 .toISOString()
-                .toString()
                 .replace(/:/g, '_')
                 .replace('Z', '');
             var backupFile = oriFile + '.' + salt + '.backup';
@@ -329,6 +297,76 @@
             return flags;
         }
     }
+    function readableSize(size) {
+        if (1 === size) {
+            return '1 Byte';
+        }
+        var i = Math.floor(Math.log(size) / Math.log(1024));
+        return ((size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]);
+    }
+    function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
+        var _time_obj = new Date();
+        var _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time_obj.toISOString(), _time = _time_obj.toISOString(), _ = ' ';
+        // prettier-ignore
+        var _file = '', _file_rel = '', _dirpath = '', _dirpath_rel = '', _dirname = '', _filename = '', _name = '', _ext = '', _mtime = _now, _ctime = _now, _mtime_obj = _time_obj, _ctime_obj = _time_obj, _bytes = -1, _size = '0B', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', '_', '__code_rr', 'var path = require("path");' +
+            'var __require_ = require;' +
+            'var r = function(file){' +
+            'var result = null;' +
+            'try{' +
+            'result = __require_(file);' +
+            '} catch (e){' +
+            'var dir = /^[\\\/]/.test(file) ? "" : $cwd;' +
+            'result = __require_(path.resolve(dir, file));' +
+            '};' +
+            'return result;' +
+            '};' +
+            'require = r;' +
+            'return eval(__code_rr);');
+        var needsByteOrSize = /bytes|size/.test(_config_rr.replacement);
+        var betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
+        if (!_config_rr.dataIsPiped) {
+            _file = path.normalize(path.join(_cwd, _file_rr));
+            _file_rel = path.relative(_cwd, _file);
+            var pathInfo = path.parse(_file);
+            _dirpath = pathInfo.dir;
+            _dirpath_rel = path.relative(_cwd, _dirpath);
+            _dirname = _file.match(/[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/)[1];
+            _filename = pathInfo.base;
+            _name = pathInfo.name;
+            _ext = pathInfo.ext;
+            if (betterToReadfromFile || /[mc]time/.test(_config_rr.replacement)) {
+                var fileStats = fs.statSync(_file);
+                _bytes = fileStats.size;
+                _size = readableSize(_bytes);
+                _mtime_obj = fileStats.mtime;
+                _ctime_obj = fileStats.ctime;
+                _mtime = _mtime_obj.toISOString();
+                _ctime = _ctime_obj.toISOString();
+                //console.log('filesize: ', fileStats.size);
+                //console.log('dataSize: ', _bytes);
+            }
+        }
+        if (needsByteOrSize && -1 === _bytes) {
+            _bytes = Buffer.from(_text).length;
+            _size = readableSize(_bytes);
+        }
+        // Run only once if no captured groups (replacement cant change)
+        if (!/\$\d/.test(_config_rr.replacement)) {
+            return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _, code_rr);
+        }
+        // Captures groups present, so need to run once per match
+        return function () {
+            var arguments$1 = arguments;
+
+            step(arguments);
+            var __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __ = _, __code_rr = code_rr;
+            var capturedGroups = '';
+            for (var i = 0; i < arguments.length - 2; i++) {
+                capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments$1[i]) + '; ';
+            }
+            return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __, capturedGroups + __code_rr);
+        };
+    }
 
     var assign;
     var pattern, replacement;
@@ -364,7 +402,7 @@
         .describe('I', 'Void case insensitive search pattern.')
         .alias('I', 'void-ignore-case')
         .boolean('G')
-        .describe('G', 'Void global search (stop looking after first match).')
+        .describe('G', 'Void global search (stop looking after the first match).')
         .alias('G', 'void-global')
         .boolean('M')
         .describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.')
@@ -423,27 +461,7 @@
         '')
         .boolean('j')
         .alias('j', 'replacement-js')
-        .describe('j', "Treat replacement as javascript source code. " +
-        "The statement from the last expression will become the replacement string. " +
-        "Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. " +
-        "The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. " +
-        "At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. " +
-        "If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. " +
-        "\nThe code has access to the following variables: " +
-        "\n'require' with the alias `r` both expanded to understand relative path even if not starting with `./`, " +
-        "\n'fs' from node, " +
-        "\n'globs' from npm, " +
-        "\n'_cwd' current working dir, " +
-        "\n'_pipe' is the data piped into the command (null if no piped data), " +
-        "\n'_find' is the pattern searched for (the needle). " +
-        "\n'_text' is the full text being searched i.e. file content or piped data (the haystack). " +
-        "\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): " +
-        "\n'_file' is the full path of the active file being searched (including full filename), " +
-        "\n'_path' is the full path without filename of the active file being searched, " +
-        "\n'_filename' is the full filename of the active file being searched, " +
-        "\n'_name' is the filename of the active file being searched with no extension, " +
-        "\n'_ext' is the extension of the filename including leading dot. " +
-        '')
+        .describe('j', "Treat replacement as javascript source code. \nThe statement from the last expression will become the replacement string. \nPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \nThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \nAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \nIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\nThe code has access to the following variables: \n`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n`fs` from node, \n`path` from node, \n`globs` from npm, \n`pipe`: the data piped into the command (null if no piped data), \n`find`: pattern searched for (the needle), \n`text`: full text being searched i.e. file content or piped data (the haystack), \n`bytes`: total size of the haystack in bytes, \n`size`: human-friendly representation of the total size of the haystack, \n`time`: ISO representation of the current time,\n`time_obj`: date object representing `time`,\n`now`: alias for `time`,\n`cwd`: current process working dir, \n`_`: a single space (for easy string concatenation).\n\nThe following values defaults to an empty string if haystack does not originate from a file:\n`file`: contains the full path of the active file being searched (including full filename), \n`file_rel`: contains `file` relative to current process working dir, \n`dirpath`: contains the full path without filename of the active file being searched, \n`dirpath_rel`: contains `dirpath` relative to current process working dir, \n`filename`: is the full filename of the active file being searched without path, \n`name`: filename of the active file being searched with no extension, \n`ext`: extension of the filename including leading dot, \n\nThe following values defaults current time if haystack does not originate from a file:\n`mtime`: ISO representation of the last modification time of the current file, \n`mtime_obj`: date object representing `mtime`, \n`ctime`: ISO representation of the creation time of the current file. \n`ctime_obj`: date object representing `ctime`. \n\nAll variables, except from module,  date objects and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n")
         /*
             .boolean('N')
             .alias('N', 'void-newline')
@@ -517,10 +535,11 @@
         if (needHelp) {
             return backOut();
         }
+        var RE_EURO = /€/g;
         // CLI interface default has € as alias for $
         if (!yargs.argv.voidEuro) {
-            pattern = pattern.replace(/€/g, '$');
-            replacement = replacement.replace(/€/g, '$');
+            pattern = pattern.replace(RE_EURO, '$');
+            replacement = replacement.replace(RE_EURO, '$');
         }
         // All options into one big config object for the rexreplace core
         var config = {};

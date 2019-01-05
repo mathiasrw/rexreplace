@@ -148,26 +148,31 @@ reset
 assert		 		"rexreplace 'foo' 'var i = 2; i + 2' my.file -o --replacement-js"    '4bar'
 
 reset
-assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' my.file -o --replacement-js"    'OoAr'
+#assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' my.file -o --replacement-js"    'OoAr'
 
 
 # Access to js variables
 reset
-assert		 		"rexreplace 'fo(o)bar' '[!!fs,!!globs,_find,_text.trim()].join(\":\")' my.file -o --replacement-js"    'true:true:fo(o)bar:foobar'
+assert		 		"rexreplace 'fo(o)bar' '[!!fs,!!globs,find,text.trim()].join(\":\")' my.file -o --replacement-js"    'true:true:fo(o)bar:foobar'
 
 
 reset
-assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+_file,'path:'+_path,'filename:'+_filename,'name:'+_name,'ext:'+_ext,'text:'+_text].join(':')\" -o --replacement-js"    'file::path::filename::name::ext::text:foobar'
+assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpath,'filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" -o --replacement-js"    'file::dirpath::filename::name::ext::text:foobar'
 
 
 reset
-assert		 		"rexreplace 'foobar' \"['filename:'+_filename,'name:'+_name,'ext:'+_ext,'text:'+_text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
+assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
+
+
+# Content manually testes
+# todo: automate test of content
+reset
+assert		 		"rexreplace 'foobar' '[require, fs, globs, path, pipe, pipe_, find, find_, text, text_, file, file_, file_rel, file_rel_, dirpath, dirpath_, dirpath_rel, dirpath_rel_, dirname, dirname_, filename, filename_, name, name_, ext, ext_, cwd, cwd_, now, now_, time_obj, time, time_, mtime_obj, mtime, mtime_, ctime_obj, ctime, ctime_, bytes, bytes_, size, size_, _].length' my.file -o --replacement-js"    '44'
 
 
 # -R
 reset
 assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
-
 
 
 
@@ -188,7 +193,7 @@ assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxa
 # rm replacement.txt
 
 
-# # Ssinge line file (with space)
+# # Singe line file (with space)
 # reset
 # echo 'fooba r' > my.file
 # echo ' .€' > pattern.txt

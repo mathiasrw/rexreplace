@@ -52,7 +52,7 @@ const yargs = require('yargs')
 	.alias('I', 'void-ignore-case')
 
 	.boolean('G')
-	.describe('G', 'Void global search (stop looking after first match).')
+	.describe('G', 'Void global search (stop looking after the first match).')
 	.alias('G', 'void-global')
 
 	.boolean('M')
@@ -150,29 +150,47 @@ const yargs = require('yargs')
 	.alias('j', 'replacement-js')
 	.describe(
 		'j',
-		`Treat replacement as javascript source code. ` +
-			`The statement from the last expression will become the replacement string. ` +
-			`Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. ` +
-			`The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. ` +
-			`At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. ` +
-			`If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. ` +
-			`\nThe code has access to the following variables: ` +
-			`\n'require' with the alias \`r\` both expanded to understand relative path even if not starting with \`./\`, ` +
-			`\n'fs' from node, ` +
-			`\n'globs' from npm, ` +
-			`\n'_cwd' current working dir, ` +
-			`\n'_pipe' is the data piped into the command (null if no piped data), ` +
-			`\n'_find' is the pattern searched for (the needle). ` +
-			`\n'_text' is the full text being searched i.e. file content or piped data (the haystack). ` +
-			`\nThe following values are also available if working on a file (if data is being piped they are all set to an empty string): ` +
-			`\n'_file' is the full path of the active file being searched (including full filename), ` +
-			`\n'_path' is the full path without filename of the active file being searched, ` +
-			`\n'_filename' is the full filename of the active file being searched, ` +
-			`\n'_name' is the filename of the active file being searched with no extension, ` +
-			`\n'_ext' is the extension of the filename including leading dot. ` +
-			''
-	)
+		`Treat replacement as javascript source code. 
+The statement from the last expression will become the replacement string. 
+Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. 
+The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. 
+At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. 
+If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
 
+The code has access to the following variables: 
+\`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
+\`fs\` from node, 
+\`path\` from node, 
+\`globs\` from npm, 
+\`pipe\`: the data piped into the command (null if no piped data), 
+\`find\`: pattern searched for (the needle), 
+\`text\`: full text being searched i.e. file content or piped data (the haystack), 
+\`bytes\`: total size of the haystack in bytes, 
+\`size\`: human-friendly representation of the total size of the haystack, 
+\`time\`: ISO representation of the current time,
+\`time_obj\`: date object representing \`time\`,
+\`now\`: alias for \`time\`,
+\`cwd\`: current process working dir, 
+\`_\`: a single space (for easy string concatenation).
+
+The following values defaults to an empty string if haystack does not originate from a file:
+\`file\`: contains the full path of the active file being searched (including full filename), 
+\`file_rel\`: contains \`file\` relative to current process working dir, 
+\`dirpath\`: contains the full path without filename of the active file being searched, 
+\`dirpath_rel\`: contains \`dirpath\` relative to current process working dir, 
+\`filename\`: is the full filename of the active file being searched without path, 
+\`name\`: filename of the active file being searched with no extension, 
+\`ext\`: extension of the filename including leading dot, 
+
+The following values defaults current time if haystack does not originate from a file:
+\`mtime\`: ISO representation of the last modification time of the current file, 
+\`mtime_obj\`: date object representing \`mtime\`, 
+\`ctime\`: ISO representation of the creation time of the current file. 
+\`ctime_obj\`: date object representing \`ctime\`. 
+
+All variables, except from module,  date objects and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
+`
+	)
 	/*
         .boolean('N')
         .alias('N', 'void-newline')
@@ -254,10 +272,11 @@ function unescapeString(str) {
 		return backOut();
 	}
 
+	const RE_EURO = /€/g;
 	// CLI interface default has € as alias for $
 	if (!yargs.argv.voidEuro) {
-		pattern = pattern.replace(/€/g, '$');
-		replacement = replacement.replace(/€/g, '$');
+		pattern = pattern.replace(RE_EURO, '$');
+		replacement = replacement.replace(RE_EURO, '$');
 	}
 
 	// All options into one big config object for the rexreplace core
