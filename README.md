@@ -24,7 +24,7 @@ RexReplace is a versatile tool to search and replace text in files from the comm
 
 _No more brute-forcing the right combination of `find`, `cat`, `sed`, `tr`, and `awk` to replace a text pattern in the right files._
 
-**Key features**
+**Key features**:
 
 - Easy and intuitive notation makes you trust what you are doing
 - Replacement can be javascript code - giving you Turing complete flexibility
