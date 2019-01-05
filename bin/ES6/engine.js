@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const globs = require('globs');
+const now = new Date();
 import { outputConfig, step, debug, chat, info, error, die } from './output';
 export const version = 'PACKAGE_VERSION';
-export function engine(config) {
+export function engine(config = { engine: 'V8' }) {
     outputConfig(config);
     step('Displaying steps for:');
     step(config);
@@ -196,14 +197,19 @@ export function engine(config) {
         }).join(' ');
     }*/
     function getFinalRegex(config) {
-        step('Get final regex');
+        step('Get final regex with engine: ' + config.engine);
         let regex = null;
         let flags = getFlags(config);
-        try {
-            regex = new RegExp(config.pattern, flags);
-        }
-        catch (err) {
-            die('Wrongly formatted regex pattern', err);
+        switch (config.engine) {
+            case 'V8':
+                regex = new RegExp(config.pattern, flags);
+                break;
+            case 'RE2':
+                const RE2 = require('re2');
+                regex = new RE2(config.pattern, flags);
+                break;
+            default:
+                die(`Engine ${config.engine} not supported yet`);
         }
         step(regex);
         return regex;
@@ -235,10 +241,11 @@ function readableSize(size) {
     return ((size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]);
 }
 function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
-    const _time_obj = new Date();
-    const _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time_obj.toISOString(), _time = _time_obj.toISOString(), _ = ' ';
+    const _time_obj = now;
+    const _time = localTimeString(_time_obj);
+    const _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time, _ = ' ', _nl = '\n';
     // prettier-ignore
-    let _file = '', _file_rel = '', _dirpath = '', _dirpath_rel = '', _dirname = '', _filename = '', _name = '', _ext = '', _mtime = _now, _ctime = _now, _mtime_obj = _time_obj, _ctime_obj = _time_obj, _bytes = -1, _size = '0B', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', '_', '__code_rr', 'var path = require("path");' +
+    let _file = '❌', _file_rel = '❌', _dirpath = '❌', _dirpath_rel = '❌', _dirname = '❌', _filename = '❌', _name = '❌', _ext = '❌', _mtime = '❌', _ctime = '❌', _mtime_obj = new Date(0), _ctime_obj = new Date(0), _bytes = -1, _size = '❌', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', 'nl', '_', '__code_rr', 'var path = require("path");' +
         'var __require_ = require;' +
         'var r = function(file){' +
         'var result = null;' +
@@ -270,8 +277,8 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
             _size = readableSize(_bytes);
             _mtime_obj = fileStats.mtime;
             _ctime_obj = fileStats.ctime;
-            _mtime = _mtime_obj.toISOString();
-            _ctime = _ctime_obj.toISOString();
+            _mtime = localTimeString(_mtime_obj);
+            _ctime = localTimeString(_ctime_obj);
             //console.log('filesize: ', fileStats.size);
             //console.log('dataSize: ', _bytes);
         }
@@ -282,16 +289,19 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
     }
     // Run only once if no captured groups (replacement cant change)
     if (!/\$\d/.test(_config_rr.replacement)) {
-        return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _, code_rr);
+        return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _nl, _, code_rr);
     }
     // Captures groups present, so need to run once per match
     return function () {
         step(arguments);
-        const __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __ = _, __code_rr = code_rr;
+        const __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __nl = _nl, __ = _, __code_rr = code_rr;
         var capturedGroups = '';
         for (var i = 0; i < arguments.length - 2; i++) {
             capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
         }
-        return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __, capturedGroups + __code_rr);
+        return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __nl, __, capturedGroups + __code_rr);
     };
+}
+function localTimeString(dateObj = new Date()) {
+    return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${('0' + dateObj.getDate()).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${('0' + dateObj.getSeconds()).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }

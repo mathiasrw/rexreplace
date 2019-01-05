@@ -70,6 +70,11 @@ const yargs = require('yargs')
 	.alias('e', 'encoding')
 	.describe('e', 'Encoding of files/piped data.')
 
+	.alias('E', 'engine')
+	.describe('E', 'What regex engine to use:')
+	.choices('E', ['V8', 'RE2' /*'sd', 'stream'*/])
+	.default('E', 'V8')
+
 	.boolean('q')
 	.describe('q', 'Only display errors (no other info)')
 	.alias('q', 'quiet')
@@ -167,13 +172,14 @@ The code has access to the following variables:
 \`text\`: full text being searched i.e. file content or piped data (the haystack), 
 \`bytes\`: total size of the haystack in bytes, 
 \`size\`: human-friendly representation of the total size of the haystack, 
-\`time\`: ISO representation of the current time,
+\`time\`: String representing the local time when the command was invoked,
 \`time_obj\`: date object representing \`time\`,
 \`now\`: alias for \`time\`,
 \`cwd\`: current process working dir, 
-\`_\`: a single space (for easy string concatenation).
+\`nl\`: a new-line char,
+\`_\`: a single space char (for easy string concatenation).
 
-The following values defaults to an empty string if haystack does not originate from a file:
+The following values defaults to \`❌ \` if haystack does not originate from a file:
 \`file\`: contains the full path of the active file being searched (including full filename), 
 \`file_rel\`: contains \`file\` relative to current process working dir, 
 \`dirpath\`: contains the full path without filename of the active file being searched, 
@@ -181,14 +187,12 @@ The following values defaults to an empty string if haystack does not originate 
 \`filename\`: is the full filename of the active file being searched without path, 
 \`name\`: filename of the active file being searched with no extension, 
 \`ext\`: extension of the filename including leading dot, 
-
-The following values defaults current time if haystack does not originate from a file:
-\`mtime\`: ISO representation of the last modification time of the current file, 
+\`mtime\`: ISO inspired representation of the last local modification time of the current file, 
+\`ctime\`: ISO representation of the local creation time of the current file. 
 \`mtime_obj\`: date object representing \`mtime\`, 
-\`ctime\`: ISO representation of the creation time of the current file. 
 \`ctime_obj\`: date object representing \`ctime\`. 
 
-All variables, except from module,  date objects and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
+All variables, except from module, date objects, \´nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
 	)
 	/*

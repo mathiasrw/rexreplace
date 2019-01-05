@@ -4,11 +4,13 @@ const path = require('path');
 
 const globs = require('globs');
 
+const now = new Date();
+
 import {outputConfig, step, debug, chat, info, error, die} from './output';
 
 export const version = 'PACKAGE_VERSION';
 
-export function engine(config) {
+export function engine(config: any = {engine: 'V8'}) {
 	outputConfig(config);
 
 	step('Displaying steps for:');
@@ -246,16 +248,22 @@ export function engine(config) {
 	}*/
 
 	function getFinalRegex(config) {
-		step('Get final regex');
+		step('Get final regex with engine: ' + config.engine);
 
 		let regex = null;
 
 		let flags = getFlags(config);
 
-		try {
-			regex = new RegExp(config.pattern, flags);
-		} catch (err) {
-			die('Wrongly formatted regex pattern', err);
+		switch (config.engine) {
+			case 'V8':
+				regex = new RegExp(config.pattern, flags);
+				break;
+			case 'RE2':
+				const RE2 = require('re2');
+				regex = new RE2(config.pattern, flags);
+				break;
+			default:
+				die(`Engine ${config.engine} not supported yet`);
 		}
 
 		step(regex);
@@ -301,31 +309,32 @@ function readableSize(size) {
 }
 
 function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
-	const _time_obj = new Date();
+	const _time_obj = now;
+	const _time = localTimeString(_time_obj);
 	const _pipe = _config_rr.pipedData,
 		_text = _data_rr,
 		_find = _config_rr.pattern,
 		code_rr = _config_rr.replacementOri,
 		_cwd = process.cwd(),
-		_now = _time_obj.toISOString(),
-		_time = _time_obj.toISOString(),
-		_ = ' ';
+		_now = _time,
+		_ = ' ',
+		_nl = '\n';
 
 	// prettier-ignore
-	let _file = '',
-		_file_rel = '',
-		_dirpath = '',
-		_dirpath_rel = '',
-		_dirname = '',
-		_filename = '',
-		_name = '',
-		_ext = '',
-		_mtime = _now,
-		_ctime = _now,
-		_mtime_obj = _time_obj,
-		_ctime_obj = _time_obj,
+	let _file = '❌',
+		_file_rel = '❌',
+		_dirpath = '❌',
+		_dirpath_rel = '❌',
+		_dirname = '❌',
+		_filename = '❌',
+		_name = '❌',
+		_ext = '❌',
+		_mtime = '❌',
+		_ctime = '❌',
+		_mtime_obj = new Date(0),
+		_ctime_obj = new Date(0),
 		_bytes = -1,
-		_size = '0B',
+		_size = '❌',
 		dynamicContent = new Function(
 			'require',
 			'fs',
@@ -377,6 +386,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'bytes_',
 			'size',
 			'size_',
+			'nl',
 			'_',
 			'__code_rr',
 				'var path = require("path");'+
@@ -415,8 +425,8 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_size = readableSize(_bytes);
 			_mtime_obj = fileStats.mtime;
 			_ctime_obj = fileStats.ctime;
-			_mtime = _mtime_obj.toISOString();
-			_ctime = _ctime_obj.toISOString();
+			_mtime = localTimeString(_mtime_obj);
+			_ctime = localTimeString(_ctime_obj);
 
 			//console.log('filesize: ', fileStats.size);
 			//console.log('dataSize: ', _bytes);
@@ -474,6 +484,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_bytes + _,
 			_size,
 			_size + _,
+			_nl,
 			_,
 			code_rr
 		);
@@ -500,6 +511,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__ctime = _ctime,
 			__bytes = _bytes,
 			__size = _size,
+			__nl = _nl,
 			__ = _,
 			__code_rr = code_rr;
 
@@ -548,8 +560,17 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__bytes + __,
 			__size,
 			__size + __,
+			__nl,
 			__,
 			capturedGroups + __code_rr
 		);
 	};
+}
+
+function localTimeString(dateObj = new Date()) {
+	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${(
+		'0' + dateObj.getDate()
+	).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
+		'0' + dateObj.getSeconds()
+	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }

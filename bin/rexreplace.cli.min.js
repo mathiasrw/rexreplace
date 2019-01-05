@@ -70,8 +70,11 @@
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
+    var now = new Date();
     var version = '4.1.1';
     function engine(config) {
+        if ( config === void 0 ) config = { engine: 'V8' };
+
         outputConfig(config);
         step('Displaying steps for:');
         step(config);
@@ -266,14 +269,19 @@
             }).join(' ');
         }*/
         function getFinalRegex(config) {
-            step('Get final regex');
+            step('Get final regex with engine: ' + config.engine);
             var regex = null;
             var flags = getFlags(config);
-            try {
-                regex = new RegExp(config.pattern, flags);
-            }
-            catch (err) {
-                die('Wrongly formatted regex pattern', err);
+            switch (config.engine) {
+                case 'V8':
+                    regex = new RegExp(config.pattern, flags);
+                    break;
+                case 'RE2':
+                    var RE2 = require('re2');
+                    regex = new RE2(config.pattern, flags);
+                    break;
+                default:
+                    die(("Engine " + (config.engine) + " not supported yet"));
             }
             step(regex);
             return regex;
@@ -305,10 +313,11 @@
         return ((size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]);
     }
     function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
-        var _time_obj = new Date();
-        var _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time_obj.toISOString(), _time = _time_obj.toISOString(), _ = ' ';
+        var _time_obj = now;
+        var _time = localTimeString(_time_obj);
+        var _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time, _ = ' ', _nl = '\n';
         // prettier-ignore
-        var _file = '', _file_rel = '', _dirpath = '', _dirpath_rel = '', _dirname = '', _filename = '', _name = '', _ext = '', _mtime = _now, _ctime = _now, _mtime_obj = _time_obj, _ctime_obj = _time_obj, _bytes = -1, _size = '0B', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', '_', '__code_rr', 'var path = require("path");' +
+        var _file = '❌', _file_rel = '❌', _dirpath = '❌', _dirpath_rel = '❌', _dirname = '❌', _filename = '❌', _name = '❌', _ext = '❌', _mtime = '❌', _ctime = '❌', _mtime_obj = new Date(0), _ctime_obj = new Date(0), _bytes = -1, _size = '❌', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', 'nl', '_', '__code_rr', 'var path = require("path");' +
             'var __require_ = require;' +
             'var r = function(file){' +
             'var result = null;' +
@@ -340,8 +349,8 @@
                 _size = readableSize(_bytes);
                 _mtime_obj = fileStats.mtime;
                 _ctime_obj = fileStats.ctime;
-                _mtime = _mtime_obj.toISOString();
-                _ctime = _ctime_obj.toISOString();
+                _mtime = localTimeString(_mtime_obj);
+                _ctime = localTimeString(_ctime_obj);
                 //console.log('filesize: ', fileStats.size);
                 //console.log('dataSize: ', _bytes);
             }
@@ -352,20 +361,25 @@
         }
         // Run only once if no captured groups (replacement cant change)
         if (!/\$\d/.test(_config_rr.replacement)) {
-            return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _, code_rr);
+            return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _nl, _, code_rr);
         }
         // Captures groups present, so need to run once per match
         return function () {
             var arguments$1 = arguments;
 
             step(arguments);
-            var __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __ = _, __code_rr = code_rr;
+            var __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __nl = _nl, __ = _, __code_rr = code_rr;
             var capturedGroups = '';
             for (var i = 0; i < arguments.length - 2; i++) {
                 capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments$1[i]) + '; ';
             }
-            return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __, capturedGroups + __code_rr);
+            return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __nl, __, capturedGroups + __code_rr);
         };
+    }
+    function localTimeString(dateObj) {
+        if ( dateObj === void 0 ) dateObj = new Date();
+
+        return ((dateObj.getFullYear()) + "-" + (('0' + (dateObj.getMonth() + 1)).slice(-2)) + "-" + (('0' + dateObj.getDate()).slice(-2)) + " " + (('0' + dateObj.getHours()).slice(-2)) + ":" + (('0' + dateObj.getMinutes()).slice(-2)) + ":" + (('0' + dateObj.getSeconds()).slice(-2)) + "." + (('00' + dateObj.getMilliseconds()).slice(-3)));
     }
 
     var assign;
@@ -413,6 +427,10 @@
         .default('e', 'utf8')
         .alias('e', 'encoding')
         .describe('e', 'Encoding of files/piped data.')
+        .alias('E', 'engine')
+        .describe('E', 'What regex engine to use:')
+        .choices('E', ['V8', 'RE2' ])
+        .default('E', 'V8')
         .boolean('q')
         .describe('q', 'Only display errors (no other info)')
         .alias('q', 'quiet')
@@ -461,7 +479,7 @@
         '')
         .boolean('j')
         .alias('j', 'replacement-js')
-        .describe('j', "Treat replacement as javascript source code. \nThe statement from the last expression will become the replacement string. \nPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \nThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \nAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \nIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\nThe code has access to the following variables: \n`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n`fs` from node, \n`path` from node, \n`globs` from npm, \n`pipe`: the data piped into the command (null if no piped data), \n`find`: pattern searched for (the needle), \n`text`: full text being searched i.e. file content or piped data (the haystack), \n`bytes`: total size of the haystack in bytes, \n`size`: human-friendly representation of the total size of the haystack, \n`time`: ISO representation of the current time,\n`time_obj`: date object representing `time`,\n`now`: alias for `time`,\n`cwd`: current process working dir, \n`_`: a single space (for easy string concatenation).\n\nThe following values defaults to an empty string if haystack does not originate from a file:\n`file`: contains the full path of the active file being searched (including full filename), \n`file_rel`: contains `file` relative to current process working dir, \n`dirpath`: contains the full path without filename of the active file being searched, \n`dirpath_rel`: contains `dirpath` relative to current process working dir, \n`filename`: is the full filename of the active file being searched without path, \n`name`: filename of the active file being searched with no extension, \n`ext`: extension of the filename including leading dot, \n\nThe following values defaults current time if haystack does not originate from a file:\n`mtime`: ISO representation of the last modification time of the current file, \n`mtime_obj`: date object representing `mtime`, \n`ctime`: ISO representation of the creation time of the current file. \n`ctime_obj`: date object representing `ctime`. \n\nAll variables, except from module,  date objects and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n")
+        .describe('j', "Treat replacement as javascript source code. \nThe statement from the last expression will become the replacement string. \nPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \nThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \nAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \nIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\nThe code has access to the following variables: \n`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n`fs` from node, \n`path` from node, \n`globs` from npm, \n`pipe`: the data piped into the command (null if no piped data), \n`find`: pattern searched for (the needle), \n`text`: full text being searched i.e. file content or piped data (the haystack), \n`bytes`: total size of the haystack in bytes, \n`size`: human-friendly representation of the total size of the haystack, \n`time`: String representing the local time when the command was invoked,\n`time_obj`: date object representing `time`,\n`now`: alias for `time`,\n`cwd`: current process working dir, \n`nl`: a new-line char,\n`_`: a single space char (for easy string concatenation).\n\nThe following values defaults to `❌ ` if haystack does not originate from a file:\n`file`: contains the full path of the active file being searched (including full filename), \n`file_rel`: contains `file` relative to current process working dir, \n`dirpath`: contains the full path without filename of the active file being searched, \n`dirpath_rel`: contains `dirpath` relative to current process working dir, \n`filename`: is the full filename of the active file being searched without path, \n`name`: filename of the active file being searched with no extension, \n`ext`: extension of the filename including leading dot, \n`mtime`: ISO inspired representation of the last local modification time of the current file, \n`ctime`: ISO representation of the local creation time of the current file. \n`mtime_obj`: date object representing `mtime`, \n`ctime_obj`: date object representing `ctime`. \n\nAll variables, except from module, date objects, ´nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n")
         /*
             .boolean('N')
             .alias('N', 'void-newline')

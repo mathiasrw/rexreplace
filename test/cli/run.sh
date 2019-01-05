@@ -71,6 +71,11 @@ reset
 assert		 		"rexreplace o x my.file --output"    "fxxbar"
 
 
+# -E
+reset
+assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"
+
+
 # -b
 reset
 rexreplace o x my.file --keep-backup
@@ -157,7 +162,7 @@ assert		 		"rexreplace 'fo(o)bar' '[!!fs,!!globs,find,text.trim()].join(\":\")' 
 
 
 reset
-assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpath,'filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" -o --replacement-js"    'file::dirpath::filename::name::ext::text:foobar'
+assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpath,'filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" -o --replacement-js"    'file:❌:dirpath:❌:filename:❌:name:❌:ext:❌:text:foobar'
 
 
 reset

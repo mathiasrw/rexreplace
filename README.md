@@ -13,13 +13,9 @@
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![FOSSA Status](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
+[![NPM downloads](https://img.shields.io/npm/dt/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![Greenkeeper badge](https://badges.greenkeeper.io/mathiasrw/rexreplace.svg)](https://greenkeeper.io/)
 
-[![NPM downloads](https://img.shields.io/npm/dt/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
-
-[![NPM version](https://img.shields.io/npm/v/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
-
-[![License](https://img.shields.io/npm/l/rexreplace.svg?registry_uri=https%3A%2F%2Fregistry.npmjs.com&colorB=brightgreen)](https://www.npmjs.com/package/rexreplace)
 
 
 # RexReplace
@@ -124,12 +120,12 @@ Require have been given the alias `r` and both are expanded to understand relati
 ----
 
 
-#### Usefull examples !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#### Usefull examples 
 
-Add filename, creation time and file size as the first line in each file in `test-run`
+Add creation time, name of the file and human readable file size as the first line in each file in `test-run`
 
 ```bash
-> rexreplace '^' 'ctime_ + name_ + size\n' -j -M 'test-run/**'          
+> rexreplace '^' 'ctime_ + name_ + size + nl' -j -M 'test-run/**'          
 ```
 
 
