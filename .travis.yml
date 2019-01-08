@@ -9,9 +9,7 @@ node_js:
 install: npm install
 
 script:
-  - npm run test-format # is formatting OK
-  - npm run test-cli    # is provided build OK
-  - npm test            # is provided source OK
+  - npm run test-ci
 
 
 before_install:

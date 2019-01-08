@@ -1,31 +1,16 @@
-#!/usr/bin/env bash
+//console.log(rr.exe);
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+describe(__filename, function() {
+	before(function() {
+		//	rr.execCMD('echo 123', (x) => console.log);
+	});
 
-source $DIR/aserta.sh
+	after(function() {});
+	describe('works with the CLI', function() {
+		//	rr.test('x x my.file', 'foobar');
 
-# # Command exit codes
-# assert_success    "true"
-# assert_failure    "false"
-# assert_raises     "unknown_cmd" 127
-# 
-# Expected output
-# assert            "echo test"    "test"
-# assert            "seq 3"        "1\n2\n3"
-# assert_contains   "echo foobar"  "oba"
-# assert_startswith "echo foobar"  "foo"
-# assert_endswith   "echo foobar"  "bar"
-# assert_matches    "echo foobar"  "^f.*r$"
-# 
-# assert_end "example"
-
-reset() {
-		echo 'Resetting testdata'
-        echo 'foobar' > my.file
-}
-
-
-
+		/*
+		
 # Plain usage
 reset
 rexreplace x x my.file
@@ -62,20 +47,18 @@ assert_success		"rexreplace -version"
 reset
 assert_success		"rexreplace -help"
 
+*/
 
-# -o
-reset
-assert		 		"rexreplace x x my.file --output"    "foobar"
+		// -o
 
-reset
-assert		 		"rexreplace o x my.file --output"    "fxxbar"
+		rr.test('x x my.file', 'foobar');
 
+		rr.test('o x my.file', 'fxxbar');
 
-# -E
-reset
-assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"
+		// -E
+		rr.test('o x my.file --output --engine RE2', 'fxxbar');
 
-
+		/*
 # -b
 reset
 rexreplace o x my.file --keep-backup
@@ -83,12 +66,26 @@ assert		 		"cat my.file"    "fxxbar"
 assert		 		"cat my.file.*"  "foobar"
 rm my.file.*
 
-# -I
-reset
-assert		 		"rexreplace Foo xxx my.file -o"    "xxxbar"
+
+*/
+
+		// # -I
+
+		rr.test('Foo xxx my.file -o', 'xxxbar');
+		rr.test('Foo xxx my.file -o --void-ignore-case', 'foobar');
+		/*rr.test('', '');
+rr.test('', '');
+rr.test('', '');
+rr.test('', '');
+rr.test('', '');
+rr.test('', '');
+rr.test('', '');
 
 reset
-assert		 		"rexreplace Foo xxx my.file -o --void-ignore-case"    "foobar"
+assert		 		"rexreplace "    ""
+
+reset
+assert		 		"rexreplace "    ""
 
 
 # -G
@@ -109,6 +106,7 @@ assert		 		"rexreplace [fb]. _ my.file --output-match --voidGlobal"    "fo"
 
 
 
+/*
 # -M
 reset
 echo foobar >> my.file
@@ -261,13 +259,23 @@ assert		 		"printf 'lots((([]))) of special chars' | rr '((([])))' '' -L"	"lots 
 rm my.file
 
 assert_end 			"rexreplace"
+		*/
+	});
+});
+
+// echo a | node -r ts-node/register --inspect src/cli.ts a b
+
+/*
+
+
+
+
+
+printf abn | node -r ts-node/register --inspect  ./src/cli.ts 'b' _ my.file -o --replacement-pipe -dV
 
 
 
 
 
 
-
-
-
-
+*/

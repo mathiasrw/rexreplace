@@ -1,9 +1,12 @@
-let font = {};
-font.red = font.green = font.gray = (str) => str;
+const font = {
+    red: (x) => `\x1b[31m${x}\x1b[39m`,
+    green: (x) => `\x1b[32m${x}\x1b[39m`,
+    gray: (x) => `\x1b[90m${x}\x1b[39m`,
+};
 // check for node version supporting chalk - if so overwrite `font`
-//const font = import('chalk');
+// font = require('chalk');
 let config = null;
-export const outputConfig = function (_config) {
+export const setOutputConfig = function (_config) {
     config = _config;
 };
 export const info = function (msg, data = '') {
@@ -17,7 +20,7 @@ export const chat = function (msg, data = '') {
         info(msg, data);
     }
     else {
-        debug(msg + ' ' + data);
+        debug(msg, data);
     }
 };
 export const die = function (msg, data = '', displayHelp = false) {
@@ -29,24 +32,30 @@ export const die = function (msg, data = '', displayHelp = false) {
 };
 export const error = function (msg, data = '') {
     if (!config.quiet && !config.quietTotal) {
-        console.error(font.red(msg), data);
+        console.error('');
+        console.error('  ⚠️   ' + font.red(msg), data);
+        console.error('');
     }
     if (config.halt) {
         kill(msg);
     }
     return false;
 };
-export function debug(data) {
+export function debug(msg, data) {
     if (config.debug) {
-        console.error(font.gray(JSON.stringify(data, null, 4)));
+        console.error(msg, '\x1b[90m');
+        console.error(data);
+        console.error('\x1b[39m');
     }
 }
-export function step(data) {
+export function step(msg, data = '') {
     if (config.verbose) {
-        debug(data);
+        debug(font.green(msg), data);
     }
 }
 function kill(msg = '', error = 1) {
+    console.error(font.gray('      See instructions with: ') + font.green('rexreplace --help'));
+    console.error('\x1b[90m');
     process.exitCode = error;
     throw new Error(msg);
 }

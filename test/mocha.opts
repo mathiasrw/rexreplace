@@ -1,3 +1,5 @@
 --require assert
---require test/helper
+--require test/_helper
 --ui bdd
+--timeout 20000
+

@@ -278,6 +278,7 @@ _.oO(What should "sed" have looked like by now?)_
 - Set engine to run on streams with https://www.npmjs.com/package/replacestream
 - Implement in go so that all platforms can be supported with no need for node (might be based on)
 - Let https://github.com/dthree/vorpal deal with the interface? Or maybe https://www.npmjs.com/package/pretty-cli
+- Pool size for how many files are accessed simultaniusly can be set from CLI
 
 
 ## Related projects
