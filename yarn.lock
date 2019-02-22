@@ -869,10 +869,10 @@ google-closure-compiler-js@>20170000:
   resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20181210.0.0.tgz#806d7e4186828307074b6eb6392d529b40701795"
   integrity sha512-gn+2hT4uQtYKD/jXJqGIXzPMln3/JD7R4caAKDPJm7adqqDvrCAw7qxAiK4Vz1rNec7hJXPXh9TeKQjzz03ZaQ==
 
-google-closure-compiler-js@^20190106.0.0:
-  version "20190106.0.0"
-  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20190106.0.0.tgz#cf630a1d290bf7dd545d614754e844d08663fc5a"
-  integrity sha512-9gbXqArlCvwp3FZOQO8dyyt6BZChliLuU95aseoTS/aapCfkxclBT4R6ar9hrEvu/fA4Zgpz+KPQyeOeJkUauQ==
+google-closure-compiler-js@^20190215.0.1:
+  version "20190215.0.1"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20190215.0.1.tgz#c20c68eed73b85102c4b3dba7afcdf4d7c0b4a6e"
+  integrity sha512-6JgPyZt/WMbNq686nunUVmqUaa89RDiWJjzfvborX4ZGczSniZYyTQb3khMH4chTbwUp+AGFvTHErreO2TACSg==
 
 growl@1.10.5:
   version "1.10.5"
