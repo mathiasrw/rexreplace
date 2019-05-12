@@ -45,7 +45,7 @@
     "sed"
   ],
   "devDependencies": {
-    "assert": "^1.4.1",
+    "assert": "^2.0.0",
     "google-closure-compiler-js": "^20190415.0.0",
     "mocha": "^6.0.0",
     "prettier": "^1.12.1",
