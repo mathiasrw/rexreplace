@@ -72,7 +72,7 @@
   "dependencies": {
     "chalk": "^2.4.1",
     "globs": "^0.1.4",
-    "yargs": "^13.1.0"
+    "yargs": "^14.0.0"
   },
   "prettier": {
     "useTabs": true,
