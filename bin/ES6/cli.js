@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as rexreplace from './engine';
+import cli from './miriam';
 const font = {
     red: (x) => `\x1b[31m${x}\x1b[39m`,
     green: (x) => `\x1b[32m${x}\x1b[39m`,
@@ -14,19 +15,23 @@ if (process.argv.length < 4) {
         process.exit(0);
     }
     if (/^--?(h|help)$/.test(process.argv[process.argv.length - 1])) {
-        needHelp = '';
+        needHelp = 'help';
+        console.error(234);
     }
     else {
         needHelp = 'Please provide parameters for both a seach-pattern and replacement';
+        console.error(23423443);
     }
 }
 else {
     [pattern, replacement] = process.argv.splice(2, 2);
 }
-const yargs = getCLIcommands();
+const config = getCLIcommands();
+config.printHelp = () => console.error(cli.getHelp());
 function backOut(needHelp) {
     if ('' === needHelp) {
-        yargs.showHelp();
+        config.printHelp();
+        process.exit(36);
     }
     else {
         console.error('');
@@ -36,6 +41,7 @@ function backOut(needHelp) {
             font.gray('See instructions with: ') +
             font.green(process.argv[1].match(/[\\\/]([^\\\/]+)[\\\/]?$/)[1] + ' --help'));
         console.error('');
+        process.exit(48);
     }
     process.exitCode = 1;
     return null;
@@ -50,16 +56,16 @@ function unescapeString(str) {
         return backOut(needHelp);
     }
     // All options into one big config object for the rexreplace core
-    const config = yargs.argv;
     // Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
     // Todo: check if this is needed at all.
-    if (config.debug) {
-        Object.keys(yargs.argv).forEach((key) => {
+    /*if (config.debug) {
+        console.log(config); return;
+        Object.keys(config.argv).forEach((key) => {
             if (1 < key.length && key.indexOf('-') < 0) {
-                config[key] = yargs.argv[key];
+                config[key] = config.argv[key];
             }
         });
-    }
+    }*/
     const RE_EURO = /€/g;
     // CLI interface default has € as alias for $
     if (!config.voidEuro) {
@@ -70,18 +76,23 @@ function unescapeString(str) {
     if (!(0 < config.maxMatchLen)) {
         return backOut('Please provide a positive number as argument to --max-match-len');
     }
-    config.globs = yargs.argv._;
-    config.showHelp = yargs.showHelp;
     config.pattern = pattern;
+    //todo: remove hardcode!
+    config.exclude = 'node_module';
+    console.error('Hardcoded exclude:', config.exclude);
     if (config.replacementJs) {
         config.replacement = replacement;
     }
     else {
         config.replacement = unescapeString(replacement);
     }
-    if (!config.output && outputIsPiped && !config.voidAutoOutput) {
-        console.error(font.gray('Looks like you are Piping output. Dont forget to set the -o flag'));
-        // config.output = true;
+    if (config.globs.lenght && outputIsPiped) {
+        if (config.voidAutoOutput) {
+            console.error(font.gray('Looks like you are piping data, but will replace data in files anyway.'));
+        }
+        else {
+            config.output = true;
+        }
     }
     if (!inputIsPiped) {
         if (config.replacementPipe) {
@@ -100,7 +111,7 @@ function unescapeString(str) {
             content += buf.toString();
         });
         process.stdin.on('end', function () {
-            if (yargs.argv.trimPipe) {
+            if (config.argv.trimPipe) {
                 content = content.trim();
             }
             config.replacement = content;
@@ -109,27 +120,31 @@ function unescapeString(str) {
     }
 })();
 function getCLIcommands() {
-    return (require('yargs')
+    cli
         .strict()
-        .usage('RexReplace ' +
-        rexreplace.version +
-        ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
-        '> rexreplace pattern replacement [fileGlob|option]+')
+        .intro('Rexreplace 4.1.1')
+        .intro('Regex search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.');
+    cli
+        .usage('> rexreplace pattern replacement [fileGlob|option]+')
         .example(`> rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
         .example('')
         .example(`> rr Foo xxx myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
         .example('')
         .example(`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`, `'foobar' in myfile.md will become 'barfoo'`)
         .example('')
-        .example(`> rexreplace '^#' '##' *.md`, `All markdown files in this dir got all headlines moved one level deeper`)
+        .example(`> rexreplace '^#' '##' *.md`, `All markdown files in this dir got all headlines moved one level deeper`);
+    cli
         .version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version)
-        .alias('v', 'version')
+        .alias('v', 'version');
+    cli
         .default('e', 'utf8')
         .alias('e', 'encoding')
-        .describe('e', 'Encoding of files/piped data.')
+        .describe('e', 'Encoding of files/piped data.');
+    cli
         .boolean('I')
         .describe('I', 'Void case insensitive search pattern.')
-        .alias('I', 'void-ignore-case')
+        .alias('I', 'void-ignore-case');
+    cli
         .boolean('M')
         .describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.')
         .alias('M', 'void-multiline')
@@ -161,7 +176,7 @@ function getCLIcommands() {
         .default('H', false)
         .boolean('A')
         .alias('A', 'void-async')
-        .describe('A', `Handle files in a synchronous flow. Good to limit memory usage when handling large files. ` +
+        .describe('A', `Handle files in a synchronous flow. Good to limit memory usage when handling large files. Is always consideres set when dealing with more than 1023 files.` +
         '')
         .boolean('T')
         .alias('T', 'trim-pipe')
@@ -180,9 +195,9 @@ function getCLIcommands() {
         .describe('max-match-len', 'Number of characters to in the largest expected match when data is piped in. Can be scientific notation. Please mesure performance overhead if changing the value. Defaults to ~2 Mb.')
         .default('max-match-len', '2e5')
         /*.requiresArg('max-match-len')
-.coerce('max-match-len', function(val) {
-    return Number(val) || (needHelp = 'Please provide a number as argument to --max-match-len');
-})*/
+    .coerce('max-match-len', function(val) {
+        return Number(val) || (needHelp = 'Please provide a number as argument to --max-match-len');
+    })*/
         .boolean('j')
         .alias('j', 'replacement-js')
         .describe('j', `Treat replacement as javascript source code. 
@@ -193,7 +208,7 @@ At some point, the $ char _will_ give you a headache when used from the command 
 If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
 
 The code has access to the following variables: 
-\`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
+\`r\` as an alias for \`require\` with both commands expanded to understand a relative path even if it is not starting with \`./\`, 
 \`fs\` from node, 
 \`path\` from node, 
 \`globs\` from npm, 
@@ -222,7 +237,7 @@ The following values are available if haystack originate from a file:
 \`ctime\`: ISO representation of the local creation time of the current file. 
 \`ctime_obj\`: date object representing \`ctime\`. 
 
-All variables, except from module, date objects, \´text\` \´nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
+All variables, except from modules, date objects, \´text\` \´nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `)
         .boolean('js-full-text')
         .describe('js-full-text', 'Exposes the full text being searched as `text` when the replacement is generated from javascript. Please note performance overhead with many or large files. Will force piped data to be hold in memory instead of streamed.')
@@ -233,15 +248,12 @@ All variables, except from module, date objects, \´text\` \´nl\` and \`_\`, ha
         .boolean('b')
         .describe('b', 'Keep a backup file of the original content.')
         .alias('b', 'keep-backup')
-        /*.boolean('O')
-        .describe(
-            'O',
-            'Void the detection automaticly setting the --output if output is being piped along.'
-        )
-        .alias('O', 'void-auto-output')*/
         .boolean('o')
-        .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.')
+        .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place. Will automaticly be set if its detected that data is being piped further.')
         .alias('o', 'output')
+        .boolean('O')
+        .describe('O', 'Will disable the check setting the --output flag if data is being piped further.')
+        .alias('O', 'void-auto-output')
         .boolean('m')
         .describe('m', `Output each match on a new line. ` +
         `Will not replace any content but you still need to provide a dummy value (like \`_\`) as replacement parameter. ` +
@@ -252,68 +264,72 @@ All variables, except from module, date objects, \´text\` \´nl\` and \`_\`, ha
         .boolean('L')
         .describe('L', 'literally search for the string provided as pattern (regex flags for global search/case insensitive still applied).')
         .alias('L', 'literal-search')
+        .string('exclude')
+        .describe('exclude', 'Exclude any files where the absolute path matches such case insensetive regex. Defaults to "node_modules"')
+        .default('exclude', 'node_modules')
         /*
-    // like trimming the last nl. Think its about the "echo" thing
-    .boolean('N')
-    .alias('N', 'void-newline')
-    .describe('N',
-        `Avoid having newline when outputting data (or when piping). `+
-        `Normally . `+
-           ''
-    )
-
-
--A (Expect there to be no match and return exit 1 if found)
--a (Expect there to be a match and return exit 1 if not found)
+        // like trimming the last nl. Think its about the "echo" thing
+        .boolean('N')
+        .alias('N', 'void-newline')
+        .describe('N',
+            `Avoid having newline when printing or piping data. `+
+            `Normally . `+
+               ''
+        )
+    
+    
+    -A (Expect there to be no match and return exit 1 if found)
+    -a (Expect there to be a match and return exit 1 if not found)
 */
         /*    .boolean('P')
-    .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
-    .alias('P', 'pattern-file')
+        .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
+        .alias('P', 'pattern-file')
 
-.boolean('R')
-    .alias('R', 'replacement-file')
-    .describe('R',
-        `Replacement is a filename from where the replacement will be generated. ` +
-        `If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
-    )
+    .boolean('R')
+        .alias('R', 'replacement-file')
+        .describe('R',
+            `Replacement is a filename from where the replacement will be generated. ` +
+            `If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
+        )
 
-*/
+    */
         /* // Ideas
 
-.boolean('n')
-    .describe('n', "Do replacement on file names instead of file content (rename the files)")
-    .alias('n', 'name')
+    .boolean('n')
+        .describe('n', "Do replacement on file names instead of file content (rename the files)")
+        .alias('n', 'name')
 
-// https://github.com/eugeneware/replacestream
-
-.integer('M')
-    .describe('M', "Maximum length of match. Set this value only if any single file of your ")
-    .alias('M', 'max-match-len')
-    .default('M', false)
-
-
-
-.boolean('G')
-    .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
-    .alias('G', 'globs-file')
-
-.boolean('g')
-    .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
-    .alias('g', 'glob-pipe')
+    // https://github.com/eugeneware/replacestream
+  
+    .integer('M')
+        .describe('M', "Maximum length of match. Set this value only if any single file of your ")
+        .alias('M', 'max-match-len')
+        .default('M', false)
 
 
-.boolean('j')
-    .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
-    .alias('j', 'pattern-js')
+   
+    .boolean('G')
+        .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
+        .alias('G', 'globs-file')
+
+    .boolean('g')
+        .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
+        .alias('g', 'glob-pipe')
 
 
-.boolean('glob-js')
-    .describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
+    .boolean('j')
+        .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
+        .alias('j', 'pattern-js')
 
 
-*/
+    .boolean('glob-js')
+        .describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
+
+
+    */
         .help('h')
         .describe('h', 'Display help.')
         .alias('h', 'help')
-        .epilog(`Inspiration: .oO(What should 'sed' have been by now?)`));
+        .epilog(`Inspiration: .oO(What should 'sed' have been by now?)`);
+    return cli.bucket('globs').run();
 }

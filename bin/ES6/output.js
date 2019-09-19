@@ -25,7 +25,7 @@ export const chat = function (msg, data = '') {
 };
 export const die = function (msg, data = '', displayHelp = false) {
     if (displayHelp && !config.quietTotal) {
-        config.showHelp();
+        config.printHelp();
     }
     error(msg, data);
     kill(msg);

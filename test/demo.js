@@ -18,6 +18,7 @@ exec('find . -type f | wc -l', (err, stdout, stderr) => {
 
 
 printf abn | node -r ts-node/register --inspect  ./src/cli.ts 'b' _ my.file -o --replacement-pipe -dV
+printf abn | node -r ts-node/register  ./src/cli.ts 'b' _ my.file -o --replacement-pipe -dV
 
 
 

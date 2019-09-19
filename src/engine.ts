@@ -2,10 +2,15 @@ import {setOutputConfig, step, debug, chat, info, error, die} from './output';
 
 import Datapoint from './Datapoint';
 
-const fs = require('fs'),
+import river from './RegexRiver';
+
+const fs = require('fs'),   // https://github.com/isaacs/node-graceful-fs
 	path = require('path'),
-	globs = require('globs'),
+	globs = require('globs'), // Todo: https://www.npmjs.com/package/fast-glob
 	replaceStream = require('replacestream');
+
+const streamReplacer = replaceStream;
+//const streamReplacer = river;
 
 const initTime = new Date();
 
@@ -55,7 +60,18 @@ export function engine(config: any = {engine: 'V8'}, stream: NodeJS.ReadStream =
 	debug(config.globs.length + ' globs provided', config.globs);
 
 	config.files = globs.sync(config.globs);
-	debug('files found', config.files);
+
+	if (config.exclude && config.exclude.length) {
+		const re_ex = new RegExp(config.exclude);
+		config.files.filter((f) => !re_ex.test(f));
+	}
+
+	debug('files found:', config.files);
+
+	if (1023 < config.files.length) {
+		chat(`Forcing async on all ${config.files.length} files`);
+		config.voidAsync = true;
+	}
 
 	if (!config.files.length) {
 		return info('0 files found');
@@ -72,29 +88,56 @@ export function engine(config: any = {engine: 'V8'}, stream: NodeJS.ReadStream =
 		//.filter((filepath) => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
 
 		// Do the replacement
-		.forEach((filepath) => treatFile(filepath, config));
+		.forEach((filepath) => (config.voidAsync = treatFile(filepath, config)));
 }
 
 function treatFile(file, config) {
-	/*if()
-	
-	fs.createReadStream('a.jpg')
-*/
-
 	if (config.voidAsync) {
-		debug('Open sync', file);
-		var data = fs.readFileSync(file, config.encoding);
-		return doReplacement(config, new Datapoint().setFile(file, data));
-	} else {
-		debug('Open async', file);
-		fs.readFile(file, config.encoding, function(err, data) {
-			if (err) {
-				return error(err);
-			}
-
-			return doReplacement(config, new Datapoint().setFile(file, data));
-		});
+		return treatFileSync(file, config);
 	}
+
+	return treatFileAsync(file, config);
+}
+
+function treatFileAsync(file, config) {
+	debug('Open async', file);
+	fs.readFile(file, config.encoding, function(err, data) {
+		if (err) {
+			switch (err.code) {
+				case 'EISDIR':
+					return false;
+				case 'EMFILE':
+					chat('Seams like async is not happy. Will try sync.');
+					debug('Going sync after file', file);
+					return treatFileSync(file, config);
+				default:
+					error('Error reading ' + file);
+					error(err);
+					return process.exit(1);
+			}
+		}
+		doReplacement(config, new Datapoint().setFile(file, data));
+		return false;
+	});
+}
+
+function treatFileSync(file, config) {
+	debug('Open sync', file);
+	var data;
+	try {
+		data = fs.readFileSync(file, config.encoding);
+	} catch (err) {
+		switch (err.code) {
+			case 'EISDIR':
+				return true;
+			default:
+				error('Error reading ' + file);
+				error(err);
+				return process.exit(1);
+		}
+	}
+	doReplacement(config, new Datapoint().setFile(file, data));
+	return true;
 }
 
 // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
@@ -108,9 +151,12 @@ function doReplacement(config: any, haystack: Datapoint) {
 
 	// handle stream
 	if (haystack.type.isStream) {
-		return haystack.streamIn
-			.pipe(replaceStream(config.regex, config.replacement, {maxMatchLen: config.maxMatchLen}))
-			.pipe(process.stdout);
+		return (
+			haystack.streamIn
+				//.pipe(river(config.regex, config.replacement, {maxMatchLen: config.maxMatchLen}))
+				.pipe(streamReplacer(config.regex, config.replacement, {maxMatchLen: config.maxMatchLen}))
+				.pipe(process.stdout)
+		);
 	}
 
 	let file = haystack.path;
