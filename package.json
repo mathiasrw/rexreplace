@@ -70,7 +70,7 @@
     "test": "test"
   },
   "dependencies": {
-    "chalk": "^2.4.1",
+    "chalk": "^3.0.0",
     "globs": "^0.1.4",
     "yargs": "^14.0.0"
   },
