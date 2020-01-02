@@ -138,29 +138,7 @@ Add creation time, name of the file and human readable file size as the first li
 
 
 Flag |  Effect
----- | ----
-`-v` | **`--version`** Print rexreplace version (can be given as only argument)                                    [boolean]
-`-V` | **`--verbose`** More chatty output                           [boolean]
-`-I` | **`--void-ignore-case`** Void case insensitive search pattern.        [boolean]
-`-G` | **`--void-global`** Void global search (stop looking after the first match). [boolean]
-`-M` | **`--void-multiline`** Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line. [boolean]
-`-u` | **`--unicode`** Treat pattern as a sequence of unicode code points. [boolean]
-`-e` | **`--encoding`** Encoding of files/piped data.        [default: "utf8"]
-`-q` | **`--quiet`** Only display errors (no other info)          [boolean]
-`-Q` | **`--quiet-total`** Never display errors or info                 [boolean]
-`-H` | **`--halt`** Halt on first error         [boolean] [default: false]
-`-d` | **`--debug`** Print debug info                             [boolean]
-`-€` | **`--void-euro`** Void having `€` as alias for `$` in pattern and replacement parameters                       [boolean]
-`-o` | **`--output`** Output the final result instead of saving to file. Will also output content even if no replacement has taken place.                                 [boolean]
-`-A` | **`--void-async`** Handle files in a synchronous flow. Good to limit memory usage when handling large files.      [boolean]
-`-B` | **`--void-backup`** Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted. [boolean]
-`-b` | **`--keep-backup`** Keep a backup file of the original content.  [boolean]
-`-m` | **`--output-match`** Output each match on a new line. Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. If the search pattern does not contain matching groups the full match will be outputted. If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter).     [boolean]
-`-T` | **`--trim-pipe`** Trim piped data before processing. If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. [boolean]
-`-R` | **`--replacement-pipe`** Replacement will be piped in. You still need to provide a dummy value (like `_`) as replacement parameter.                                   [boolean]
-`-j` | **`--replacement-js`** Treat replacement as javascript source code. The statement from the last expression will become the replacement string. Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted person - that be anyone that is not yourself. The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. The code has access to the following variables: `require` with the alias `r` both expanded to understand relative path even if not starting with `./`, `fs` from node, `globs` from npm, `_cwd` current working dir, `_pipe` is the data piped into the command (null if no piped data), `_find` is the pattern searched for (the needle). `_text` is the full text being searched i.e. file content or piped data (the haystack). The following values are also available if working on a file (if data is being piped they are all set to an empty string): `_file` is the full path of the active file being searched (including full filename), `_path` is the full path without filename of the active file being searched, `_filename` is the full filename of the active file being searched, `_name` is the filename of the active file being searched with no extension, `_ext` is the extension of the filename including leading dot.                                 [boolean]
-`-h` | **`--help`** Display help.                                [boolean]
-## Good to know 
+undefined 
 
 ### Features 
 
