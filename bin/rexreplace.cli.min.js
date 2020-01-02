@@ -232,7 +232,7 @@
             }
             if (config.outputMatch) {
                 step('Output match');
-                if ('6' > process.versions.node) {
+                if (parseInt(process.versions.node) < 6) {
                     return die('outputMatch is only supported in node 6+');
                 }
                 return function () {
@@ -253,7 +253,9 @@
             }
             // If captured groups then run dynamicly
             //console.log(process);
-            if (config.replacementJs && /\$\d/.test(config.replacement) && process.versions.node < '6') {
+            if (config.replacementJs &&
+                /\$\d/.test(config.replacement) &&
+                parseInt(process.versions.node) < 6) {
                 return die('Captured groups for javascript replacement is only supported in node 6+');
             }
             step(config.replacement);

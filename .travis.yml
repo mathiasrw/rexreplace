@@ -1,17 +1,20 @@
 language: node_js
 node_js:
-  #- "node"
+  - "node"
+  - "12"
+  - "11"
+  - "10"
   - "9"
   - "8"
   #- "7" 7 cant build google closure (but should be OK as long as 6 is OK to run rexreplace)
   - "6"
 
-install: npm install
+install: yarn install --frozen-lockfile
 
 script:
-  - npm run test-format # is formatting OK
-  - npm run test-cli    # is provided build OK
-  - npm test            # is provided source OK
+  - yarn test-format # is formatting OK
+  - yarn test-cli    # is provided build OK
+  - yarn test        # is provided source OK
 
 
 before_install:

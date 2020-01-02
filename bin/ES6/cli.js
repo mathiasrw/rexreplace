@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// CLI interface for rexreplace
 import * as rexreplace from './engine';
 let pattern, replacement;
 // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
