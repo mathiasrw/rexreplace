@@ -4,10 +4,7 @@ node_js:
   - "12"
   - "11"
   - "10"
-  - "9"
-  - "8"
-  #- "7" 7 cant build google closure (but should be OK as long as 6 is OK to run rexreplace)
-  - "6"
+  
 
 install: yarn install --frozen-lockfile
 
