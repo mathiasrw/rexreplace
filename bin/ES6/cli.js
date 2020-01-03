@@ -137,7 +137,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 \`mtime_obj\`: date object representing \`mtime\`, 
 \`ctime_obj\`: date object representing \`ctime\`. 
 
-All variables, except from module, date objects, \´nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
+All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `)
     /*
         .boolean('N')
