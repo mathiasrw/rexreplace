@@ -300,9 +300,9 @@
             if (!config.voidMultiline) {
                 flags += 'm';
             }
-            //if (config.voidDotall) {
-            //	flags += 's';
-            //}
+            if (config.voidDotall) {
+                flags += 's';
+            }
             if (config.unicode) {
                 flags += 'u';
             }
@@ -423,9 +423,9 @@
         .boolean('G')
         .describe('G', 'Void global search (stop looking after the first match).')
         .alias('G', 'void-global')
-        //.boolean('S')
-        //.describe('S', 'Void having `.` match newline.')
-        //.alias('S', 'void-dotAll')
+        .boolean('S')
+        .describe('S', 'Void having `.` match newline.')
+        .alias('S', 'void-dotAll')
         .boolean('M')
         .describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.')
         .alias('M', 'void-multiline')

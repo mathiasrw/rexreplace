@@ -55,9 +55,9 @@ const yargs = require('yargs')
 	.describe('G', 'Void global search (stop looking after the first match).')
 	.alias('G', 'void-global')
 
-	//.boolean('S')
-	//.describe('S', 'Void having `.` match newline.')
-	//.alias('S', 'void-dotAll')
+	.boolean('S')
+	.describe('S', 'Void having `.` match newline.')
+	.alias('S', 'void-dotAll')
 
 	.boolean('M')
 	.describe(

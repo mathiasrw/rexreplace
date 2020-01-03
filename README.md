@@ -143,6 +143,7 @@ Flag |  Effect
 `-V` | **`--verbose`** More chatty output                           [boolean]
 `-I` | **`--void-ignore-case`** Void case insensitive search pattern.        [boolean]
 `-G` | **`--void-global`** Void global search (stop looking after the first match).                                      [boolean]
+`-S` | **`--void-dotAll`** Void letting `.` also match newline.         [boolean]
 `-M` | **`--void-multiline`** Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line. [boolean]
 `-u` | **`--unicode`** Treat pattern as a sequence of unicode code points. [boolean]
 `-e` | **`--encoding`** Encoding of files/piped data.        [default: "utf8"]
