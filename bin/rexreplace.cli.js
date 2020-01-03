@@ -71,7 +71,7 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var version = '5.0.0';
+    var version = '5.1.1';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
@@ -300,7 +300,7 @@
             if (!config.voidMultiline) {
                 flags += 'm';
             }
-            if (config.voidDotall) {
+            if (config.dotAll) {
                 flags += 's';
             }
             if (config.unicode) {
@@ -423,9 +423,9 @@
         .boolean('G')
         .describe('G', 'Void global search (stop looking after the first match).')
         .alias('G', 'void-global')
-        .boolean('S')
-        .describe('S', 'Void having `.` match newline.')
-        .alias('S', 'void-dotAll')
+        .boolean('s')
+        .describe('s', 'Have `.` also match newline.')
+        .alias('s', 'dot-all')
         .boolean('M')
         .describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.')
         .alias('M', 'void-multiline')

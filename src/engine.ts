@@ -293,7 +293,7 @@ export function engine(config: any = {engine: 'V8'}) {
 			flags += 'm';
 		}
 
-		if (config.voidDotall) {
+		if (config.dotAll) {
 			flags += 's';
 		}
 

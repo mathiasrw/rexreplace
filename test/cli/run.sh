@@ -109,6 +109,14 @@ assert		 		"rexreplace [fb]. _ my.file --output-match --voidGlobal"    "fo"
 
 
 
+# -s
+reset
+echo foobar >> my.file
+assert		 		"rexreplace ar.foo _ my.file -o --dot-all "    "foob_bar"
+
+
+
+
 # -M
 reset
 echo foobar >> my.file

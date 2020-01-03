@@ -228,7 +228,7 @@ export function engine(config = { engine: 'V8' }) {
         if (!config.voidMultiline) {
             flags += 'm';
         }
-        if (config.voidDotall) {
+        if (config.dotAll) {
             flags += 's';
         }
         if (config.unicode) {
