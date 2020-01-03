@@ -109,6 +109,14 @@ assert		 		"rexreplace [fb]. _ my.file --output-match --voidGlobal"    "fo"
 
 
 
+# -s
+reset
+echo foobar >> my.file
+assert		 		"rexreplace ar.foo _ my.file -o --dot-all "    "foob_bar"
+
+
+
+
 # -M
 reset
 echo foobar >> my.file
@@ -167,6 +175,10 @@ assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpa
 
 reset
 assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
+
+reset
+assert		 		"rexreplace 'foo((b)ar)' '€1+€2' my.file -o --replacement-js"    'barb'
+
 
 
 # Content manually testes

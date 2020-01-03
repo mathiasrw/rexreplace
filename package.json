@@ -1,7 +1,7 @@
 {
   "name": "rexreplace",
-  "version": "4.1.2",
-  "description": "Smooth search & replace in files from CLI.",
+  "version": "5.1.2",
+  "description": "Smoothly search & replace in files from CLI.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
   "main": "src/engine.js",
@@ -30,7 +30,7 @@
     "test-speed": "bash test/speed/run.sh",
     "prepublishOnly": "git pull && yarn test-minify && yarn load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
-    "load-options": "rr -h | rr 'Options:([\\s\\S]+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n)[\\s\\S]*?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
+    "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
     "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
     "format": "yarn prettier --write",
     "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"
@@ -45,23 +45,21 @@
     "sed"
   ],
   "devDependencies": {
+    "@rollup/plugin-buble": "^0.21.0",
+    "@rollup/plugin-replace": "^2.3.0",
     "@types/node": "^13.1.2",
     "assert": "^2.0.0",
     "google-closure-compiler-js": "^20190909.0.0",
+    "magic-string": "^0.25.5",
     "mocha": "6.2.2",
     "prettier": "1.19.1",
     "re2": "1.10.5",
     "rollup": "1.27.14",
-    "rollup-plugin-buble": "0.19.8",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
-    "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-filesize": "6.2.1",
     "rollup-plugin-hashbang": "^1.0.1",
-    "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-preserve-shebang": "^0.1.6",
     "rollup-plugin-progress": "1.1.1",
-    "rollup-plugin-re": "^1.0.7",
-    "rollup-plugin-replace": "2.2.0",
     "rollup-plugin-typescript3": "^1.1.2",
     "rollup-plugin-uglify": "6.0.4",
     "typescript": "3.7.4",
@@ -71,6 +69,8 @@
     "test": "test"
   },
   "dependencies": {
+    "@rollup/plugin-commonjs": "^11.0.0",
+    "@rollup/plugin-node-resolve": "^6.0.0",
     "chalk": "^2.4.1",
     "globs": "^0.1.4",
     "yargs": "^14.0.0"

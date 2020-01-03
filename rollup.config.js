@@ -8,10 +8,10 @@ import { uglify } from 'rollup-plugin-uglify';
 
 */
 // import filesize from 'rollup-plugin-filesize';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 import hashbang from 'rollup-plugin-hashbang'
-import buble from 'rollup-plugin-buble';
-import resolve from 'rollup-plugin-node-resolve';
+import buble from '@rollup/plugin-buble';
+import resolve from '@rollup/plugin-node-resolve';
 
 
 

@@ -228,6 +228,9 @@ export function engine(config = { engine: 'V8' }) {
         if (!config.voidMultiline) {
             flags += 'm';
         }
+        if (config.dotAll) {
+            flags += 's';
+        }
         if (config.unicode) {
             flags += 'u';
         }
@@ -296,12 +299,12 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
     // Captures groups present, so need to run once per match
     return function () {
         step(arguments);
-        const __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time = _time, __mtime = _mtime, __ctime = _ctime, __bytes = _bytes, __size = _size, __nl = _nl, __ = _, __code_rr = code_rr;
+        const __pipe = _pipe, __text = _text, __find = _find, __file = _file, __file_rel = _file_rel, __dirpath = _dirpath, __dirpath_rel = _dirpath_rel, __dirname = _dirname, __filename = _filename, __name = _name, __ext = _ext, __cwd = _cwd, __now = _now, __time_obj = _time_obj, __time = _time, __mtime_obj = _mtime_obj, __mtime = _mtime, __ctime_obj = _ctime_obj, __ctime = _ctime, __bytes = _bytes, __size = _size, __nl = _nl, __ = _, __code_rr = code_rr;
         var capturedGroups = '';
         for (var i = 0; i < arguments.length - 2; i++) {
             capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
         }
-        return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + __, __time, __time + __, __mtime, __mtime + __, __ctime, __ctime + __, __bytes, __bytes + __, __size, __size + __, __nl, __, capturedGroups + __code_rr);
+        return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + _, __time_obj, __time, __time + _, __mtime_obj, __mtime, __mtime + _, __ctime_obj, __ctime, __ctime + _, __bytes, __bytes + __, __size, __size + __, __nl, __, capturedGroups + __code_rr);
     };
 }
 function localTimeString(dateObj = new Date()) {
