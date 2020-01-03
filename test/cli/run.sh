@@ -168,6 +168,10 @@ assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpa
 reset
 assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
 
+reset
+assert		 		"rexreplace 'foo((b)ar)' '€1+€2' my.file -o --replacement-js"    'barb'
+
+
 
 # Content manually testes
 # todo: automate test of content
