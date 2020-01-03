@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "5.1.4",
+  "version": "5.1.5",
   "description": "Smoothly search & replace in files from CLI.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "test-speed": "bash test/speed/run.sh",
     "prepublishOnly": "git pull && yarn test-minify && yarn load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
-    "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
+    "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
     "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
     "format": "yarn prettier --write",
     "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"

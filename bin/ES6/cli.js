@@ -124,7 +124,7 @@ The code has access to the following variables:
 \`nl\`: a new-line char,
 \`_\`: a single space char (for easy string concatenation).
 
-The following values defaults to \`❌ \` if haystack does not originate from a file:
+The following values defaults to \`❌\` if haystack does not originate from a file:
 \`file\`: contains the full path of the active file being searched (including full filename), 
 \`file_rel\`: contains \`file\` relative to current process working dir, 
 \`dirpath\`: contains the full path without filename of the active file being searched, 
