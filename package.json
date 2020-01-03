@@ -28,10 +28,9 @@
     "test-cli": "npm uninstall -g rexreplace && npm -g install ./ && yarn test-cli-only",
     "test-cli-only": "bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
-    "prepublishOnly": "git pull && yarn test-minify # && yarn load-options",
+    "prepublishOnly": "git pull && yarn test-minify && yarn load-options",
     "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
-    "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -m | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----\n).+?(\n## Good to know)' '€1 + _pipe + €2' readme.md -jT",
-    "debug": "rr -h | rr 'Options:(.+)Examples:' _ -m",
+    "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\n {26,}' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
     "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
     "format": "yarn prettier --write",
     "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'"
