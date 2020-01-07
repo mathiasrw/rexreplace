@@ -229,7 +229,7 @@ Results from the latest speed test can always be seen in the [speed test log](ht
 
 The graph visualises speed as relative to fastest overall run (`sed` on a 1kb file). This chart also has [an interactive version in log scale](https://plot.ly/~mathiasrw/1.embed), so the details in the low end can be studied better. Interestingly files of 1Kb, 5Kb takes longer for `rr` than 10Kb files. 
 
-Now, what is relevant to notice is how `sed` only takes 3.3 seconds longer for the 100Mb file - even if the difference looks drastic on the graph. 
+Now, what is relevant to notice is how `sed` only takes 4.9 seconds longer for the 100Mb file - even if the difference looks drastic on the graph. 
 
 ```
 Speed relative to fastest tool for each file size
