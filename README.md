@@ -26,7 +26,7 @@ RexReplace is a versatile tool to search and replace text in files from the comm
 
 - Easy and intuitive notation makes you trust what you are doing
 - Replacement can be javascript code - giving you Turing complete flexibility
-- Pinoint the exact files with [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl16a.html) (`docs/*.md` represents each markdown file in `docs/`)
+- Pinpoint the exact files with [glob notation](https://www.tcl.tk/man/tcl8.5/tutorial/Tcl16a.html) (`docs/*.md` represents each markdown file in `docs/`)
 - No more brute-forcing the right combination of `find`, `cat`, `sed`, `tr`, and `awk` to replace a text pattern in the right files
 
 
@@ -60,7 +60,6 @@ Hard for your fingers to write on your keyboard? We got you covered with the `rr
 > rr Foo xxx myfile.md
 ```
 
-It works with 
 
 ----
 
