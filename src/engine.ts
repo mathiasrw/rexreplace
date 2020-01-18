@@ -405,7 +405,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 					'try{'+
 						'result = __require_(file);'+
 					'} catch (e){'+
-						'var dir = /^[\\\/]/.test(file) ? "" : $cwd;'+
+						'var dir = /^[\\\/]/.test(file) ? "" : cwd;'+
 						'result = __require_(path.resolve(dir, file));'+
 					'};'+
 					'return result;'+

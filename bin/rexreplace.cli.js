@@ -71,7 +71,7 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var version = '5.1.5';
+    var version = '5.1.6';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
@@ -329,7 +329,7 @@
             'try{' +
             'result = __require_(file);' +
             '} catch (e){' +
-            'var dir = /^[\\\/]/.test(file) ? "" : $cwd;' +
+            'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
             'result = __require_(path.resolve(dir, file));' +
             '};' +
             'return result;' +
