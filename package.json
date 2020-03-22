@@ -63,7 +63,7 @@
     "rollup-plugin-typescript3": "^1.1.2",
     "rollup-plugin-uglify": "6.0.4",
     "typescript": "3.7.4",
-    "yarn": "1.22.0"
+    "yarn": "1.22.1"
   },
   "directories": {
     "test": "test"
