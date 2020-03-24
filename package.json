@@ -1,8 +1,11 @@
 {
   "name": "rexreplace",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Smoothly search & replace in files from CLI.",
   "author": "Mathias Rangel Wulff",
+  "funding": {
+    "paymail":"mwulff@moneybutton.com"
+  },
   "license": "MIT",
   "main": "src/engine.js",
   "repository": {
@@ -45,35 +48,35 @@
     "sed"
   ],
   "devDependencies": {
-    "@rollup/plugin-buble": "0.20.0",
-    "@rollup/plugin-replace": "^2.3.0",
-    "@types/node": "^13.9.3",
+    "@rollup/plugin-buble": "0.21.1",
+    "@rollup/plugin-replace": "2.3.1",
+    "@types/node": "13.9.3",
     "assert": "^2.0.0",
-    "google-closure-compiler-js": "^20200204.0.0",
-    "magic-string": "^0.25.5",
-    "mocha": "7.1.0",
-    "prettier": "1.19.1",
+    "google-closure-compiler-js": "20200315.0.0",
+    "magic-string": "^0.25.7",
+    "mocha": "7.1.1",
+    "prettier": "2.0.2",
     "re2": "1.10.5",
-    "rollup": "1.32.0",
+    "rollup": "2.1.0",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-filesize": "6.2.1",
-    "rollup-plugin-hashbang": "^1.0.1",
+    "rollup-plugin-hashbang": "2.2.2",
     "rollup-plugin-preserve-shebang": "^0.1.6",
     "rollup-plugin-progress": "1.1.1",
     "rollup-plugin-typescript3": "^1.1.2",
     "rollup-plugin-uglify": "6.0.4",
-    "typescript": "3.7.4",
-    "yarn": "1.22.1"
+    "typescript": "3.8.3",
+    "yarn": "1.22.4"
   },
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "@rollup/plugin-commonjs": "^11.0.0",
-    "@rollup/plugin-node-resolve": "^7.1.0",
-    "chalk": "^2.4.1",
-    "globs": "^0.1.4",
-    "yargs": "^15.2.0"
+    "@rollup/plugin-commonjs": "11.0.2",
+    "@rollup/plugin-node-resolve": "7.1.1",
+    "chalk": "3.0.0",
+    "globs": "0.1.4",
+    "yargs": "15.3.1"
   },
   "prettier": {
     "useTabs": true,

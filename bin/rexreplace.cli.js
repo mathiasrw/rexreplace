@@ -151,10 +151,7 @@
             }
             //Make sure data is always on disk
             var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
-            var salt = new Date()
-                .toISOString()
-                .replace(/:/g, '_')
-                .replace('Z', '');
+            var salt = new Date().toISOString().replace(/:/g, '_').replace('Z', '');
             var backupFile = oriFile + '.' + salt + '.backup';
             if (_config_rr.voidAsync) {
                 try {

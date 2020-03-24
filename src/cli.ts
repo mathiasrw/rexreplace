@@ -275,7 +275,7 @@ function unescapeString(str) {
 	return new Function("return '" + str.replace(/'/g, "\\'") + "'")();
 }
 
-(function() {
+(function () {
 	if (needHelp) {
 		return backOut();
 	}

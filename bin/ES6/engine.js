@@ -81,10 +81,7 @@ export function engine(config = { engine: 'V8' }) {
         }
         //Make sure data is always on disk
         const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
-        const salt = new Date()
-            .toISOString()
-            .replace(/:/g, '_')
-            .replace('Z', '');
+        const salt = new Date().toISOString().replace(/:/g, '_').replace('Z', '');
         const backupFile = oriFile + '.' + salt + '.backup';
         if (_config_rr.voidAsync) {
             try {

@@ -56,7 +56,7 @@ export function engine(config: any = {engine: 'V8'}) {
 			return doReplacement(file, config, data);
 		} else {
 			chat('Open async: ' + file);
-			fs.readFile(file, config.encoding, function(err, data) {
+			fs.readFile(file, config.encoding, function (err, data) {
 				if (err) {
 					return error(err);
 				}
@@ -101,7 +101,7 @@ export function engine(config: any = {engine: 'V8'}) {
 
 		// Write directly to the same file (if the process is killed all new and old data is lost)
 		if (_config_rr.voidBackup) {
-			return fs.writeFile(_file_rr, result, _config_rr.encoding, function(err) {
+			return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
 				if (err) {
 					return error(err);
 				}
@@ -111,10 +111,7 @@ export function engine(config: any = {engine: 'V8'}) {
 
 		//Make sure data is always on disk
 		const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
-		const salt = new Date()
-			.toISOString()
-			.replace(/:/g, '_')
-			.replace('Z', '');
+		const salt = new Date().toISOString().replace(/:/g, '_').replace('Z', '');
 		const backupFile = oriFile + '.' + salt + '.backup';
 
 		if (_config_rr.voidAsync) {
@@ -210,7 +207,7 @@ export function engine(config: any = {engine: 'V8'}) {
 				return die('outputMatch is only supported in node 6+');
 			}
 
-			return function() {
+			return function () {
 				step(arguments);
 
 				if (arguments.length === 3) {
@@ -499,7 +496,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 		);
 	}
 	// Captures groups present, so need to run once per match
-	return function() {
+	return function () {
 		step(arguments);
 
 		const __pipe = _pipe,

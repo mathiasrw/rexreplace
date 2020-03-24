@@ -5,18 +5,18 @@ font.red = font.green = font.gray = (str) => str;
 
 let config: any = null;
 
-export const outputConfig = function(_config) {
+export const outputConfig = function (_config) {
 	config = _config;
 };
 
-export const info = function(msg, data = '') {
+export const info = function (msg, data = '') {
 	if (config.quiet || config.quietTotal) {
 		return;
 	}
 	console.error(font.gray(msg), data);
 };
 
-export const chat = function(msg, data = '') {
+export const chat = function (msg, data = '') {
 	if (config.verbose) {
 		info(msg, data);
 	} else {
@@ -24,7 +24,7 @@ export const chat = function(msg, data = '') {
 	}
 };
 
-export const die = function(msg, data = '', displayHelp = false) {
+export const die = function (msg, data = '', displayHelp = false) {
 	if (displayHelp && !config.quietTotal) {
 		config.showHelp();
 	}
@@ -32,7 +32,7 @@ export const die = function(msg, data = '', displayHelp = false) {
 	kill(msg);
 };
 
-export const error = function(msg, data = '') {
+export const error = function (msg, data = '') {
 	if (!config.quiet && !config.quietTotal) {
 		console.error(font.red(msg), data);
 	}
