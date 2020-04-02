@@ -74,7 +74,7 @@
   "dependencies": {
     "@rollup/plugin-commonjs": "11.0.2",
     "@rollup/plugin-node-resolve": "7.1.1",
-    "chalk": "3.0.0",
+    "chalk": "4.0.0",
     "globs": "0.1.4",
     "yargs": "15.3.1"
   },
