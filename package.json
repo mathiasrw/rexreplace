@@ -59,7 +59,7 @@
     "re2": "1.10.5",
     "rollup": "2.1.0",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
-    "rollup-plugin-filesize": "6.2.1",
+    "rollup-plugin-filesize": "7.0.0",
     "rollup-plugin-hashbang": "2.2.2",
     "rollup-plugin-preserve-shebang": "^0.1.6",
     "rollup-plugin-progress": "1.1.1",
