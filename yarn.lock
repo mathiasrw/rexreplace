@@ -548,10 +548,10 @@ globs@0.1.4:
   dependencies:
     glob "^7.1.1"
 
-google-closure-compiler-js@20200315.0.0:
-  version "20200315.0.0"
-  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20200315.0.0.tgz#60c1258059a0214a76203936ec550a39ada1f07b"
-  integrity sha512-PE+LZ3dDYnP0F7Sk12cdbC7skdKUIPeS4VIy7RCow97PixdpU5s1kWYyzKjX/rzj45GwMyeL2u5kG4uArZwcNA==
+google-closure-compiler-js@20200406.0.0:
+  version "20200406.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20200406.0.0.tgz#e73f498b1ab56a0580c0f945463252f7562f6f98"
+  integrity sha512-4qsr9VwjpSfoGt84bRAwDAcUlyYodZ9iywVMQwWzCu+SziCNXLFhUWkfLqTXbOYRSwO94UadwERSBdoPZY/GrA==
 
 google-closure-compiler-js@>20170000:
   version "20191111.0.0"
