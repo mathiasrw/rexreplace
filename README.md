@@ -14,7 +14,7 @@
 [![FOSSA Status](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
 [![NPM downloads](https://img.shields.io/npm/dt/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
-[![Greenkeeper badge](https://badges.greenkeeper.io/mathiasrw/rexreplace.svg)](https://greenkeeper.io/)
+
 
 
 
