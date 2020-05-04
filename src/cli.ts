@@ -2,16 +2,16 @@
 
 // CLI interface for rexreplace
 
-import * as rexreplace from './engine';
+import * as rexreplace from './engine.ts';
 
 let pattern, replacement;
 
 // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = false;
-if (process.argv.length < 4) {
+if (Deno.args.length < 4) {
 	needHelp = true;
 } else {
-	[pattern, replacement] = process.argv.splice(2, 2);
+	[pattern, replacement] = Deno.args.splice(2, 2);
 }
 
 const yargs = require('yargs')
@@ -268,10 +268,10 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
 
 function backOut() {
 	yargs.showHelp();
-	process.exitCode = 1;
+	Deno.exit(1);
 }
 
-function unescapeString(str) {
+function unescapeString(str='') {
 	return new Function("return '" + str.replace(/'/g, "\\'") + "'")();
 }
 
@@ -312,17 +312,18 @@ function unescapeString(str) {
 	/*if(Boolean(process.stdout.isTTY)){
         config.output = true;
     }*/
+	rexreplace.engine(config);
 
-	if (Boolean(process.stdin.isTTY)) {
+	if (0 && Boolean(/*Deno.isTTY().stdin*/)) {
 		if (config.replacementPipe) {
 			return backOut();
 		}
 		rexreplace.engine(config);
 	} else {
-		process.stdin.setEncoding(config.encoding);
-
-		process.stdin.on('readable', () => {
-			let chunk = process.stdin.read();
+		//Deno.stdin. setEncoding(config.encoding);
+/*
+		Deno.stdin.read(() => {
+			let chunk = Deno.stdin.read();
 
 			if (null !== chunk) {
 				pipeInUse = true;
@@ -341,6 +342,6 @@ function unescapeString(str) {
 				config.pipedData = pipeData;
 			}
 			rexreplace.engine(config);
-		});
+		});*/
 	}
 })();

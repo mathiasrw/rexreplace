@@ -55,6 +55,6 @@ export function step(data) {
 }
 
 function kill(msg = '', error = 1) {
-	process.exitCode = error;
+	Deno.exit(error);
 	throw new Error(msg);
 }

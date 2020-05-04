@@ -6,7 +6,7 @@ const globs = require('globs');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, error, die} from './output';
+import {outputConfig, step, debug, chat, info, error, die} from './output.ts';
 
 export const version = 'PACKAGE_VERSION';
 
