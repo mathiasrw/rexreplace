@@ -48,7 +48,7 @@
     "sed"
   ],
   "devDependencies": {
-    "@rollup/plugin-buble": "0.21.1",
+    "@rollup/plugin-buble": "0.21.3",
     "@rollup/plugin-replace": "2.3.2",
     "@types/node": "14.0.1",
     "assert": "^2.0.0",
