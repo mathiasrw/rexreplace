@@ -8,7 +8,7 @@
 
 
 
-[![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
+[![Build Status](https://github.com/mathiasrw/rexreplace/workflows/Build/badge.svg)](https://github.com/mathiasrw/rexreplace/actions?query=branch%3Amaster)
 [![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) 
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![FOSSA Status](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
@@ -193,7 +193,7 @@ Flag |  Effect
 
 
 ### Not a priority
-- Speed. Obviously, speed is important, but to what extent does a 0,29-second command really satisfy the user compared to a 294-millisecond command? See _test->speed_ for more info. 
+- Speed. well... obviously, speed is important, but to what extent does a 29 millisecond command really satisfy the user compared to a 294 millisecond command? See _test->speed_ for more info. 
 
 ```bash
 > time cat README.md | sed 's/a/x/g'  > /dev/null
