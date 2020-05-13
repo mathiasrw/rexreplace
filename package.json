@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "5.2.2",
+  "version": "5.3.0",
   "description": "Smoothly search & replace in files from CLI.",
   "author": "Mathias Rangel Wulff",
   "funding": {
