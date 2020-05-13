@@ -8,13 +8,15 @@
 
 
 
-[![Build Status](https://travis-ci.org/mathiasrw/rexreplace.svg?branch=master)](https://travis-ci.org/mathiasrw/rexreplace)
+[![Build Status](https://img.shields.io/github/workflow/status/mathiasrw/rexreplace/Build)](https://github.com/mathiasrw/rexreplace/actions?query=branch%3Amaster)
+[![Dependabot](https://api.dependabot.com/badges/status?host=github&repo=mathiasrw/rexreplace)](https://dependabot.com/#how-it-works)
 [![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) 
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![FOSSA Status](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
-[![NPM downloads](https://img.shields.io/npm/dt/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
-[![Greenkeeper badge](https://badges.greenkeeper.io/mathiasrw/rexreplace.svg)](https://greenkeeper.io/)
+
+
+
 
 
 
@@ -193,7 +195,7 @@ Flag |  Effect
 
 
 ### Not a priority
-- Speed. Obviously, speed is important, but to what extent does a 0,29-second command really satisfy the user compared to a 294-millisecond command? See _test->speed_ for more info. 
+- Speed. Well... obviously, speed is important, but to what extent does a 29 millisecond command really satisfy the user compared to a 294 millisecond command? See _test->speed_ for more info. 
 
 ```bash
 > time cat README.md | sed 's/a/x/g'  > /dev/null
