@@ -72,7 +72,7 @@
     "test": "test"
   },
   "dependencies": {
-    "@rollup/plugin-commonjs": "11.0.2",
+    "@rollup/plugin-commonjs": "11.1.0",
     "@rollup/plugin-node-resolve": "7.1.3",
     "chalk": "4.0.0",
     "globs": "0.1.4",
