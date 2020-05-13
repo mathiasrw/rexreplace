@@ -69,7 +69,7 @@
     "rollup-plugin-uglify": "6.0.4",
     "typescript": "3.9.2",
     "yarn": "1.22.4",
-    "version-bump-prompt": "^5.0.5"
+    "version-bump-prompt": "^6.0.3"
   },
   "directories": {
     "test": "test"
