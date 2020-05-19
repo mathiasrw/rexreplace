@@ -59,7 +59,7 @@
     "mocha": "7.1.2",
     "prettier": "2.0.5",
     "re2": "1.11.0",
-    "rollup": "2.10.3",
+    "rollup": "2.10.4",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-filesize": "9.0.0",
     "rollup-plugin-hashbang": "2.2.2",
