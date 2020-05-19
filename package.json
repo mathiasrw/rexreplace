@@ -52,7 +52,7 @@
   "devDependencies": {
     "@rollup/plugin-buble": "0.21.3",
     "@rollup/plugin-replace": "2.3.2",
-    "@types/node": "14.0.1",
+    "@types/node": "14.0.2",
     "assert": "^2.0.0",
     "google-closure-compiler-js": "20200517.0.0",
     "magic-string": "^0.25.7",
