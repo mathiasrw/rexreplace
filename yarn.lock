@@ -2093,10 +2093,10 @@ qs@~6.5.2:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
   integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
 
-re2@1.12.1:
-  version "1.12.1"
-  resolved "https://registry.yarnpkg.com/re2/-/re2-1.12.1.tgz#9187a4cc30d09cea34be29e9ac2a2597295b801b"
-  integrity sha512-HtI4CSZevx7Pi4i6g5lxmQqV58x78zROZxtwmObrpjbJgxp8pq2IiF5wVOR8j8NAmp/J1D9lVh9zSFWg8x5+bw==
+re2@1.13.0:
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/re2/-/re2-1.13.0.tgz#62eff549aef4925c7560c3f9e32f8be78cec6b79"
+  integrity sha512-FchygUSVoOwgXbFUtrHNivCCXahCAKB1BiBQ7CMcQp+xgOplHdnAaJ0WAS7e9w/DyPFGdpwJqwnuQNjBA1/ovw==
   dependencies:
     nan "^2.14.1"
 
