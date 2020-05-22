@@ -63,7 +63,7 @@
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-filesize": "9.0.0",
     "rollup-plugin-hashbang": "2.2.2",
-    "rollup-plugin-preserve-shebang": "^0.1.6",
+    "rollup-plugin-preserve-shebang": "^1.0.0",
     "rollup-plugin-progress": "1.1.2",
     "rollup-plugin-typescript3": "^1.1.2",
     "rollup-plugin-uglify": "6.0.4",
