@@ -2093,12 +2093,13 @@ qs@~6.5.2:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
   integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
 
-re2@1.13.1:
-  version "1.13.1"
-  resolved "https://registry.yarnpkg.com/re2/-/re2-1.13.1.tgz#12ff1f9a3f930dc9ab004b975260244841fc204c"
-  integrity sha512-9OlqC9qwXD99Er2H7zMt98u9oSzD1ei/Ji3Bw9ObABHSob5gVH/aJV0dR60FNcUCQMQrnHOWCFfO+6uJsFU0dA==
+re2@1.14.0:
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/re2/-/re2-1.14.0.tgz#727076590acfe868cf04e115a3a3f6c373ddd63b"
+  integrity sha512-TYogJmzni8zNVaw4gNOVORRTUaggLZwnMhJoTD0POKeACEoCxTWa9BAYehRnh3S1JUXIMEfcEUa7piiGEn71Zg==
   dependencies:
     nan "^2.14.1"
+    node-gyp "^6.1.0"
 
 read-package-json-fast@^1.1.1, read-package-json-fast@^1.1.3:
   version "1.1.3"
@@ -2934,7 +2935,7 @@ yargs@15.3.1:
     y18n "^4.0.0"
     yargs-parser "^18.1.1"
 
-yarn@1.22.4:
-  version "1.22.4"
-  resolved "https://registry.yarnpkg.com/yarn/-/yarn-1.22.4.tgz#01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e"
-  integrity sha512-oYM7hi/lIWm9bCoDMEWgffW8aiNZXCWeZ1/tGy0DWrN6vmzjCXIKu2Y21o8DYVBUtiktwKcNoxyGl/2iKLUNGA==
+yarn@1.22.1:
+  version "1.22.1"
+  resolved "https://registry.yarnpkg.com/yarn/-/yarn-1.22.1.tgz#888d8b01ac8547669b3bda5fe4b5b8b88c909e8c"
+  integrity sha512-hL7Fd2Psv4fOiE/JjVULDg+LckG0Ql7IPUh5wWC/4UEr6W+eF+VVEWfRu6Q7qbOnqk7+qY7CXYSSLBfJIyElXA==
