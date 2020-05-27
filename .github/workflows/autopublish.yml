@@ -1,4 +1,4 @@
-name: Inspect Contexts
+name: Auto publish
 
 on: 
   push:
@@ -12,7 +12,7 @@ jobs:
     name: Autopublish dependabot
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect context
+      - name: Checking the who pushed
         run: |
-          echo "The github.pusher is:"
-          echo "${{ toJson(github.pusher) }}"
+          echo "The github.event.pusher is:"
+          echo "${{ toJson(github.event.pusher) }}"
