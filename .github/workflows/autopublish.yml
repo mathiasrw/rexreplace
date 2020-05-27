@@ -1,0 +1,18 @@
+name: Inspect Contexts
+
+on: 
+  push:
+    branches:
+    - master
+    
+
+jobs:
+  build:
+    if: ${{ 1==1 }}
+    name: Autopublish dependabot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect context
+        run: |
+          echo "The github.pusher is:"
+          echo "${{ toJson(github.pusher) }}"
