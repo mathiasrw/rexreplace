@@ -1,0 +1,19 @@
+name: Publish on bump
+
+on: 
+  push:
+    branches:
+    - master
+    
+
+jobs:
+  build:
+    if: ${{ !github.event.pusher.email }}
+    name: Autopublish dependabot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking the who pushed
+        run: |
+          echo "The github.event.pusher is:"
+          echo "${{ toJson(github.event) }}"
+          echo "And I must publish!!!"
