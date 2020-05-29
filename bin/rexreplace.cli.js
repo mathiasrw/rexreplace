@@ -29,14 +29,15 @@
         }
     };
     var die = function (msg, data, displayHelp) {
+        if ( msg === void 0 ) msg = '';
         if ( data === void 0 ) data = '';
         if ( displayHelp === void 0 ) displayHelp = false;
 
         if (displayHelp && !config.quietTotal) {
             config.showHelp();
         }
-        error(msg, data);
-        kill(msg);
+        msg && error(' ❌ ' + msg, data);
+        kill();
     };
     var error = function (msg, data) {
         if ( data === void 0 ) data = '';
@@ -59,19 +60,19 @@
             debug(data);
         }
     }
-    function kill(msg, error) {
-        if ( msg === void 0 ) msg = '';
+    function kill(error, msg) {
         if ( error === void 0 ) error = 1;
+        if ( msg === void 0 ) msg = '';
 
-        process.exitCode = error;
-        throw new Error(msg);
+        msg && console.error(+msg);
+        process.exit(error);
     }
 
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var version = '5.2.2';
+    var version = '5.3.0';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
@@ -204,9 +205,9 @@
             }
             return false;
         }
-        function getFinalPattern(config) {
+        function getFinalPattern(conf) {
             step('Get final pattern');
-            var pattern = config.pattern;
+            var pattern = replacePlaceholders(conf.pattern, conf);
             /*if (config.patternFile) {
                 pattern = fs.readFileSync(pattern, 'utf8');
                 pattern = new Function('return '+pattern)();
@@ -214,20 +215,21 @@
             step(pattern);
             return pattern;
         }
-        function getFinalReplacement(config) {
+        function getFinalReplacement(conf) {
             step('Get final replacement');
             /*if(config.replacementFile){
                 return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
             }*/
-            if (config.replacementPipe) {
+            conf.replacement = replacePlaceholders(conf.replacement, conf);
+            if (conf.replacementPipe) {
                 step('Piping replacement');
-                config.pipedDataUsed = true;
-                if (null === config.pipedData) {
+                conf.pipedDataUsed = true;
+                if (null === conf.pipedData) {
                     return die('No data piped into replacement');
                 }
-                config.replacement = config.pipedData;
+                conf.replacement = conf.pipedData;
             }
-            if (config.outputMatch) {
+            if (conf.outputMatch) {
                 step('Output match');
                 if (parseInt(process.versions.node) < 6) {
                     return die('outputMatch is only supported in node 6+');
@@ -250,13 +252,13 @@
             }
             // If captured groups then run dynamicly
             //console.log(process);
-            if (config.replacementJs &&
-                /\$\d/.test(config.replacement) &&
+            if (conf.replacementJs &&
+                /\$\d/.test(conf.replacement) &&
                 parseInt(process.versions.node) < 6) {
                 return die('Captured groups for javascript replacement is only supported in node 6+');
             }
-            step(config.replacement);
-            return config.replacement;
+            step(conf.replacement);
+            return conf.replacement;
         }
         /*function oneLinerFromFile(str){
             let lines = str.split("\n");
@@ -273,14 +275,28 @@
             var flags = getFlags(config);
             switch (config.engine) {
                 case 'V8':
-                    regex = new RegExp(config.pattern, flags);
+                    try {
+                        regex = new RegExp(config.pattern, flags);
+                    }
+                    catch (e) {
+                        if (config.debug)
+                            { throw new Error(e); }
+                        die(e.message);
+                    }
                     break;
                 case 'RE2':
                     var RE2 = require('re2');
-                    regex = new RE2(config.pattern, flags);
+                    try {
+                        regex = new RE2(config.pattern, flags);
+                    }
+                    catch (e$1) {
+                        if (config.debug)
+                            { throw new Error(e$1); }
+                        die(e$1.message);
+                    }
                     break;
                 default:
-                    die(("Engine " + (config.engine) + " not supported yet"));
+                    die(("Engine " + (config.engine) + " not supported"));
             }
             step(regex);
             return regex;
@@ -383,6 +399,21 @@
 
         return ((dateObj.getFullYear()) + "-" + (('0' + (dateObj.getMonth() + 1)).slice(-2)) + "-" + (('0' + dateObj.getDate()).slice(-2)) + " " + (('0' + dateObj.getHours()).slice(-2)) + ":" + (('0' + dateObj.getMinutes()).slice(-2)) + ":" + (('0' + dateObj.getSeconds()).slice(-2)) + "." + (('00' + dateObj.getMilliseconds()).slice(-3)));
     }
+    var re = {
+        euro: /€/g,
+        section: /§/g,
+    };
+    function replacePlaceholders(str, conf) {
+        if ( str === void 0 ) str = '';
+
+        if (!conf.voidEuro) {
+            str = str.replace(re.euro, '$');
+        }
+        if (!conf.voidSection) {
+            str = str.replace(re.section, '\\');
+        }
+        return str;
+    }
 
     var assign;
     var pattern, replacement;
@@ -452,6 +483,9 @@
         .boolean('€')
         .describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
         .alias('€', 'void-euro')
+        .boolean('§')
+        .describe('§', "Void having '§' as alias for '' in pattern and replacement parameters")
+        .alias('§', 'void-section')
         .boolean('o')
         .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.')
         .alias('o', 'output')
@@ -552,17 +586,13 @@
         process.exitCode = 1;
     }
     function unescapeString(str) {
-        return new Function("return '" + str.replace(/'/g, "\\'") + "'")();
+        if ( str === void 0 ) str = '';
+
+        return new Function(("return '" + (str.replace(/'/g, "\\'")) + "'"))();
     }
     (function () {
         if (needHelp) {
             return backOut();
-        }
-        var RE_EURO = /€/g;
-        // CLI interface default has € as alias for $
-        if (!yargs.argv.voidEuro) {
-            pattern = pattern.replace(RE_EURO, '$');
-            replacement = replacement.replace(RE_EURO, '$');
         }
         // All options into one big config object for the rexreplace core
         var config = {};

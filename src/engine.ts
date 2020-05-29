@@ -172,9 +172,9 @@ export function engine(config: any = {engine: 'V8'}) {
 		return false;
 	}
 
-	function getFinalPattern(config) {
+	function getFinalPattern(conf: any) {
 		step('Get final pattern');
-		let pattern = config.pattern;
+		let pattern = replacePlaceholders(conf.pattern, conf);
 
 		/*if (config.patternFile) {
 			pattern = fs.readFileSync(pattern, 'utf8');
@@ -185,22 +185,24 @@ export function engine(config: any = {engine: 'V8'}) {
 		return pattern;
 	}
 
-	function getFinalReplacement(config) {
+	function getFinalReplacement(conf: any) {
 		step('Get final replacement');
 		/*if(config.replacementFile){
 			return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 		}*/
 
-		if (config.replacementPipe) {
+		conf.replacement = replacePlaceholders(conf.replacement, conf);
+
+		if (conf.replacementPipe) {
 			step('Piping replacement');
-			config.pipedDataUsed = true;
-			if (null === config.pipedData) {
+			conf.pipedDataUsed = true;
+			if (null === conf.pipedData) {
 				return die('No data piped into replacement');
 			}
-			config.replacement = config.pipedData;
+			conf.replacement = conf.pipedData;
 		}
 
-		if (config.outputMatch) {
+		if (conf.outputMatch) {
 			step('Output match');
 
 			if (parseInt(process.versions.node) < 6) {
@@ -227,16 +229,16 @@ export function engine(config: any = {engine: 'V8'}) {
 		// If captured groups then run dynamicly
 		//console.log(process);
 		if (
-			config.replacementJs &&
-			/\$\d/.test(config.replacement) &&
+			conf.replacementJs &&
+			/\$\d/.test(conf.replacement) &&
 			parseInt(process.versions.node) < 6
 		) {
 			return die('Captured groups for javascript replacement is only supported in node 6+');
 		}
 
-		step(config.replacement);
+		step(conf.replacement);
 
-		return config.replacement;
+		return conf.replacement;
 	}
 
 	/*function oneLinerFromFile(str){
@@ -258,14 +260,24 @@ export function engine(config: any = {engine: 'V8'}) {
 
 		switch (config.engine) {
 			case 'V8':
-				regex = new RegExp(config.pattern, flags);
+				try {
+					regex = new RegExp(config.pattern, flags);
+				} catch (e) {
+					if (config.debug) throw new Error(e);
+					die(e.message);
+				}
 				break;
 			case 'RE2':
 				const RE2 = require('re2');
-				regex = new RE2(config.pattern, flags);
+				try {
+					regex = new RE2(config.pattern, flags);
+				} catch (e) {
+					if (config.debug) throw new Error(e);
+					die(e.message);
+				}
 				break;
 			default:
-				die(`Engine ${config.engine} not supported yet`);
+				die(`Engine ${config.engine} not supported`);
 		}
 
 		step(regex);
@@ -346,7 +358,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'fs',
 			'globs',
 			'path',
-			
+
 			'pipe',
 			'pipe_',
 
@@ -364,7 +376,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'dirpath_',
 			'dirpath_rel',
 			'dirpath_rel_',
-			
+
 			'dirname',
 			'dirname_',
 			'filename',
@@ -395,19 +407,19 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'nl',
 			'_',
 			'__code_rr',
-				'var path = require("path");'+
-				'var __require_ = require;'+
-				'var r = function(file){'+
-					'var result = null;'+
-					'try{'+
-						'result = __require_(file);'+
-					'} catch (e){'+
-						'var dir = /^[\\\/]/.test(file) ? "" : cwd;'+
-						'result = __require_(path.resolve(dir, file));'+
-					'};'+
-					'return result;'+
-				'};'+
-				'require = r;'+
+			'var path = require("path");' +
+			'var __require_ = require;' +
+			'var r = function(file){' +
+			'var result = null;' +
+			'try{' +
+			'result = __require_(file);' +
+			'} catch (e){' +
+			'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
+			'result = __require_(path.resolve(dir, file));' +
+			'};' +
+			'return result;' +
+			'};' +
+			'require = r;' +
 			'return eval(__code_rr);'
 		);
 
@@ -593,4 +605,21 @@ function localTimeString(dateObj = new Date()) {
 	).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
 		'0' + dateObj.getSeconds()
 	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
+}
+
+const re = {
+	euro: /€/g,
+	section: /§/g,
+};
+
+function replacePlaceholders(str = '', conf: any) {
+	if (!conf.voidEuro) {
+		str = str.replace(re.euro, '$');
+	}
+
+	if (!conf.voidSection) {
+		str = str.replace(re.section, '\\');
+	}
+
+	return str;
 }

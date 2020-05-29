@@ -68,6 +68,9 @@ const yargs = require('yargs')
     .boolean('€')
     .describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
     .alias('€', 'void-euro')
+    .boolean('§')
+    .describe('§', "Void having '§' as alias for '' in pattern and replacement parameters")
+    .alias('§', 'void-section')
     .boolean('o')
     .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.')
     .alias('o', 'output')
@@ -205,18 +208,12 @@ function backOut() {
     yargs.showHelp();
     process.exitCode = 1;
 }
-function unescapeString(str) {
-    return new Function("return '" + str.replace(/'/g, "\\'") + "'")();
+function unescapeString(str = '') {
+    return new Function(`return '${str.replace(/'/g, "\\'")}'`)();
 }
 (function () {
     if (needHelp) {
         return backOut();
-    }
-    const RE_EURO = /€/g;
-    // CLI interface default has € as alias for $
-    if (!yargs.argv.voidEuro) {
-        pattern = pattern.replace(RE_EURO, '$');
-        replacement = replacement.replace(RE_EURO, '$');
     }
     // All options into one big config object for the rexreplace core
     let config = {};

@@ -134,9 +134,9 @@ export function engine(config = { engine: 'V8' }) {
         }
         return false;
     }
-    function getFinalPattern(config) {
+    function getFinalPattern(conf) {
         step('Get final pattern');
-        let pattern = config.pattern;
+        let pattern = replacePlaceholders(conf.pattern, conf);
         /*if (config.patternFile) {
             pattern = fs.readFileSync(pattern, 'utf8');
             pattern = new Function('return '+pattern)();
@@ -144,20 +144,21 @@ export function engine(config = { engine: 'V8' }) {
         step(pattern);
         return pattern;
     }
-    function getFinalReplacement(config) {
+    function getFinalReplacement(conf) {
         step('Get final replacement');
         /*if(config.replacementFile){
             return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
-        if (config.replacementPipe) {
+        conf.replacement = replacePlaceholders(conf.replacement, conf);
+        if (conf.replacementPipe) {
             step('Piping replacement');
-            config.pipedDataUsed = true;
-            if (null === config.pipedData) {
+            conf.pipedDataUsed = true;
+            if (null === conf.pipedData) {
                 return die('No data piped into replacement');
             }
-            config.replacement = config.pipedData;
+            conf.replacement = conf.pipedData;
         }
-        if (config.outputMatch) {
+        if (conf.outputMatch) {
             step('Output match');
             if (parseInt(process.versions.node) < 6) {
                 return die('outputMatch is only supported in node 6+');
@@ -178,13 +179,13 @@ export function engine(config = { engine: 'V8' }) {
         }
         // If captured groups then run dynamicly
         //console.log(process);
-        if (config.replacementJs &&
-            /\$\d/.test(config.replacement) &&
+        if (conf.replacementJs &&
+            /\$\d/.test(conf.replacement) &&
             parseInt(process.versions.node) < 6) {
             return die('Captured groups for javascript replacement is only supported in node 6+');
         }
-        step(config.replacement);
-        return config.replacement;
+        step(conf.replacement);
+        return conf.replacement;
     }
     /*function oneLinerFromFile(str){
         let lines = str.split("\n");
@@ -201,14 +202,28 @@ export function engine(config = { engine: 'V8' }) {
         let flags = getFlags(config);
         switch (config.engine) {
             case 'V8':
-                regex = new RegExp(config.pattern, flags);
+                try {
+                    regex = new RegExp(config.pattern, flags);
+                }
+                catch (e) {
+                    if (config.debug)
+                        throw new Error(e);
+                    die(e.message);
+                }
                 break;
             case 'RE2':
                 const RE2 = require('re2');
-                regex = new RE2(config.pattern, flags);
+                try {
+                    regex = new RE2(config.pattern, flags);
+                }
+                catch (e) {
+                    if (config.debug)
+                        throw new Error(e);
+                    die(e.message);
+                }
                 break;
             default:
-                die(`Engine ${config.engine} not supported yet`);
+                die(`Engine ${config.engine} not supported`);
         }
         step(regex);
         return regex;
@@ -306,4 +321,17 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 }
 function localTimeString(dateObj = new Date()) {
     return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${('0' + dateObj.getDate()).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${('0' + dateObj.getSeconds()).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
+}
+const re = {
+    euro: /€/g,
+    section: /§/g,
+};
+function replacePlaceholders(str = '', conf) {
+    if (!conf.voidEuro) {
+        str = str.replace(re.euro, '$');
+    }
+    if (!conf.voidSection) {
+        str = str.replace(re.section, '\\');
+    }
+    return str;
 }

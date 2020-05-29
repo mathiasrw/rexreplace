@@ -20,12 +20,12 @@ export const chat = function (msg, data = '') {
         debug(msg + ' ' + data);
     }
 };
-export const die = function (msg, data = '', displayHelp = false) {
+export const die = function (msg = '', data = '', displayHelp = false) {
     if (displayHelp && !config.quietTotal) {
         config.showHelp();
     }
-    error(msg, data);
-    kill(msg);
+    msg && error(' ❌ ' + msg, data);
+    kill();
 };
 export const error = function (msg, data = '') {
     if (!config.quiet && !config.quietTotal) {
@@ -46,7 +46,7 @@ export function step(data) {
         debug(data);
     }
 }
-function kill(msg = '', error = 1) {
-    process.exitCode = error;
-    throw new Error(msg);
+function kill(error = 1, msg = '') {
+    msg && console.error(+msg);
+    process.exit(error);
 }

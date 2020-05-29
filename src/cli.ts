@@ -100,6 +100,10 @@ const yargs = require('yargs')
 	.describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
 	.alias('€', 'void-euro')
 
+	.boolean('§')
+	.describe('§', "Void having '§' as alias for '' in pattern and replacement parameters")
+	.alias('§', 'void-section')
+
 	.boolean('o')
 	.describe(
 		'o',
@@ -271,20 +275,13 @@ function backOut() {
 	process.exitCode = 1;
 }
 
-function unescapeString(str) {
-	return new Function("return '" + str.replace(/'/g, "\\'") + "'")();
+function unescapeString(str = '') {
+	return new Function(`return '${str.replace(/'/g, "\\'")}'`)();
 }
 
 (function () {
 	if (needHelp) {
 		return backOut();
-	}
-
-	const RE_EURO = /€/g;
-	// CLI interface default has € as alias for $
-	if (!yargs.argv.voidEuro) {
-		pattern = pattern.replace(RE_EURO, '$');
-		replacement = replacement.replace(RE_EURO, '$');
 	}
 
 	// All options into one big config object for the rexreplace core
@@ -312,7 +309,6 @@ function unescapeString(str) {
 	/*if(Boolean(process.stdout.isTTY)){
         config.output = true;
     }*/
-
 	if (Boolean(process.stdin.isTTY)) {
 		if (config.replacementPipe) {
 			return backOut();

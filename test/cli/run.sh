@@ -153,6 +153,21 @@ reset
 assert		 		"rexreplace '.€' '€' my.file -o --void-euro"    'foobar'
 
 
+# -§
+reset
+echo foo[bar] > my.file
+assert		 		"rexreplace '[\]]' '[' my.file -o"    'foo[bar['
+
+
+reset
+echo foo[bar] > my.file
+assert		 		"rexreplace '[§]]' '[' my.file -o"    'foo[bar['
+
+reset
+echo foo[bar] > my.file
+assert		 		"rexreplace '[§]]' '[' my.file -o --void-section"    'foo[bar]'
+
+
 # -j
 reset
 assert		 		"rexreplace 'foo' '2+2' my.file -o --replacement-js"    '4bar'

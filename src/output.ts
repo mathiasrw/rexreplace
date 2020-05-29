@@ -24,12 +24,12 @@ export const chat = function (msg, data = '') {
 	}
 };
 
-export const die = function (msg, data = '', displayHelp = false) {
+export const die = function (msg = '', data = '', displayHelp = false) {
 	if (displayHelp && !config.quietTotal) {
 		config.showHelp();
 	}
-	error(msg, data);
-	kill(msg);
+	msg && error(' ❌ ' + msg, data);
+	kill();
 };
 
 export const error = function (msg, data = '') {
@@ -54,7 +54,7 @@ export function step(data) {
 	}
 }
 
-function kill(msg = '', error = 1) {
-	process.exitCode = error;
-	throw new Error(msg);
+function kill(error = 1, msg = '') {
+	msg && console.error(+msg);
+	process.exit(error);
 }
