@@ -68,7 +68,7 @@
     "rollup-plugin-uglify": "6.0.4",
     "typescript": "3.9.3",
     "version-bump-prompt": "6.0.3",
-    "@rollup/plugin-commonjs": "12.0.0",
+    "@rollup/plugin-commonjs": "13.0.0",
     "@rollup/plugin-node-resolve": "8.0.0",
     "yarn": "1.22.4"
   },
