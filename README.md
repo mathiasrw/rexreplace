@@ -139,7 +139,7 @@ The `[` as a literate char must be escaped according to regex. If you run the co
 
 ```json
 "scripts":{
-  "go": "rexreplace '\\[' '.0.[' myfile.md"
+  "fix": "rexreplace '\\[' '.0.[' myfile.md"
 }
 ```
 
@@ -150,11 +150,9 @@ RexReplace defaults to treating `§` as an alias for `\` so the following give s
 > rexreplace '§[' '.0.[' myfile.md
 ```
 
-The `[` as a literate char must be escaped according to regex. If you run the command as a parameter (this could be from a script in package.json) as you need to escape the escape:
-
 ```json
 "scripts":{
-  "go": "rexreplace '§[' '.0.[' myfile.md"
+  "fix": "rexreplace '§[' '.0.[' myfile.md"
 }
 ```
 
@@ -230,10 +228,6 @@ Flag |  Effect
 - See the [release note](https://github.com/mathiasrw/rexreplace/releases) for a log of changes. Descriptions are given in latest patch version. 
 
 
-### Limitations
-- RexReplace reads each file fully into memory, so working on your 4Gb log files will probably not be ideal.
-- For versions of Node prior to 6, please use version 2.2.x. For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
-
 ### Quirks
 - Options can only be set after the replacement parameter. "_But I like to put my options as the first thing, so I know what I am doing_" I agree, but we must sometimes sacrifice habits for consistency.
 
@@ -242,6 +236,9 @@ Flag |  Effect
 - Per default `§` is treated as an alias for `\` in the CLI input. The main reason is for you not to worry about escaping the escape of an escape. Use the `-§` flag if you need to search or replace the actual section char. 
 
 
+### Limitations
+- RexReplace reads each file fully into memory, so working on your 8Gb log files will probably not be ideal.
+- For versions of Node prior to 6, please use version 2.2.x. For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
 
 
 
