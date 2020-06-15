@@ -2304,10 +2304,10 @@ rollup-plugin-hashbang@2.2.2:
   dependencies:
     magic-string "^0.22.4"
 
-rollup-plugin-preserve-shebang@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-preserve-shebang/-/rollup-plugin-preserve-shebang-1.0.0.tgz#6f82e122a2c898f75a59e04d45d3d903dfa00a3a"
-  integrity sha512-4bOul8jlkjPY/fC7YxpuL+svM+EhdS49Kl2dfWDTuKowSTwwCITCEsZhujdDp91ke3+sko+Z2Up80zbZU7sHmg==
+rollup-plugin-preserve-shebang@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-preserve-shebang/-/rollup-plugin-preserve-shebang-1.0.1.tgz#17109cdb4ed12c3cac9379b802182427cdbee5a1"
+  integrity sha512-gk7ExGBqvUinhgrvldKHkAKXXwRkWMXMZymNkrtn50uBgHITlhRjhnKmbNGwAIc4Bzgl3yLv7/8Fhi/XeHhFKg==
   dependencies:
     magic-string "^0.25.7"
 
