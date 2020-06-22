@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    if: ${{ !github.event.pusher.email }}
+    if: ${{ null || !github.event.pusher.email }}
     name: Autopublish dependabot
     runs-on: ubuntu-latest
     steps:
