@@ -1189,10 +1189,10 @@ globs@0.1.4:
   dependencies:
     glob "^7.1.1"
 
-google-closure-compiler-js@20200614.0.0, google-closure-compiler-js@>20170000:
-  version "20200614.0.0"
-  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20200614.0.0.tgz#f3ce1dfabd976099c6e238611ffd670d665ef573"
-  integrity sha512-N2Sok4PHpRmQTSu/Am8Ex715RRYFk524ZvqIdT1VIWnrWhtKN5+lXhtYEXoJFpUKwt1+1QR8nrGIIl3iry+rhA==
+google-closure-compiler-js@20200628.0.0, google-closure-compiler-js@>20170000:
+  version "20200628.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20200628.0.0.tgz#476d50d8b5155dd9d923a1394e0af76bcc8905ec"
+  integrity sha512-kGO/fvKDNOawBmzpWEzLW2EMb0ikTc0Y1hZEedLOex/cOm9zc5Cn8w2L0f963ydgFcj4fszzIgAtmZ9CRxqkfg==
 
 graceful-fs@^4.1.2, graceful-fs@^4.2.2, graceful-fs@^4.2.3:
   version "4.2.4"
