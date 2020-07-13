@@ -2220,10 +2220,10 @@ qs@~6.5.2:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
   integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
 
-re2@1.15.1:
-  version "1.15.1"
-  resolved "https://registry.yarnpkg.com/re2/-/re2-1.15.1.tgz#b3a98b719921cedcacc7b3a69a313515f0134f67"
-  integrity sha512-KLguHw2yYQJ16o+5E2K+0QYXYwpGI+R0zJQMYqzQHhYJqYIm5lb0GfPtL4MwMS8jpxd1EhGHlVlt0mfgLSn9Xw==
+re2@1.15.2:
+  version "1.15.2"
+  resolved "https://registry.yarnpkg.com/re2/-/re2-1.15.2.tgz#dc046b8dcaf8e26583b4f5e9c57e176a444899a2"
+  integrity sha512-XVOmdex9j1dokTwJRCJoB6/Bzd78HS/JypwNYbPE6OcWAzxJazL+Oqu7wphpt70JdCOjiPxk7ISWWKmOavBlbA==
   dependencies:
     nan "^2.14.1"
     node-gyp "^7.0.0"
