@@ -50,7 +50,7 @@
   ],
   "devDependencies": {
     "@rollup/plugin-buble": "0.21.3",
-    "@rollup/plugin-commonjs": "13.0.1",
+    "@rollup/plugin-commonjs": "14.0.0",
     "@rollup/plugin-node-resolve": "8.4.0",
     "@rollup/plugin-replace": "2.3.3",
     "@types/node": "14.0.23",
