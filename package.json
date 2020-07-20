@@ -59,7 +59,7 @@
     "magic-string": "^0.25.7",
     "mocha": "8.0.1",
     "prettier": "2.0.5",
-    "re2": "1.15.2",
+    "re2": "1.15.4",
     "rollup": "2.21.0",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-filesize": "9.0.2",
