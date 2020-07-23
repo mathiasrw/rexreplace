@@ -72,7 +72,7 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var version = '6.0.1';
+    var version = '6.0.2';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
