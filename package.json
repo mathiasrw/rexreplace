@@ -55,7 +55,7 @@
     "@rollup/plugin-replace": "2.3.3",
     "@types/node": "14.0.26",
     "assert": "^2.0.0",
-    "google-closure-compiler-js": "20200628.0.0",
+    "google-closure-compiler-js": "20200719.0.0",
     "magic-string": "^0.25.7",
     "mocha": "8.0.1",
     "prettier": "2.0.5",
