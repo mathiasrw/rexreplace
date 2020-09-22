@@ -4,7 +4,6 @@ import pkg from './package.json';
 import progress from 'rollup-plugin-progress';
 import typescript from 'rollup-plugin-typescript3';
 import closure from 'rollup-plugin-closure-compiler-js';
-import { uglify } from 'rollup-plugin-uglify';
 
 */
 // import filesize from 'rollup-plugin-filesize';
@@ -17,7 +16,6 @@ import resolve from '@rollup/plugin-node-resolve';
 
 // https://github.com/ritz078/rollup-plugin-filesize
 // https://github.com/jkuri/rollup-plugin-progress
-// https://github.com/TrySound/rollup-plugin-uglify
 // https://github.com/camelaissani/rollup-plugin-closure-compiler-js
 // https://github.com/rollup/rollup-plugin-buble (for browser)
 // https://github.com/jetiny/rollup-plugin-re
