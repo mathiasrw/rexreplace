@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "6.0.5",
+  "version": "6.0.11",
   "description": "Smoothly search & replace in files from CLI.",
   "author": "Mathias Rangel Wulff",
   "funding": {
@@ -18,25 +18,26 @@
     "rexreplace_unmin": "bin/rexreplace.cli.js"
   },
   "scripts": {
-    "test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
     "test": "yarn build && yarn test-cli && yarn test-js",
     "postbuild": "cp bin/rexreplace.cli.js bin/rexreplace.cli.min.js",
+    "version": "yarn build-minify",
     "build": "yarn build-only",
     "build-only": "tsc src/cli --outDir bin/ES6 -t ES6 && rollup -c",
     "build-minify": "yarn build && yarn minify",
     "minify": "echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && google-closure-compiler-js bin/rexreplace.cli.js >> bin/rexreplace.cli.min.js",
     "prebuild": "rm -fr bin && yarn format",
     "test-js": "echo todo: async mocha",
+    "test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
     "test-cli": "npm uninstall -g rexreplace && npm -g install ./ && yarn test-cli-only",
     "test-cli-only": "bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
     "prepublishOnly": "yarn is-git-clean && git rebase origin && yarn test-minify && yarn load-options && yarn bump",
-    "postpublish": "git add --all && git commit -m v$(node -e 'console.log(require(`./package.json`).version)') && git tag v$(node -e 'console.log(require(`./package.json`).version)') && git push && git push --tag && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
+    "postpublish": "git push --tag && git push && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
     "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
     "format": "yarn prettier --write",
     "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'",
-    "bump": "yarn is-git-clean && bump --tag 'v%s'",
+    "bump": "yarn is-git-clean && bump --tag 'v%s' --all",
     "is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)"
   },
   "keywords": [
