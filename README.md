@@ -10,7 +10,7 @@
 
 [![Build Status](https://img.shields.io/github/workflow/status/mathiasrw/rexreplace/Build)](https://github.com/mathiasrw/rexreplace/actions?query=branch%3Amaster)
 [![Dependabot](https://api.dependabot.com/badges/status?host=github&repo=mathiasrw/rexreplace)](https://github.com/mathiasrw/rexreplace/pulls?q=is%3Apr+sort%3Aupdated-desc+label%3Adependencies+)
-[![NPM downloads](http://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) 
+[![NPM downloads](https://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) 
 [![npm version](https://badge.fury.io/js/rexreplace.svg)](https://www.npmjs.com/package/rexreplace)
 [![FOSSA Status](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
