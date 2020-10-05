@@ -70,7 +70,7 @@
     "rollup-plugin-typescript3": "^1.1.2",
     "typescript": "3",
     "version-bump-prompt": "6.1.0",
-    "yarn": "1.22.5"
+    "yarn": "1.22.10"
   },
   "directories": {
     "test": "test"
