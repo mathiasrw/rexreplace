@@ -2200,7 +2200,7 @@ randombytes@^2.1.0:
   dependencies:
     safe-buffer "^5.1.0"
 
-re2@^1.15.4:
+re2@1.15.6:
   version "1.15.6"
   resolved "https://registry.yarnpkg.com/re2/-/re2-1.15.6.tgz#838f86ea4205ffec47c7f5802b12a8fee33472b3"
   integrity sha512-SsxGuKiizqOPBwm2YkMfh+Wsj+02sqP9y8xydC9KbZqHuY2qdjEyoJAfBapKSTK130gZMXVE6Qm+GTlOfjwqJw==
