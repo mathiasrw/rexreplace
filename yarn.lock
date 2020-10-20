@@ -1334,10 +1334,10 @@ inquirer@^7.3.3:
     strip-ansi "^6.0.0"
     through "^2.3.6"
 
-install-artifact-from-github@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/install-artifact-from-github/-/install-artifact-from-github-1.1.1.tgz#587cd8b1a8ed97f4d4230cd7f76bec7a0c4ff292"
-  integrity sha512-ZA4d8ABVKdGoWjYK+EyHrOfMRpOLyrBX/9dVts2ULDBRuFWObQ/I3o4f80Ca8klbYQAa5oIRG7XbU22r74A+Ew==
+install-artifact-from-github@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/install-artifact-from-github/-/install-artifact-from-github-1.1.3.tgz#552f1ec3e693f970726e3f68018ff5885665ec9e"
+  integrity sha512-iNuncO/pI1w0UOrebs9dwwVpXqERkszPcb7AYq2hbsJDS3X+XdZ+E5kE91EBSc98mjvCMWOoBa1Zk3hVeP1ddA==
 
 ip@1.1.5:
   version "1.1.5"
@@ -1825,10 +1825,10 @@ mute-stream@0.0.8:
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
 
-nan@^2.14.1:
-  version "2.14.1"
-  resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.1.tgz#d7be34dfa3105b91494c3147089315eff8874b01"
-  integrity sha512-isWHgVjnFjh2x2yuJ/tj3JbwoHu3UC2dX5G/88Cm24yB6YopVgxvBObDY7n5xW6ExmFhJpSEQqFPvq9zaXc8Jw==
+nan@^2.14.2:
+  version "2.14.2"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.2.tgz#f5376400695168f4cc694ac9393d0c9585eeea19"
+  integrity sha512-M2ufzIiINKCuDfBSAUr1vWQ+vuVcA9kqx8JJUsbQi6yf1uGRyb7HfpdfUr5qLXf3B/t8dPvcjhKMmlfnP47EzQ==
 
 node-gyp@^6.1.0:
   version "6.1.0"
@@ -1847,29 +1847,36 @@ node-gyp@^6.1.0:
     tar "^4.4.12"
     which "^1.3.1"
 
-node-gyp@^7.1.0:
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/node-gyp/-/node-gyp-7.1.0.tgz#cb8aed7ab772e73ad592ae0c71b0e3741099fe39"
-  integrity sha512-rjlHQlnl1dqiDZxZYiKqQdrjias7V+81OVR5PTzZioCBtWkNdrKy06M05HLKxy/pcKikKRCabeDRoZaEc6nIjw==
+node-gyp@^7.1.1:
+  version "7.1.2"
+  resolved "https://registry.yarnpkg.com/node-gyp/-/node-gyp-7.1.2.tgz#21a810aebb187120251c3bcec979af1587b188ae"
+  integrity sha512-CbpcIo7C3eMu3dL1c3d0xw449fHIGALIJsRP4DDPHpyiW8vcriNY7ubh9TE4zEKfSxscY7PjeFnshE7h75ynjQ==
   dependencies:
     env-paths "^2.2.0"
     glob "^7.1.4"
     graceful-fs "^4.2.3"
-    nopt "^4.0.3"
+    nopt "^5.0.0"
     npmlog "^4.1.2"
     request "^2.88.2"
-    rimraf "^2.6.3"
+    rimraf "^3.0.2"
     semver "^7.3.2"
-    tar "^6.0.1"
+    tar "^6.0.2"
     which "^2.0.2"
 
-nopt@^4.0.1, nopt@^4.0.3:
+nopt@^4.0.1:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/nopt/-/nopt-4.0.3.tgz#a375cad9d02fd921278d954c2254d5aa57e15e48"
   integrity sha512-CvaGwVMztSMJLOeXPrez7fyfObdZqNUK1cPAEzLHrTybIua9pMdmmPR5YwtfNftIOMv3DPUhFaxsZMNTQO20Kg==
   dependencies:
     abbrev "1"
     osenv "^0.1.4"
+
+nopt@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/nopt/-/nopt-5.0.0.tgz#530942bb58a512fccafe53fe210f13a25355dc88"
+  integrity sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ==
+  dependencies:
+    abbrev "1"
 
 normalize-path@^3.0.0, normalize-path@~3.0.0:
   version "3.0.0"
@@ -2200,14 +2207,14 @@ randombytes@^2.1.0:
   dependencies:
     safe-buffer "^5.1.0"
 
-re2@1.15.6:
-  version "1.15.6"
-  resolved "https://registry.yarnpkg.com/re2/-/re2-1.15.6.tgz#838f86ea4205ffec47c7f5802b12a8fee33472b3"
-  integrity sha512-SsxGuKiizqOPBwm2YkMfh+Wsj+02sqP9y8xydC9KbZqHuY2qdjEyoJAfBapKSTK130gZMXVE6Qm+GTlOfjwqJw==
+re2@1.15.7:
+  version "1.15.7"
+  resolved "https://registry.yarnpkg.com/re2/-/re2-1.15.7.tgz#2af0d49d1aaabc356f2a720fc066297402157c0d"
+  integrity sha512-qoS2+oIAWJIW6efF8dq8d1C8SJDx6N9AZESq5xGM5d0WDxF+JEXZD7W3qQM5cnapVmfmZqSv+VJibIW0hy0HsA==
   dependencies:
-    install-artifact-from-github "^1.1.1"
-    nan "^2.14.1"
-    node-gyp "^7.1.0"
+    install-artifact-from-github "^1.1.3"
+    nan "^2.14.2"
+    node-gyp "^7.1.1"
 
 read-package-json-fast@^1.1.1, read-package-json-fast@^1.1.3:
   version "1.1.3"
