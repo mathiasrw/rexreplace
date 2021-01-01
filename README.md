@@ -1,4 +1,7 @@
-_Please note that issues with piping when using node version 15 has been observed but not identified. We are on the case..._
+_Please note that issues have been observed when piping using node version 15. We are on the case to identify the exact problem_
+
+
+----
 
 <!--h3 align="center">
     <br>
