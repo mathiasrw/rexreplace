@@ -330,7 +330,6 @@ _.oO(What should "sed" have looked like by now?)_
 - Let pattern and glob be javascript code returning a string as the result
 - Flag for simple string search (all other chars than [\n\r\t])
 - Auto string search / replace if no regex magic is used (and verify that speed is better)
-- Make `echo 'a\"b' | rr '\"' '"'` work (needs `rr '\\"' '"'` = not intuitive)
 - Error != warning
 - Flag for String-literal (no regex, no special chars, no escape chars) to avoid backslashes or remembering which characters needs to be escaped
 - Check if https://github.com/eugeneware/replacestream is good to rely on
@@ -357,7 +356,7 @@ Many projects are seeking to solve the same problem as RexReplace. I my oppinion
 
 <img src="https://cloud.githubusercontent.com/assets/1063454/24103435/5a0e3746-0dd3-11e7-9f0e-fd8664348fbe.png" align="right" alt="RexReplace mascot Benny on the RexReplace logBo" />
 
-Please note that RexReplace is an **OPEN open source software** project. 
+Please note that RexReplace is an [OPEN open source software](http://open-oss.com) project. 
 This means that individuals making significant and valuable contributions are given commit access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
 
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com) 
