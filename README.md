@@ -1,3 +1,5 @@
+_Please note that issues with piping when using node version 15 has been observed but not identified. We are on the case..._
+
 <!--h3 align="center">
     <br>
 <img width="350" src="https://cloud.githubusercontent.com/assets/1063454/24127465/ed1a59a2-0e28-11e7-9546-160d7eb1d8b9.png" alt="RexReplace mascot Benny on the RexReplace logo" />
