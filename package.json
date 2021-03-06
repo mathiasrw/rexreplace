@@ -37,7 +37,7 @@
     "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
     "format": "yarn prettier --write",
     "prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'",
-    "bump": "yarn is-git-clean && bump --tag 'v%s' --all",
+    "bump": "bump --tag 'v%s' --all",
     "is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)"
   },
   "keywords": [
