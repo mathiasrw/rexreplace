@@ -256,6 +256,12 @@ export function engine(config: any = {engine: 'V8'}) {
 	function getFinalRegex(config) {
 		step('Get final regex with engine: ' + config.engine);
 
+		let pattern = config.pattern;
+
+		if (config.literal) {
+			pattern = pattern.replace(/[-\[\]{}()*+?.,\/\\^$|#\s]/g, '\\$&');
+		}
+
 		let regex = null;
 
 		let flags = getFlags(config);
@@ -263,7 +269,7 @@ export function engine(config: any = {engine: 'V8'}) {
 		switch (config.engine) {
 			case 'V8':
 				try {
-					regex = new RegExp(config.pattern, flags);
+					regex = new RegExp(pattern, flags);
 				} catch (e) {
 					if (config.debug) throw new Error(e);
 					die(e.message);
@@ -271,7 +277,7 @@ export function engine(config: any = {engine: 'V8'}) {
 				break;
 			case 'RE2':
 				try {
-					regex = new RE2(config.pattern, flags);
+					regex = new RE2(pattern, flags);
 				} catch (e) {
 					if (config.debug) throw new Error(e);
 					die(e.message);

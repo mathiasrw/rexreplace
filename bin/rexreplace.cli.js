@@ -272,12 +272,16 @@
         }*/
         function getFinalRegex(config) {
             step('Get final regex with engine: ' + config.engine);
+            var pattern = config.pattern;
+            if (config.literal) {
+                pattern = pattern.replace(/[-\[\]{}()*+?.,\/\\^$|#\s]/g, '\\$&');
+            }
             var regex = null;
             var flags = getFlags(config);
             switch (config.engine) {
                 case 'V8':
                     try {
-                        regex = new RegExp(config.pattern, flags);
+                        regex = new RegExp(pattern, flags);
                     }
                     catch (e) {
                         if (config.debug)
@@ -287,7 +291,7 @@
                     break;
                 case 'RE2':
                     try {
-                        regex = new RE2(config.pattern, flags);
+                        regex = new RE2(pattern, flags);
                     }
                     catch (e$1) {
                         if (config.debug)
@@ -445,6 +449,9 @@
         .alias('V', 'verbose')
         //.conflicts('V', 'q')
         //.conflicts('V', 'Q')
+        .boolean('L')
+        .describe('L', 'Literal string search (no regex used when searching)')
+        .alias('L', 'literal')
         .boolean('I')
         .describe('I', 'Void case insensitive search pattern.')
         .alias('I', 'void-ignore-case')

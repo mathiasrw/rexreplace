@@ -328,7 +328,6 @@ _.oO(What should "sed" have looked like by now?)_
 - Let pattern and globs be piped
 - Let Pattern, replacement, and globs come from a file
 - Let pattern and glob be javascript code returning a string as the result
-- Flag for simple string search (all other chars than [\n\r\t])
 - Auto string search / replace if no regex magic is used (and verify that speed is better)
 - Error != warning
 - Flag for String-literal (no regex, no special chars, no escape chars) to avoid backslashes or remembering which characters needs to be escaped

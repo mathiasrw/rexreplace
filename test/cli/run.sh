@@ -207,6 +207,15 @@ reset
 assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
 
 
+	
+
+# -L
+reset
+assert		 		"rexreplace 'b' '*+*' my.file -o"    'foo*+*ar'
+assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
+
+
+
 
 # # -P
 # reset

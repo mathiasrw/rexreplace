@@ -47,6 +47,10 @@ const yargs = require('yargs')
 	//.conflicts('V', 'q')
 	//.conflicts('V', 'Q')
 
+	.boolean('L')
+	.describe('L', 'Literal string search (no regex used when searching)')
+	.alias('L', 'literal')
+
 	.boolean('I')
 	.describe('I', 'Void case insensitive search pattern.')
 	.alias('I', 'void-ignore-case')
