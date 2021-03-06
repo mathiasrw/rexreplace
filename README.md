@@ -195,6 +195,7 @@ Flag |  Effect
 ---- | ----
 `-v` | **`--version`** Print rexreplace version (can be given as only argument)                                    [boolean]
 `-V` | **`--verbose`** More chatty output                           [boolean]
+`-L` | **`--literal`** Literal string search (no regex used when searching) [boolean]
 `-I` | **`--void-ignore-case`** Void case insensitive search pattern.        [boolean]
 `-G` | **`--void-global`** Void global search (stop looking after the first match).                                      [boolean]
 `-s` | **`--dot-all`** Have `.` also match newline.                 [boolean]
