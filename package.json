@@ -58,7 +58,7 @@
     "assert": "^2.0.0",
     "google-closure-compiler-js": "20200719.0.0",
     "magic-string": "^0.25.7",
-    "mocha": "8.2.1",
+    "mocha": "8.3.1",
     "prettier": "2.1.2",
     "rollup": "2.33.2",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
