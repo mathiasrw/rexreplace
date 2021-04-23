@@ -75,7 +75,7 @@
     "test": "test"
   },
   "dependencies": {
-    "chalk": "4.1.0",
+    "chalk": "4.1.1",
     "globs": "0.1.4",
     "re2": "1.15.9",
     "yargs": "16.2.0"
