@@ -77,7 +77,7 @@
   "dependencies": {
     "chalk": "4.1.0",
     "globs": "0.1.4",
-    "re2": "1.15.9",
+    "re2": "1.16.0",
     "yargs": "16.2.0"
   },
   "prettier": {
