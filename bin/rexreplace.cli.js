@@ -72,8 +72,7 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var RE2 = require('re2');
-    var version = '6.1.4';
+    var version = '6.1.2';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
@@ -291,6 +290,7 @@
                     break;
                 case 'RE2':
                     try {
+                        var RE2 = require('re2');
                         regex = new RE2(pattern, flags);
                     }
                     catch (e$1) {

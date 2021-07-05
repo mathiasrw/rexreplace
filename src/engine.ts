@@ -6,8 +6,6 @@ const globs = require('globs');
 
 const now = new Date();
 
-const RE2 = require('re2');
-
 import {outputConfig, step, debug, chat, info, error, die} from './output';
 
 export const version = 'PACKAGE_VERSION';
@@ -277,6 +275,7 @@ export function engine(config: any = {engine: 'V8'}) {
 				break;
 			case 'RE2':
 				try {
+					const RE2 = require('re2');
 					regex = new RE2(pattern, flags);
 				} catch (e) {
 					if (config.debug) throw new Error(e);

@@ -5,3 +5,4 @@ myfile
 .rpt2_cache
 tmp/*
 package-lock.json
+.vscode
