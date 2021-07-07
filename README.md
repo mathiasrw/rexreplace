@@ -193,7 +193,127 @@ Let both `"foo 'is' bar"` and `' foo "was" bar'` ' become `» foo ... bar «` in
 
 Flag |  Effect
 ---- | ----
-null
+\n` +
+    `  -v, --version           Print rexreplace version (can be given as only\n` +
+    `                          argument)                                    [boolean]\n` +
+    `  -V, --verbose           More chatty output                           [boolean]\n` +
+    `  -L, --literal           Literal string search (no regex used when searching)\n` +
+    `                                                                       [boolean]\n` +
+    `  -I, --void-ignore-case  Void case insensitive search pattern.        [boolean]\n` +
+    `  -G, --void-global       Void global search (stop looking after the first\n` +
+    `                          match).                                      [boolean]\n` +
+    `  -s, --dot-all           Have `.` also match newline.                 [boolean]\n` +
+    `  -M, --void-multiline    Void multiline search pattern. Makes ^ and $ match\n` +
+    `                          start/end of whole content rather than each line.\n` +
+    `                                                                       [boolean]\n` +
+    `  -u, --unicode           Treat pattern as a sequence of unicode code points.\n` +
+    `                                                                       [boolean]\n` +
+    `  -e, --encoding          Encoding of files/piped data.        [default: "utf8"]\n` +
+    `  -E, --engine            What regex engine to use:\n` +
+    `                                                 [choices: "V8"] [default: "V8"]\n` +
+    `  -q, --quiet             Only display errors (no other info)          [boolean]\n` +
+    `  -Q, --quiet-total       Never display errors or info                 [boolean]\n` +
+    `  -H, --halt              Halt on first error         [boolean] [default: false]\n` +
+    `  -d, --debug             Print debug info                             [boolean]\n` +
+    "  -€, --void-euro         Void having `€` as alias for `$` in pattern and\n" +
+    `                          replacement parameters                       [boolean]\n` +
+    "  -§, --void-section      Void having `§` as alias for `` in pattern and\n" +
+    `                          replacement parameters                       [boolean]\n` +
+    `  -o, --output            Output the final result instead of saving to file.\n` +
+    `                          Will also output content even if no replacement has\n` +
+    `                          taken place.                                 [boolean]\n` +
+    `  -A, --void-async        Handle files in a synchronous flow. Good to limit\n` +
+    `                          memory usage when handling large files.      [boolean]\n` +
+    `  -B, --void-backup       Avoid temporary backing up file. Works async\n` +
+    `                          (independent of -A flag) and will speed up things but\n` +
+    `                          at one point data lives only in memory, and you will\n` +
+    `                          lose the content if the process is abrupted. [boolean]\n` +
+    `  -b, --keep-backup       Keep a backup file of the original content.  [boolean]\n` +
+    `  -m, --output-match      Output each match on a new line. Will not replace any\n` +
+    `                          content but you still need to provide a dummy value\n` +
+    `                          (like `_`) as replacement parameter. If search\n` +
+    `                          pattern does not contain matching groups the full\n` +
+    `                          match will be outputted. If search pattern does\n` +
+    `                          contain matching groups only matching groups will be\n` +
+    `                          outputted (same line with no delimiter).     [boolean]\n` +
+    `  -T, --trim-pipe         Trim piped data before processing. If piped data only\n` +
+    `                          consists of chars that can be trimmed (new line,\n` +
+    `                          space, tabs...) it will become an empty string.\n` +
+    `                                                                       [boolean]\n` +
+    `  -R, --replacement-pipe  Replacement will be piped in. You still need to\n` +
+    `                          provide a dummy value (like `_`) as replacement\n` +
+    `                          parameter.                                   [boolean]\n` +
+    `  -j, --replacement-js    Treat replacement as javascript source code.\n` +
+    `                          The statement from the last expression will become\n` +
+    `                          the replacement string.\n` +
+    `                          Purposefully implemented the most insecure way\n` +
+    `                          possible to remove _any_ incentive to consider\n` +
+    `                          running code from an untrusted part.\n` +
+    `                          The full match will be available as a javascript\n` +
+    `                          variable named $0 while each captured group will be\n` +
+    `                          available as $1, $2, $3, ... and so on.\n` +
+    `                          At some point, the $ char _will_ give you a headache\n` +
+    `                          when used from the command line, so use €0, €1, €2,\n` +
+    `                          €3... instead.\n` +
+    `                          If the javascript source code references to the full\n` +
+    `                          match or a captured group the code will run once per\n` +
+    `                          match. Otherwise, it will run once per file.\n` +
+    `\n` +
+    `                          The code has access to the following variables:\n` +
+    `                          `r` as an alias for `require` with both expanded to\n` +
+    `                          understand a relative path even if it is not\n` +
+    `                          starting with `./`,\n` +
+    `                          `fs` from node,\n` +
+    `                          `path` from node,\n` +
+    `                          `globs` from npm,\n` +
+    `                          `pipe`: the data piped into the command (null if no\n` +
+    `                          piped data),\n` +
+    `                          `find`: pattern searched for (the needle),\n` +
+    `                          `text`: full text being searched i.e. file content\n` +
+    `                          or piped data (the haystack),\n` +
+    `                          `bytes`: total size of the haystack in bytes,\n` +
+    `                          `size`: human-friendly representation of the total\n` +
+    `                          size of the haystack,\n` +
+    `                          `time`: String representing the local time when the\n` +
+    `                          command was invoked,\n` +
+    `                          `time_obj`: date object representing `time`,\n` +
+    `                          `now`: alias for `time`,\n` +
+    `                          `cwd`: current process working dir,\n` +
+    `                          `nl`: a new-line char,\n` +
+    `                          `_`: a single space char (for easy string\n` +
+    `                          concatenation).\n` +
+    `\n` +
+    `                          The following values defaults to `❌` if haystack\n` +
+    `                          does not originate from a file:\n` +
+    `                          `file`: contains the full path of the active file\n` +
+    `                          being searched (including full filename),\n` +
+    `                          `file_rel`: contains `file` relative to current\n` +
+    `                          process working dir,\n` +
+    `                          `dirpath`: contains the full path without filename\n` +
+    `                          of the active file being searched,\n` +
+    `                          `dirpath_rel`: contains `dirpath` relative to\n` +
+    `                          current process working dir,\n` +
+    `                          `filename`: is the full filename of the active file\n` +
+    `                          being searched without path,\n` +
+    `                          `name`: filename of the active file being searched\n` +
+    `                          with no extension,\n` +
+    `                          `ext`: extension of the filename including leading\n` +
+    `                          dot,\n` +
+    `                          `mtime`: ISO inspired representation of the last\n` +
+    `                          local modification time of the current file,\n` +
+    `                          `ctime`: ISO representation of the local creation\n` +
+    `                          time of the current file.\n` +
+    `                          `mtime_obj`: date object representing `mtime`,\n` +
+    `                          `ctime_obj`: date object representing `ctime`.\n` +
+    `\n` +
+    `                          All variables, except from module, date objects,\n` +
+    `                          `nl` and `_`, has a corresponding variable name\n` +
+    `                          followed by `_` where the content has an extra space\n` +
+    `                          at the end (for easy concatenation).\n` +
+    `                                                                       [boolean]\n` +
+    `  -h, --help              Display help.                                [boolean]\n` +
+    `\n` +
+    `
 
 ## Good to know 
 

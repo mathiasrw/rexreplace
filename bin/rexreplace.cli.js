@@ -424,11 +424,12 @@
     // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
     var needHelp = 0;
     if (process.argv.length < 4) {
-        if (/-*version$/i.test(process.argv[process.argv.length - 1])) {
+        if (/-v|--?version$/i.test(process.argv[process.argv.length - 1])) {
             console.log(version);
             process.exitCode = 0;
+            process.exit();
         }
-        else if (/-*help$/i.test(process.argv[process.argv.length - 1])) {
+        else if (/-h|--?help$/i.test(process.argv[process.argv.length - 1])) {
             needHelp = 1;
         }
         else {
@@ -600,8 +601,11 @@
     function backOut(exitcode) {
         if ( exitcode === void 0 ) exitcode = 1;
 
-        yargs.showHelp();
+        var help = yargs.getHelp();
+        var io = exitcode ? console.error : console.log;
+        io(help);
         process.exitCode = exitcode;
+        process.exit();
     }
     function unescapeString(str) {
         if ( str === void 0 ) str = '';

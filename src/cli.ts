@@ -9,10 +9,11 @@ let pattern, replacement;
 // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = 0;
 if (process.argv.length < 4) {
-	if (/-*version$/i.test(process.argv[process.argv.length - 1])) {
+	if (/-v|--?version$/i.test(process.argv[process.argv.length - 1])) {
 		console.log(rexreplace.version);
 		process.exitCode = 0;
-	} else if (/-*help$/i.test(process.argv[process.argv.length - 1])) {
+		process.exit();
+	} else if (/-h|--?help$/i.test(process.argv[process.argv.length - 1])) {
 		needHelp = 1;
 	} else {
 		needHelp = 2;
@@ -282,8 +283,11 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
 	.epilog(`Inspiration: .oO(What should 'sed' have been by now?)`);
 
 function backOut(exitcode = 1) {
-	yargs.showHelp();
+	const help = yargs.getHelp();
+	const io = exitcode ? console.error : console.log;
+	io(help);
 	process.exitCode = exitcode;
+	process.exit();
 }
 
 function unescapeString(str = '') {
