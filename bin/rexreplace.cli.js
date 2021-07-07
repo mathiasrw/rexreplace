@@ -501,7 +501,7 @@
         .describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
         .alias('€', 'void-euro')
         .boolean('§')
-        .describe('§', "Void having '§' as alias for '' in pattern and replacement parameters")
+        .describe('§', "Void having '§' as alias for '\\' in pattern and replacement parameters")
         .alias('§', 'void-section')
         .boolean('o')
         .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.')

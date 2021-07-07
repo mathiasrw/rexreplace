@@ -208,7 +208,7 @@ Flag |  Effect
 `-H` | **`--halt`** Halt on first error         [boolean] [default: false]
 `-d` | **`--debug`** Print debug info                             [boolean]
 `-€` | **`--void-euro`** Void having `€` as alias for `$` in pattern and replacement parameters                       [boolean]
-`-§` | **`--void-section`** Void having `§` as alias for `` in pattern and replacement parameters                       [boolean]
+`-§` | **`--void-section`** Void having `§` as alias for `\` in pattern and replacement parameters                       [boolean]
 `-o` | **`--output`** Output the final result instead of saving to file. Will also output content even if no replacement has taken place.                                 [boolean]
 `-A` | **`--void-async`** Handle files in a synchronous flow. Good to limit memory usage when handling large files.      [boolean]
 `-B` | **`--void-backup`** Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted. [boolean]

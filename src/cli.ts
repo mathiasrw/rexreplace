@@ -113,7 +113,7 @@ const yargs = require('yargs')
 	.alias('€', 'void-euro')
 
 	.boolean('§')
-	.describe('§', "Void having '§' as alias for '' in pattern and replacement parameters")
+	.describe('§', "Void having '§' as alias for '\\' in pattern and replacement parameters")
 	.alias('§', 'void-section')
 
 	.boolean('o')
