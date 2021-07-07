@@ -71,9 +71,10 @@ reset
 assert		 		"rexreplace o x my.file --output"    "fxxbar"
 
 
-# -E
+# -E 
 reset
-assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"
+# assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"		# RE2	 depricated
+assert		 		"rexreplace o x my.file --output --engine V8"    "fxxbar"
 
 
 # -b

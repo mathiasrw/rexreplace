@@ -72,7 +72,7 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var version = '6.1.2';
+    var version = '6.1.4';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
@@ -422,9 +422,18 @@
     var assign;
     var pattern, replacement;
     // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
-    var needHelp = false;
+    var needHelp = 0;
     if (process.argv.length < 4) {
-        needHelp = true;
+        if (/-*version$/i.test(process.argv[process.argv.length - 1])) {
+            console.log(version);
+            process.exitCode = 0;
+        }
+        else if (/-*help$/i.test(process.argv[process.argv.length - 1])) {
+            needHelp = 1;
+        }
+        else {
+            needHelp = 2;
+        }
     }
     else {
         (assign = process.argv.splice(2, 2), pattern = assign[0], replacement = assign[1]);
@@ -472,7 +481,7 @@
         .describe('e', 'Encoding of files/piped data.')
         .alias('E', 'engine')
         .describe('E', 'What regex engine to use:')
-        .choices('E', ['V8', 'RE2' ])
+        .choices('E', ['V8' ])
         .default('E', 'V8')
         .boolean('q')
         .describe('q', 'Only display errors (no other info)')
@@ -588,9 +597,11 @@
         .describe('h', 'Display help.')
         .alias('h', 'help')
         .epilog("Inspiration: .oO(What should 'sed' have been by now?)");
-    function backOut() {
+    function backOut(exitcode) {
+        if ( exitcode === void 0 ) exitcode = 1;
+
         yargs.showHelp();
-        process.exitCode = 1;
+        process.exitCode = exitcode;
     }
     function unescapeString(str) {
         if ( str === void 0 ) str = '';
@@ -598,8 +609,8 @@
         return new Function(("return '" + (str.replace(/'/g, "\\'")) + "'"))();
     }
     (function () {
-        if (needHelp) {
-            return backOut();
+        if (0 < needHelp) {
+            return backOut(needHelp - 1);
         }
         // All options into one big config object for the rexreplace core
         var config = {};
