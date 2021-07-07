@@ -37,7 +37,7 @@ export default [
 			resolve(), 
 			buble(),
 			replace({
-				"PACKAGE_VERSION": require('./package.json').version
+				"PACKAGE_VERSION": require('./package.json').version,preventAssignment: true,
 			}),
 
 			//progress(),

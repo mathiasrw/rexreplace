@@ -218,9 +218,9 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
     .alias('h', 'help')
     .epilog(`Inspiration: .oO(What should 'sed' have been by now?)`);
 function backOut(exitcode = 1) {
-    const help = yargs.getHelp();
+    const help = yargs.showHelp();
     const io = exitcode ? console.error : console.log;
-    io(help);
+    //io(help);
     process.exitCode = exitcode;
     process.exit();
 }

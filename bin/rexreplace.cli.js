@@ -601,9 +601,8 @@
     function backOut(exitcode) {
         if ( exitcode === void 0 ) exitcode = 1;
 
-        var help = yargs.getHelp();
-        var io = exitcode ? console.error : console.log;
-        io(help);
+        yargs.showHelp();
+        //io(help);
         process.exitCode = exitcode;
         process.exit();
     }
