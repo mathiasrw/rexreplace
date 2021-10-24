@@ -70,6 +70,9 @@
     "version-bump-prompt": "6.1.0",
     "yarn": "1.22.17"
   },
+  "resolutions": {
+    "ansi-regex": "^5.0.1"
+  },
   "directories": {
     "test": "test"
   },
