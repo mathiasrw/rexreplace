@@ -13,9 +13,8 @@
     "url": "git+https://github.com/mathiasrw/rexreplace.git"
   },
   "bin": {
-    "rr": "bin/rexreplace.cli.min.js",
-    "rexreplace": "bin/rexreplace.cli.min.js",
-    "rexreplace_unmin": "bin/rexreplace.cli.js"
+    "rr": "bin/rexreplace.cli.js",
+    "rexreplace": "bin/rexreplace.cli.js"
   },
   "scripts": {
     "test": "yarn build && yarn test-cli && yarn test-js",
@@ -24,7 +23,7 @@
     "build": "yarn build-only",
     "build-only": "tsc src/cli --outDir bin/ES6 -t ES6 && rollup -c",
     "build-minify": "yarn build && yarn minify",
-    "minify": "echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && google-closure-compiler-js bin/rexreplace.cli.js >> bin/rexreplace.cli.min.js",
+    "minify": "echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && google-closure-compiler --js=bin/rexreplace.cli.js --js_output_file=bin/rexreplace.cli.min.js",
     "prebuild": "rm -fr bin && yarn format",
     "test-js": "echo todo: async mocha",
     "test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
@@ -52,24 +51,24 @@
   "devDependencies": {
     "@rollup/plugin-buble": "0.21.3",
     "@rollup/plugin-commonjs": "20.0.0",
-    "@rollup/plugin-node-resolve": "13.0.4",
+    "@rollup/plugin-node-resolve": "13.0.6",
     "@rollup/plugin-replace": "3.0.0",
-    "@types/node": "16.4.10",
+    "@types/node": "16.11.4",
     "assert": "^2.0.0",
-    "google-closure-compiler-js": "20200719.0.0",
+    "google-closure-compiler": "^20211006.0.0",
     "magic-string": "^0.25.7",
-    "mocha": "9.0.3",
-    "prettier": "2.3.2",
-    "rollup": "2.55.1",
+    "mocha": "9.1.3",
+    "prettier": "2.4.1",
+    "rollup": "2.58.0",
     "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-filesize": "9.1.1",
     "rollup-plugin-hashbang": "2.2.2",
     "rollup-plugin-preserve-shebang": "1.0.1",
     "rollup-plugin-progress": "1.1.2",
     "rollup-plugin-typescript3": "1.1.3",
-    "typescript": "4.3.5",
+    "typescript": "4.4.4",
     "version-bump-prompt": "6.1.0",
-    "yarn": "1.22.11"
+    "yarn": "1.22.17"
   },
   "directories": {
     "test": "test"
