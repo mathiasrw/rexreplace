@@ -30,7 +30,7 @@ export function engine(config: any = {engine: 'V8'}) {
 		return doReplacement('Piped data', config, config.pipedData);
 	}
 
-	config.files = globs.sync(config.files);
+	config.files = globs2paths(config.globs);
 
 	if (!config.files.length) {
 		return error(config.files.length + ' files found');
@@ -95,7 +95,7 @@ export function engine(config: any = {engine: 'V8'}) {
 		}
 
 		// Release the memory while storing files
-		_data_rr = undefined;
+		_data_rr = '';
 
 		debug('Write new content to: ' + _file_rr);
 
@@ -155,7 +155,7 @@ export function engine(config: any = {engine: 'V8'}) {
 	function handlePipedData(config) {
 		step('Check Piped Data');
 
-		if (config.files.length) {
+		if (config.globs.length) {
 			if (!config.replacementJs) {
 				chat('Piped data never used.');
 			}
@@ -260,7 +260,7 @@ export function engine(config: any = {engine: 'V8'}) {
 			pattern = pattern.replace(/[-\[\]{}()*+?.,\/\\^$|#\s]/g, '\\$&');
 		}
 
-		let regex = null;
+		let regex;
 
 		let flags = getFlags(config);
 
@@ -628,4 +628,26 @@ function replacePlaceholders(str = '', conf: any) {
 	}
 
 	return str;
+}
+
+function globs2paths(_globs: string[] = []) {
+	const globsToInclude: string[] = [];
+	const globsToExclude: string[] = [];
+
+	_globs.filter(Boolean).forEach((glob) => {
+		if ('!' === glob[0] || '^' === glob[0]) {
+			globsToExclude.push(glob.slice(1));
+		} else {
+			globsToInclude.push(glob);
+		}
+	});
+
+	let filesToInclude = globs.sync(globsToInclude);
+
+	if (globsToExclude.length) {
+		const filesToExclude = globs.sync(globsToExclude);
+		return filesToInclude.filter((el) => !filesToExclude.includes(el));
+	}
+
+	return filesToInclude;
 }

@@ -2,10 +2,9 @@ test/*
 src/*
 gfx/*
 rollup.config.js
-greenkeeper.json
 tmp/*
-package-lock.json
 .*/
 *.log
 *.txt
 *.file
+*.lock
