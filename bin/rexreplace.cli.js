@@ -72,7 +72,7 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
-    var version = '7.0.3';
+    var version = '7.1.0';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
@@ -87,7 +87,7 @@
         if (handlePipedData(config)) {
             return doReplacement('Piped data', config, config.pipedData);
         }
-        config.files = globs.sync(config.files);
+        config.files = globs2paths(config.globs);
         if (!config.files.length) {
             return error(config.files.length + ' files found');
         }
@@ -139,7 +139,7 @@
                 return;
             }
             // Release the memory while storing files
-            _data_rr = undefined;
+            _data_rr = '';
             debug('Write new content to: ' + _file_rr);
             // Write directly to the same file (if the process is killed all new and old data is lost)
             if (_config_rr.voidBackup) {
@@ -192,7 +192,7 @@
         }
         function handlePipedData(config) {
             step('Check Piped Data');
-            if (config.files.length) {
+            if (config.globs.length) {
                 if (!config.replacementJs) {
                     chat('Piped data never used.');
                 }
@@ -275,7 +275,7 @@
             if (config.literal) {
                 pattern = pattern.replace(/[-\[\]{}()*+?.,\/\\^$|#\s]/g, '\\$&');
             }
-            var regex = null;
+            var regex;
             var flags = getFlags(config);
             switch (config.engine) {
                 case 'V8':
@@ -417,6 +417,26 @@
             str = str.replace(re.section, '\\');
         }
         return str;
+    }
+    function globs2paths(_globs) {
+        if ( _globs === void 0 ) _globs = [];
+
+        var globsToInclude = [];
+        var globsToExclude = [];
+        _globs.filter(Boolean).forEach(function (glob) {
+            if ('!' === glob[0] || '^' === glob[0]) {
+                globsToExclude.push(glob.slice(1));
+            }
+            else {
+                globsToInclude.push(glob);
+            }
+        });
+        var filesToInclude = globs.sync(globsToInclude);
+        if (globsToExclude.length) {
+            var filesToExclude = globs.sync(globsToExclude);
+            return filesToInclude.filter(function (el) { return !filesToExclude.includes(el); });
+        }
+        return filesToInclude;
     }
 
     var assign;
@@ -625,7 +645,7 @@
         });
         var pipeInUse = false;
         var pipeData = '';
-        config.files = yargs.argv._;
+        config.globs = yargs.argv._;
         config.pipedData = null;
         config.showHelp = yargs.showHelp;
         config.pattern = pattern;

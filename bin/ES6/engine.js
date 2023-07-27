@@ -16,7 +16,7 @@ export function engine(config = { engine: 'V8' }) {
     if (handlePipedData(config)) {
         return doReplacement('Piped data', config, config.pipedData);
     }
-    config.files = globs.sync(config.files);
+    config.files = globs2paths(config.globs);
     if (!config.files.length) {
         return error(config.files.length + ' files found');
     }
@@ -68,7 +68,7 @@ export function engine(config = { engine: 'V8' }) {
             return;
         }
         // Release the memory while storing files
-        _data_rr = undefined;
+        _data_rr = '';
         debug('Write new content to: ' + _file_rr);
         // Write directly to the same file (if the process is killed all new and old data is lost)
         if (_config_rr.voidBackup) {
@@ -121,7 +121,7 @@ export function engine(config = { engine: 'V8' }) {
     }
     function handlePipedData(config) {
         step('Check Piped Data');
-        if (config.files.length) {
+        if (config.globs.length) {
             if (!config.replacementJs) {
                 chat('Piped data never used.');
             }
@@ -202,7 +202,7 @@ export function engine(config = { engine: 'V8' }) {
         if (config.literal) {
             pattern = pattern.replace(/[-\[\]{}()*+?.,\/\\^$|#\s]/g, '\\$&');
         }
-        let regex = null;
+        let regex;
         let flags = getFlags(config);
         switch (config.engine) {
             case 'V8':
@@ -338,4 +338,22 @@ function replacePlaceholders(str = '', conf) {
         str = str.replace(re.section, '\\');
     }
     return str;
+}
+function globs2paths(_globs = []) {
+    const globsToInclude = [];
+    const globsToExclude = [];
+    _globs.filter(Boolean).forEach((glob) => {
+        if ('!' === glob[0] || '^' === glob[0]) {
+            globsToExclude.push(glob.slice(1));
+        }
+        else {
+            globsToInclude.push(glob);
+        }
+    });
+    let filesToInclude = globs.sync(globsToInclude);
+    if (globsToExclude.length) {
+        const filesToExclude = globs.sync(globsToExclude);
+        return filesToInclude.filter((el) => !filesToExclude.includes(el));
+    }
+    return filesToInclude;
 }

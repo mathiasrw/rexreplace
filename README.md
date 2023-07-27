@@ -322,6 +322,8 @@ _.oO(What should "sed" have looked like by now?)_
 
 ### Future ideas
 
+- Default to RegExmoji lax syntax
+- Support RegExmoji strict syntax
 - Add support to require hjson, jsonh, yaml, ini files directly
 - Test-run with info outputted about what will happen (sets -t and does not change anything)
 - Let search and replace be within the names of the files (ask for overwriting. -Y = no questions)
