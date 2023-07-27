@@ -30,7 +30,7 @@
     "test-cli": "npm uninstall -g rexreplace && npm -g install ./ && yarn test-cli-only",
     "test-cli-only": "bash test/cli/run.sh",
     "test-speed": "bash test/speed/run.sh",
-    "prepublishOnly": "yarn is-git-clean && git fetch && git rebase origin && yarn test-minify && yarn load-options && yarn bump",
+    "prepublishOnly": "yarn is-git-clean && git fetch && git rebase origin/main && yarn test-minify && yarn load-options && yarn bump",
     "postpublish": "git push --tag && git push && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
     "load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
     "test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
@@ -70,7 +70,8 @@
     "yarn": "1.22.19"
   },
   "resolutions": {
-    "ansi-regex": "^5.0.1"
+    "ansi-regex": "^5.0.1",
+	"tough-cookie": "^4.1.3"
   },
   "directories": {
     "test": "test"
