@@ -241,7 +241,7 @@ function unescapeString(str = '') {
     });
     let pipeInUse = false;
     let pipeData = '';
-    config.files = yargs.argv._;
+    config.globs = yargs.argv._;
     config.pipedData = null;
     config.showHelp = yargs.showHelp;
     config.pattern = pattern;
