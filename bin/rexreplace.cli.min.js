@@ -68,7 +68,7 @@
         process.exit(error);
     }
 
-    var fs = require('fs');
+    var fs = require('fs-extra');
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
@@ -537,7 +537,7 @@
         .describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. " +
         '')
         .boolean('B')
-        .describe('B', 'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted.')
+        .describe('B', 'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is halted.')
         .alias('B', 'void-backup')
         .boolean('b')
         .describe('b', 'Keep a backup file of the original content.')
@@ -546,7 +546,7 @@
         .describe('m', "Output each match on a new line. " +
         "Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. " +
         "If search pattern does not contain matching groups the full match will be outputted. " +
-        "If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). " +
+        "If search pattern _does_ contain matching groups only matching groups will be outputted (same line with no delimiter). " +
         "")
         .alias('m', 'output-match')
         .boolean('T')
@@ -558,9 +558,6 @@
         .alias('R', 'replacement-pipe')
         .describe('R', "Replacement will be piped in. You still need to provide a dummy value (like `_`) as replacement parameter." +
         '')
-        .boolean('j')
-        .alias('j', 'replacement-js')
-        .describe('j', "Treat replacement as javascript source code. \nThe statement from the last expression will become the replacement string. \nPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \nThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \nAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \nIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\nThe code has access to the following variables: \n`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n`fs` from node, \n`path` from node, \n`globs` from npm, \n`pipe`: the data piped into the command (null if no piped data), \n`find`: pattern searched for (the needle), \n`text`: full text being searched i.e. file content or piped data (the haystack), \n`bytes`: total size of the haystack in bytes, \n`size`: human-friendly representation of the total size of the haystack, \n`time`: String representing the local time when the command was invoked,\n`time_obj`: date object representing `time`,\n`now`: alias for `time`,\n`cwd`: current process working dir, \n`nl`: a new-line char,\n`_`: a single space char (for easy string concatenation).\n\nThe following values defaults to `❌` if haystack does not originate from a file:\n`file`: contains the full path of the active file being searched (including full filename), \n`file_rel`: contains `file` relative to current process working dir, \n`dirpath`: contains the full path without filename of the active file being searched, \n`dirpath_rel`: contains `dirpath` relative to current process working dir, \n`filename`: is the full filename of the active file being searched without path, \n`name`: filename of the active file being searched with no extension, \n`ext`: extension of the filename including leading dot, \n`mtime`: ISO inspired representation of the last local modification time of the current file, \n`ctime`: ISO representation of the local creation time of the current file. \n`mtime_obj`: date object representing `mtime`, \n`ctime_obj`: date object representing `ctime`. \n\nAll variables, except from module, date objects, `nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n")
         .string('x')
         .describe('x', 'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.')
         .alias('x', 'exclude-re')
@@ -568,7 +565,13 @@
         .describe('X', 'Exclude files found with this glob. Can be used multiple times.')
         .alias('X', 'exclude-glob')
         /*
-            .boolean('N')
+        
+        
+        -T (Expect no match and return exit 1 if found)
+        -t (Expect a match and return exit 1 if not found)
+
+        
+        .boolean('N')
             .alias('N', 'void-newline')
             .describe('N',
                 `Avoid having newline when outputting data (or when piping). `+
@@ -577,18 +580,16 @@
             )
         
         
-        -E (Expect there to be no match and return exit 1 if found)
-        -e (Expect there to be batch and return exit 1 if not found)
-    */
-        /*    .boolean('P')
-            .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
-            .alias('P', 'pattern-file')
+
+        .boolean('p')
+            .describe('p', "Pattern is the path to a filename containing the pattern. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
+            .alias('p', 'pattern-file')
+        
 
         .boolean('R')
             .alias('R', 'replacement-file')
             .describe('R',
-                `Replacement is a filename from where the replacement will be generated. ` +
-                `If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
+                `Replacement is the path to a filename containing the replacement`.`Will be followed by other all rules (like -€)`
             )
 
         */
@@ -615,9 +616,9 @@
             .alias('g', 'glob-pipe')
 
 
-        .boolean('j')
-            .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
-            .alias('j', 'pattern-js')
+        .boolean('J')
+            .describe('J', "Pattern is javascript source that will return a string giving the pattern to use")
+            .alias('J', 'pattern-js')
 
 
         .boolean('glob-js')
@@ -625,6 +626,9 @@
 
 
         */
+        .boolean('j')
+        .alias('j', 'replacement-js')
+        .describe('j', "Treat replacement as javascript source code. \n\tThe statement from the last expression will become the replacement string. \n\tPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \n\tThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \n\tAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \n\tIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\t\n\tThe code has access to the following variables: \n\t`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n\t`fs` from node, \n\t`path` from node, \n\t`globs` from npm, \n\t`pipe`: the data piped into the command (null if no piped data), \n\t`find`: pattern searched for (the needle), \n\t`text`: full text being searched i.e. file content or piped data (the haystack), \n\t`bytes`: total size of the haystack in bytes, \n\t`size`: human-friendly representation of the total size of the haystack, \n\t`time`: String representing the local time when the command was invoked,\n\t`time_obj`: date object representing `time`,\n\t`now`: alias for `time`,\n\t`cwd`: current process working dir, \n\t`nl`: a new-line char,\n\t`_`: a single space char (for easy string concatenation).\n\t\n\tThe following values defaults to `❌` if haystack does not originate from a file:\n\t`file`: contains the full path of the active file being searched (including full filename), \n\t`file_rel`: contains `file` relative to current process working dir, \n\t`dirpath`: contains the full path without filename of the active file being searched, \n\t`dirpath_rel`: contains `dirpath` relative to current process working dir, \n\t`filename`: is the full filename of the active file being searched without path, \n\t`name`: filename of the active file being searched with no extension, \n\t`ext`: extension of the filename including leading dot, \n\t`mtime`: ISO inspired representation of the last local modification time of the current file, \n\t`ctime`: ISO representation of the local creation time of the current file. \n\t`mtime_obj`: date object representing `mtime`, \n\t`ctime_obj`: date object representing `ctime`. \n\t\n\tAll variables, except from module, date objects, `nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n\t")
         .help('h')
         .describe('h', 'Display help.')
         .alias('h', 'help')

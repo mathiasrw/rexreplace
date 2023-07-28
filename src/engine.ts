@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const path = require('path');
 
@@ -36,6 +36,8 @@ export function engine(config: any = {engine: 'V8'}) {
 	config.regex = getFinalRegex(config.pattern, config) || '';
 
 	step(config);
+
+	
 
 	if (handlePipedData(config)) {
 		return doReplacement('Piped data', config, config.pipedData);

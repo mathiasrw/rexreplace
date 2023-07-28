@@ -74,6 +74,7 @@
     "test": "test"
   },
   "dependencies": {
+    "fs-extra": "^11.1.1",
     "globs": "0.1.4",
     "yargs": "16.2.0"
   },
