@@ -3,8 +3,10 @@ src/*
 gfx/*
 rollup.config.js
 tmp/*
-.*/
+.*
 *.log
 *.txt
 *.file
 *.lock
+*.ts
+legacy/

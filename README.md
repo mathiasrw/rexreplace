@@ -269,7 +269,7 @@ rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 ## Test 
 
 ### Regression
-All CLI end to end tests are defined in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/master/test/cli/run.sh) and all unit test are described in [`test/*.js`](https://github.com/mathiasrw/rexreplace/tree/master/test). After `git clone`'ing the repo and `npm install`'ing you can invoke them with:
+All CLI end to end tests are defined in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) and all unit test are described in [`test/*.js`](https://github.com/mathiasrw/rexreplace/tree/main/test). After `git clone`'ing the repo and `npm install`'ing you can invoke them with:
 
 ```bash
 > npm test
@@ -281,7 +281,7 @@ _**tl;dr**:_
 _Files over 5 Mb are faster with `rr` than with `sed` - but - it does not matter as any file under 25 Mb has less than 0.7 seconds in difference._
 
 The speed test is initiated by `npm run test-speed`. The test takes files in different sizes and compares the processing time for RexReplace (`rr`) and the Unix tool `sed`. The test uses the sources of a website displaying [the book _1984_ by George Orwell](http://1984.surge.sh). The task for the tests is to remove all HTML tags by search-and-replace, so only the final text is left. The source is 888Kb, so all files up to 500Kb are generated directly from the source, while larger files are created by combining the first 500Kb several times. Each test runs 10 times to even out any temporary workload fluctuations. 
-Results from the latest speed test can always be seen in the [speed test log](https://github.com/mathiasrw/rexreplace/blob/master/test/speed/testlog.speed.md). 
+Results from the latest speed test can always be seen in the [speed test log](https://github.com/mathiasrw/rexreplace/blob/main/test/speed/testlog.speed.md). 
 
 <p align="center">
 <img src="https://cloud.githubusercontent.com/assets/1063454/24081543/fc237d68-0d09-11e7-8c31-92a550589b53.png" alt="" />
