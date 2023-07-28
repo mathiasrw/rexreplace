@@ -34,8 +34,9 @@ const yargs = require('yargs')
 
 	.example(`> rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
 	.example('')
-	.example(`> rr Foo xxx myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
+	.example(`> rr xxx Foo myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
 	.example('')
+
 	.example(
 		`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`,
 		`'foobar' in myfile.md will become 'barfoo'`
@@ -45,7 +46,11 @@ const yargs = require('yargs')
 		`> rexreplace '^#' '##' *.md`,
 		`All markdown files in this dir got all headlines moved one level deeper`
 	)
-
+	.example('')
+	.example(
+		`> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' `,
+		`Provide multiple files or glob if needed`
+	)
 	.version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version)
 	.alias('v', 'version')
 
@@ -215,6 +220,17 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
 	)
+	.string('x')
+	.describe(
+		'x',
+		'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.'
+	)
+	.alias('x', 'exclude-re')
+
+	.string('X')
+	.describe('X', 'Exclude files found with this glob. Can be used multiple times.')
+	.alias('X', 'exclude-glob')
+
 	/*
         .boolean('N')
         .alias('N', 'void-newline')
@@ -245,7 +261,7 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
 	/* // Ideas
 
     .boolean('n')
-        .describe('n', "Do replacement on file names instead of file content (rename the files)")
+        .describe('n', "Do replacement on file path/names instead of file content (rename/move the files)")
         .alias('n', 'name')
 
     // https://github.com/eugeneware/replacestream
@@ -311,10 +327,13 @@ function unescapeString(str = '') {
 
 	let pipeInUse = false;
 	let pipeData = '';
-	config.globs = yargs.argv._;
+
 	config.pipedData = null;
 	config.showHelp = yargs.showHelp;
 	config.pattern = pattern;
+	config.includeGlob = yargs.argv._;
+	config.excludeGlob = [...yargs.argv.excludeGlob].filter(Boolean);
+	config.excludeRe = [...yargs.argv.excludeRe].filter(Boolean);
 	if (config.replacementJs) {
 		config.replacement = replacement;
 	} else {

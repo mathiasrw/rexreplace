@@ -22,6 +22,7 @@ source $DIR/aserta.sh
 reset() {
 		echo 'Resetting testdata'
         echo 'foobar' > my.file
+        echo 'abc123' > your.file
 }
 
 
@@ -217,6 +218,43 @@ assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
 
 
 
+# -x
+reset
+					rexreplace 'b' '*+*' my.file
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file'
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'a*+*c123'
+reset
+					rexreplace 'b' '*+*' '*.file' -x y
+assert		 		"cat my.file"    					'foobar'
+assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file' -x ^y
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'abc123'
+
+
+# -X
+reset
+					rexreplace 'b' '*+*' '*.file' -X '*.file'
+assert		 		"cat my.file"    					'foobar'
+assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file' -X 'y*'
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'abc123'
+
+
+
+
+
+
+
+
+
 
 # # -P
 # reset
@@ -268,6 +306,7 @@ assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
 # reset
 
 rm my.file
+rm your.file
 
 assert_end 			"rexreplace"
 

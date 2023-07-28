@@ -72,6 +72,16 @@
     var path = require('path');
     var globs = require('globs');
     var now = new Date();
+    var re = {
+        euro: /€/g,
+        section: /§/g,
+        mctime: /[mc]time/,
+        colon: /:/g,
+        capturedGroupRef: /\$\d/,
+        regexSpecialChars: /[-\[\]{}()*+?.,\/\\^$|#\s]/g,
+        byteOrSize: /bytes|size/,
+        folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
+    };
     var version = '7.1.2';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
@@ -79,15 +89,15 @@
         outputConfig(config);
         step('Displaying steps for:');
         step(config);
-        config.pattern = getFinalPattern(config) || '';
-        config.replacement = getFinalReplacement(config) || '';
+        config.pattern = getFinalPattern(config.pattern, config) || '';
+        config.replacement = getFinalReplacement(config.replacement, config) || '';
         config.replacementOri = config.replacement;
-        config.regex = getFinalRegex(config) || '';
+        config.regex = getFinalRegex(config.pattern, config) || '';
         step(config);
         if (handlePipedData(config)) {
             return doReplacement('Piped data', config, config.pipedData);
         }
-        config.files = globs2paths(config.globs);
+        config.files = getFilePaths(config);
         if (!config.files.length) {
             return error(config.files.length + ' files found');
         }
@@ -100,232 +110,231 @@
             .filter(function (filepath) { return (fs.existsSync(filepath) ? true : error('File not found:', filepath)); })
             // Do the replacement
             .forEach(function (filepath) { return openFile(filepath, config); });
-        function openFile(file, config) {
-            if (config.voidAsync) {
-                chat('Open sync: ' + file);
-                var data = fs.readFileSync(file, config.encoding);
-                return doReplacement(file, config, data);
-            }
-            else {
-                chat('Open async: ' + file);
-                fs.readFile(file, config.encoding, function (err, data) {
-                    if (err) {
-                        return error(err);
-                    }
-                    return doReplacement(file, config, data);
-                });
-            }
+    }
+    function openFile(file, config) {
+        if (config.voidAsync) {
+            chat('Open sync: ' + file);
+            var data = fs.readFileSync(file, config.encoding);
+            return doReplacement(file, config, data);
         }
-        // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
-        function doReplacement(_file_rr, _config_rr, _data_rr) {
-            debug('Work on content from: ' + _file_rr);
-            // Variables to be accessible from js.
-            if (_config_rr.replacementJs) {
-                _config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
-            }
-            // Main regexp of the whole thing
-            var result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
-            // The output of matched strings is done from the replacement, so no need to continue
-            if (_config_rr.outputMatch) {
-                return;
-            }
-            if (_config_rr.output) {
-                debug('Output result from: ' + _file_rr);
-                return process.stdout.write(result);
-            }
-            // Nothing replaced = no need for writing file again
-            if (result === _data_rr) {
-                chat('Nothing changed in: ' + _file_rr);
-                return;
-            }
-            // Release the memory while storing files
-            _data_rr = '';
-            debug('Write new content to: ' + _file_rr);
-            // Write directly to the same file (if the process is killed all new and old data is lost)
-            if (_config_rr.voidBackup) {
-                return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
-                    if (err) {
-                        return error(err);
-                    }
-                    info(_file_rr);
-                });
-            }
-            //Make sure data is always on disk
-            var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
-            var salt = new Date().toISOString().replace(/:/g, '_').replace('Z', '');
-            var backupFile = oriFile + '.' + salt + '.backup';
-            if (_config_rr.voidAsync) {
-                try {
-                    fs.renameSync(oriFile, backupFile);
-                    fs.writeFileSync(oriFile, result, _config_rr.encoding);
-                    if (!_config_rr.keepBackup) {
-                        fs.unlinkSync(backupFile);
-                    }
-                }
-                catch (e) {
-                    return error(e);
-                }
-                return info(_file_rr);
-            }
-            // Let me know when fs gets promise'fied
-            fs.rename(oriFile, backupFile, function (err) {
+        else {
+            chat('Open async: ' + file);
+            fs.readFile(file, config.encoding, function (err, data) {
                 if (err) {
                     return error(err);
                 }
-                fs.writeFile(oriFile, result, _config_rr.encoding, function (err) {
-                    if (err) {
-                        return error(err);
-                    }
-                    if (!_config_rr.keepBackup) {
-                        fs.unlink(backupFile, function (err) {
-                            if (err) {
-                                return error(err);
-                            }
-                            info(_file_rr);
-                        });
-                    }
-                    else {
-                        info(_file_rr);
-                    }
-                });
+                return doReplacement(file, config, data);
             });
         }
-        function handlePipedData(config) {
-            step('Check Piped Data');
-            if (config.globs.length) {
-                if (!config.replacementJs) {
-                    chat('Piped data never used.');
+    }
+    // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
+    function doReplacement(_file_rr, _config_rr, _data_rr) {
+        debug('Work on content from: ' + _file_rr);
+        // Variables to be accessible from js.
+        if (_config_rr.replacementJs) {
+            _config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
+        }
+        // Main regexp of the whole thing
+        var result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
+        // The output of matched strings is done from the replacement, so no need to continue
+        if (_config_rr.outputMatch) {
+            return;
+        }
+        if (_config_rr.output) {
+            debug('Output result from: ' + _file_rr);
+            return process.stdout.write(result);
+        }
+        // Nothing replaced = no need for writing file again
+        if (result === _data_rr) {
+            chat('Nothing changed in: ' + _file_rr);
+            return;
+        }
+        // Release the memory while storing files
+        _data_rr = '';
+        debug('Write new content to: ' + _file_rr);
+        // Write directly to the same file (if the process is killed all new and old data is lost)
+        if (_config_rr.voidBackup) {
+            return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
+                if (err) {
+                    return error(err);
                 }
-                return false;
+                info(_file_rr);
+            });
+        }
+        //Make sure data is always on disk
+        var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+        var salt = new Date().toISOString().replace(re.colon, '_').replace('Z', '');
+        var backupFile = oriFile + '.' + salt + '.backup';
+        if (_config_rr.voidAsync) {
+            try {
+                fs.renameSync(oriFile, backupFile);
+                fs.writeFileSync(oriFile, result, _config_rr.encoding);
+                if (!_config_rr.keepBackup) {
+                    fs.unlinkSync(backupFile);
+                }
             }
-            if (null !== config.pipedData && !config.pipedDataUsed) {
-                config.dataIsPiped = true;
-                config.output = true;
-                return true;
+            catch (e) {
+                return error(e);
+            }
+            return info(_file_rr);
+        }
+        // Let me know when fs gets promise'fied
+        fs.rename(oriFile, backupFile, function (err) {
+            if (err) {
+                return error(err);
+            }
+            fs.writeFile(oriFile, result, _config_rr.encoding, function (err) {
+                if (err) {
+                    return error(err);
+                }
+                if (!_config_rr.keepBackup) {
+                    fs.unlink(backupFile, function (err) {
+                        if (err) {
+                            return error(err);
+                        }
+                        info(_file_rr);
+                    });
+                }
+                else {
+                    info(_file_rr);
+                }
+            });
+        });
+    }
+    function handlePipedData(config) {
+        step('Check Piped Data');
+        if (config.includeGlob.length) {
+            if (!config.replacementJs && config.pipedData) {
+                chat('Piped data never used.');
             }
             return false;
         }
-        function getFinalPattern(conf) {
-            step('Get final pattern');
-            var pattern = replacePlaceholders(conf.pattern, conf);
-            /*if (config.patternFile) {
-                pattern = fs.readFileSync(pattern, 'utf8');
-                pattern = new Function('return '+pattern)();
-            }*/
-            step(pattern);
-            return pattern;
+        if (null !== config.pipedData && !config.pipedDataUsed) {
+            config.dataIsPiped = true;
+            config.output = true;
+            return true;
         }
-        function getFinalReplacement(conf) {
-            step('Get final replacement');
-            /*if(config.replacementFile){
-                return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
-            }*/
-            conf.replacement = replacePlaceholders(conf.replacement, conf);
-            if (conf.replacementPipe) {
-                step('Piping replacement');
-                conf.pipedDataUsed = true;
-                if (null === conf.pipedData) {
-                    return die('No data piped into replacement');
-                }
-                conf.replacement = conf.pipedData;
-            }
-            if (conf.outputMatch) {
-                step('Output match');
-                if (parseInt(process.versions.node) < 6) {
-                    return die('outputMatch is only supported in node 6+');
-                }
-                return function () {
-                    var arguments$1 = arguments;
-
-                    step(arguments);
-                    if (arguments.length === 3) {
-                        step('Printing full match');
-                        process.stdout.write(arguments[0] + '\n');
-                        return '';
-                    }
-                    for (var i = 1; i < arguments.length - 2; i++) {
-                        process.stdout.write(arguments$1[i]);
-                    }
-                    process.stdout.write('\n');
-                    return '';
-                };
-            }
-            // If captured groups then run dynamicly
-            //console.log(process);
-            if (conf.replacementJs &&
-                /\$\d/.test(conf.replacement) &&
-                parseInt(process.versions.node) < 6) {
-                return die('Captured groups for javascript replacement is only supported in node 6+');
-            }
-            step(conf.replacement);
-            return conf.replacement;
+        return false;
+    }
+    function getFinalPattern(pattern, conf) {
+        step('Get final pattern');
+        pattern = replacePlaceholders(pattern, conf);
+        if (conf.literal) {
+            pattern = pattern.replace(re.regexSpecialChars, '\\$&');
         }
-        /*function oneLinerFromFile(str){
-            let lines = str.split("\n");
-            if(lines.length===1){
-                return str;
-            }
-            return lines.map(function (line) {
-                return line.trim();
-            }).join(' ');
+        /*if (config.patternFile) {
+            pattern = fs.readFileSync(pattern, 'utf8');
+            pattern = new Function('return '+pattern)();
         }*/
-        function getFinalRegex(config) {
-            step('Get final regex with engine: ' + config.engine);
-            var pattern = config.pattern;
-            if (config.literal) {
-                pattern = pattern.replace(/[-\[\]{}()*+?.,\/\\^$|#\s]/g, '\\$&');
+        step(pattern);
+        return pattern;
+    }
+    function getFinalReplacement(replacement, conf) {
+        step('Get final replacement');
+        /*if(config.replacementFile){
+            return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
+        }*/
+        replacement = replacePlaceholders(replacement, conf);
+        if (conf.replacementPipe) {
+            step('Piping replacement');
+            conf.pipedDataUsed = true;
+            if (null === conf.pipedData) {
+                return die('No data piped into replacement');
             }
-            var regex;
-            var flags = getFlags(config);
-            switch (config.engine) {
-                case 'V8':
-                    try {
-                        regex = new RegExp(pattern, flags);
-                    }
-                    catch (e) {
-                        if (config.debug)
-                            { throw new Error(e); }
-                        die(e.message);
-                    }
-                    break;
-                case 'RE2':
-                    try {
-                        var RE2 = require('re2');
-                        regex = new RE2(pattern, flags);
-                    }
-                    catch (e$1) {
-                        if (config.debug)
-                            { throw new Error(e$1); }
-                        die(e$1.message);
-                    }
-                    break;
-                default:
-                    die(("Engine " + (config.engine) + " not supported"));
-            }
-            step(regex);
-            return regex;
+            replacement = conf.pipedData;
         }
-        function getFlags(config) {
-            step('Get flags');
-            var flags = '';
-            if (!config.voidGlobal) {
-                flags += 'g';
+        if (conf.outputMatch) {
+            step('Output match');
+            if (parseInt(process.versions.node) < 6) {
+                return die('outputMatch is only supported in node 6+');
             }
-            if (!config.voidIgnoreCase) {
-                flags += 'i';
-            }
-            if (!config.voidMultiline) {
-                flags += 'm';
-            }
-            if (config.dotAll) {
-                flags += 's';
-            }
-            if (config.unicode) {
-                flags += 'u';
-            }
-            step(flags);
-            return flags;
+            return function () {
+                var arguments$1 = arguments;
+
+                step(arguments);
+                if (arguments.length === 3) {
+                    step('Printing full match');
+                    process.stdout.write(arguments[0] + '\n');
+                    return '';
+                }
+                for (var i = 1; i < arguments.length - 2; i++) {
+                    process.stdout.write(arguments$1[i]);
+                }
+                process.stdout.write('\n');
+                return '';
+            };
         }
+        // If captured groups then run dynamicly
+        //console.log(process);
+        if (conf.replacementJs &&
+            re.capturedGroupRef.test(conf.replacement) &&
+            parseInt(process.versions.node) < 6) {
+            return die('Captured groups for javascript replacement is only supported in node 6+');
+        }
+        step(replacement);
+        return replacement;
+    }
+    /*function oneLinerFromFile(str){
+        let lines = str.split("\n");
+        if(lines.length===1){
+            return str;
+        }
+        return lines.map(function (line) {
+            return line.trim();
+        }).join(' ');
+    }*/
+    function getFinalRegex(pattern, config) {
+        step('Get final regex with engine: ' + config.engine);
+        var regex;
+        var flags = getFlags(config);
+        switch (config.engine) {
+            case 'V8':
+                try {
+                    regex = new RegExp(pattern, flags);
+                }
+                catch (e) {
+                    if (config.debug)
+                        { throw new Error(e); }
+                    die(e.message);
+                }
+                break;
+            case 'RE2':
+                try {
+                    var RE2 = require('re2');
+                    regex = new RE2(pattern, flags);
+                }
+                catch (e$1) {
+                    if (config.debug)
+                        { throw new Error(e$1); }
+                    die(e$1.message);
+                }
+                break;
+            default:
+                die(("Engine " + (config.engine) + " not supported"));
+        }
+        step(regex);
+        return regex;
+    }
+    function getFlags(config) {
+        step('Get flags');
+        var flags = '';
+        if (!config.voidGlobal) {
+            flags += 'g';
+        }
+        if (!config.voidIgnoreCase) {
+            flags += 'i';
+        }
+        if (!config.voidMultiline) {
+            flags += 'm';
+        }
+        if (config.dotAll) {
+            flags += 's';
+        }
+        if (config.unicode) {
+            flags += 'u';
+        }
+        step(flags);
+        return flags;
     }
     function readableSize(size) {
         if (1 === size) {
@@ -353,7 +362,7 @@
             '};' +
             'require = r;' +
             'return eval(__code_rr);');
-        var needsByteOrSize = /bytes|size/.test(_config_rr.replacement);
+        var needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
         var betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
         if (!_config_rr.dataIsPiped) {
             _file = path.normalize(path.join(_cwd, _file_rr));
@@ -361,11 +370,11 @@
             var pathInfo = path.parse(_file);
             _dirpath = pathInfo.dir;
             _dirpath_rel = path.relative(_cwd, _dirpath);
-            _dirname = _file.match(/[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/)[1];
+            _dirname = (_file.match(re.folderName) || ' _')[1];
             _filename = pathInfo.base;
             _name = pathInfo.name;
             _ext = pathInfo.ext;
-            if (betterToReadfromFile || /[mc]time/.test(_config_rr.replacement)) {
+            if (betterToReadfromFile || re.mctime.test(_config_rr.replacement)) {
                 var fileStats = fs.statSync(_file);
                 _bytes = fileStats.size;
                 _size = readableSize(_bytes);
@@ -385,7 +394,7 @@
         if (!/\$\d/.test(_config_rr.replacement)) {
             return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _nl, _, code_rr);
         }
-        // Captures groups present, so need to run once per match
+        // Capture groups used, so need to run once per match
         return function () {
             var arguments$1 = arguments;
 
@@ -403,10 +412,6 @@
 
         return ((dateObj.getFullYear()) + "-" + (('0' + (dateObj.getMonth() + 1)).slice(-2)) + "-" + (('0' + dateObj.getDate()).slice(-2)) + " " + (('0' + dateObj.getHours()).slice(-2)) + ":" + (('0' + dateObj.getMinutes()).slice(-2)) + ":" + (('0' + dateObj.getSeconds()).slice(-2)) + "." + (('00' + dateObj.getMilliseconds()).slice(-3)));
     }
-    var re = {
-        euro: /€/g,
-        section: /§/g,
-    };
     function replacePlaceholders(str, conf) {
         if ( str === void 0 ) str = '';
 
@@ -418,23 +423,21 @@
         }
         return str;
     }
-    function globs2paths(_globs) {
-        if ( _globs === void 0 ) _globs = [];
-
-        var globsToInclude = [];
-        var globsToExclude = [];
-        _globs.filter(Boolean).forEach(function (glob) {
-            if ('!' === glob[0] || '^' === glob[0]) {
-                globsToExclude.push(glob.slice(1));
-            }
-            else {
-                globsToInclude.push(glob);
-            }
-        });
-        var filesToInclude = globs.sync(globsToInclude);
-        if (globsToExclude.length) {
-            var filesToExclude = globs.sync(globsToExclude);
-            return filesToInclude.filter(function (el) { return !filesToExclude.includes(el); });
+    function getFilePaths(conf) {
+        var includeGlob = conf.includeGlob;
+        var excludeGlob = conf.excludeGlob;
+        var excludeRe = conf.excludeRe;
+        var filesToInclude = globs.sync(includeGlob);
+        if (excludeRe.length) {
+            excludeRe
+                .map(function (el) { return getFinalPattern(el, conf); })
+                .forEach(function (re) {
+                filesToInclude = filesToInclude.filter(function (el) { return !el.match(re); });
+            });
+        }
+        if (excludeGlob.length) {
+            var filesToExclude = globs.sync(excludeGlob);
+            filesToInclude = filesToInclude.filter(function (el) { return !filesToExclude.includes(el); });
         }
         return filesToInclude;
     }
@@ -467,11 +470,13 @@
         '> rexreplace pattern replacement [fileGlob|option]+')
         .example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'")
         .example('')
-        .example("> rr Foo xxx myfile.md", "The alias 'rr' can be used instead of 'rexreplace'")
+        .example("> rr xxx Foo myfile.md", "The alias 'rr' can be used instead of 'rexreplace'")
         .example('')
         .example("> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md", "'foobar' in myfile.md will become 'barfoo'")
         .example('')
         .example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper")
+        .example('')
+        .example("> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' ", "Provide multiple files or glob if needed")
         .version('v', 'Print rexreplace version (can be given as only argument)', version)
         .alias('v', 'version')
         .boolean('V')
@@ -556,6 +561,12 @@
         .boolean('j')
         .alias('j', 'replacement-js')
         .describe('j', "Treat replacement as javascript source code. \nThe statement from the last expression will become the replacement string. \nPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \nThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \nAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \nIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\nThe code has access to the following variables: \n`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n`fs` from node, \n`path` from node, \n`globs` from npm, \n`pipe`: the data piped into the command (null if no piped data), \n`find`: pattern searched for (the needle), \n`text`: full text being searched i.e. file content or piped data (the haystack), \n`bytes`: total size of the haystack in bytes, \n`size`: human-friendly representation of the total size of the haystack, \n`time`: String representing the local time when the command was invoked,\n`time_obj`: date object representing `time`,\n`now`: alias for `time`,\n`cwd`: current process working dir, \n`nl`: a new-line char,\n`_`: a single space char (for easy string concatenation).\n\nThe following values defaults to `❌` if haystack does not originate from a file:\n`file`: contains the full path of the active file being searched (including full filename), \n`file_rel`: contains `file` relative to current process working dir, \n`dirpath`: contains the full path without filename of the active file being searched, \n`dirpath_rel`: contains `dirpath` relative to current process working dir, \n`filename`: is the full filename of the active file being searched without path, \n`name`: filename of the active file being searched with no extension, \n`ext`: extension of the filename including leading dot, \n`mtime`: ISO inspired representation of the last local modification time of the current file, \n`ctime`: ISO representation of the local creation time of the current file. \n`mtime_obj`: date object representing `mtime`, \n`ctime_obj`: date object representing `ctime`. \n\nAll variables, except from module, date objects, `nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n")
+        .string('x')
+        .describe('x', 'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.')
+        .alias('x', 'exclude-re')
+        .string('X')
+        .describe('X', 'Exclude files found with this glob. Can be used multiple times.')
+        .alias('X', 'exclude-glob')
         /*
             .boolean('N')
             .alias('N', 'void-newline')
@@ -584,7 +595,7 @@
         /* // Ideas
 
         .boolean('n')
-            .describe('n', "Do replacement on file names instead of file content (rename the files)")
+            .describe('n', "Do replacement on file path/names instead of file content (rename/move the files)")
             .alias('n', 'name')
 
         // https://github.com/eugeneware/replacestream
@@ -645,10 +656,12 @@
         });
         var pipeInUse = false;
         var pipeData = '';
-        config.globs = yargs.argv._;
         config.pipedData = null;
         config.showHelp = yargs.showHelp;
         config.pattern = pattern;
+        config.includeGlob = yargs.argv._;
+        config.excludeGlob = [].concat( yargs.argv.excludeGlob ).filter(Boolean);
+        config.excludeRe = [].concat( yargs.argv.excludeRe ).filter(Boolean);
         if (config.replacementJs) {
             config.replacement = replacement;
         }
