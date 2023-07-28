@@ -82,7 +82,7 @@
         byteOrSize: /bytes|size/,
         folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
     };
-    var version = '7.1.2';
+    var version = '7.1.3';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
