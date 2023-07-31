@@ -1,15 +1,6 @@
-_Please note that issues have been observed when piping using node version 15. We are on the case to identify the exact problem_
 
 
-----
 
-<!--h3 align="center">
-    <br>
-<img width="350" src="https://cloud.githubusercontent.com/assets/1063454/24127465/ed1a59a2-0e28-11e7-9546-160d7eb1d8b9.png" alt="RexReplace mascot Benny on the RexReplace logo" />
-    <br>
-    <br>
-
-</h3-->
 
 [![CI-test](https://github.com/mathiasrw/rexreplace/workflows/CI-test/badge.svg)](https://github.com/mathiasrw/rexreplace/actions)
 [![NPM downloads](https://img.shields.io/npm/dm/rexreplace.svg?style=flat&label=npm%20downloads)](https://npm-stat.com/charts.html?package=rexreplace) 
@@ -19,10 +10,19 @@ _Please note that issues have been observed when piping using node version 15. W
 
 
 
+<h3 align="center">
+    <br>
+<img width="350" src="https://cloud.githubusercontent.com/assets/1063454/24127465/ed1a59a2-0e28-11e7-9546-160d7eb1d8b9.png" alt="RexReplace mascot Benny on the RexReplace logo" />
+    <br>
+    <br>
 
+</h3>
 
+---
 
 # RexReplace
+
+
 
 RexReplace is a versatile tool to search and replace text in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts. 
 

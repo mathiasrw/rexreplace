@@ -190,8 +190,8 @@ const yargs = require('yargs')
 	/*
     
 	
-	-T (Expect no match and return exit 1 if found)
-	-t (Expect a match and return exit 1 if not found)
+	-T (Expect no match in any file and return exit 1 if found)
+	-t (Expect a match in each file and return exit 1 if not found)
 
 	
 	.boolean('N')
@@ -215,9 +215,7 @@ const yargs = require('yargs')
             `Replacement is the path to a filename containing the replacement`.`Will be followed by other all rules (like -€)`
         )
 
-    */
 
-	/* // Ideas
 
     .boolean('n')
         .describe('n', "Do replacement on file path+name instead of file content (rename/move the files)")
