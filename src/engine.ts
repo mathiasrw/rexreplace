@@ -37,8 +37,6 @@ export function engine(config: any = {engine: 'V8'}) {
 
 	step(config);
 
-	
-
 	if (handlePipedData(config)) {
 		return doReplacement('Piped data', config, config.pipedData);
 	}
