@@ -16,7 +16,9 @@
         if (config.quiet || config.quietTotal) {
             return;
         }
-        console.error(font.gray(msg), data);
+        if (config.output || config.outputMatch)
+            { return console.error.apply(this, [font.gray(msg), data].filter(Boolean)); }
+        console.log.apply(this, [msg, data].filter(Boolean));
     };
     var chat = function (msg, data) {
         if ( data === void 0 ) data = '';
@@ -43,7 +45,7 @@
         if ( data === void 0 ) data = '';
 
         if (!config.quiet && !config.quietTotal) {
-            console.error(font.red(msg), data);
+            console.error.apply(this, [font.red(msg), data].filter(Boolean));
         }
         if (config.halt) {
             kill(msg);
@@ -70,7 +72,7 @@
 
     var fs = require('fs-extra');
     var path = require('path');
-    var globs = require('globs');
+    var fGlob = require('fast-glob');
     var now = new Date();
     var re = {
         euro: /€/g,
@@ -82,141 +84,153 @@
         byteOrSize: /bytes|size/,
         folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
     };
-    var version = '7.1.3';
-    function engine(config) {
-        if ( config === void 0 ) config = { engine: 'V8' };
+    var version = '7.1.3-y';
+    function engine(conf) {
+        if ( conf === void 0 ) conf = { engine: 'V8' };
 
-        outputConfig(config);
+        conf = handlepipeData(conf);
+        outputConfig(conf);
         step('Displaying steps for:');
-        step(config);
-        config.pattern = getFinalPattern(config.pattern, config) || '';
-        config.replacement = getFinalReplacement(config.replacement, config) || '';
-        config.replacementOri = config.replacement;
-        config.regex = getFinalRegex(config.pattern, config) || '';
-        step(config);
-        if (handlePipedData(config)) {
-            return doReplacement('Piped data', config, config.pipedData);
+        step(conf);
+        conf.pattern = getPattern(conf.pattern, conf) || '';
+        conf.replacement = getReplacement(conf.replacement, conf) || '';
+        conf.replacementOri = conf.replacement;
+        conf.regex = getRegex(conf.pattern, conf) || '';
+        step(conf);
+        if (null !== conf.pipeData) {
+            return doReplacement('Piped data', conf, conf.pipeData);
         }
-        config.files = getFilePaths(config);
-        if (!config.files.length) {
-            return error(config.files.length + ' files found');
+        conf.files = getFilePaths(conf);
+        if (!conf.files.length) {
+            return error(conf.files.length + ' files found');
         }
-        chat(config.files.length + ' files found');
-        step(config);
-        config.files
+        chat(conf.files.length + ' files found');
+        step(conf);
+        conf.files
             // Correct filepath
             //.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
             // Find out if any filepaths are invalid
-            .filter(function (filepath) { return (fs.existsSync(filepath) ? true : error('File not found:', filepath)); })
+            .filter(function (filepath) { return (fs.statSync(filepath).isFile() ? true : error('Not a file:', filepath)); })
             // Do the replacement
-            .forEach(function (filepath) { return openFile(filepath, config); });
+            .forEach(function (filepath) { return openFile(filepath, conf); });
     }
-    function openFile(file, config) {
-        if (config.voidAsync) {
+    function openFile(file, conf) {
+        if (conf.voidAsync) {
             chat('Open sync: ' + file);
-            var data = fs.readFileSync(file, config.encoding);
-            return doReplacement(file, config, data);
+            var data = fs.readFileSync(file, conf.encoding);
+            return doReplacement(file, conf, data);
         }
         else {
             chat('Open async: ' + file);
-            fs.readFile(file, config.encoding, function (err, data) {
+            fs.readFile(file, conf.encoding, function (err, data) {
                 if (err) {
                     return error(err);
                 }
-                return doReplacement(file, config, data);
+                return doReplacement(file, conf, data);
             });
         }
     }
     // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
-    function doReplacement(_file_rr, _config_rr, _data_rr) {
-        debug('Work on content from: ' + _file_rr);
+    function doReplacement(filePath, conf, content) {
+        debug('Work on content from: ' + filePath);
         // Variables to be accessible from js.
-        if (_config_rr.replacementJs) {
-            _config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
+        if (conf.replacementJs) {
+            conf.replacement = dynamicReplacement(filePath, conf, content);
         }
         // Main regexp of the whole thing
-        var result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
+        var result = content.replace(conf.regex, conf.replacement);
         // The output of matched strings is done from the replacement, so no need to continue
-        if (_config_rr.outputMatch) {
+        if (conf.outputMatch) {
             return;
         }
-        if (_config_rr.output) {
-            debug('Output result from: ' + _file_rr);
+        if (conf.output) {
+            debug('Output result from: ' + filePath);
             return process.stdout.write(result);
         }
         // Nothing replaced = no need for writing file again
-        if (result === _data_rr) {
-            chat('Nothing changed in: ' + _file_rr);
+        if (result === content) {
+            debug('Nothing changed in: ' + filePath);
             return;
         }
         // Release the memory while storing files
-        _data_rr = '';
-        debug('Write new content to: ' + _file_rr);
+        content = '';
+        debug('Write udpated content to: ' + filePath);
+        if (conf.simulate)
+            { return info(filePath); }
         // Write directly to the same file (if the process is killed all new and old data is lost)
-        if (_config_rr.voidBackup) {
-            return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
+        if (conf.voidBackup) {
+            return fs.writeFile(filePath, result, conf.encoding, function (err) {
                 if (err) {
                     return error(err);
                 }
-                info(_file_rr);
+                info(filePath);
             });
         }
         //Make sure data is always on disk
-        var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+        var oriFile = path.normalize(path.join(process.cwd(), filePath));
         var salt = new Date().toISOString().replace(re.colon, '_').replace('Z', '');
         var backupFile = oriFile + '.' + salt + '.backup';
-        if (_config_rr.voidAsync) {
+        if (conf.voidAsync) {
             try {
                 fs.renameSync(oriFile, backupFile);
-                fs.writeFileSync(oriFile, result, _config_rr.encoding);
-                if (!_config_rr.keepBackup) {
+                fs.writeFileSync(oriFile, result, conf.encoding);
+                if (!conf.keepBackup) {
                     fs.unlinkSync(backupFile);
                 }
             }
             catch (e) {
                 return error(e);
             }
-            return info(_file_rr);
+            return info(filePath);
         }
         // Let me know when fs gets promise'fied
         fs.rename(oriFile, backupFile, function (err) {
             if (err) {
                 return error(err);
             }
-            fs.writeFile(oriFile, result, _config_rr.encoding, function (err) {
+            fs.writeFile(oriFile, result, conf.encoding, function (err) {
                 if (err) {
                     return error(err);
                 }
-                if (!_config_rr.keepBackup) {
+                if (!conf.keepBackup) {
                     fs.unlink(backupFile, function (err) {
                         if (err) {
                             return error(err);
                         }
-                        info(_file_rr);
+                        info(filePath);
                     });
                 }
                 else {
-                    info(_file_rr);
+                    info(filePath);
                 }
             });
         });
     }
-    function handlePipedData(config) {
+    function handlepipeData(conf) {
+        outputConfig(conf);
         step('Check Piped Data');
-        if (config.includeGlob.length) {
-            if (!config.replacementJs && config.pipedData) {
-                chat('Piped data never used.');
-            }
-            return false;
+        if (conf.replacementPipe) {
+            step('Piping replacement');
+            if (null === conf.pipeData)
+                { die('You flagged that replacement will be piped in - but no data arrived.'); }
+            conf.replacement = conf.pipeData;
+            conf.pipeData = null;
         }
-        if (null !== config.pipedData && !config.pipedDataUsed) {
-            config.dataIsPiped = true;
-            config.output = true;
-            return true;
+        else if (conf.globPipe) {
+            step('Piping globs');
+            if (conf.includeGlob.length)
+                { die('Please pipe filenames/globs in OR provide as parameters. Not both.'); }
+            if (null === conf.pipeData)
+                { die('You flagged that filenames/globs will be piped in - but no data arrived.'); }
+            conf.globs = conf.pipeData;
+            conf.pipeData = null;
         }
-        return false;
+        else if (null !== conf.pipeData) {
+            conf.output = true;
+        }
+        return conf;
     }
-    function getFinalPattern(pattern, conf) {
+    function getPattern(pattern, conf) {
         step('Get final pattern');
         pattern = replacePlaceholders(pattern, conf);
         if (conf.literal) {
@@ -224,25 +238,17 @@
         }
         /*if (config.patternFile) {
             pattern = fs.readFileSync(pattern, 'utf8');
-            pattern = new Function('return '+pattern)();
+            pattern = new Function('return '+pattern)(); // js code?!?
         }*/
         step(pattern);
         return pattern;
     }
-    function getFinalReplacement(replacement, conf) {
+    function getReplacement(replacement, conf) {
         step('Get final replacement');
         /*if(config.replacementFile){
             return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
         }*/
         replacement = replacePlaceholders(replacement, conf);
-        if (conf.replacementPipe) {
-            step('Piping replacement');
-            conf.pipedDataUsed = true;
-            if (null === conf.pipedData) {
-                return die('No data piped into replacement');
-            }
-            replacement = conf.pipedData;
-        }
         if (conf.outputMatch) {
             step('Output match');
             if (parseInt(process.versions.node) < 6) {
@@ -283,17 +289,17 @@
             return line.trim();
         }).join(' ');
     }*/
-    function getFinalRegex(pattern, config) {
-        step('Get final regex with engine: ' + config.engine);
+    function getRegex(pattern, conf) {
+        step('Get final regex with engine: ' + conf.engine);
         var regex;
-        var flags = getFlags(config);
-        switch (config.engine) {
+        var flags = getFlags(conf);
+        switch (conf.engine) {
             case 'V8':
                 try {
                     regex = new RegExp(pattern, flags);
                 }
                 catch (e) {
-                    if (config.debug)
+                    if (conf.debug)
                         { throw new Error(e); }
                     die(e.message);
                 }
@@ -304,33 +310,33 @@
                     regex = new RE2(pattern, flags);
                 }
                 catch (e$1) {
-                    if (config.debug)
+                    if (conf.debug)
                         { throw new Error(e$1); }
                     die(e$1.message);
                 }
                 break;
             default:
-                die(("Engine " + (config.engine) + " not supported"));
+                die(("Engine " + (conf.engine) + " not supported"));
         }
         step(regex);
         return regex;
     }
-    function getFlags(config) {
+    function getFlags(conf) {
         step('Get flags');
         var flags = '';
-        if (!config.voidGlobal) {
+        if (!conf.voidGlobal) {
             flags += 'g';
         }
-        if (!config.voidIgnoreCase) {
+        if (!conf.voidIgnoreCase) {
             flags += 'i';
         }
-        if (!config.voidMultiline) {
+        if (!conf.voidMultiline) {
             flags += 'm';
         }
-        if (config.dotAll) {
+        if (conf.dotAll) {
             flags += 's';
         }
-        if (config.unicode) {
+        if (conf.unicode) {
             flags += 'u';
         }
         step(flags);
@@ -343,12 +349,12 @@
         var i = Math.floor(Math.log(size) / Math.log(1024));
         return ((size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]);
     }
-    function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
+    function dynamicReplacement(path, conf, content) {
         var _time_obj = now;
         var _time = localTimeString(_time_obj);
-        var _pipe = _config_rr.pipedData, _text = _data_rr, _find = _config_rr.pattern, code_rr = _config_rr.replacementOri, _cwd = process.cwd(), _now = _time, _ = ' ', _nl = '\n';
+        var _pipe = conf.pipeData, _text = content, _find = conf.pattern, code_rr = conf.replacementOri, _cwd = process.cwd(), _now = _time, _ = ' ', _nl = '\n';
         // prettier-ignore
-        var _file = '❌', _file_rel = '❌', _dirpath = '❌', _dirpath_rel = '❌', _dirname = '❌', _filename = '❌', _name = '❌', _ext = '❌', _mtime = '❌', _ctime = '❌', _mtime_obj = new Date(0), _ctime_obj = new Date(0), _bytes = -1, _size = '❌', dynamicContent = new Function('require', 'fs', 'globs', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', 'nl', '_', '__code_rr', 'var path = require("path");' +
+        var _file = '❌', _file_rel = '❌', _dirpath = '❌', _dirpath_rel = '❌', _dirname = '❌', _filename = '❌', _name = '❌', _ext = '❌', _mtime = '❌', _ctime = '❌', _mtime_obj = new Date(0), _ctime_obj = new Date(0), _bytes = -1, _size = '❌', dynamicContent = new Function('require', 'fs', 'glob', 'path', 'pipe', 'pipe_', 'find', 'find_', 'text', 'text_', 'file', 'file_', 'file_rel', 'file_rel_', 'dirpath', 'dirpath_', 'dirpath_rel', 'dirpath_rel_', 'dirname', 'dirname_', 'filename', 'filename_', 'name', 'name_', 'ext', 'ext_', 'cwd', 'cwd_', 'now', 'now_', 'time_obj', 'time', 'time_', 'mtime_obj', 'mtime', 'mtime_', 'ctime_obj', 'ctime', 'ctime_', 'bytes', 'bytes_', 'size', 'size_', 'nl', '_', '__code_rr', 'var path = require("path");' +
             'var __require_ = require;' +
             'var r = function(file){' +
             'var result = null;' +
@@ -362,10 +368,10 @@
             '};' +
             'require = r;' +
             'return eval(__code_rr);');
-        var needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
+        var needsByteOrSize = re.byteOrSize.test(conf.replacement);
         var betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
-        if (!_config_rr.dataIsPiped) {
-            _file = path.normalize(path.join(_cwd, _file_rr));
+        if (!conf.pipeData) {
+            _file = path.normalize(path.join(_cwd, path));
             _file_rel = path.relative(_cwd, _file);
             var pathInfo = path.parse(_file);
             _dirpath = pathInfo.dir;
@@ -374,7 +380,7 @@
             _filename = pathInfo.base;
             _name = pathInfo.name;
             _ext = pathInfo.ext;
-            if (betterToReadfromFile || re.mctime.test(_config_rr.replacement)) {
+            if (betterToReadfromFile || re.mctime.test(conf.replacement)) {
                 var fileStats = fs.statSync(_file);
                 _bytes = fileStats.size;
                 _size = readableSize(_bytes);
@@ -390,9 +396,10 @@
             _bytes = Buffer.from(_text).length;
             _size = readableSize(_bytes);
         }
+        var glob = function (a, b) { return fGlob.sync(a, Object.assign({ unique: true, caseSensitiveMatch: !conf.voidIgnoreCase, dot: true }, b)); };
         // Run only once if no captured groups (replacement cant change)
-        if (!/\$\d/.test(_config_rr.replacement)) {
-            return dynamicContent(require, fs, globs, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _nl, _, code_rr);
+        if (!/\$\d/.test(conf.replacement)) {
+            return dynamicContent(require, fs, glob, path, _pipe, _pipe + _, _find, _find + _, _text, _text + _, _file, _file + _, _file_rel, _file_rel + _, _dirpath, _dirpath + _, _dirpath_rel, _dirpath_rel + _, _dirname, _dirname + _, _filename, _filename + _, _name, _name + _, _ext, _ext + _, _cwd, _cwd + _, _now, _now + _, _time_obj, _time, _time + _, _mtime_obj, _mtime, _mtime + _, _ctime_obj, _ctime, _ctime + _, _bytes, _bytes + _, _size, _size + _, _nl, _, code_rr);
         }
         // Capture groups used, so need to run once per match
         return function () {
@@ -404,7 +411,7 @@
             for (var i = 0; i < arguments.length - 2; i++) {
                 capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments$1[i]) + '; ';
             }
-            return dynamicContent(require, fs, globs, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + _, __time_obj, __time, __time + _, __mtime_obj, __mtime, __mtime + _, __ctime_obj, __ctime, __ctime + _, __bytes, __bytes + __, __size, __size + __, __nl, __, capturedGroups + __code_rr);
+            return dynamicContent(require, fs, glob, path, __pipe, __pipe + __, __find, __find + __, __text, __text + __, __file, __file + __, __file_rel, __file_rel + __, __dirpath, __dirpath + __, __dirpath_rel, __dirpath_rel + __, __dirname, __dirname + __, __filename, __filename + __, __name, __name + __, __ext, __ext + __, __cwd, __cwd + __, __now, __now + _, __time_obj, __time, __time + _, __mtime_obj, __mtime, __mtime + _, __ctime_obj, __ctime, __ctime + _, __bytes, __bytes + __, __size, __size + __, __nl, __, capturedGroups + __code_rr);
         };
     }
     function localTimeString(dateObj) {
@@ -427,24 +434,27 @@
         var includeGlob = conf.includeGlob;
         var excludeGlob = conf.excludeGlob;
         var excludeRe = conf.excludeRe;
-        var filesToInclude = globs.sync(includeGlob);
+        var voidIgnoreCase = conf.voidIgnoreCase;
+        var filesToInclude = fGlob.sync(includeGlob, {
+            ignore: excludeGlob,
+            onlyFiles: true,
+            unique: true,
+            caseSensitiveMatch: !voidIgnoreCase,
+            dot: true,
+        });
         if (excludeRe.length) {
             excludeRe
-                .map(function (el) { return getFinalPattern(el, conf); })
+                .map(function (el) { return getRegex(getPattern(el, conf), conf); })
                 .forEach(function (re) {
                 filesToInclude = filesToInclude.filter(function (el) { return !el.match(re); });
             });
-        }
-        if (excludeGlob.length) {
-            var filesToExclude = globs.sync(excludeGlob);
-            filesToInclude = filesToInclude.filter(function (el) { return !filesToExclude.includes(el); });
         }
         return filesToInclude;
     }
 
     var assign;
     var pattern, replacement;
-    // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
+    // To avoid problems with patterns or replacements starting with '-' so the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
     var needHelp = 0;
     if (process.argv.length < 4) {
         if (/-v|--?version$/i.test(process.argv[process.argv.length - 1])) {
@@ -464,9 +474,9 @@
     }
     var yargs = require('yargs')
         .strict()
-        .usage('RexReplace ' +
+        .usage('RexReplace v' +
         version +
-        ': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
+        '\n\nRegexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
         '> rexreplace pattern replacement [fileGlob|option]+')
         .example("> rexreplace 'Foo' 'xxx' myfile.md", "'foobar' in myfile.md will become 'xxxbar'")
         .example('')
@@ -476,29 +486,21 @@
         .example('')
         .example("> rexreplace '^#' '##' *.md", "All markdown files in this dir got all headlines moved one level deeper")
         .example('')
-        .example("> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' ", "Provide multiple files or glob if needed")
+        .example("> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' ", "Provide multiple files or globs if needed")
         .version('v', 'Print rexreplace version (can be given as only argument)', version)
         .alias('v', 'version')
-        .boolean('V')
-        .describe('V', 'More chatty output')
-        .alias('V', 'verbose')
-        //.conflicts('V', 'q')
-        //.conflicts('V', 'Q')
-        .boolean('L')
-        .describe('L', 'Literal string search (no regex used when searching)')
-        .alias('L', 'literal')
         .boolean('I')
         .describe('I', 'Void case insensitive search pattern.')
         .alias('I', 'void-ignore-case')
         .boolean('G')
         .describe('G', 'Void global search (stop looking after the first match).')
         .alias('G', 'void-global')
-        .boolean('s')
-        .describe('s', 'Have `.` also match newline.')
-        .alias('s', 'dot-all')
         .boolean('M')
         .describe('M', 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.')
         .alias('M', 'void-multiline')
+        .boolean('s')
+        .describe('s', 'Have `.` also match newline.')
+        .alias('s', 'dot-all')
         .boolean('u')
         .describe('u', 'Treat pattern as a sequence of unicode code points.')
         .alias('u', 'unicode')
@@ -509,39 +511,38 @@
         .describe('E', 'What regex engine to use:')
         .choices('E', ['V8' ])
         .default('E', 'V8')
-        .boolean('q')
-        .describe('q', 'Only display errors (no other info)')
-        .alias('q', 'quiet')
-        .boolean('Q')
-        .describe('Q', 'Never display errors or info')
-        .alias('Q', 'quiet-total')
-        .boolean('H')
-        .describe('H', 'Halt on first error')
-        .alias('H', 'halt')
-        .default('H', false)
-        .boolean('d')
-        .describe('d', 'Print debug info')
-        .alias('d', 'debug')
+        .boolean('L')
+        .describe('L', 'Literal string search (no regex used when searching)')
+        .alias('L', 'literal')
         .boolean('€')
         .describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
         .alias('€', 'void-euro')
         .boolean('§')
         .describe('§', "Void having '§' as alias for '\\' in pattern and replacement parameters")
         .alias('§', 'void-section')
-        .boolean('o')
-        .describe('o', 'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.')
-        .alias('o', 'output')
-        //.conflicts('o','O')
         .boolean('A')
         .alias('A', 'void-async')
-        .describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. " +
-        '')
+        .describe('A', "Handle files in a synchronous flow. Good to limit memory usage when handling large files. ")
+        .boolean('H')
+        .describe('H', 'Halt on first error')
+        .alias('H', 'halt')
+        .default('H', false)
+        .boolean('q')
+        .describe('q', 'Only display errors (no other info)')
+        .alias('q', 'quiet')
+        .boolean('Q')
+        .describe('Q', 'Never display errors or info')
+        .alias('Q', 'quiet-total')
         .boolean('B')
-        .describe('B', 'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is halted.')
+        .describe('B', 'Avoid temporary backing up files. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is forced closed.')
         .alias('B', 'void-backup')
         .boolean('b')
-        .describe('b', 'Keep a backup file of the original content.')
+        .describe('b', 'Keep the backup file with the original content.')
         .alias('b', 'keep-backup')
+        .boolean('o')
+        .describe('o', 'Output the final result instead of saving to file. Will output the full content even if no replacement has taken place.')
+        .alias('o', 'output')
+        //.conflicts('o','O')
         .boolean('m')
         .describe('m', "Output each match on a new line. " +
         "Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. " +
@@ -556,14 +557,34 @@
         '')
         .boolean('R')
         .alias('R', 'replacement-pipe')
-        .describe('R', "Replacement will be piped in. You still need to provide a dummy value (like `_`) as replacement parameter." +
-        '')
+        .describe('R', "Replacement is being piped in. You still need to provide a dummy value (like `_`) as replacement parameter.")
+        .conflicts('R', 'g')
+        .conflicts('R', 'G')
+        .boolean('g')
+        .describe('g', 'Filename/globs will be piped in. If filename/globs are provided in command (-X flags are ok) the execution will halt')
+        .alias('g', 'glob-pipe')
+        .conflicts('g', 'G')
+        /*    .boolean('G')
+        .describe('G', "filename/globs provided are to files containing one target filename/glob per line")
+        .alias('G', 'glob-file')
+        .conflicts('G','g')*/
+        .boolean('S')
+        .describe('S', 'Simulate output without changing any files')
+        .alias('S', 'simulate')
         .string('x')
         .describe('x', 'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.')
         .alias('x', 'exclude-re')
         .string('X')
         .describe('X', 'Exclude files found with this glob. Can be used multiple times.')
         .alias('X', 'exclude-glob')
+        .boolean('V')
+        .describe('V', 'More chatty output')
+        .alias('V', 'verbose')
+        .boolean('d')
+        .describe('d', 'Print debug info')
+        .alias('d', 'debug')
+        //.conflicts('V', 'q')
+        //.conflicts('V', 'Q')
         /*
         
         
@@ -586,10 +607,10 @@
             .alias('p', 'pattern-file')
         
 
-        .boolean('R')
-            .alias('R', 'replacement-file')
-            .describe('R',
-                `Replacement is the path to a filename containing the replacement`.`Will be followed by other all rules (like -€)`
+        .boolean('r')
+            .alias('r', 'replacement-file')
+            .describe('r',
+                `Replacement is the path to a filename containing the replacement`.`Will run before any other rules (like -€)`
             )
 
 
@@ -606,13 +627,6 @@
 
 
        
-        .boolean('G')
-            .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
-            .alias('G', 'globs-file')
-
-        .boolean('g')
-            .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
-            .alias('g', 'glob-pipe')
 
 
         .boolean('J')
@@ -627,7 +641,7 @@
         */
         .boolean('j')
         .alias('j', 'replacement-js')
-        .describe('j', "Treat replacement as javascript source code. \n\tThe statement from the last expression will become the replacement string. \n\tPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. \n\tThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \n\tAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \n\tIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\t\n\tThe code has access to the following variables: \n\t`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n\t`fs` from node, \n\t`path` from node, \n\t`globs` from npm, \n\t`pipe`: the data piped into the command (null if no piped data), \n\t`find`: pattern searched for (the needle), \n\t`text`: full text being searched i.e. file content or piped data (the haystack), \n\t`bytes`: total size of the haystack in bytes, \n\t`size`: human-friendly representation of the total size of the haystack, \n\t`time`: String representing the local time when the command was invoked,\n\t`time_obj`: date object representing `time`,\n\t`now`: alias for `time`,\n\t`cwd`: current process working dir, \n\t`nl`: a new-line char,\n\t`_`: a single space char (for easy string concatenation).\n\t\n\tThe following values defaults to `❌` if haystack does not originate from a file:\n\t`file`: contains the full path of the active file being searched (including full filename), \n\t`file_rel`: contains `file` relative to current process working dir, \n\t`dirpath`: contains the full path without filename of the active file being searched, \n\t`dirpath_rel`: contains `dirpath` relative to current process working dir, \n\t`filename`: is the full filename of the active file being searched without path, \n\t`name`: filename of the active file being searched with no extension, \n\t`ext`: extension of the filename including leading dot, \n\t`mtime`: ISO inspired representation of the last local modification time of the current file, \n\t`ctime`: ISO representation of the local creation time of the current file. \n\t`mtime_obj`: date object representing `mtime`, \n\t`ctime_obj`: date object representing `ctime`. \n\t\n\tAll variables, except from module, date objects, `nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n\t")
+        .describe('j', "Treat replacement as javascript source code. \n\tThe statement from the last expression will become the replacement string. \n\tPurposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted party. \n\tThe full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \n\tAt some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \n\tIf the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\t\n\tThe code has access to the following variables: \n\t`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n\t`fs` from node, \n\t`path` from node, \n\t`glob` proxy name for the .sync function of fast-glob from npm, \n\t`pipe`: the data piped into the command (null if no piped data), \n\t`find`: pattern searched for (the needle), \n\t`text`: full text being searched i.e. file content or piped data (the haystack), \n\t`bytes`: total size of the haystack in bytes, \n\t`size`: human-friendly representation of the total size of the haystack, \n\t`time`: String representing the local time when the command was invoked,\n\t`time_obj`: date object representing `time`,\n\t`now`: alias for `time`,\n\t`cwd`: current process working dir, \n\t`nl`: a new-line char,\n\t`_`: a single space char (for easy string concatenation).\n\t\n\tThe following values defaults to `❌` if haystack does not originate from a file:\n\t`file`: contains the full path of the active file being searched (including full filename), \n\t`file_rel`: contains `file` relative to current process working dir, \n\t`dirpath`: contains the full path without filename of the active file being searched, \n\t`dirpath_rel`: contains `dirpath` relative to current process working dir, \n\t`filename`: is the full filename of the active file being searched without path, \n\t`name`: filename of the active file being searched with no extension, \n\t`ext`: extension of the filename including leading dot, \n\t`mtime`: ISO inspired representation of the last local modification time of the current file, \n\t`ctime`: ISO representation of the local creation time of the current file. \n\t`mtime_obj`: date object representing `mtime`, \n\t`ctime_obj`: date object representing `ctime`. \n\t\n\tAll variables, except from module, date objects, `nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n\t")
         .help('h')
         .describe('h', 'Display help.')
         .alias('h', 'help')
@@ -636,7 +650,6 @@
         if ( exitcode === void 0 ) exitcode = 1;
 
         yargs.showHelp();
-        //io(help);
         process.exitCode = exitcode;
         process.exit();
     }
@@ -649,39 +662,33 @@
         if (0 < needHelp) {
             return backOut(needHelp - 1);
         }
-        // All options into one big config object for the rexreplace core
-        var config = {};
-        // Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+        // All options into one big config object for the rexreplace engine
+        var conf = {};
+        // Use only camelCase full lenght version of settings
         Object.keys(yargs.argv).forEach(function (key) {
             if (1 < key.length && key.indexOf('-') < 0) {
-                config[key] = yargs.argv[key];
+                conf[key] = yargs.argv[key];
             }
         });
+        conf.pipeData = null;
+        conf.showHelp = yargs.showHelp;
+        conf.pattern = pattern;
+        conf.includeGlob = yargs.argv._;
+        conf.excludeGlob = [].concat( yargs.argv.excludeGlob ).filter(Boolean);
+        conf.excludeRe = [].concat( yargs.argv.excludeRe ).filter(Boolean);
+        if (conf.replacementJs) {
+            conf.replacement = replacement;
+        }
+        else {
+            conf.replacement = unescapeString(replacement);
+        }
         var pipeInUse = false;
         var pipeData = '';
-        config.pipedData = null;
-        config.showHelp = yargs.showHelp;
-        config.pattern = pattern;
-        config.includeGlob = yargs.argv._;
-        config.excludeGlob = [].concat( yargs.argv.excludeGlob ).filter(Boolean);
-        config.excludeRe = [].concat( yargs.argv.excludeRe ).filter(Boolean);
-        if (config.replacementJs) {
-            config.replacement = replacement;
-        }
-        else {
-            config.replacement = unescapeString(replacement);
-        }
-        /*if(Boolean(process.stdout.isTTY)){
-            config.output = true;
-        }*/
         if (Boolean(process.stdin.isTTY)) {
-            if (config.replacementPipe) {
-                return backOut();
-            }
-            engine(config);
+            engine(conf);
         }
         else {
-            process.stdin.setEncoding(config.encoding);
+            process.stdin.setEncoding(conf.encoding);
             process.stdin.on('readable', function () {
                 var chunk = process.stdin.read();
                 if (null !== chunk) {
@@ -697,9 +704,9 @@
                     if (yargs.argv.trimPipe) {
                         pipeData = pipeData.trim();
                     }
-                    config.pipedData = pipeData;
+                    conf.pipeData = pipeData;
                 }
-                engine(config);
+                engine(conf);
             });
         }
     })();

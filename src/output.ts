@@ -13,7 +13,10 @@ export const info = function (msg, data = '') {
 	if (config.quiet || config.quietTotal) {
 		return;
 	}
-	console.error(font.gray(msg), data);
+	if (config.output || config.outputMatch)
+		return console.error.apply(this, [font.gray(msg), data].filter(Boolean));
+
+	console.log.apply(this, [msg, data].filter(Boolean));
 };
 
 export const chat = function (msg, data = '') {
@@ -34,7 +37,7 @@ export const die = function (msg = '', data = '', displayHelp = false) {
 
 export const error = function (msg, data = '') {
 	if (!config.quiet && !config.quietTotal) {
-		console.error(font.red(msg), data);
+		console.error.apply(this, [font.red(msg), data].filter(Boolean));
 	}
 	if (config.halt) {
 		kill(msg);

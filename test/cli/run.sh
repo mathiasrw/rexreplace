@@ -20,7 +20,7 @@ source $DIR/aserta.sh
 # assert_end "example"
 
 reset() {
-		echo 'Resetting testdata'
+		echo 'Reset test data'
         echo 'foobar' > my.file
         echo 'abc123' > your.file
 }
@@ -67,6 +67,9 @@ assert_success		"rexreplace -help"
 # -o
 reset
 assert		 		"rexreplace x x my.file --output"    "foobar"
+
+assert_end 			"rexreplace"
+exit 
 
 reset
 assert		 		"rexreplace o x my.file --output"    "fxxbar"
@@ -208,7 +211,6 @@ assert		 		"rexreplace 'foobar' '[require, fs, globs, path, pipe, pipe_, find, f
 reset
 assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
 
-
 	
 
 # -L
@@ -237,6 +239,7 @@ assert		 		"cat my.file"    					'foo*+*ar'
 assert		 		"cat your.file"    					'abc123'
 
 
+
 # -X
 reset
 					rexreplace 'b' '*+*' '*.file' -X '*.file'
@@ -248,6 +251,12 @@ assert		 		"cat my.file"    					'foo*+*ar'
 assert		 		"cat your.file"    					'abc123'
 
 
+
+# -S
+reset
+					rexreplace 'b' '_' 'my.file' -S &> 'your.file'
+assert				"cat your.file"    'my.file'
+assert		 		"cat 'my.file'"    'foobar'
 
 
 

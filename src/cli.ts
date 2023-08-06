@@ -6,7 +6,7 @@ import * as rexreplace from './engine';
 
 let pattern, replacement;
 
-// To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
+// To avoid problems with patterns or replacements starting with '-' so the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = 0;
 if (process.argv.length < 4) {
 	if (/-v|--?version$/i.test(process.argv[process.argv.length - 1])) {
@@ -26,9 +26,9 @@ const yargs = require('yargs')
 	.strict()
 
 	.usage(
-		'RexReplace ' +
+		'RexReplace v' +
 			rexreplace.version +
-			': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
+			'\n\nRegexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
 			'> rexreplace pattern replacement [fileGlob|option]+'
 	)
 
@@ -49,20 +49,10 @@ const yargs = require('yargs')
 	.example('')
 	.example(
 		`> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' `,
-		`Provide multiple files or glob if needed`
+		`Provide multiple files or globs if needed`
 	)
 	.version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version)
 	.alias('v', 'version')
-
-	.boolean('V')
-	.describe('V', 'More chatty output')
-	.alias('V', 'verbose')
-	//.conflicts('V', 'q')
-	//.conflicts('V', 'Q')
-
-	.boolean('L')
-	.describe('L', 'Literal string search (no regex used when searching)')
-	.alias('L', 'literal')
 
 	.boolean('I')
 	.describe('I', 'Void case insensitive search pattern.')
@@ -72,16 +62,16 @@ const yargs = require('yargs')
 	.describe('G', 'Void global search (stop looking after the first match).')
 	.alias('G', 'void-global')
 
-	.boolean('s')
-	.describe('s', 'Have `.` also match newline.')
-	.alias('s', 'dot-all')
-
 	.boolean('M')
 	.describe(
 		'M',
 		'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.'
 	)
 	.alias('M', 'void-multiline')
+
+	.boolean('s')
+	.describe('s', 'Have `.` also match newline.')
+	.alias('s', 'dot-all')
 
 	.boolean('u')
 	.describe('u', 'Treat pattern as a sequence of unicode code points.')
@@ -96,22 +86,9 @@ const yargs = require('yargs')
 	.choices('E', ['V8' /*'RE2' /*'sd', 'stream'*/])
 	.default('E', 'V8')
 
-	.boolean('q')
-	.describe('q', 'Only display errors (no other info)')
-	.alias('q', 'quiet')
-
-	.boolean('Q')
-	.describe('Q', 'Never display errors or info')
-	.alias('Q', 'quiet-total')
-
-	.boolean('H')
-	.describe('H', 'Halt on first error')
-	.alias('H', 'halt')
-	.default('H', false)
-
-	.boolean('d')
-	.describe('d', 'Print debug info')
-	.alias('d', 'debug')
+	.boolean('L')
+	.describe('L', 'Literal string search (no regex used when searching)')
+	.alias('L', 'literal')
 
 	.boolean('€')
 	.describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
@@ -121,32 +98,44 @@ const yargs = require('yargs')
 	.describe('§', "Void having '§' as alias for '\\' in pattern and replacement parameters")
 	.alias('§', 'void-section')
 
-	.boolean('o')
-	.describe(
-		'o',
-		'Output the final result instead of saving to file. Will also output content even if no replacement has taken place.'
-	)
-	.alias('o', 'output')
-	//.conflicts('o','O')
-
 	.boolean('A')
 	.alias('A', 'void-async')
 	.describe(
 		'A',
-		`Handle files in a synchronous flow. Good to limit memory usage when handling large files. ` +
-			''
+		`Handle files in a synchronous flow. Good to limit memory usage when handling large files. `
 	)
+
+	.boolean('H')
+	.describe('H', 'Halt on first error')
+	.alias('H', 'halt')
+	.default('H', false)
+
+	.boolean('q')
+	.describe('q', 'Only display errors (no other info)')
+	.alias('q', 'quiet')
+
+	.boolean('Q')
+	.describe('Q', 'Never display errors or info')
+	.alias('Q', 'quiet-total')
 
 	.boolean('B')
 	.describe(
 		'B',
-		'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is halted.'
+		'Avoid temporary backing up files. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is forced closed.'
 	)
 	.alias('B', 'void-backup')
 
 	.boolean('b')
-	.describe('b', 'Keep a backup file of the original content.')
+	.describe('b', 'Keep the backup file with the original content.')
 	.alias('b', 'keep-backup')
+
+	.boolean('o')
+	.describe(
+		'o',
+		'Output the final result instead of saving to file. Will output the full content even if no replacement has taken place.'
+	)
+	.alias('o', 'output')
+	//.conflicts('o','O')
 
 	.boolean('m')
 	.describe(
@@ -172,9 +161,27 @@ const yargs = require('yargs')
 	.alias('R', 'replacement-pipe')
 	.describe(
 		'R',
-		`Replacement will be piped in. You still need to provide a dummy value (like \`_\`) as replacement parameter.` +
-			''
+		`Replacement is being piped in. You still need to provide a dummy value (like \`_\`) as replacement parameter.`
 	)
+	.conflicts('R', 'g')
+	.conflicts('R', 'G')
+
+	.boolean('g')
+	.describe(
+		'g',
+		'Filename/globs will be piped in. If filename/globs are provided in command (-X flags are ok) the execution will halt'
+	)
+	.alias('g', 'glob-pipe')
+	.conflicts('g', 'G')
+
+	/*    .boolean('G')
+	.describe('G', "filename/globs provided are to files containing one target filename/glob per line")
+	.alias('G', 'glob-file')
+	.conflicts('G','g')*/
+
+	.boolean('S')
+	.describe('S', 'Simulate output without changing any files')
+	.alias('S', 'simulate')
 
 	.string('x')
 	.describe(
@@ -186,6 +193,17 @@ const yargs = require('yargs')
 	.string('X')
 	.describe('X', 'Exclude files found with this glob. Can be used multiple times.')
 	.alias('X', 'exclude-glob')
+
+	.boolean('V')
+	.describe('V', 'More chatty output')
+	.alias('V', 'verbose')
+
+	.boolean('d')
+	.describe('d', 'Print debug info')
+	.alias('d', 'debug')
+
+	//.conflicts('V', 'q')
+	//.conflicts('V', 'Q')
 
 	/*
     
@@ -209,10 +227,10 @@ const yargs = require('yargs')
         .alias('p', 'pattern-file')
 	
 
-    .boolean('R')
-        .alias('R', 'replacement-file')
-        .describe('R',     
-            `Replacement is the path to a filename containing the replacement`.`Will be followed by other all rules (like -€)`
+    .boolean('r')
+        .alias('r', 'replacement-file')
+        .describe('r',     
+            `Replacement is the path to a filename containing the replacement`.`Will run before any other rules (like -€)`
         )
 
 
@@ -229,13 +247,6 @@ const yargs = require('yargs')
 
 
    
-    .boolean('G')
-        .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
-        .alias('G', 'globs-file')
-
-    .boolean('g')
-        .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
-        .alias('g', 'glob-pipe')
 
 
     .boolean('J')
@@ -255,7 +266,7 @@ const yargs = require('yargs')
 		'j',
 		`Treat replacement as javascript source code. 
 	The statement from the last expression will become the replacement string. 
-	Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. 
+	Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted party. 
 	The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. 
 	At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. 
 	If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
@@ -264,7 +275,7 @@ const yargs = require('yargs')
 	\`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
 	\`fs\` from node, 
 	\`path\` from node, 
-	\`globs\` from npm, 
+	\`glob\` proxy name for the .sync function of fast-glob from npm, 
 	\`pipe\`: the data piped into the command (null if no piped data), 
 	\`find\`: pattern searched for (the needle), 
 	\`text\`: full text being searched i.e. file content or piped data (the haystack), 
@@ -302,7 +313,6 @@ const yargs = require('yargs')
 function backOut(exitcode = 1) {
 	const help = yargs.showHelp();
 	const io = exitcode ? console.error : console.log;
-	//io(help);
 	process.exitCode = exitcode;
 	process.exit();
 }
@@ -316,41 +326,37 @@ function unescapeString(str = '') {
 		return backOut(needHelp - 1);
 	}
 
-	// All options into one big config object for the rexreplace core
-	let config: any = {};
+	// All options into one big config object for the rexreplace engine
+	let conf: any = {};
 
-	// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+	// Use only camelCase full lenght version of settings
 	Object.keys(yargs.argv).forEach((key) => {
 		if (1 < key.length && key.indexOf('-') < 0) {
-			config[key] = yargs.argv[key];
+			conf[key] = yargs.argv[key];
 		}
 	});
+
+	conf.pipeData = null;
+	conf.showHelp = yargs.showHelp;
+	conf.pattern = pattern;
+
+	conf.includeGlob = yargs.argv._;
+	conf.excludeGlob = [...yargs.argv.excludeGlob].filter(Boolean);
+	conf.excludeRe = [...yargs.argv.excludeRe].filter(Boolean);
+
+	if (conf.replacementJs) {
+		conf.replacement = replacement;
+	} else {
+		conf.replacement = unescapeString(replacement);
+	}
 
 	let pipeInUse = false;
 	let pipeData = '';
 
-	config.pipedData = null;
-	config.showHelp = yargs.showHelp;
-	config.pattern = pattern;
-	config.includeGlob = yargs.argv._;
-	config.excludeGlob = [...yargs.argv.excludeGlob].filter(Boolean);
-	config.excludeRe = [...yargs.argv.excludeRe].filter(Boolean);
-	if (config.replacementJs) {
-		config.replacement = replacement;
-	} else {
-		config.replacement = unescapeString(replacement);
-	}
-
-	/*if(Boolean(process.stdout.isTTY)){
-        config.output = true;
-    }*/
 	if (Boolean(process.stdin.isTTY)) {
-		if (config.replacementPipe) {
-			return backOut();
-		}
-		rexreplace.engine(config);
+		rexreplace.engine(conf);
 	} else {
-		process.stdin.setEncoding(config.encoding);
+		process.stdin.setEncoding(conf.encoding);
 
 		process.stdin.on('readable', () => {
 			let chunk = process.stdin.read();
@@ -369,9 +375,10 @@ function unescapeString(str = '') {
 				if (yargs.argv.trimPipe) {
 					pipeData = pipeData.trim();
 				}
-				config.pipedData = pipeData;
+
+				conf.pipeData = pipeData;
 			}
-			rexreplace.engine(config);
+			rexreplace.engine(conf);
 		});
 	}
 })();
