@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const fGlob = require('fast-glob');
+const globs = require('globs');
 
 const now = new Date();
 
@@ -22,8 +23,6 @@ const re = {
 export const version = 'PACKAGE_VERSION';
 
 export function engine(conf: any = {engine: 'V8'}) {
-	conf = handlepipeData(conf);
-
 	outputConfig(conf);
 
 	step('Displaying steps for:');
@@ -39,8 +38,8 @@ export function engine(conf: any = {engine: 'V8'}) {
 
 	step(conf);
 
-	if (null !== conf.pipeData) {
-		return doReplacement('Piped data', conf, conf.pipeData);
+	if (handlepipeData(conf)) {
+		return doReplacement('[pipe-data]', conf, conf.pipeData);
 	}
 
 	conf.files = getFilePaths(conf);
@@ -169,31 +168,44 @@ function doReplacement(filePath: string, conf: any, content: string) {
 }
 
 function handlepipeData(conf) {
-	outputConfig(conf);
-
 	step('Check Piped Data');
 
-	if (conf.replacementPipe) {
-		step('Piping replacement');
-		if (null === conf.pipeData)
-			die('You flagged that replacement will be piped in - but no data arrived.');
+	/*
+	        if (conf.replacementPipe) {
+            step('Piping replacement');
+            if (null === conf.pipeData)
+                { die('You flagged that replacement will be piped in - but no data arrived.'); }
+            conf.replacement = conf.pipeData;
+            conf.pipeData = null;
+        }
+        else if (conf.globPipe) {
+            step('Piping globs');
+            if (conf.includeGlob.length)
+                { die('Please pipe filenames/globs in OR provide as parameters. Not both.'); }
+            if (null === conf.pipeData)
+                { die('You flagged that filenames/globs will be piped in - but no data arrived.'); }
+            conf.globs = conf.pipeData;
+            conf.pipeData = null;
+        }
+        else if (null !== conf.pipeData) {
 
-		conf.replacement = conf.pipeData;
-		conf.pipeData = null;
-	} else if (conf.globPipe) {
-		step('Piping globs');
-		if (conf.includeGlob.length)
-			die('Please pipe filenames/globs in OR provide as parameters. Not both.');
+	*/
 
-		if (null === conf.pipeData)
-			die('You flagged that filenames/globs will be piped in - but no data arrived.');
+	if (conf.includeGlob.length) {
+		if (!conf.replacementJs && conf.pipeData) {
+			chat('Piped data never used.');
+		}
 
-		conf.globs = conf.pipeData;
-		conf.pipeData = null;
-	} else if (null !== conf.pipeData) {
-		conf.output = true;
+		return false;
 	}
-	return conf;
+
+	if (null !== conf.pipeData && !conf.pipeDataUsed) {
+		conf.dataIsPiped = true;
+		conf.output = true;
+		return true;
+	}
+
+	return false;
 }
 
 function getPattern(pattern, conf: any) {
@@ -220,6 +232,15 @@ function getReplacement(replacement, conf: any) {
 	}*/
 
 	replacement = replacePlaceholders(replacement, conf);
+
+	if (conf.replacementPipe) {
+		step('Piping replacement');
+		conf.pipeDataUsed = true;
+		if (null === conf.pipeData) {
+			return die('No data piped into replacement');
+		}
+		replacement = conf.pipeData;
+	}
 
 	if (conf.outputMatch) {
 		step('Output match');
@@ -344,13 +365,13 @@ function readableSize(size) {
 	);
 }
 
-function dynamicReplacement(path, conf, content) {
+function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	const _time_obj = now;
 	const _time = localTimeString(_time_obj);
-	const _pipe = conf.pipeData,
-		_text = content,
-		_find = conf.pattern,
-		code_rr = conf.replacementOri,
+	const _pipe = _config_rr.pipeData,
+		_text = _data_rr,
+		_find = _config_rr.pattern,
+		code_rr = _config_rr.replacementOri,
 		_cwd = process.cwd(),
 		_now = _time,
 		_ = ' ',
@@ -374,7 +395,7 @@ function dynamicReplacement(path, conf, content) {
 		dynamicContent = new Function(
 			'require',
 			'fs',
-			'glob',
+			'globs',
 			'path',
 
 			'pipe',
@@ -441,11 +462,11 @@ function dynamicReplacement(path, conf, content) {
 			'return eval(__code_rr);'
 		);
 
-	const needsByteOrSize = re.byteOrSize.test(conf.replacement);
+	const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
 	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
 
-	if (!conf.pipeData) {
-		_file = path.normalize(path.join(_cwd, path));
+	if (!_config_rr.dataIsPiped) {
+		_file = path.normalize(path.join(_cwd, _file_rr));
 		_file_rel = path.relative(_cwd, _file);
 		const pathInfo = path.parse(_file);
 		_dirpath = pathInfo.dir;
@@ -455,7 +476,7 @@ function dynamicReplacement(path, conf, content) {
 		_name = pathInfo.name;
 		_ext = pathInfo.ext;
 
-		if (betterToReadfromFile || re.mctime.test(conf.replacement)) {
+		if (betterToReadfromFile || re.mctime.test(_config_rr.replacement)) {
 			const fileStats = fs.statSync(_file);
 			_bytes = fileStats.size;
 			_size = readableSize(_bytes);
@@ -477,13 +498,13 @@ function dynamicReplacement(path, conf, content) {
 	const glob = (a, b) =>
 		fGlob.sync(a, {
 			unique: true,
-			caseSensitiveMatch: !conf.voidIgnoreCase,
+			caseSensitiveMatch: !_config_rr.voidIgnoreCase,
 			dot: true,
 			...b,
 		});
 
 	// Run only once if no captured groups (replacement cant change)
-	if (!/\$\d/.test(conf.replacement)) {
+	if (!/\$\d/.test(_config_rr.replacement)) {
 		return dynamicContent(
 			require,
 			fs,

@@ -68,9 +68,6 @@ assert_success		"rexreplace -help"
 reset
 assert		 		"rexreplace x x my.file --output"    "foobar"
 
-assert_end 			"rexreplace"
-exit 
-
 reset
 assert		 		"rexreplace o x my.file --output"    "fxxbar"
 
