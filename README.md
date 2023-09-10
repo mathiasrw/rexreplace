@@ -275,7 +275,7 @@ All CLI end to end tests are defined in [test/cli/run.sh](https://github.com/mat
 > npm test
 ```
 
-### Speed
+## Performance
 
 _**tl;dr**:_ 
 _Files over 5 Mb are faster with `rr` than with `sed` - but - it does not matter as any file under 25 Mb has less than 0.7 seconds in difference._
@@ -312,6 +312,38 @@ So even though the speed evolves very differently, there is only little practica
 
 Please note that speeds might look very different when files get as large as the memory available. 
 
+Sure, I can help sharpen up the text for better clarity and impact. While I don't have specific knowledge about the rexreplace project, I understand the general idea conveyed in the text. Here's a revised version:
+
+---
+
+### Tips and Tricks for Performance
+
+It is much more time expensive to read lots of files, than to have a long search regex. 
+
+> **Illustrative Anecdote Time**
+> 
+> Say you've got a bunch of files you want to duplicate, but you also have a list of keys that need to be unique across all the duplicated files. One way to do this is to add `_v2` to each key in the duplicate files.
+>
+> Using rexreplace for each individual key would be the "default" approach. In a real-world example with 5,000 keys and 10,000 files, this method took 57 minutes. The slow part is that each of the 10,000 files is opened and read 5,000 times plus opening node 5000 times.
+>
+> Doing the same task, but with all the keys bundled into a single long search regex using a `(key1|key2|key3|...)` format it only took 2.14 seconds! Even though this creates an nasty 300Kb search regex string, it’s way faster.
+>
+> ```
+> > rexreplace key1 key1_v2 src/v2/**/*.*
+> > rexreplace key2 key2_v2 src/v2/**/*.*
+> > rexreplace key3 key3_v2 src/v2/**/*.*
+> ...
+> > rexreplace key5000 key5000_v2 src/v2/**/*.*
+> => 57 minutes
+>  
+> > rexreplace '(key1|key2|key3|...|key5000)' €1_v2 src/v2/**/*.*
+> => 2.14 seconds
+> ```
+> Moral: Choose the right approach might save you time...
+
+
+
+
 ## Rumours
 
 ### Inspiration
@@ -328,6 +360,7 @@ _.oO(What should "sed" have looked like by now?)_
 - Let search and replace be within the names of the files (ask for overwriting. -Y = no questions)
 - Let search and replace be within the path of the files (ask for overwriting. -Y = no questions)
 - Let pattern and globs be piped
+- Let pipe be placed into search or replace. 
 - Let Pattern, replacement, and globs come from a file
 - Let pattern and glob be javascript code returning a string as the result
 - Auto string search / replace if no regex magic is used (and verify that speed is better)

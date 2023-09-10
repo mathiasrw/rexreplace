@@ -23,6 +23,8 @@ const re = {
 export const version = 'PACKAGE_VERSION';
 
 export function engine(conf: any = {engine: 'V8'}) {
+	conf = handlePipeData(conf);
+
 	outputConfig(conf);
 
 	step('Displaying steps for:');
@@ -38,7 +40,7 @@ export function engine(conf: any = {engine: 'V8'}) {
 
 	step(conf);
 
-	if (handlepipeData(conf)) {
+	if (conf.contentWasPiped) {
 		return doReplacement('[pipe-data]', conf, conf.pipeData);
 	}
 
@@ -167,45 +169,34 @@ function doReplacement(filePath: string, conf: any, content: string) {
 	});
 }
 
-function handlepipeData(conf) {
+function handlePipeData(conf) {
+	outputConfig(conf);
+
 	step('Check Piped Data');
 
-	/*
-	        if (conf.replacementPipe) {
-            step('Piping replacement');
-            if (null === conf.pipeData)
-                { die('You flagged that replacement will be piped in - but no data arrived.'); }
-            conf.replacement = conf.pipeData;
-            conf.pipeData = null;
-        }
-        else if (conf.globPipe) {
-            step('Piping globs');
-            if (conf.includeGlob.length)
-                { die('Please pipe filenames/globs in OR provide as parameters. Not both.'); }
-            if (null === conf.pipeData)
-                { die('You flagged that filenames/globs will be piped in - but no data arrived.'); }
-            conf.globs = conf.pipeData;
-            conf.pipeData = null;
-        }
-        else if (null !== conf.pipeData) {
-
-	*/
-
-	if (conf.includeGlob.length) {
-		if (!conf.replacementJs && conf.pipeData) {
-			chat('Piped data never used.');
+	if (conf.replacementPipe) {
+		step('Piping replacement');
+		if (null === conf.pipeData) {
+			die('You flagged that replacement will be piped in - but no data arrived.');
 		}
-
-		return false;
-	}
-
-	if (null !== conf.pipeData && !conf.pipeDataUsed) {
-		conf.dataIsPiped = true;
+		conf.replacement = conf.pipeData;
+		if (!conf.replacementJs) conf.pipeData = null;
+	} else if (conf.globPipe) {
+		step('Piping globs');
+		if (conf.includeGlob.length) {
+			die('Please pipe file/globs OR provide as parameters. Not both.');
+		}
+		if (null === conf.pipeData) {
+			die('You flagged that filenames/globs will be piped in - but no data arrived.');
+		}
+		conf.globs = conf.pipeData;
+		if (!conf.replacementJs) conf.pipeData = null;
+	} else if (null !== conf.pipeData) {
+		conf.contentWasPiped = true;
 		conf.output = true;
-		return true;
 	}
 
-	return false;
+	return conf;
 }
 
 function getPattern(pattern, conf: any) {

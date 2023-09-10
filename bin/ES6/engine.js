@@ -16,6 +16,7 @@ const re = {
 };
 export const version = 'PACKAGE_VERSION';
 export function engine(conf = { engine: 'V8' }) {
+    conf = handlePipeData(conf);
     outputConfig(conf);
     step('Displaying steps for:');
     step(conf);
@@ -24,7 +25,7 @@ export function engine(conf = { engine: 'V8' }) {
     conf.replacementOri = conf.replacement;
     conf.regex = getRegex(conf.pattern, conf) || '';
     step(conf);
-    if (handlepipeData(conf)) {
+    if (conf.contentWasPiped) {
         return doReplacement('[pipe-data]', conf, conf.pipeData);
     }
     conf.files = getFilePaths(conf);
@@ -133,20 +134,35 @@ function doReplacement(filePath, conf, content) {
         });
     });
 }
-function handlepipeData(conf) {
+function handlePipeData(conf) {
+    outputConfig(conf);
     step('Check Piped Data');
-    if (conf.includeGlob.length) {
-        if (!conf.replacementJs && conf.pipeData) {
-            chat('Piped data never used.');
+    if (conf.replacementPipe) {
+        step('Piping replacement');
+        if (null === conf.pipeData) {
+            die('You flagged that replacement will be piped in - but no data arrived.');
         }
-        return false;
+        conf.replacement = conf.pipeData;
+        if (!conf.replacementJs)
+            conf.pipeData = null;
     }
-    if (null !== conf.pipeData && !conf.pipeDataUsed) {
-        conf.dataIsPiped = true;
+    else if (conf.globPipe) {
+        step('Piping globs');
+        if (conf.includeGlob.length) {
+            die('Please pipe file/globs OR provide as parameters. Not both.');
+        }
+        if (null === conf.pipeData) {
+            die('You flagged that filenames/globs will be piped in - but no data arrived.');
+        }
+        conf.globs = conf.pipeData;
+        if (!conf.replacementJs)
+            conf.pipeData = null;
+    }
+    else if (null !== conf.pipeData) {
+        conf.contentWasPiped = true;
         conf.output = true;
-        return true;
     }
-    return false;
+    return conf;
 }
 function getPattern(pattern, conf) {
     step('Get final pattern');
