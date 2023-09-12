@@ -23,8 +23,6 @@ const re = {
 export const version = 'PACKAGE_VERSION';
 
 export function engine(conf: any = {engine: 'V8'}) {
-	conf = handlePipeData(conf);
-
 	outputConfig(conf);
 
 	step('Displaying steps for:');
@@ -40,13 +38,13 @@ export function engine(conf: any = {engine: 'V8'}) {
 
 	step(conf);
 
-	if (conf.contentWasPiped) {
-		return doReplacement('[pipe-data]', conf, conf.pipeData);
-	}
-
 	conf.files = getFilePaths(conf);
 
 	if (!conf.files.length) {
+		if (conf.contentWasPiped) {
+			return doReplacement('[pipe-data]', conf, conf.pipeData);
+		}
+
 		return error(conf.files.length + ' files found');
 	}
 
@@ -55,8 +53,6 @@ export function engine(conf: any = {engine: 'V8'}) {
 	step(conf);
 
 	conf.files
-		// Correct filepath
-		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
 		// Find out if any filepaths are invalid
 		.filter((filepath) => (fs.statSync(filepath).isFile() ? true : error('Not a file:', filepath)))
 
@@ -75,7 +71,6 @@ function openFile(file, conf) {
 			if (err) {
 				return error(err);
 			}
-
 			return doReplacement(file, conf, data);
 		});
 	}
@@ -100,6 +95,7 @@ function doReplacement(filePath: string, conf: any, content: string) {
 
 	if (conf.output) {
 		debug('Output result from: ' + filePath);
+
 		return process.stdout.write(result);
 	}
 
@@ -169,36 +165,6 @@ function doReplacement(filePath: string, conf: any, content: string) {
 	});
 }
 
-function handlePipeData(conf) {
-	outputConfig(conf);
-
-	step('Check Piped Data');
-
-	if (conf.replacementPipe) {
-		step('Piping replacement');
-		if (null === conf.pipeData) {
-			die('You flagged that replacement will be piped in - but no data arrived.');
-		}
-		conf.replacement = conf.pipeData;
-		if (!conf.replacementJs) conf.pipeData = null;
-	} else if (conf.globPipe) {
-		step('Piping globs');
-		if (conf.includeGlob.length) {
-			die('Please pipe file/globs OR provide as parameters. Not both.');
-		}
-		if (null === conf.pipeData) {
-			die('You flagged that filenames/globs will be piped in - but no data arrived.');
-		}
-		conf.globs = conf.pipeData;
-		if (!conf.replacementJs) conf.pipeData = null;
-	} else if (null !== conf.pipeData) {
-		conf.contentWasPiped = true;
-		conf.output = true;
-	}
-
-	return conf;
-}
-
 function getPattern(pattern, conf: any) {
 	step('Get final pattern');
 	pattern = replacePlaceholders(pattern, conf);
@@ -223,15 +189,6 @@ function getReplacement(replacement, conf: any) {
 	}*/
 
 	replacement = replacePlaceholders(replacement, conf);
-
-	if (conf.replacementPipe) {
-		step('Piping replacement');
-		conf.pipeDataUsed = true;
-		if (null === conf.pipeData) {
-			return die('No data piped into replacement');
-		}
-		replacement = conf.pipeData;
-	}
 
 	if (conf.outputMatch) {
 		step('Output match');
@@ -258,7 +215,6 @@ function getReplacement(replacement, conf: any) {
 	}
 
 	// If captured groups then run dynamicly
-	//console.log(process);
 	if (
 		conf.replacementJs &&
 		re.capturedGroupRef.test(conf.replacement) &&
@@ -456,7 +412,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
 	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
 
-	if (!_config_rr.dataIsPiped) {
+	if (!_config_rr.contentWasPiped) {
 		_file = path.normalize(path.join(_cwd, _file_rr));
 		_file_rel = path.relative(_cwd, _file);
 		const pathInfo = path.parse(_file);
@@ -475,9 +431,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_ctime_obj = fileStats.ctime;
 			_mtime = localTimeString(_mtime_obj);
 			_ctime = localTimeString(_ctime_obj);
-
-			//console.log('filesize: ', fileStats.size);
-			//console.log('dataSize: ', _bytes);
 		}
 	}
 

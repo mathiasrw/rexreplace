@@ -16,7 +16,6 @@ const re = {
 };
 export const version = 'PACKAGE_VERSION';
 export function engine(conf = { engine: 'V8' }) {
-    conf = handlePipeData(conf);
     outputConfig(conf);
     step('Displaying steps for:');
     step(conf);
@@ -25,18 +24,16 @@ export function engine(conf = { engine: 'V8' }) {
     conf.replacementOri = conf.replacement;
     conf.regex = getRegex(conf.pattern, conf) || '';
     step(conf);
-    if (conf.contentWasPiped) {
-        return doReplacement('[pipe-data]', conf, conf.pipeData);
-    }
     conf.files = getFilePaths(conf);
     if (!conf.files.length) {
+        if (conf.contentWasPiped) {
+            return doReplacement('[pipe-data]', conf, conf.pipeData);
+        }
         return error(conf.files.length + ' files found');
     }
     chat(conf.files.length + ' files found');
     step(conf);
     conf.files
-        // Correct filepath
-        //.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
         // Find out if any filepaths are invalid
         .filter((filepath) => (fs.statSync(filepath).isFile() ? true : error('Not a file:', filepath)))
         // Do the replacement
@@ -134,36 +131,6 @@ function doReplacement(filePath, conf, content) {
         });
     });
 }
-function handlePipeData(conf) {
-    outputConfig(conf);
-    step('Check Piped Data');
-    if (conf.replacementPipe) {
-        step('Piping replacement');
-        if (null === conf.pipeData) {
-            die('You flagged that replacement will be piped in - but no data arrived.');
-        }
-        conf.replacement = conf.pipeData;
-        if (!conf.replacementJs)
-            conf.pipeData = null;
-    }
-    else if (conf.globPipe) {
-        step('Piping globs');
-        if (conf.includeGlob.length) {
-            die('Please pipe file/globs OR provide as parameters. Not both.');
-        }
-        if (null === conf.pipeData) {
-            die('You flagged that filenames/globs will be piped in - but no data arrived.');
-        }
-        conf.globs = conf.pipeData;
-        if (!conf.replacementJs)
-            conf.pipeData = null;
-    }
-    else if (null !== conf.pipeData) {
-        conf.contentWasPiped = true;
-        conf.output = true;
-    }
-    return conf;
-}
 function getPattern(pattern, conf) {
     step('Get final pattern');
     pattern = replacePlaceholders(pattern, conf);
@@ -183,14 +150,6 @@ function getReplacement(replacement, conf) {
         return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
     }*/
     replacement = replacePlaceholders(replacement, conf);
-    if (conf.replacementPipe) {
-        step('Piping replacement');
-        conf.pipeDataUsed = true;
-        if (null === conf.pipeData) {
-            return die('No data piped into replacement');
-        }
-        replacement = conf.pipeData;
-    }
     if (conf.outputMatch) {
         step('Output match');
         if (parseInt(process.versions.node) < 6) {
@@ -211,7 +170,6 @@ function getReplacement(replacement, conf) {
         };
     }
     // If captured groups then run dynamicly
-    //console.log(process);
     if (conf.replacementJs &&
         re.capturedGroupRef.test(conf.replacement) &&
         parseInt(process.versions.node) < 6) {
@@ -310,7 +268,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
         'return eval(__code_rr);');
     const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
     const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
-    if (!_config_rr.dataIsPiped) {
+    if (!_config_rr.contentWasPiped) {
         _file = path.normalize(path.join(_cwd, _file_rr));
         _file_rel = path.relative(_cwd, _file);
         const pathInfo = path.parse(_file);
@@ -328,8 +286,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
             _ctime_obj = fileStats.ctime;
             _mtime = localTimeString(_mtime_obj);
             _ctime = localTimeString(_ctime_obj);
-            //console.log('filesize: ', fileStats.size);
-            //console.log('dataSize: ', _bytes);
         }
     }
     if (needsByteOrSize && -1 === _bytes) {

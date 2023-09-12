@@ -1,0 +1,4 @@
+"1 files found"
+"Open async: my.file"
+"Work on content from: my.file"
+"Output result from: my.file"

@@ -19,8 +19,11 @@ source $DIR/aserta.sh
 # 
 # assert_end "example"
 
+counter=0
+
 reset() {
-		echo 'Reset test data'
+		counter=$((counter + 1))
+		echo "$counter: Resetting test data"
         echo 'foobar' > my.file
         echo 'abc123' > your.file
 }
@@ -31,6 +34,8 @@ reset() {
 reset
 rexreplace x x my.file
 assert		 		"cat my.file"    "foobar"
+
+
 
 reset
 rexreplace o x my.file
@@ -70,6 +75,22 @@ assert		 		"rexreplace x x my.file --output"    "foobar"
 
 reset
 assert		 		"rexreplace o x my.file --output"    "fxxbar"
+
+reset
+rexreplace o x my.file --output > stdout.log 2> stderr.log
+assert		 		"cat my.file"   		"foobar"
+assert		 		"cat stdout.log"    	"my.file"
+assert		 		"cat stderr.log"    	""
+
+reset
+rexreplace o x my.file > stdout.log 2> stderr.log
+assert		 		"cat my.file"   		"fxxbar"
+assert		 		"cat stdout.log"    	"my.file"
+assert		 		"cat stderr.log"    	""
+rm stdout.log
+rm stderr.log
+
+
 
 
 # -E 
@@ -139,8 +160,9 @@ assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' my.file -o"    "barfoo"
 
 # globs
 reset
-echo foobar >> my_file
-assert		 		"rexreplace o x my*le -o"    "fxxbar\nfxxbar"
+echo foobar > my_file
+assert		 		"rexreplace o x my*file -o"    "fxxbar\nfxxbar"
+assert		 		"cat my.file"    "foobar"
 rm my_file
 
 
@@ -187,11 +209,11 @@ assert		 		"rexreplace 'fo(o)bar' '[!!fs,!!globs,find,text.trim()].join(\":\")' 
 
 
 reset
-assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpath,'filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" -o --replacement-js"    'file:❌:dirpath:❌:filename:❌:name:❌:ext:❌:text:foobar'
+assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpath,'filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join('|')\" -o --replacement-js"    'file:❌|dirpath:❌|filename:❌|name:❌|ext:❌|text:foobar'
 
 
 reset
-assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
+assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join('|')\" my.file -o --replacement-js"    'filename:my.file|name:my|ext:.file|text:foobar'
 
 reset
 assert		 		"rexreplace 'foo((b)ar)' '€1+€2' my.file -o --replacement-js"    'barb'
@@ -254,6 +276,7 @@ reset
 					rexreplace 'b' '_' 'my.file' -S &> 'your.file'
 assert				"cat your.file"    'my.file'
 assert		 		"cat 'my.file'"    'foobar'
+
 
 
 
