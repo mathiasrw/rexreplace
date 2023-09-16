@@ -248,10 +248,10 @@
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.1.tgz#aa22750962f3bf0e79d753d3cc067f010c95f194"
   integrity sha512-LG4opVs2ANWZ1TJoKc937iMmNstM/d0ae1vNbnBvBhqCSezgVUOzcLCqbI5elV8Vy6WKwKjaqR+zO9VKirBBCA==
 
-"@types/node@20.6.0":
-  version "20.6.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.6.0.tgz#9d7daa855d33d4efec8aea88cd66db1c2f0ebe16"
-  integrity sha512-najjVq5KN2vsH2U/xyh2opaSEz6cZMR2SetLIlxlj08nOcmPOemJmUK2o4kUzfLqfrWE0PIrNeE16XhYDd3nqg==
+"@types/node@20.6.1":
+  version "20.6.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.6.1.tgz#8b589bba9b2af0128796461a0979764562687e6f"
+  integrity sha512-4LcJvuXQlv4lTHnxwyHQZ3uR9Zw2j7m1C9DfuwoTFQQP4Pmu04O6IfLYgMmHoOCt0nosItLLZAH+sOrRE0Bo8g==
 
 "@types/resolve@1.20.2":
   version "1.20.2"
