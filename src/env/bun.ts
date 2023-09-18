@@ -2,13 +2,13 @@
 
 /// <reference types="bun-types" />
 
-import * as yargs from 'yargs';
+import {executeReplacement, cli2conf} from '../cli.js';
+
+import fs from 'fs-extra';
 
 export const runtime: Runtime = {
-	fileReadSync: async (path, encoding = 'utf8') => {
-		const file = Bun.file(path);
-		return await file.text();
-	},
+	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, {encoding}),
+
 	fileReadAsync: async (path, encoding = 'utf8') => {
 		const file = Bun.file(path);
 		return file.text();
@@ -21,8 +21,8 @@ export const runtime: Runtime = {
 		return Bun.write(path, data);
 	},
 
-	fileDeleteSync: ioFn_node.fileDeleteSync,
-	fileDeleteAsync: ioFn_node.fileDeleteAsync,
+	fileDeleteSync: (path) => fs.unlinkSync(path),
+	fileDeleteAsync: (path) => fs.unlink(path),
 
 	fileCopySync: async (originalPath, destinationPath) => {
 		const input = Bun.file(originalPath);
@@ -34,9 +34,29 @@ export const runtime: Runtime = {
 		const output = Bun.file(destinationPath);
 		return Bun.write(output, input);
 	},
+	exit: process.exit,
 };
 
-import {executeReplacement, cli2conf} from '../cli.js';
-import {Runtime} from '../types.js';
+(() => {
+	let conf = cli2conf(runtime, process.argv.slice(2));
 
-executeReplacement(cli2conf(process.argv.slice(2)), {ioFn, yargs, pipeData});
+	if (Boolean(process.stdin.isTTY)) return executeReplacement(runtime, conf);
+
+	process.stdin.setEncoding(conf.encoding);
+
+	let pipeData = '';
+	process.stdin.on('readable', () => {
+		let chunk = process.stdin.read();
+
+		if (null !== chunk) {
+			pipeData += chunk;
+			while ((chunk = process.stdin.read())) {
+				pipeData += chunk;
+			}
+		}
+	});
+
+	process.stdin.on('end', () => {
+		return executeReplacement(runtime, conf, pipeData);
+	});
+})();

@@ -30,13 +30,11 @@ export const runtime: Runtime = {
 
 	process.stdin.setEncoding(conf.encoding);
 
-	let pipeInUse = false;
 	let pipeData = '';
 	process.stdin.on('readable', () => {
 		let chunk = process.stdin.read();
 
 		if (null !== chunk) {
-			pipeInUse = true;
 			pipeData += chunk;
 			while ((chunk = process.stdin.read())) {
 				pipeData += chunk;
@@ -45,6 +43,6 @@ export const runtime: Runtime = {
 	});
 
 	process.stdin.on('end', () => {
-		rexreplace.engine(placePipeData(conf));
+		return executeReplacement(runtime, conf, pipeData);
 	});
 })();

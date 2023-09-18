@@ -13,6 +13,7 @@ export const info = function (msg, data = '') {
 	if (conf.quiet || conf.quietTotal) {
 		return;
 	}
+
 	if (conf.output || conf.outputMatch)
 		return console.error.apply(this, [font.gray(msg), data].filter(Boolean));
 
@@ -32,9 +33,8 @@ export const error = function (msg, data = '') {
 		return die(msg, data);
 	}
 	if (!conf.quietTotal) {
-		console.error.apply(this, [' ❌',font.red(msg), data].filter(Boolean));
+		console.error.apply(this, [' ❌', font.red(msg), data].filter(Boolean));
 	}
-
 
 	return false;
 };
@@ -47,7 +47,7 @@ export const die = function (msg = '', data = '', displayHelp = false) {
 	kill();
 };
 
-export function debug(data) {
+export function debug(...data) {
 	if (conf.debug) {
 		console.error(font.gray(JSON.stringify(data, null, 4)));
 	}

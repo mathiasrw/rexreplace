@@ -22,7 +22,11 @@ const re = {
 
 export const version = 'PACKAGE_VERSION';
 
-export function engine(runtime: Runtime, conf: any = {engine: 'V8'}) {
+let runtime: Runtime;
+
+export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
+	runtime = _runtime;
+
 	outputConfig(conf);
 
 	step('Displaying steps for:');
@@ -32,7 +36,7 @@ export function engine(runtime: Runtime, conf: any = {engine: 'V8'}) {
 
 	conf.replacement = getReplacement(conf.replacement, conf) || '';
 
-	conf.replacementOri = conf.replacement;
+	if (conf.replacementJs) conf.replacementOri = conf.replacement;
 
 	conf.regex = getRegex(conf.pattern, conf) || '';
 
@@ -54,7 +58,14 @@ export function engine(runtime: Runtime, conf: any = {engine: 'V8'}) {
 
 	conf.files
 		// Find out if any filepaths are invalid
-		.filter((filepath) => (fs.statSync(filepath).isFile() ? true : error('Not a file:', filepath)))
+		.filter((filepath) => {
+			if (fs.statSync(filepath).isFile()) {
+				return true;
+			}
+
+			debug('Not a valid file:', filepath);
+			return false;
+		})
 
 		// Do the replacement
 		.forEach((filepath) => openFile(filepath, conf));
@@ -63,17 +74,18 @@ export function engine(runtime: Runtime, conf: any = {engine: 'V8'}) {
 function openFile(file, conf) {
 	if (conf.voidAsync) {
 		chat('Open sync: ' + file);
-		var data = fs.readFileSync(file, conf.encoding);
+		var data = runtime.fileReadSync(file, conf.encoding);
 		return doReplacement(file, conf, data);
-	} else {
-		chat('Open async: ' + file);
-		fs.readFile(file, conf.encoding, function (err, data) {
-			if (err) {
-				return error(err);
-			}
-			return doReplacement(file, conf, data);
-		});
 	}
+
+	chat('Open async: ' + file);
+
+	fs.readFile(file, conf.encoding, function (err, data) {
+		if (err) {
+			return error(err);
+		}
+		return doReplacement(file, conf, data);
+	});
 }
 
 // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
@@ -85,7 +97,7 @@ function doReplacement(filePath: string, conf: any, content: string) {
 		conf.replacement = dynamicReplacement(filePath, conf, content);
 	}
 
-	// Main regexp of the whole thing
+	// Main regexp doing the replacement
 	const result = content.replace(conf.regex, conf.replacement);
 
 	// The output of matched strings is done from the replacement, so no need to continue
@@ -108,9 +120,9 @@ function doReplacement(filePath: string, conf: any, content: string) {
 	// Release the memory while storing files
 	content = '';
 
-	debug('Write udpated content to: ' + filePath);
-
 	if (conf.simulate) return info(filePath);
+
+	debug('Write updated content to: ' + filePath);
 
 	// Write directly to the same file (if the process is killed all new and old data is lost)
 	if (conf.voidBackup) {
@@ -158,9 +170,9 @@ function doReplacement(filePath: string, conf: any, content: string) {
 					}
 					info(filePath);
 				});
-			} else {
-				info(filePath);
 			}
+
+			return info(filePath);
 		});
 	});
 }

@@ -1,8 +1,14 @@
+/// <reference path="../types/rexreplace.d.ts" />
+
 import yargs from 'yargs';
 
 import * as rexreplace from './engine';
 
 import {outputConfig, step, debug, chat, info, error, die} from './output';
+
+const re = {
+	nl: /\r?\n/,
+};
 
 //executeReplacement(cli2conf(process.argv.slice(2)), null);
 
@@ -24,7 +30,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 		[pattern, replacement] = args.splice(0, 2);
 	}
 
-	const argv = yargs
+	const argv = yargs(args)
 		.strict()
 
 		.usage(
@@ -34,21 +40,16 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 				'> rexreplace pattern replacement [fileGlob|option]+'
 		)
 
-		.example(`> rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
-		.example('')
-		.example(`> rr xxx Foo myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
-		.example('')
-
+		.usage(`> rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
+		.usage(`> rr xxx Foo myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
 		.example(
 			`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`,
 			`'foobar' in myfile.md will become 'barfoo'`
 		)
-		.example('')
 		.example(
 			`> rexreplace '^#' '##' *.md`,
 			`All markdown files in this dir got all headlines moved one level deeper`
 		)
-		.example('')
 		.example(
 			`> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' `,
 			`Provide multiple files or globs if needed`
@@ -312,7 +313,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 		.alias('h', 'help')
 
 		.epilog(`Inspiration: .oO(What should 'sed' have been by now?)`)
-		.parse(args);
+		.parseSync();
 
 	// All options into one big config object for the rexreplace engine
 	let conf: any = {};
@@ -324,19 +325,23 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 		}
 	});
 
-	conf.showHelp = argv.showHelp;
+	conf.showHelp = yargs.showHelp;
 	conf.needHelp = needHelp;
 	conf.pattern = pattern;
+	conf.replacement = replacement;
 	conf.includeGlob = argv._;
 	conf.excludeGlob = [...argv.excludeGlob].filter(Boolean);
 	conf.excludeRe = [...argv.excludeRe].filter(Boolean);
-	conf.replacement = replacement;
 
 	if (!conf.replacementJs) {
 		conf.replacement = unescapeString(conf.replacement);
 	}
 
 	return conf;
+}
+
+function unescapeString(str = '') {
+	return new Function(`return '${str.replace(/'/g, "\\'")}'`)();
 }
 
 export function executeReplacement(runtime: Runtime, conf, pipeData: string = null) {
@@ -377,7 +382,7 @@ export function executeReplacement(runtime: Runtime, conf, pipeData: string = nu
 			return die('Please pipe file/globs to include OR provide them as as parameters. Not both.');
 		}
 
-		conf.globs = pipeData;
+		conf.globs = pipeData.split(/\r?\n/).filter(Boolean);
 
 		if (conf.replacementJs) conf.pipeData = pipeData;
 
@@ -395,8 +400,4 @@ export function executeReplacement(runtime: Runtime, conf, pipeData: string = nu
 	conf.output = true;
 	process.stdout.setDefaultEncoding(conf.encoding);
 	return rexreplace.engine(runtime, conf);
-}
-
-function unescapeString(str = '') {
-	return new Function(`return '${str.replace(/'/g, "\\'")}'`)();
 }

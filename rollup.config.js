@@ -24,7 +24,7 @@ import resolve from '@rollup/plugin-node-resolve';
 export default [
 	{
 		// input: 'src/cli.ts',
-		input: 'bin/ES6/cli.js',
+		input: 'bin/ES6/env/node.js',
 		output: {
 			name: 'rexreplace',
 			//file: 'build/ES5/rexreplace.bundle.js',
@@ -32,25 +32,27 @@ export default [
 			format: 'iife'
 		},
 		plugins: [
-			hashbang(),			
+			hashbang(),
 			//typescript(),
-			resolve(), 
-			buble(),
+			resolve(),
+			buble({
+				transforms: { generator: false }
+			}),
 			replace({
-				"PACKAGE_VERSION": require('./package.json').version,preventAssignment: true,
+				"PACKAGE_VERSION": require('./package.json').version, preventAssignment: true,
 			}),
 
 			//progress(),
 			/*closure({
-				        languageIn: 'ECMASCRIPT6',
-				        languageOut: 'ECMASCRIPT5',
-				        compilationLevel: 'ADVANCED',
-				        warningLevel: 'QUIET',
+						languageIn: 'ECMASCRIPT6',
+						languageOut: 'ECMASCRIPT5',
+						compilationLevel: 'ADVANCED',
+						warningLevel: 'QUIET',
 						env:'CUSTOM',
 						//externs: ['externs.js'],
-    		}),//*/
+			}),//*/
 
-    		//uglify(),
+			//uglify(),
 			//filesize(),
 		]
 	},/*{

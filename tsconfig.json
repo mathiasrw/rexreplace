@@ -1,10 +1,12 @@
 {
 	"compilerOptions": {
-		"allowImportingTsExtensions": true,
-		"typeRoots": ["src", "node_modules/@types"],
-		"target": "es6",
+		"typeRoots": ["./types", "./node_modules/@types", "./node_modules/bun-types"],
+		"outDir": "bin/ES6",
+		"target": "ES6",
 		"lib": ["es6", "esnext"],
-		"types": ["bun-types", "node"],
-		"moduleResolution": "node"
-	}
+		"types": ["node"],
+		"moduleResolution": "nodenext",
+		"module": "NodeNext"
+	},
+	"include": ["src/env/node.ts"]
 }
