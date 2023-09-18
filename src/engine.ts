@@ -22,7 +22,7 @@ const re = {
 
 export const version = 'PACKAGE_VERSION';
 
-export function engine(conf: any = {engine: 'V8'}) {
+export function engine(runtime: Runtime, conf: any = {engine: 'V8'}) {
 	outputConfig(conf);
 
 	step('Displaying steps for:');

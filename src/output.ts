@@ -28,13 +28,13 @@ export const chat = function (msg, data = '') {
 };
 
 export const error = function (msg, data = '') {
-	if (!conf.quiet && !conf.quietTotal) {
-		console.error.apply(this, [font.red(msg), data].filter(Boolean));
+	if (conf.bail) {
+		return die(msg, data);
+	}
+	if (!conf.quietTotal) {
+		console.error.apply(this, [' ❌',font.red(msg), data].filter(Boolean));
 	}
 
-	if (conf.bail) {
-		kill();
-	}
 
 	return false;
 };

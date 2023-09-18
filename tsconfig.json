@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"typeRoots": ["src", "node_modules/@types"],
+		"target": "es6",
+		"lib": ["es6", "esnext"],
+		"types": ["bun-types", "node"],
+		"moduleResolution": "node"
+	}
+}
