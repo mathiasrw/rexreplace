@@ -633,7 +633,7 @@ function getFilePaths(conf) {
 		dot: true,
 	});
 
-	if (excludeRe.length) {
+	if (excludeRe) {
 		excludeRe
 			.map((el) => getRegex(getPattern(el, conf), conf))
 			.forEach((re) => {

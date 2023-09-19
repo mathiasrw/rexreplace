@@ -31,9 +31,8 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 	}
 
 	const argv = yargs(args)
-		.strict()
-
-		.usage(
+		//.strict()
+		/*		.usage(
 			'RexReplace v' +
 				rexreplace.version +
 				'\n\nRegexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
@@ -42,6 +41,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 
 		.usage(`> rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
 		.usage(`> rr xxx Foo myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
+		*/
 		.example(
 			`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`,
 			`'foobar' in myfile.md will become 'barfoo'`
@@ -274,7 +274,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 			The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. 
 			At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. 
 			If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
-			
+
 			The code has access to the following variables: 
 			\`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
 			\`fs\` from node, 
@@ -291,7 +291,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 			\`cwd\`: current process working dir, 
 			\`nl\`: a new-line char,
 			\`_\`: a single space char (for easy string concatenation).
-			
+
 			The following values defaults to \`❌\` if haystack does not originate from a file:
 			\`file\`: contains the full path of the active file being searched (including full filename), 
 			\`file_rel\`: contains \`file\` relative to current process working dir, 
@@ -304,9 +304,9 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 			\`ctime\`: ISO representation of the local creation time of the current file. 
 			\`mtime_obj\`: date object representing \`mtime\`, 
 			\`ctime_obj\`: date object representing \`ctime\`. 
-			
+
 			All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
-			`
+			`.replaceAll(/\s+/g, ' ')
 		)
 		.help('h')
 		.describe('h', 'Display help.')
@@ -330,8 +330,12 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 	conf.pattern = pattern;
 	conf.replacement = replacement;
 	conf.includeGlob = argv._;
-	conf.excludeGlob = [...argv.excludeGlob].filter(Boolean);
-	conf.excludeRe = [...argv.excludeRe].filter(Boolean);
+	conf.excludeGlob = (
+		Array.isArray(argv.excludeGlob) ? argv.excludeGlob : [argv.excludeGlob]
+	).filter(Boolean);
+	conf.excludeRe = (Array.isArray(argv.excludeRe) ? argv.excludeRe : [argv.excludeRe]).filter(
+		Boolean
+	);
 
 	if (!conf.replacementJs) {
 		conf.replacement = unescapeString(conf.replacement);

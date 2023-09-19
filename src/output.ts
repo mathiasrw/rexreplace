@@ -54,7 +54,7 @@ export function debug(...data) {
 }
 
 export function step(data) {
-	if (conf.verbose) {
+	if (conf?.verbose) {
 		console.error(font.gray(data));
 	}
 }
