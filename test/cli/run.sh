@@ -79,8 +79,14 @@ assert		 		"rexreplace o x my.file --output"    "fxxbar"
 reset
 rexreplace o x my.file --output > stdout.log 2> stderr.log
 assert		 		"cat my.file"   		"foobar"
-assert		 		"cat stdout.log"    	"my.file"
+assert		 		"cat stdout.log"    	"fxxbar"
 assert		 		"cat stderr.log"    	""
+
+reset
+rexreplace o x my.file --output --verbose > stdout.log 2> stderr.log
+assert		 		"cat my.file"   		"foobar"
+assert		 		"cat stdout.log"    	"fxxbar"
+assert		 		"cat stderr.log"    	"my.file"
 
 reset
 rexreplace o x my.file > stdout.log 2> stderr.log
