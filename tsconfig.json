@@ -5,8 +5,15 @@
 		"target": "ES6",
 		"lib": ["es6", "esnext"],
 		"types": ["node"],
-		"moduleResolution": "nodenext",
-		"module": "NodeNext"
+		"moduleResolution": "node",
+		"module": "commonjs",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"esModuleInterop": true
 	},
-	"include": ["src/env/node.ts"]
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules"],
+	"ts-node": {
+		"esm": true
+	}
 }

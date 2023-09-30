@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 
+#rexreplace() {
+  # node dist/env/node.js "$@"
+  #npx node-ts src/env/node.ts "$@"
+  # npx ts-node src/env/node.ts "$@"
+  # bun src/env/bun.ts "$@"
+#}
+
 echo RexReplace v$(rexreplace -v)
-where rexreplace
+# where rexreplace
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+export STOP=1
 source $DIR/aserta.sh
 
 # # Command exit codes
@@ -31,8 +39,6 @@ reset() {
         echo 'abc123' > your.file
 		echo -n > stdout.log
 		echo -n > stderr.log
-
-rm stderr.log
 }
 
 
@@ -588,10 +594,12 @@ assert_failure	"rexreplace '*foo' 'bar' my.file"
 # assert		 		"rexreplace ??? ??? my.file -d"    "foobar"
 # reset
 
+reset
 rm my.file
 rm your.file
 rm stdout.log
 rm stderr.log
+
 
 assert_end 			"rexreplace"
 

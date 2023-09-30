@@ -30,12 +30,12 @@ export const runtime: Runtime = {
 
 	process.stdin.setEncoding(conf.encoding);
 
-	let pipeData = '';
+	let pipeData = null;
 	process.stdin.on('readable', () => {
 		let chunk = process.stdin.read();
 
 		if (null !== chunk) {
-			pipeData += chunk;
+			pipeData = chunk;
 			while ((chunk = process.stdin.read())) {
 				pipeData += chunk;
 			}

@@ -2,13 +2,11 @@
 
 /// <reference types="deno" />
 
-import {readAll} from 'https://deno.land/std/io/mod.ts';
-
 import yargs from 'https://deno.land/x/yargs/deno.ts';
 
 import fs from 'fs-extra';
 
-import {cli2conf, executeReplacement} from '../cli.js';
+import {cli2conf, executeReplacement} from '../cli.ts';
 
 const runtime: Runtime = {
 	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, {encoding}),
@@ -40,7 +38,7 @@ const runtime: Runtime = {
 };
 
 async function getPipeData() {
-	const stdinContent = await readAll(Deno.stdin);
+	const stdinContent = await Deno.readAll(Deno.stdin);
 	const text = new TextDecoder().decode(stdinContent);
 	return text;
 }

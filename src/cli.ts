@@ -4,7 +4,7 @@ import yargs from 'yargs';
 
 import * as rexreplace from './engine.ts';
 
-import {chat, debug, die, error, info, outputConfig, step} from './output';
+import {chat, debug, die, error, info, outputConfig, step} from './output.ts';
 
 const re = {
 	nl: /\r?\n/,

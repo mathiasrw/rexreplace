@@ -7,7 +7,7 @@ const globs = require('globs');
 
 const now = new Date();
 
-import {chat, debug, die, error, info, outputConfig, step} from './output';
+import {chat, debug, die, error, info, outputConfig, step} from './output.ts';
 
 const re = {
 	euro: /€/g,
@@ -45,7 +45,7 @@ export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
 	conf.files = getFilePaths(conf);
 
 	if (!conf.files.length) {
-		if (conf.contentWasPiped) {
+		if (null !== conf.pipeData) {
 			return doReplacement('[pipe-data]', conf, conf.pipeData);
 		}
 
