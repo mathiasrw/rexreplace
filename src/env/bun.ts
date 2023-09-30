@@ -2,12 +2,12 @@
 
 /// <reference types="bun-types" />
 
-import {executeReplacement, cli2conf} from '../cli.js';
+import { cli2conf, executeReplacement } from '../cli.js';
 
 import fs from 'fs-extra';
 
 export const runtime: Runtime = {
-	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, {encoding}),
+	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, { encoding }),
 
 	fileReadAsync: async (path, encoding = 'utf8') => {
 		const file = Bun.file(path);

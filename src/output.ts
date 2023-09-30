@@ -14,8 +14,9 @@ export const info = function (msg, data = '') {
 		return;
 	}
 
-	if (conf.output || conf.outputMatch)
+	if (conf.output || conf.outputMatch) {
 		return console.error.apply(this, [font.gray(msg), data].filter(Boolean));
+	}
 
 	console.log.apply(this, [msg, data].filter(Boolean));
 };

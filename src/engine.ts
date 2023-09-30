@@ -7,7 +7,7 @@ const globs = require('globs');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, error, die} from './output';
+import { chat, debug, die, error, info, outputConfig, step } from './output';
 
 const re = {
 	euro: /€/g,
@@ -24,7 +24,7 @@ export const version = 'PACKAGE_VERSION';
 
 let runtime: Runtime;
 
-export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
+export function engine(_runtime: Runtime, conf: any = { engine: 'V8' }) {
 	runtime = _runtime;
 
 	outputConfig(conf);
@@ -66,7 +66,6 @@ export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
 			debug('Not a valid file:', filepath);
 			return false;
 		})
-
 		// Do the replacement
 		.forEach((filepath) => openFile(filepath, conf));
 }
@@ -232,7 +231,9 @@ function getReplacement(replacement, conf: any) {
 		re.capturedGroupRef.test(conf.replacement) &&
 		parseInt(process.versions.node) < 6
 	) {
-		return die('Captured groups for javascript replacement is only supported in node 6+');
+		return die(
+			'Captured groups for javascript replacement is only supported in node 6+',
+		);
 	}
 
 	step(replacement);
@@ -320,7 +321,8 @@ function readableSize(size) {
 	}
 	const i = Math.floor(Math.log(size) / Math.log(1024));
 	return (
-		(size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]
+		(size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' +
+		['Bytes', 'KB', 'MB', 'GB', 'TB'][i]
 	);
 }
 
@@ -356,25 +358,20 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'fs',
 			'globs',
 			'path',
-
 			'pipe',
 			'pipe_',
-
 			'find',
 			'find_',
 			'text',
 			'text_',
-
 			'file',
 			'file_',
 			'file_rel',
 			'file_rel_',
-
 			'dirpath',
 			'dirpath_',
 			'dirpath_rel',
 			'dirpath_rel_',
-
 			'dirname',
 			'dirname_',
 			'filename',
@@ -385,7 +382,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'ext_',
 			'cwd',
 			'cwd_',
-
 			'now',
 			'now_',
 			'time_obj',
@@ -397,7 +393,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'ctime_obj',
 			'ctime',
 			'ctime_',
-
 			'bytes',
 			'bytes_',
 			'size',
@@ -406,19 +401,19 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'_',
 			'__code_rr',
 			'var path = require("path");' +
-			'var __require_ = require;' +
-			'var r = function(file){' +
-			'var result = null;' +
-			'try{' +
-			'result = __require_(file);' +
-			'} catch (e){' +
-			'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
-			'result = __require_(path.resolve(dir, file));' +
-			'};' +
-			'return result;' +
-			'};' +
-			'require = r;' +
-			'return eval(__code_rr);'
+				'var __require_ = require;' +
+				'var r = function(file){' +
+				'var result = null;' +
+				'try{' +
+				'result = __require_(file);' +
+				'} catch (e){' +
+				'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
+				'result = __require_(path.resolve(dir, file));' +
+				'};' +
+				'return result;' +
+				'};' +
+				'require = r;' +
+				'return eval(__code_rr);',
 		);
 
 	const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
@@ -507,7 +502,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_size + _,
 			_nl,
 			_,
-			code_rr
+			code_rr,
 		);
 	}
 	// Capture groups used, so need to run once per match
@@ -549,25 +544,20 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			fs,
 			glob,
 			path,
-
 			__pipe,
 			__pipe + __,
-
 			__find,
 			__find + __,
 			__text,
 			__text + __,
-
 			__file,
 			__file + __,
 			__file_rel,
 			__file_rel + __,
-
 			__dirpath,
 			__dirpath + __,
 			__dirpath_rel,
 			__dirpath_rel + __,
-
 			__dirname,
 			__dirname + __,
 			__filename,
@@ -578,7 +568,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__ext + __,
 			__cwd,
 			__cwd + __,
-
 			__now,
 			__now + _,
 			__time_obj,
@@ -590,24 +579,27 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__ctime_obj,
 			__ctime,
 			__ctime + _,
-
 			__bytes,
 			__bytes + __,
 			__size,
 			__size + __,
 			__nl,
 			__,
-			capturedGroups + __code_rr
+			capturedGroups + __code_rr,
 		);
 	};
 }
 
 function localTimeString(dateObj = new Date()) {
-	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${(
-		'0' + dateObj.getDate()
-	).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
-		'0' + dateObj.getSeconds()
-	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
+	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${
+		(
+			'0' + dateObj.getDate()
+		).slice(-2)
+	} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${
+		(
+			'0' + dateObj.getSeconds()
+		).slice(-2)
+	}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }
 
 function replacePlaceholders(str = '', conf: any) {
@@ -623,7 +615,7 @@ function replacePlaceholders(str = '', conf: any) {
 }
 
 function getFilePaths(conf) {
-	const {includeGlob, excludeGlob, excludeRe, voidIgnoreCase} = conf;
+	const { includeGlob, excludeGlob, excludeRe, voidIgnoreCase } = conf;
 
 	let filesToInclude: string[] = fGlob.sync(includeGlob, {
 		ignore: excludeGlob,

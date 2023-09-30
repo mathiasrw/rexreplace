@@ -2,26 +2,26 @@
 
 /// <reference types="deno" />
 
-import {readAll} from 'https://deno.land/std/io/mod.ts';
+import { readAll } from 'https://deno.land/std/io/mod.ts';
 
 import yargs from 'https://deno.land/x/yargs/deno.ts';
 
 import fs from 'fs-extra';
 
-import {executeReplacement, cli2conf} from '../cli.js';
+import { cli2conf, executeReplacement } from '../cli.js';
 
 const runtime: Runtime = {
-	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, {encoding}),
+	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, { encoding }),
 
 	async fileReadAsync(path, encoding = 'utf8') {
-		const data = await fs.readFile(path, {encoding});
+		const data = await fs.readFile(path, { encoding });
 		return data;
 	},
 
-	fileWriteSync: (path, data, encoding = 'utf8') => fs.writeFileSync(path, data, {encoding}),
+	fileWriteSync: (path, data, encoding = 'utf8') => fs.writeFileSync(path, data, { encoding }),
 
 	async fileWriteAsync(path, data, encoding = 'utf8') {
-		return fs.writeFile(path, data, {encoding});
+		return fs.writeFile(path, data, { encoding });
 	},
 
 	fileDeleteSync: (path) => fs.unlinkSync(path),
@@ -45,6 +45,6 @@ async function getPipeData() {
 	return text;
 }
 
-let conf = cli2conf(Deno.args, {runtime, yargs});
+let conf = cli2conf(Deno.args, { runtime, yargs });
 
-executeReplacement(conf, {runtime, yargs, pipeData: getPipeData()});
+executeReplacement(conf, { runtime, yargs, pipeData: getPipeData() });

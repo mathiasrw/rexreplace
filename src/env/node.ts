@@ -2,15 +2,15 @@
 
 /// <reference types="node" />
 
-import {executeReplacement, cli2conf} from '../cli.js';
+import { cli2conf, executeReplacement } from '../cli.js';
 import fs from 'fs-extra';
 
 export const runtime: Runtime = {
-	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, {encoding}),
-	fileReadAsync: (path, encoding = 'utf8') => fs.readFile(path, {encoding}),
+	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, { encoding }),
+	fileReadAsync: (path, encoding = 'utf8') => fs.readFile(path, { encoding }),
 
-	fileWriteSync: (path, data, encoding = 'utf8') => fs.writeFileSync(path, data, {encoding}),
-	fileWriteAsync: (path, data, encoding = 'utf8') => fs.writeFile(path, data, {encoding}),
+	fileWriteSync: (path, data, encoding = 'utf8') => fs.writeFileSync(path, data, { encoding }),
+	fileWriteAsync: (path, data, encoding = 'utf8') => fs.writeFile(path, data, { encoding }),
 
 	fileDeleteSync: (path) => fs.unlinkSync(path),
 	fileDeleteAsync: (path) => fs.unlink(path),
