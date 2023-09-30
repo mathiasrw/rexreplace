@@ -7,7 +7,7 @@ const globs = require('globs');
 
 const now = new Date();
 
-import { chat, debug, die, error, info, outputConfig, step } from './output';
+import {chat, debug, die, error, info, outputConfig, step} from './output';
 
 const re = {
 	euro: /€/g,
@@ -24,7 +24,7 @@ export const version = 'PACKAGE_VERSION';
 
 let runtime: Runtime;
 
-export function engine(_runtime: Runtime, conf: any = { engine: 'V8' }) {
+export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
 	runtime = _runtime;
 
 	outputConfig(conf);
@@ -231,9 +231,7 @@ function getReplacement(replacement, conf: any) {
 		re.capturedGroupRef.test(conf.replacement) &&
 		parseInt(process.versions.node) < 6
 	) {
-		return die(
-			'Captured groups for javascript replacement is only supported in node 6+',
-		);
+		return die('Captured groups for javascript replacement is only supported in node 6+');
 	}
 
 	step(replacement);
@@ -321,8 +319,7 @@ function readableSize(size) {
 	}
 	const i = Math.floor(Math.log(size) / Math.log(1024));
 	return (
-		(size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' +
-		['Bytes', 'KB', 'MB', 'GB', 'TB'][i]
+		(size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]
 	);
 }
 
@@ -502,7 +499,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_size + _,
 			_nl,
 			_,
-			code_rr,
+			code_rr
 		);
 	}
 	// Capture groups used, so need to run once per match
@@ -585,21 +582,17 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__size + __,
 			__nl,
 			__,
-			capturedGroups + __code_rr,
+			capturedGroups + __code_rr
 		);
 	};
 }
 
 function localTimeString(dateObj = new Date()) {
-	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${
-		(
-			'0' + dateObj.getDate()
-		).slice(-2)
-	} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${
-		(
-			'0' + dateObj.getSeconds()
-		).slice(-2)
-	}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
+	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${(
+		'0' + dateObj.getDate()
+	).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
+		'0' + dateObj.getSeconds()
+	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }
 
 function replacePlaceholders(str = '', conf: any) {
@@ -615,7 +608,7 @@ function replacePlaceholders(str = '', conf: any) {
 }
 
 function getFilePaths(conf) {
-	const { includeGlob, excludeGlob, excludeRe, voidIgnoreCase } = conf;
+	const {includeGlob, excludeGlob, excludeRe, voidIgnoreCase} = conf;
 
 	let filesToInclude: string[] = fGlob.sync(includeGlob, {
 		ignore: excludeGlob,
