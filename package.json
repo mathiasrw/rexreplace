@@ -12,7 +12,7 @@
 	},
 	"bin": {
 		"rr": "bin/rexreplace.cli.js",
-		"rexreplace": "bin/env/node.js"
+		"rexreplace": "dist/env/node.js"
 	},
 	"scripts": {
 		"test": "yarn build && yarn test-cli && yarn test-js",

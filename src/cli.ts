@@ -266,6 +266,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 
 		.boolean('j')
 		.alias('j', 'replacement-js')
+		.alias('j', 'js')
 		.describe(
 			'j',
 			`Treat replacement as javascript source code. 
