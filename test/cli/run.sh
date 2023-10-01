@@ -13,7 +13,11 @@ echo RexReplace v$(rexreplace -v)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export STOP=1
+#export DEBUG=1
 source $DIR/aserta.sh
+
+
+
 
 # # Command exit codes
 # assert_success    "true"
@@ -108,7 +112,7 @@ assert_success		"rexreplace -h"
 echo
 echo '>' --output
 reset
-assert		 		"rexreplace x x my.file --output"	"foobar"
+assert		 		"rexreplace x x my.file --output --verbose --debug"	"foobar"
 assert		 		"rexreplace x x my.file -o"   		"foobar"
 
 
@@ -149,11 +153,20 @@ assert		 		"cat stderr.log"    	""
 
 echo
 echo '>' --engine
-reset
+#reset
 # assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"		# RE2	 depricated
+
+
+reset
 assert		 		"rexreplace o x my.file --output --engine V8"    "fxxbar"
-assert		 		"rexreplace o x my.file --output -e V8"    "fxxbar"
-assert_failure		 "rexreplace o x my.file --output -e xxxyyyzzz" 
+
+
+reset
+assert		 		"rexreplace o x my.file --output -E V8"    "fxxbar"
+
+
+reset
+assert_failure		 "rexreplace o x my.file --output -E xxxyyyzzz" 
 
 
 
@@ -195,8 +208,14 @@ assert		 		"rexreplace Foo xxx my.file -o --I"    "foobar"
 echo
 echo '>' --void-global
 reset
-assert		 		"rexreplace o x my.file -o "    			 "foobar"
+assert		 		"rexreplace o x my.file -o "    			 "fxxbar"
+
+
+reset
 assert		 		"rexreplace o x my.file -o --void-global"    "fxobar"
+
+
+reset
 assert		 		"rexreplace o x my.file -o -G"    			 "fxobar"
 
 
@@ -206,6 +225,9 @@ echo
 echo '>' --output-match
 reset
 assert		 		"rexreplace [fb]. _ my.file --output-match"    "fo\\nba"
+
+
+reset
 assert		 		"rexreplace [fb]. _ my.file -O"    "fo\\nba"
 
 
@@ -219,6 +241,9 @@ echo
 echo ": Combine multiple flags (-GO)"
 reset
 assert		 		"rexreplace [fb]. _ my.file --output-match --voidGlobal"    "fo"
+
+
+reset
 assert		 		"rexreplace [fb]. _ my.file -GO"    "fo"
 
 

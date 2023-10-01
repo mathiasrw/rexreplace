@@ -105,8 +105,9 @@ function doReplacement(filePath: string, conf: any, content: string) {
 	}
 
 	if (conf.output) {
-		debug('Output result from: ' + filePath);
-
+		if (conf.verbose || conf.debug) {
+			console.error(filePath);
+		}
 		return process.stdout.write(result);
 	}
 
@@ -129,7 +130,7 @@ function doReplacement(filePath: string, conf: any, content: string) {
 			if (err) {
 				return error(err);
 			}
-			info(filePath);
+			return info(filePath);
 		});
 	}
 
@@ -163,11 +164,11 @@ function doReplacement(filePath: string, conf: any, content: string) {
 			}
 
 			if (!conf.keepBackup) {
-				fs.unlink(backupFile, (err) => {
+				return fs.unlink(backupFile, (err) => {
 					if (err) {
 						return error(err);
 					}
-					info(filePath);
+					return info(filePath);
 				});
 			}
 

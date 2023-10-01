@@ -4,7 +4,7 @@ import yargs from 'yargs';
 
 import * as rexreplace from './engine.ts';
 
-import {chat, debug, die, error, info, outputConfig, step} from './output.ts';
+import {chat, debug, die, warn, info, outputConfig, step} from './output.ts';
 
 const re = {
 	nl: /\r?\n/,
@@ -31,17 +31,16 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 	}
 
 	const argv = yargs(args)
-		//.strict()
-		/*		.usage(
-			'RexReplace v' +
+		.usage(
+			'$0 RexReplace v' +
 				rexreplace.version +
 				'\n\nRegexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
 				'> rexreplace pattern replacement [fileGlob|option]+'
 		)
 
-		.usage(`> rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
-		.usage(`> rr xxx Foo myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
-		*/
+		.usage(`$0 > rexreplace 'Foo' 'xxx' myfile.md`, `'foobar' in myfile.md will become 'xxxbar'`)
+		.usage(`$0 > rr xxx Foo myfile.md`, `The alias 'rr' can be used instead of 'rexreplace'`)
+
 		.example(
 			`> rexreplace '(f?(o))o(.*)' '$3$1€2' myfile.md`,
 			`'foobar' in myfile.md will become 'barfoo'`
@@ -287,7 +286,7 @@ export function cli2conf(runtime: Runtime, args: string[]) {
 		.describe('h', 'Display help.')
 		.alias('h', 'help')
 		.epilog(`Inspiration: .oO(What should 'sed' have been by now?)`)
-		.parseSync();
+		.strict().argv;
 
 	// All options into one big config object for the rexreplace engine
 	let conf: any = {};
@@ -324,6 +323,7 @@ function unescapeString(str = '') {
 
 export function executeReplacement(runtime: Runtime, conf, pipeData: string = null) {
 	if (0 < conf.needHelp) {
+		conf.showHelp();
 		runtime.exit(conf.needHelp - 1);
 	}
 
@@ -368,9 +368,10 @@ export function executeReplacement(runtime: Runtime, conf, pipeData: string = nu
 	}
 
 	if (conf.includeGlob.length) {
-		return die(
-			'Data is being piped in, but no flag indicating what to use it for. If you want to do replacements in the pipe then avoid having files/globs in the parameters'
-		);
+		if ('' !== pipeData && '\n' !== pipeData)
+			return warn(
+				`${conf.includeGlob.length} file paths / globs provided. \n    Data is also being piped to the command with no flags indicating how to treat it.\n    Pipe data will be ignored, but check if this is actually what you intended to do.`
+			);
 	}
 
 	step('Content being piped');

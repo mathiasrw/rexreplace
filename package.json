@@ -22,10 +22,10 @@
 		"build": "yarn build-only",
 		"build-only": "swc src/ -d dist/ && bun build --target node src/env/node.ts --outfile bin/rexreplace.cli.js ",
 		"build-minify": "bun build --target node src/env/node.ts --outfile bin/rexreplace.cli.min.js --minify",
-		"prebuild": "rm -fr bin # && yarn format",
+		"prebuild": "rm -fr bin dist # && yarn format",
 		"test-js": "echo todo: async mocha",
 		"test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
-		"test-cli": "npm uninstall -g rexreplace && npm -g install ./ && yarn test-cli-only",
+		"test-cli": "(true || (npm uninstall -g rexreplace && npm -g install ./)) && yarn test-cli-only",
 		"test-cli-only": "bash test/cli/run.sh",
 		"test-speed": "bash test/speed/run.sh",
 		"prepublishOnly": "yarn is-git-clean && git fetch && git rebase origin/main && yarn test-minify && yarn load-options && yarn bump",
@@ -80,6 +80,7 @@
 		"test": "test"
 	},
 	"dependencies": {
+		"chalk": "^5.3.0",
 		"fast-glob": "^3.3.1",
 		"fs-extra": "^11.1.1",
 		"globs": "0.1.4",

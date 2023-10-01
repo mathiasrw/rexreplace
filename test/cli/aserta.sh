@@ -433,7 +433,7 @@ assert() {
 	# shellcheck disable=SC2059
 	expected=$(printf "${2:-}")
 	# shellcheck disable=SC2059
-	result=$(printf "$(eval 2>/dev/null "$1" <<< "${3:-}")")
+	[[ -n "$DEBUG" ]] && result=$(printf "$(eval "$1" <<< "${3:-}")") || result=$(printf "$(eval 2>/dev/null "$1" <<< "${3:-}")")
 	if [[ "$result" == "$expected" ]]; then
 		[[ -z "$DEBUG" ]] || printf '.'
 		return
