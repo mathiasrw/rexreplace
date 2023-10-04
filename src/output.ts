@@ -40,7 +40,7 @@ export const error = function (msg, data = '') {
 
 export const warn = function (msg, data = '') {
 	if (!conf?.quiet && !conf?.quietTotal) {
-		console.error.apply(this, [' 🟡', font.yellow(msg), data].filter(Boolean));
+		console.warn.apply(this, [' 🟡', font.yellow(msg), data].filter(Boolean));
 	}
 
 	return false;
