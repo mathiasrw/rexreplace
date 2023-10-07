@@ -50,7 +50,7 @@
     "@rollup/plugin-commonjs": "25.0.5",
     "@rollup/plugin-node-resolve": "15.2.2",
     "@rollup/plugin-replace": "5.0.3",
-    "@types/node": "20.8.0",
+    "@types/node": "20.8.3",
     "assert": "^2.0.0",
     "magic-string": "0.30.4",
     "mocha": "10.2.0",
