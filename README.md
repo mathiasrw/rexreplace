@@ -10,21 +10,17 @@
 
 
 
-<h3 align="center">
-    <br>
-<img width="350" src="https://cloud.githubusercontent.com/assets/1063454/24127465/ed1a59a2-0e28-11e7-9546-160d7eb1d8b9.png" alt="RexReplace mascot Benny on the RexReplace logo" />
-    <br>
-    <br>
-
-</h3>
-
----
 
 # RexReplace
 
+<h2 align="center"><a href="https://github.com/mathiasrw/rexreplace"><img src="https://cloud.githubusercontent.com/assets/1063454/24127465/ed1a59a2-0e28-11e7-9546-160d7eb1d8b9.png" alt="RexReplace mascot Benny as the RexReplace logo" style="max-width:80%"/></a>
+</h2>
 
 
-RexReplace is a versatile tool to search and replace text in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts. 
+
+
+
+RexReplace is a versatile tool to search and replace text in files from the command line. Its inspired by how developers often need to do quick fixes or one-liners for build scripts.
 
 **Key features**:
 
