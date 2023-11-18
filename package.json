@@ -64,7 +64,7 @@
     "rollup-plugin-typescript3": "3.0.2",
     "typescript": "5.2.2",
     "version-bump-prompt": "6.1.0",
-    "yarn": "1.22.19"
+    "yarn": "1.22.21"
   },
   "resolutions": {
     "ansi-regex": "5.0.1",
