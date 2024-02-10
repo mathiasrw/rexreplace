@@ -52,7 +52,7 @@
     "@rollup/plugin-replace": "5.0.5",
     "@types/node": "20.8.3",
     "assert": "^2.0.0",
-    "magic-string": "0.30.6",
+    "magic-string": "0.30.7",
     "mocha": "10.2.0",
     "prettier": "3.2.5",
     "rollup": "2.79.1",
