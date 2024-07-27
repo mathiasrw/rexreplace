@@ -62,7 +62,7 @@
     "rollup-plugin-preserve-shebang": "1.0.1",
     "rollup-plugin-progress": "1.1.2",
     "rollup-plugin-typescript3": "3.0.5",
-    "typescript": "5.5.3",
+    "typescript": "5.5.4",
     "version-bump-prompt": "6.1.0",
     "yarn": "1.22.22"
   },
