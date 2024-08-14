@@ -6,3 +6,5 @@ myfile
 tmp/*
 package-lock.json
 .vscode
+/dist
+/bin
