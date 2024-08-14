@@ -20,7 +20,7 @@
 		"build": "yarn build-only",
 		"build-only": "tsc src/cli --outDir bin/ES6 -t ES6 && rollup -c",
 		"build-minify": "yarn build && yarn minify",
-		"minify": "echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && npx google-closure-compiler --js=bin/rexreplace.cli.js >> bin/rexreplace.cli.min.js",
+		"minify": "# echo '#!/usr/bin/env node' > bin/rexreplace.cli.min.js && npx google-closure-compiler --js=bin/rexreplace.cli.js >> bin/rexreplace.cli.min.js",
 		"prebuild": "rm -fr bin && yarn format",
 		"test-js": "echo todo: async mocha",
 		"test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
@@ -33,7 +33,7 @@
 		"test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
 		"format": "yarn prettier --write",
 		"prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'",
-		"bump": "bump --tag 'v%s' --all",
+		"bump": "# bump --tag 'v%s' --all",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)"
 	},
 	"keywords": [
