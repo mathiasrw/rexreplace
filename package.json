@@ -51,7 +51,7 @@
 		"@rollup/plugin-replace": "5.0.7",
 		"@rollup/plugin-swc": "^0.3.1",
 		"@swc/core": "^1.7.11",
-		"@types/node": "20.8.3",
+		"@types/node": "20.14.15",
 		"assert": "^2.0.0",
 		"mocha": "10.7.3",
 		"prettier": "3.3.3",
