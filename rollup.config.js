@@ -29,7 +29,6 @@ export default [
 			banner: '#!/usr/bin/env node',
 		},
 		plugins: [
-			hashbang(),
 			resolve(),
 			swc({ jsc: { target: 'es5', }, }),
 			replace({

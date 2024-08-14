@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // CLI interface for rexreplace
 import * as rexreplace from './engine';
 let pattern, replacement;

@@ -68,7 +68,7 @@
         byteOrSize: /bytes|size/,
         folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/
     };
-    const version = '7.1.3';
+    const version = '7.1.4';
     function engine(config = {
         engine: 'V8'
     }) {
