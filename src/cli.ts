@@ -1,7 +1,7 @@
 /// <reference path="../types/rexreplace.d.ts" />
 
 import yargs from 'yargs';
-import argMate, {helpText} from 'argmate';
+import argMate, {paramInfo} from 'argmate';
 import * as rexreplace from './engine.ts';
 
 import {chat, debug, die, warn, info, outputConfig, step} from './output.ts';
@@ -337,10 +337,10 @@ outro:
 	);
 
 	// All options into one big config object for the rexreplace engine
-	let conf: any = {};
+	let conf: any = argv;
 
 	conf.showHelp = () => {
-		console.log(helpText());
+		console.log('helpText()');
 		process.exit();
 	};
 	conf.needHelp = needHelp;

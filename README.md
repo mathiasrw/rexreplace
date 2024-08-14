@@ -14,7 +14,7 @@
 [![FOSSA Status](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmathiasrw%2Frexreplace?ref=badge_shield)
 [![OPEN open source software](https://img.shields.io/badge/Open--OSS-%E2%9C%94-brightgreen.svg)](http://open-oss.com)
 
-RexReplace is a versatile tool to search and replace text in files from the command line. It's inspired by how developers often need to do quick fixes or one-liners for build scripts.
+> RexReplace is a versatile tool to search and replace text in files from the command line. It's inspired by how developers often need to do quick fixes or one-liners for build scripts.
 
 **Key features**:
 
@@ -294,11 +294,11 @@ Reading many files multiple times is far more time-consuming than creating a com
 
 > **Anecdote time**
 >
-> Imagine you need to duplicate a set of files, but each duplicate must have unique keys. To achieve this, you can append `_v2` to each key in the duplicated files.
+> Imagine you need to duplicate a set of files, but each duplicate must have unique keys. To achieve this, you can append `_v2` to each key in the duplicated files. Running a separate `rexreplace` command for each key is a reasoable approach.
 >
-> Running a separate `rexreplace` command for each key is a logical approach. However, in a real-world scenario with 5,000 keys across 10,000 files, this method took **57 minutes**. The bottleneck was identifying the 10,000 files 5,000 times, opening, and reading each one repeatedly, plus the startup time for node 5,000 times.
+> However, in a real-world scenario with 5,000 keys across 10,000 files, this approach took **57 minutes**. The bottleneck was identifying the 10,000 files 5,000 times, open + read each file 5000 times and the startup time of node x 5,000.
 >
-> Alternatively, bundling all keys into a single regex search pattern like `(key1|key2|key3|...)'` reduced the runtime to surprising **2.14 seconds**! Although this resulted in a 300Kb regex string, it was significantly faster.
+> Seeking to optimize performance we bundled all keys into a single regex search pattern like `(key1|key2|key3|...)'`. This resulted in a nasty 300KB one-line command but it reduced the runtime to **2.14 seconds**!
 >
 > ```sh
 > # Separate commands for each key
@@ -314,7 +314,7 @@ Reading many files multiple times is far more time-consuming than creating a com
 > # Total time: 2.14 seconds
 > ```
 >
-> Moral: Choosing the right approach can save you a significant amount of time.
+> Look, not all problems can be solved like this, but the moral is stil valid: Choosing the right approach can save you a significant amount of time.
 
 ## Rumours
 

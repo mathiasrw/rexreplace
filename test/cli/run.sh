@@ -48,7 +48,7 @@ reset() {
 
 
 echo
-echo '>' Happy path
+echo '>' Plain
 reset
 rexreplace x x my.file
 assert		 		"cat my.file"    "foobar"

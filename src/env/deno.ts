@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 
 import {cli2conf, executeReplacement} from '../cli.ts';
 
-const runtime: Runtime = {
+export const runtime: Runtime = {
 	fileReadSync: (path, encoding = 'utf8') => fs.readFileSync(path, {encoding}),
 
 	async fileReadAsync(path, encoding = 'utf8') {
