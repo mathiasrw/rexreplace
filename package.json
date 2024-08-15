@@ -21,8 +21,7 @@
 		"test": "yarn build && yarn test-cli && yarn test-js",
 		"postbuild": "cp bin/rexreplace.cli.js bin/rexreplace.cli.min.js",
 		"version": "yarn build-minify",
-		"build": "yarn build-only",
-		"build-only": "rollup -c --bundleConfigAsCjs",
+		"build": "rollup -c --bundleConfigAsCjs",
 		"build-minify": "yarn build && yarn minify",
 		"minify": "cat bin/rexreplace.cli.js > bin/rexreplace.cli.min.js",
 		"prebuild": "rm -fr bin && yarn format",
@@ -37,7 +36,7 @@
 		"format": "prettier . --write",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
 		"release": "yarn version",
-		"prerelease": "yarn is-git-clean && yarn test-minify && yarn load-options",
+		"prerelease": "yarn is-git-clean && yarn test && yarn test-minify && yarn load-options",
 		"postrelease": "npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\" && (open https://github.com/mathiasrw/rexreplace/releases || 1)"
 	},
 	"keywords": [

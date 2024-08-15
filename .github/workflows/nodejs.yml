@@ -22,5 +22,6 @@ jobs:
                   node-version: ${{ matrix.node-version }}
             - run: npx yarn install
             - run: npx yarn test-format
+            - run: npm uninstall -g rexreplace && npm -g install ./ && (where rexreplace || 1)
             - run: npx yarn test-cli
             - run: npx yarn test
