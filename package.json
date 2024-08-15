@@ -31,15 +31,14 @@
 		"test-cli": "npm uninstall -g rexreplace && npm -g install ./ && yarn test-cli-only",
 		"test-cli-only": "bash test/cli/run.sh",
 		"test-speed": "bash test/speed/run.sh",
-		"#prepublishOnly": "#yarn is-git-clean && git fetch && git rebase origin/main && yarn test-minify && yarn load-options ",
-		"#postpublish": "#git push --tag && git push && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
-		"load-options": "#rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
+		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main",
+		"load-options": "# rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
 		"test-format": "prettier . --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
 		"format": "prettier . --write",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
 		"release": "yarn version",
 		"prerelease": "yarn is-git-clean && yarn test-minify && yarn load-options",
-		"postrelease": "npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\""
+		"postrelease": "npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\" && (open https://github.com/mathiasrw/rexreplace/releases || 1)"
 	},
 	"keywords": [
 		"search",
