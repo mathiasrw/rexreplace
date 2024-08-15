@@ -20,12 +20,9 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
+            - run: npm install -g .
+            - run: rexreplace --version
             - run: npx yarn install
-            - name: Setup rr command
-              run: |
-                  echo 'alias rexreplace="node ./bin/rexreplace.cli.js"' >> $HOME/.bashrc
-                  source $HOME/.bashrc
-                  rexreplace --version || echo "RexReplace not accessible"
             - run: npx yarn test-format
             - run: npm uninstall -g rexreplace && npm -g install ./ && (which rexreplace || exit 0)
             - run: npx yarn test-cli
