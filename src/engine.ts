@@ -285,7 +285,7 @@ function getFinalRegex(pattern, config) {
 			break;
 		case 'RE2':
 			try {
-				const RE2 = require('re2');
+				//const RE2 = require('re2');
 				regex = new RE2(pattern, flags);
 			} catch (e) {
 				if (config.debug) throw new Error(e);

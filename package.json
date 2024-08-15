@@ -1,10 +1,9 @@
 {
 	"name": "rexreplace",
 	"version": "7.1.6",
-	"description": "Smoothly search & replace in files from CLI.",
+	"description": "Search & replace across files with a CLI tool that makes you trust what you are doing.",
 	"author": "Mathias Rangel Wulff",
 	"license": "MIT",
-	"main": "src/engine.js",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/mathiasrw/rexreplace.git"
@@ -17,12 +16,13 @@
 		"rr": "bin/rexreplace.cli.min.js",
 		"rexreplace": "bin/rexreplace.cli.js"
 	},
+	"main": "src/engine.js",
 	"scripts": {
 		"test": "yarn build && yarn test-cli && yarn test-js",
 		"postbuild": "cp bin/rexreplace.cli.js bin/rexreplace.cli.min.js",
 		"version": "yarn build-minify",
 		"build": "yarn build-only",
-		"build-only": "rollup -c",
+		"build-only": "rollup -c --bundleConfigAsCjs",
 		"build-minify": "yarn build && yarn minify",
 		"minify": "cat bin/rexreplace.cli.js > bin/rexreplace.cli.min.js",
 		"prebuild": "rm -fr bin && yarn format",
@@ -36,8 +36,11 @@
 		"load-options": "rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
 		"test-format": "yarn prettier --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
 		"format": "yarn prettier --write",
-		"prettier": "prettier '{src,test}/**/*.{scss,css,js,ts}'",
-		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)"
+		"prettier": "prettier .",
+		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
+		"release": "yarn version",
+		"preversion": "yarn # && yarn test",
+		"postversion": "npm publish # && git push && git push --tags && echo \"Successfully released version $npm_package_version\""
 	},
 	"keywords": [
 		"search",
@@ -49,25 +52,25 @@
 		"sed"
 	],
 	"devDependencies": {
-		"@rollup/plugin-node-resolve": "13.0.6",
-		"@rollup/plugin-replace": "3.0.0",
-		"@types/node": "20.4.5",
-		"assert": "^2.0.0",
-		"mocha": "10.2.0",
-		"prettier": "3.0.0",
-		"rollup": "2.58.0",
-		"yarn": "1.22.19",
+		"@rollup/plugin-replace": "5",
 		"@rollup/plugin-swc": "^0.3.1",
-		"@swc/core": "^1.7.11"
+		"@swc/core": "^1.7.11",
+		"@types/node": "22.3.0",
+		"assert": "^2.0.0",
+		"mocha": "10.7.3",
+		"prettier": "3.3.3",
+		"rollup": "4",
+		"yarn": "1.22.19"
 	},
-	"resolutions": {},
+	"resolutions": {
+		"glob": "9"
+	},
 	"directories": {
 		"test": "test"
 	},
 	"dependencies": {
-		"ansi-regex": "6.0.1",
 		"globs": "0.1.4",
-		"yargs": "15"
+		"yargs": "16"
 	},
 	"prettier": {
 		"useTabs": true,

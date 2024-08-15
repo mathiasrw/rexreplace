@@ -2,9 +2,10 @@ _This is the legacy version of [RexReplace](https://www.npmjs.com/package/rexrep
 
 # rreplace
 
-Regex replace in files from your CLI - with a tiny footprint. 
+Regex replace in files from your CLI - with a tiny footprint.
 
-### Installation 
+### Installation
+
 ```bash
 > npm install -g rreplace
 ```
@@ -12,6 +13,7 @@ Regex replace in files from your CLI - with a tiny footprint.
 Works on any version of Node.js since 0.6
 
 ### Usage
+
 ```bash
 > rreplace pattern replace filepath [regexFlags [encoding]]
 ```
@@ -29,11 +31,10 @@ Works on any version of Node.js since 0.6
 ### Example
 
 ```bash
-> rreplace '(foo)(.*)' '$2$1' myfile.md 
+> rreplace '(foo)(.*)' '$2$1' myfile.md
   # 'foobar' is now 'barfoo' in myfile.md
 ```
 
-
 ---
-MIT License
 
+MIT License
