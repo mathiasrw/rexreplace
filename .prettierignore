@@ -1,5 +1,4 @@
 legacy/
-/bin/
-/dist/
-/.*
+dist/
+bin/
 *.md

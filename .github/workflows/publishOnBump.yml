@@ -1,19 +1,18 @@
 name: Publish on bump
 
-on: 
-  push:
-    branches:
-    - Qmaster
-    
+on:
+    push:
+        branches:
+            - Qmaster
 
 jobs:
-  build:
-    if: ${{ null || !github.event.pusher.email }}
-    name: Autopublish dependabot
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checking the who pushed
-        run: |
-          echo "The github.event.pusher is:"
-          echo "${{ toJson(github.event) }}"
-          echo "And I must publish!!!"
+    build:
+        if: ${{ null || !github.event.pusher.email }}
+        name: Autopublish dependabot
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checking the who pushed
+              run: |
+                  echo "The github.event.pusher is:"
+                  echo "${{ toJson(github.event) }}"
+                  echo "And I must publish!!!"

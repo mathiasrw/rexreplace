@@ -2,9 +2,9 @@ test/*
 gfx/*
 rollup.config.js
 tmp/*
-.*/
+.*
 *.log
 *.txt
 *.file
 *.lock
-/legacy
+legacy/

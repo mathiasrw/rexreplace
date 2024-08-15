@@ -286,7 +286,8 @@ function getFinalRegex(pattern, config) {
 		case 'RE2':
 			try {
 				//const RE2 = require('re2');
-				regex = new RE2(pattern, flags);
+				//regex = new RE2(pattern, flags);
+				regex = new RegExp(pattern, flags);
 			} catch (e) {
 				if (config.debug) throw new Error(e);
 				die(e.message);
@@ -617,7 +618,9 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 function localTimeString(dateObj = new Date()) {
 	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${(
 		'0' + dateObj.getDate()
-	).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
+	).slice(
+		-2
+	)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
 		'0' + dateObj.getSeconds()
 	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }

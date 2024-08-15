@@ -69,13 +69,5 @@
 	"dependencies": {
 		"globs": "0.1.4",
 		"yargs": "16"
-	},
-	"prettier": {
-		"useTabs": true,
-		"printWidth": 100,
-		"singleQuote": true,
-		"arrowParens": "always",
-		"bracketSpacing": false,
-		"trailingComma": "es5"
 	}
 }
