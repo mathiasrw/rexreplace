@@ -68,6 +68,6 @@
 	},
 	"dependencies": {
 		"globs": "0.1.4",
-		"yargs": "16"
+		"yargs": "17"
 	}
 }
