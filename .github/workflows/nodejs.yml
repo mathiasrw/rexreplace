@@ -20,12 +20,5 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
-            - run: yarn --version
-            - run: bun --version
-            - run: npx yarn install
-            - run: npm run build
-            - run: npm install --location=global .
-            - run: rexreplace --version
-            - run: npm run test-format
-            - run: npm run test-cli
-            - run: npm run test
+            - run: yarn install
+            - run: yarn test-ci
