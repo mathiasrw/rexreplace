@@ -4,5 +4,3 @@ useTabs: true
 bracketSpacing: false
 trailingComma: es5
 singleQuote: true
-arrowParens: "avoid"
-

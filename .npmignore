@@ -1,5 +1,4 @@
 test/*
-src/*
 gfx/*
 rollup.config.js
 tmp/*
@@ -8,5 +7,4 @@ tmp/*
 *.txt
 *.file
 *.lock
-*.ts
 legacy/

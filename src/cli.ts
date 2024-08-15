@@ -1,6 +1,6 @@
 // CLI interface for rexreplace
 
-import * as rexreplace from './engine';
+import * as rexreplace from './engine.ts';
 
 let pattern, replacement;
 
@@ -138,7 +138,7 @@ const yargs = require('yargs')
 	.boolean('B')
 	.describe(
 		'B',
-		'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is halted.'
+		'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted.'
 	)
 	.alias('B', 'void-backup')
 
@@ -152,7 +152,7 @@ const yargs = require('yargs')
 		`Output each match on a new line. ` +
 			`Will not replace any content but you still need to provide a dummy value (like \`_\`) as replacement parameter. ` +
 			`If search pattern does not contain matching groups the full match will be outputted. ` +
-			`If search pattern _does_ contain matching groups only matching groups will be outputted (same line with no delimiter). ` +
+			`If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). ` +
 			``
 	)
 	.alias('m', 'output-match')
@@ -174,6 +174,50 @@ const yargs = require('yargs')
 			''
 	)
 
+	.boolean('j')
+	.alias('j', 'replacement-js')
+	.describe(
+		'j',
+		`Treat replacement as javascript source code. 
+The statement from the last expression will become the replacement string. 
+Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. 
+The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. 
+At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. 
+If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
+
+The code has access to the following variables: 
+\`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
+\`fs\` from node, 
+\`path\` from node, 
+\`globs\` from npm, 
+\`pipe\`: the data piped into the command (null if no piped data), 
+\`find\`: pattern searched for (the needle), 
+\`text\`: full text being searched i.e. file content or piped data (the haystack), 
+\`bytes\`: total size of the haystack in bytes, 
+\`size\`: human-friendly representation of the total size of the haystack, 
+\`time\`: String representing the local time when the command was invoked,
+\`time_obj\`: date object representing \`time\`,
+\`now\`: alias for \`time\`,
+\`cwd\`: current process working dir, 
+\`nl\`: a new-line char,
+\`_\`: a single space char (for easy string concatenation).
+
+The following values defaults to \`❌\` if haystack does not originate from a file:
+\`file\`: contains the full path of the active file being searched (including full filename), 
+\`file_rel\`: contains \`file\` relative to current process working dir, 
+\`dirpath\`: contains the full path without filename of the active file being searched, 
+\`dirpath_rel\`: contains \`dirpath\` relative to current process working dir, 
+\`filename\`: is the full filename of the active file being searched without path, 
+\`name\`: filename of the active file being searched with no extension, 
+\`ext\`: extension of the filename including leading dot, 
+\`mtime\`: ISO inspired representation of the last local modification time of the current file, 
+\`ctime\`: ISO representation of the local creation time of the current file. 
+\`mtime_obj\`: date object representing \`mtime\`, 
+\`ctime_obj\`: date object representing \`ctime\`. 
+
+All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
+`
+	)
 	.string('x')
 	.describe(
 		'x',
@@ -186,13 +230,7 @@ const yargs = require('yargs')
 	.alias('X', 'exclude-glob')
 
 	/*
-    
-	
-	-T (Expect no match in any file and return exit 1 if found)
-	-t (Expect a match in each file and return exit 1 if not found)
-
-	
-	.boolean('N')
+        .boolean('N')
         .alias('N', 'void-newline')
         .describe('N',    
             `Avoid having newline when outputting data (or when piping). `+
@@ -201,22 +239,27 @@ const yargs = require('yargs')
         )
 	
 	
+	-E (Expect there to be no match and return exit 1 if found)
+	-e (Expect there to be batch and return exit 1 if not found)
+*/
 
-	.boolean('p')
-        .describe('p', "Pattern is the path to a filename containing the pattern. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
-        .alias('p', 'pattern-file')
-	
+	/*    .boolean('P')
+        .describe('P', "Pattern is a filename from where the pattern will be generated. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
+        .alias('P', 'pattern-file')
 
     .boolean('R')
         .alias('R', 'replacement-file')
         .describe('R',     
-            `Replacement is the path to a filename containing the replacement`.`Will be followed by other all rules (like -€)`
+            `Replacement is a filename from where the replacement will be generated. ` +
+            `If more than one line is found in the file the final replacement will be defined by each line trimmed and having newlines removed followed by all other rules (like -€).`
         )
 
+    */
 
+	/* // Ideas
 
     .boolean('n')
-        .describe('n', "Do replacement on file path+name instead of file content (rename/move the files)")
+        .describe('n', "Do replacement on file path/names instead of file content (rename/move the files)")
         .alias('n', 'name')
 
     // https://github.com/eugeneware/replacestream
@@ -236,9 +279,9 @@ const yargs = require('yargs')
         .alias('g', 'glob-pipe')
 
 
-    .boolean('J')
-        .describe('J', "Pattern is javascript source that will return a string giving the pattern to use")
-        .alias('J', 'pattern-js')
+    .boolean('j')
+        .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
+        .alias('j', 'pattern-js')
 
 
     .boolean('glob-js')
@@ -247,50 +290,6 @@ const yargs = require('yargs')
 
     */
 
-	.boolean('j')
-	.alias('j', 'replacement-js')
-	.describe(
-		'j',
-		`Treat replacement as javascript source code. 
-	The statement from the last expression will become the replacement string. 
-	Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. 
-	The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. 
-	At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. 
-	If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
-	
-	The code has access to the following variables: 
-	\`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
-	\`fs\` from node, 
-	\`path\` from node, 
-	\`globs\` from npm, 
-	\`pipe\`: the data piped into the command (null if no piped data), 
-	\`find\`: pattern searched for (the needle), 
-	\`text\`: full text being searched i.e. file content or piped data (the haystack), 
-	\`bytes\`: total size of the haystack in bytes, 
-	\`size\`: human-friendly representation of the total size of the haystack, 
-	\`time\`: String representing the local time when the command was invoked,
-	\`time_obj\`: date object representing \`time\`,
-	\`now\`: alias for \`time\`,
-	\`cwd\`: current process working dir, 
-	\`nl\`: a new-line char,
-	\`_\`: a single space char (for easy string concatenation).
-	
-	The following values defaults to \`❌\` if haystack does not originate from a file:
-	\`file\`: contains the full path of the active file being searched (including full filename), 
-	\`file_rel\`: contains \`file\` relative to current process working dir, 
-	\`dirpath\`: contains the full path without filename of the active file being searched, 
-	\`dirpath_rel\`: contains \`dirpath\` relative to current process working dir, 
-	\`filename\`: is the full filename of the active file being searched without path, 
-	\`name\`: filename of the active file being searched with no extension, 
-	\`ext\`: extension of the filename including leading dot, 
-	\`mtime\`: ISO inspired representation of the last local modification time of the current file, 
-	\`ctime\`: ISO representation of the local creation time of the current file. 
-	\`mtime_obj\`: date object representing \`mtime\`, 
-	\`ctime_obj\`: date object representing \`ctime\`. 
-	
-	All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
-	`
-	)
 	.help('h')
 	.describe('h', 'Display help.')
 	.alias('h', 'help')
@@ -328,11 +327,17 @@ function unescapeString(str = '') {
 	let pipeData = '';
 
 	config.pipedData = null;
+
 	config.showHelp = yargs.showHelp;
+
 	config.pattern = pattern;
+
 	config.includeGlob = yargs.argv._;
-	config.excludeGlob = [...yargs.argv.excludeGlob].filter(Boolean);
-	config.excludeRe = [...yargs.argv.excludeRe].filter(Boolean);
+
+	config.excludeGlob = [].concat(yargs.argv.excludeGlob).filter(Boolean);
+
+	config.excludeRe = [].concat(yargs.argv.excludeRe).filter(Boolean);
+
 	if (config.replacementJs) {
 		config.replacement = replacement;
 	} else {
