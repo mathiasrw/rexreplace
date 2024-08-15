@@ -1,7 +1,7 @@
 /// <reference path="../types/rexreplace.d.ts" />
 
 import yargs from 'yargs';
-import argMate, {paramInfo} from 'argmate';
+import argMate /*paramInfo*/ from 'argmate';
 import * as rexreplace from './engine.ts';
 
 import {chat, debug, die, warn, info, outputConfig, step} from './output.ts';
