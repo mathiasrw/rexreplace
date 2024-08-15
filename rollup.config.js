@@ -6,10 +6,10 @@ import typescript from 'rollup-plugin-typescript3';
 import closure from 'rollup-plugin-closure-compiler-js';
 
 */
-// import filesize from 'rollup-plugin-filesize';
+import swc from '@rollup/plugin-swc';
 import replace from '@rollup/plugin-replace';
-import hashbang from 'rollup-plugin-hashbang'
-import buble from '@rollup/plugin-buble';
+// import hashbang from 'rollup-plugin-hashbang'
+//import buble from '@rollup/plugin-buble';
 import resolve from '@rollup/plugin-node-resolve';
 
 
@@ -24,33 +24,35 @@ import resolve from '@rollup/plugin-node-resolve';
 export default [
 	{
 		// input: 'src/cli.ts',
-		input: 'bin/ES6/cli.js',
+		input: 'src/cli.ts',
 		output: {
+			banner: '#!/usr/bin/env node',
 			name: 'rexreplace',
 			//file: 'build/ES5/rexreplace.bundle.js',
 			file: 'bin/rexreplace.cli.js',
 			format: 'iife'
 		},
 		plugins: [
-			hashbang(),			
+			//hashbang(),
 			//typescript(),
-			resolve(), 
-			buble(),
+			resolve(),
+			swc({ jsc: { target: 'es5', }, }),
+			//buble(),
 			replace({
-				"PACKAGE_VERSION": require('./package.json').version,preventAssignment: true,
+				"PACKAGE_VERSION": require('./package.json').version, preventAssignment: true,
 			}),
 
 			//progress(),
 			/*closure({
-				        languageIn: 'ECMASCRIPT6',
-				        languageOut: 'ECMASCRIPT5',
-				        compilationLevel: 'ADVANCED',
-				        warningLevel: 'QUIET',
+						languageIn: 'ECMASCRIPT6',
+						languageOut: 'ECMASCRIPT5',
+						compilationLevel: 'ADVANCED',
+						warningLevel: 'QUIET',
 						env:'CUSTOM',
 						//externs: ['externs.js'],
-    		}),//*/
+			}),//*/
 
-    		//uglify(),
+			//uglify(),
 			//filesize(),
 		]
 	},/*{

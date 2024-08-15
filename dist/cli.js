@@ -1,0 +1,329 @@
+/// <reference path="../types/rexreplace.d.ts" />
+function _array_like_to_array(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+function _array_with_holes(arr) {
+    if (Array.isArray(arr)) return arr;
+}
+function _iterable_to_array_limit(arr, i) {
+    var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+    if (_i == null) return;
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _s, _e;
+    try {
+        for(_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true){
+            _arr.push(_s.value);
+            if (i && _arr.length === i) break;
+        }
+    } catch (err) {
+        _d = true;
+        _e = err;
+    } finally{
+        try {
+            if (!_n && _i["return"] != null) _i["return"]();
+        } finally{
+            if (_d) throw _e;
+        }
+    }
+    return _arr;
+}
+function _non_iterable_rest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _sliced_to_array(arr, i) {
+    return _array_with_holes(arr) || _iterable_to_array_limit(arr, i) || _unsupported_iterable_to_array(arr, i) || _non_iterable_rest();
+}
+function _unsupported_iterable_to_array(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array(o, minLen);
+}
+import argMate from 'argmate';
+import * as rexreplace from './engine.ts';
+import { die, warn, step } from './output.ts';
+var re = {
+    nl: /\r?\n/,
+    unescape: /'/g
+};
+//executeReplacement(cli2conf(process.argv.slice(2)), null);
+export function cli2conf(runtime, args) {
+    var pattern, replacement;
+    // To avoid problems with patterns or replacements starting with '-' so the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
+    var needHelp = 0;
+    if (args.length < 2) {
+        if (/-v|--?version$/i.test(args.slice(-1)[0])) {
+            console.log(rexreplace.version);
+            runtime.exit(0);
+        } else if (/-h|--?help$/i.test(args.slice(-1)[0])) {
+            needHelp = 1;
+        } else {
+            needHelp = 2;
+        }
+    } else {
+        var ref;
+        ref = _sliced_to_array(args.splice(0, 2), 2), pattern = ref[0], replacement = ref[1], ref;
+    }
+    var argv = argMate(args, {
+        version: {
+            describe: 'Print rexreplace version (can be given as only argument)',
+            alias: 'v'
+        },
+        voidIgnoreCase: {
+            describe: 'Void case insensitive search pattern.',
+            alias: 'I'
+        },
+        voidGlobal: {
+            describe: 'Void global search (stop looking after the first match).',
+            alias: 'G'
+        },
+        voidMultiline: {
+            describe: 'Void multiline search pattern. Makes ^ and $ match start/end of whole content rather than each line.',
+            alias: 'M'
+        },
+        dotAll: {
+            alias: 's',
+            describe: 'Have `.` also match newline.'
+        },
+        unicode: {
+            describe: 'Treat pattern as a sequence of unicode code points.',
+            alias: 'u'
+        },
+        encoding: {
+            default: 'utf8',
+            alias: 'e',
+            describe: 'Encoding of files/piped data.'
+        },
+        engine: {
+            alias: 'E',
+            describe: 'What regex engine to use:',
+            default: 'V8',
+            valid: [
+                'V8' /*'RE2' /*'sd', 'stream'*/ 
+            ]
+        },
+        literal: {
+            alias: 'L',
+            describe: 'Literal string search (no regex used when searching)'
+        },
+        voidEuro: {
+            alias: '€',
+            describe: "Void having '€' as alias for '$' in pattern and replacement parameters"
+        },
+        voidSection: {
+            alias: '§',
+            describe: "Void having '§' as alias for '\\' in pattern and replacement parameters"
+        },
+        voidAsync: {
+            alias: 'A',
+            describe: "Handle files in a synchronous flow. Good to limit memory usage when handling large files. "
+        },
+        halt: {
+            alias: [
+                'H',
+                'bail'
+            ],
+            describe: 'Halt on first error',
+            default: false
+        },
+        quiet: {
+            alias: 'q',
+            describe: 'Only display errors (no other info)'
+        },
+        quietTotal: {
+            alias: 'Q',
+            describe: 'Never display any errors or info'
+        },
+        voidBackup: {
+            alias: 'B',
+            describe: 'Avoid temporary backing up files. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you might lose data if the process is forced closed.'
+        },
+        keepBackup: {
+            describe: 'Keep the backup file with the original content.',
+            alias: 'b'
+        },
+        output: {
+            alias: 'o',
+            describe: 'Output the final result instead of saving to file. Will output the full content even if no replacement has taken place.'
+        },
+        outputMatch: {
+            alias: 'm',
+            describe: "Output each match on a new line. " + "Will not replace any content but you still need to provide a dummy value (like `_`) as replacement parameter. " + "If search pattern does not contain matching groups the full match will be outputted. " + "If search pattern _does_ contain matching groups only matching groups will be outputted (same line with no delimiter). " + ""
+        },
+        trimPipe: {
+            alias: 'T',
+            describe: "Trim piped data before processing. " + "If piped data only consists of chars that can be trimmed (new line, space, tabs...) it will become an empty string. " + ''
+        },
+        replacementPipe: {
+            alias: 'R',
+            describe: "Replacement is being piped in. You still need to provide a dummy value (like `_`) as replacement parameter.",
+            conflict: [
+                'g',
+                'G'
+            ]
+        },
+        globPipe: {
+            alias: 'g',
+            describe: 'Filename/globs will be piped in. If filename/globs are provided in command (-X flags are ok) the execution will halt',
+            conflict: [
+                'G'
+            ]
+        },
+        /*    .boolean('G')
+	.describe('G', "filename/globs provided are to files containing one target filename/glob per line")
+	.alias('G', 'glob-file')
+	.conflicts('G','g')*/ simulate: {
+            alias: 'S',
+            describe: 'Simulate output without changing any files'
+        },
+        excludeRe: {
+            alias: 'x',
+            decsribe: 'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.',
+            type: 'string[]'
+        },
+        excludeGlob: {
+            alias: 'X',
+            decsribe: 'Exclude files found with this glob. Can be used multiple times.',
+            type: 'string[]'
+        },
+        verbose: {
+            alias: 'V',
+            descrube: 'More chatty output'
+        },
+        debug: {
+            alias: 'd',
+            describe: 'Print debug info'
+        },
+        /*
+
+
+	-T (Expect no match in any file and return exit 1 if found)
+	-t (Expect a match in each file and return exit 1 if not found)
+
+
+	.boolean('N')
+        .alias('N', 'void-newline')
+        .describe('N',
+            `Avoid having newline when outputting data (or when piping). `+
+            `Normally . `+
+               ''
+        )
+
+
+
+	.boolean('p')
+        .describe('p', "Pattern is the path to a filename containing the pattern. If more than one line is found in the file the pattern will be defined by each line trimmed and having newlines removed followed by other all rules (like -€).)")
+        .alias('p', 'pattern-file')
+
+
+    .boolean('r')
+        .alias('r', 'replacement-file')
+        .describe('r',
+            `Replacement is the path to a filename containing the replacement`.`Will run before any other rules (like -€)`
+        )
+
+
+
+    .boolean('n')
+        .describe('n', "Do replacement on file path+name instead of file content (rename/move the files)")
+        .alias('n', 'name')
+
+    // https://github.com/eugeneware/replacestream
+    .integer('M')
+        .describe('M', "Maximum length of match. Set this value only if any single file of your ")
+        .alias('M', 'max-match-len')
+        .default('M', false)
+
+
+
+
+
+    .boolean('J')
+        .describe('J', "Pattern is javascript source that will return a string giving the pattern to use")
+        .alias('J', 'pattern-js')
+
+
+    .boolean('glob-js')
+        .describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
+
+
+    */ replacementJs: {
+            alias: [
+                'j',
+                'js'
+            ],
+            describe: "Treat replacement as javascript source code. \n			The statement from the last expression will become the replacement string. \n			Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted party. \n			The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. \n			At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. \n			If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. \n\n			The code has access to the following variables: \n			`r` as an alias for `require` with both expanded to understand a relative path even if it is not starting with `./`, \n			`fs` from node, \n			`path` from node, \n			`glob` proxy name for the .sync function of fast-glob from npm, \n			`pipe`: the data piped into the command (null if no piped data), \n			`find`: pattern searched for (the needle), \n			`text`: full text being searched i.e. file content or piped data (the haystack), \n			`bytes`: total size of the haystack in bytes, \n			`size`: human-friendly representation of the total size of the haystack, \n			`time`: String representing the local time when the command was invoked,\n			`time_obj`: date object representing `time`,\n			`now`: alias for `time`,\n			`cwd`: current process working dir, \n			`nl`: a new-line char,\n			`_`: a single space char (for easy string concatenation).\n\n			The following values defaults to `❌` if haystack does not originate from a file:\n			`file`: contains the full path of the active file being searched (including full filename), \n			`file_rel`: contains `file` relative to current process working dir, \n			`dirpath`: contains the full path without filename of the active file being searched, \n			`dirpath_rel`: contains `dirpath` relative to current process working dir, \n			`filename`: is the full filename of the active file being searched without path, \n			`name`: filename of the active file being searched with no extension, \n			`ext`: extension of the filename including leading dot, \n			`mtime`: ISO inspired representation of the last local modification time of the current file, \n			`ctime`: ISO representation of the local creation time of the current file. \n			`mtime_obj`: date object representing `mtime`, \n			`ctime_obj`: date object representing `ctime`. \n\n			All variables, except from module, date objects, `nl` and `_`, has a corresponding variable name followed by `_` where the content has an extra space at the end (for easy concatenation). \n			".replaceAll(/\s+/g, ' ')
+        },
+        help: {
+            alias: 'h',
+            descriubie: 'Display help.'
+        }
+    }, {
+    });
+    // All options into one big config object for the rexreplace engine
+    var conf = argv;
+    conf.showHelp = function() {
+        console.log('helpText()');
+        process.exit();
+    };
+    conf.needHelp = needHelp;
+    conf.pattern = pattern;
+    conf.replacement = replacement;
+    conf.includeGlob = argv._;
+    conf.excludeGlob = argv.excludeGlob.filter(Boolean);
+    conf.excludeRe = argv.excludeRe.filter(Boolean);
+    if (!conf.replacementJs) {
+        conf.replacement = unescapeString(conf.replacement);
+    }
+    return conf;
+}
+function unescapeString() {
+    var str = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : '';
+    return new Function("return '".concat(str.replace(re.unescape, "\\'"), "'"))();
+}
+export function executeReplacement(runtime, conf) {
+    var pipeData = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
+    if (0 < conf.needHelp) {
+        conf.showHelp();
+        runtime.exit(conf.needHelp - 1);
+    }
+    if (null === pipeData) return rexreplace.engine(runtime, conf);
+    if (conf.trimPipe) {
+        pipeData = pipeData.trim();
+    }
+    if (conf.replacementPipe) {
+        step('Replacement from pipe');
+        if (null === pipeData) {
+            return die('You asked the piped data to be used as replacement - but no data arrived.');
+        }
+        conf.replacement = pipeData;
+        if (conf.replacementJs) conf.pipeData = pipeData;
+        return rexreplace.engine(runtime, conf);
+    }
+    if (conf.globPipe) {
+        step('globs from pipe');
+        if (null === conf.pipeData) {
+            return die('You asked the piped data to be use as files/globs to include - but no data arrived.');
+        }
+        if (conf.includeGlob.length) {
+            return die('Please pipe file/globs to include OR provide them as as parameters. Not both.');
+        }
+        conf.globs = pipeData.split(re.nl).filter(Boolean);
+        if (conf.replacementJs) conf.pipeData = pipeData;
+        return rexreplace.engine(runtime, conf);
+    }
+    if (conf.includeGlob.length && !conf.replacementJs && '' !== pipeData && '\n' !== pipeData) {
+        return warn("".concat(conf.includeGlob.length, " file paths / globs provided. \n    Data is also being piped in, but with no flags indicating how to deal with it.\n    Pipe data will be ignored for now, but check if this is actually what you intended to do."));
+    }
+    step('Content being piped');
+    conf.pipeData = pipeData;
+    conf.output = true;
+    process.stdout.setDefaultEncoding(conf.encoding);
+    return rexreplace.engine(runtime, conf);
+}

@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-
 // CLI interface for rexreplace
 
-import * as rexreplace from './engine';
+import * as rexreplace from './engine.ts';
 
 let pattern, replacement;
 
@@ -329,11 +327,17 @@ function unescapeString(str = '') {
 	let pipeData = '';
 
 	config.pipedData = null;
+
 	config.showHelp = yargs.showHelp;
+
 	config.pattern = pattern;
+
 	config.includeGlob = yargs.argv._;
-	config.excludeGlob = [...yargs.argv.excludeGlob].filter(Boolean);
-	config.excludeRe = [...yargs.argv.excludeRe].filter(Boolean);
+
+	config.excludeGlob = [].concat(yargs.argv.excludeGlob).filter(Boolean);
+
+	config.excludeRe = [].concat(yargs.argv.excludeRe).filter(Boolean);
+
 	if (config.replacementJs) {
 		config.replacement = replacement;
 	} else {
