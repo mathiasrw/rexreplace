@@ -1,6 +1,6 @@
 {
 	"name": "rexreplace",
-	"version": "7.1.6",
+	"version": "7.1.7",
 	"description": "Search & replace across files with a CLI tool that makes you trust what you are doing.",
 	"author": "Mathias Rangel Wulff",
 	"license": "MIT",
@@ -38,9 +38,9 @@
 		"format": "yarn prettier --write",
 		"prettier": "prettier .",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
-		"release": "yarn version",
 		"preversion": "yarn # && yarn test",
-		"postversion": "npm publish # && git push && git push --tags && echo \"Successfully released version $npm_package_version\""
+		"postversion": "npm publish # && git push && git push --tags && echo \"Successfully released version $npm_package_version\"",
+		"release": "yarn version"
 	},
 	"keywords": [
 		"search",
