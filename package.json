@@ -1,6 +1,6 @@
 {
 	"name": "rexreplace",
-	"version": "7.1.6",
+	"version": "7.1.7",
 	"description": "Search & replace across files with a CLI tool that makes you trust what you are doing.",
 	"author": "Mathias Rangel Wulff",
 	"license": "MIT",
