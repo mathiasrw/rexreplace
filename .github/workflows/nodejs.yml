@@ -20,10 +20,10 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
-            - run: npm install -g .
-            - run: rexreplace --version
             - run: npx yarn install
-            - run: npx yarn test-format
-            - run: npm uninstall -g rexreplace && npm -g install ./ && (which rexreplace || exit 0)
-            - run: npx yarn test-cli
-            - run: npx yarn test
+            - run: npm run build-only
+            - run: npm install --location=global .
+            - run: rexreplace --version
+            - run: npm run test-format
+            - run: npm run test-cli
+            - run: npm run test
