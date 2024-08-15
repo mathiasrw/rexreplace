@@ -39,7 +39,7 @@
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
 		"release": "yarn version",
 		"prerelease": "yarn is-git-clean && yarn test-minify && yarn load-options",
-		"postrelease": "echo npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\""
+		"postrelease": "npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\""
 	},
 	"keywords": [
 		"search",
