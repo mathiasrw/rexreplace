@@ -20,14 +20,14 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
-            - run: npm ci
-            - run: npm run test-format
-            - name: Install and setup rexreplace globally
+            - run: npx yarn install
+            - name: Setup rr command
               run: |
                   npm install -g ./
                   echo "$(npm bin -g)" >> $GITHUB_PATH
                   npx rexreplace --version || echo "rexreplace not accessible via npx"
                   rexreplace --version || echo "rexreplace not accessible directly"
-            - name: Run CLI tests
-              run: npm run test-cli
-            - run: npm test
+            - run: npx yarn test-format
+            - run: npm uninstall -g rexreplace && npm -g install ./ && (which rexreplace || exit 0)
+            - run: npx yarn test-cli
+            - run: npx yarn test
