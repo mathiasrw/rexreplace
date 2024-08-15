@@ -11,7 +11,7 @@ export default [
 			format: 'iife',
 		},
 		plugins: [
-			swc({ jsc: { target: 'es5' } }),
+			swc({jsc: {target: 'es5'}}),
 			replace({
 				PACKAGE_VERSION: require('./package.json').version,
 				preventAssignment: true,

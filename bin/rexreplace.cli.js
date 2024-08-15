@@ -68,7 +68,7 @@
 	    byteOrSize: /bytes|size/,
 	    folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/
 	};
-	const version = '7.1.6';
+	const version = '7.1.7';
 	function engine(config = {
 	    engine: 'V8'
 	}) {
@@ -272,7 +272,7 @@
 	            break;
 	        case 'RE2':
 	            try {
-	                const RE2 = require('re2');
+	                //const RE2 = require('re2');
 	                regex = new RE2(pattern, flags);
 	            } catch (e) {
 	                if (config.debug) throw new Error(e);
