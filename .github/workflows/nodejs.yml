@@ -20,6 +20,8 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
+            - run: yarn --version
+            - run: bun --version
             - run: npx yarn install
             - run: npm run build
             - run: npm install --location=global .

@@ -27,7 +27,7 @@
 		"prebuild": "rm -fr bin && yarn format",
 		"test-js": "echo todo: async mocha",
 		"test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
-		"test-cli": "npm uninstall -g rexreplace && npm -g install ./ && yarn test-cli-only",
+		"test-cli": "npm uninstall --location=global rexreplace && npm --location=global install ./ && yarn test-cli-only # why on earth are they depricating the -g flag",
 		"test-cli-only": "bash test/cli/run.sh",
 		"test-speed": "bash test/speed/run.sh",
 		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main",
