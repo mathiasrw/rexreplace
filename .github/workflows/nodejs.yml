@@ -15,18 +15,17 @@ jobs:
                 node-version: [18.x, 20.x, 22.x]
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v1
+              uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npx yarn install
             - name: Setup rr command
               run: |
-                  npm install -g ./
-                  echo "$(npm bin -g)" >> $GITHUB_PATH
-                  npx rexreplace --version || echo "rexreplace not accessible via npx"
-                  rexreplace --version || echo "rexreplace not accessible directly"
+                  echo 'alias rexreplace="node ./bin/rexreplace.cli.js"' >> $HOME/.bashrc
+                  source $HOME/.bashrc
+                  rexreplace --version || echo "RexReplace not accessible"
             - run: npx yarn test-format
             - run: npm uninstall -g rexreplace && npm -g install ./ && (which rexreplace || exit 0)
             - run: npx yarn test-cli
