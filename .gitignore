@@ -8,3 +8,6 @@ package-lock.json
 .vscode
 /dist
 /bin
+
+v7/
+v8/

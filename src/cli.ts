@@ -317,7 +317,7 @@ function unescapeString(str = '') {
 	let config: any = {};
 
 	// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
-	Object.keys(yargs.argv).forEach((key) => {
+	Object.keys(yargs.argv).forEach(key => {
 		if (1 < key.length && key.indexOf('-') < 0) {
 			config[key] = yargs.argv[key];
 		}

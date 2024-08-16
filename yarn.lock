@@ -330,6 +330,11 @@ cliui@^7.0.2:
     strip-ansi "^6.0.0"
     wrap-ansi "^7.0.0"
 
+cmdmix@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/cmdmix/-/cmdmix-2.2.2.tgz#32a23a58e4a59c55ff2974e1e0f38b8cdf3e8b5a"
+  integrity sha512-sEKwwSgP5BKUsIShoxF4sVTIZADA1MBboLtgq6QfxEcxveGKjZ/W8wqS2MzfUp2w9JC6sJr/B8ZR/ijzXFy8dQ==
+
 color-convert@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-2.0.1.tgz#72d3a68d598c9bdb3af2ad1e84f21d896abd4de3"

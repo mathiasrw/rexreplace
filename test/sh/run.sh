@@ -139,7 +139,7 @@ assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' my.file -o"    "barfoo"
 
 # globs
 reset
-echo foobar >> my_file
+echo foobar > my_file
 assert		 		"rexreplace o x my*le -o"    "fxxbar\nfxxbar"
 rm my_file
 
@@ -213,8 +213,9 @@ assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxa
 
 # -L
 reset
-assert		 		"rexreplace 'b' '*+*' my.file -o"    'foo*+*ar'
-assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
+					rexreplace 'b' '*+*' my.file
+assert		 		"cat my.file"									'foo*+*ar'
+assert		 		"rexreplace '*+*' 'z' my.file -o --literal"   	'foozar'
 
 
 

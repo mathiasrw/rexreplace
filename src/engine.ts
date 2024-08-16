@@ -55,10 +55,10 @@ export function engine(config: any = {engine: 'V8'}) {
 		// Correct filepath
 		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
 		// Find out if any filepaths are invalid
-		.filter((filepath) => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
+		.filter(filepath => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
 
 		// Do the replacement
-		.forEach((filepath) => openFile(filepath, config));
+		.forEach(filepath => openFile(filepath, config));
 }
 
 function openFile(file, config) {
@@ -140,18 +140,18 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	}
 
 	// Let me know when fs gets promise'fied
-	fs.rename(oriFile, backupFile, (err) => {
+	fs.rename(oriFile, backupFile, err => {
 		if (err) {
 			return error(err);
 		}
 
-		fs.writeFile(oriFile, result, _config_rr.encoding, (err) => {
+		fs.writeFile(oriFile, result, _config_rr.encoding, err => {
 			if (err) {
 				return error(err);
 			}
 
 			if (!_config_rr.keepBackup) {
-				fs.unlink(backupFile, (err) => {
+				fs.unlink(backupFile, err => {
 					if (err) {
 						return error(err);
 					}
@@ -644,15 +644,15 @@ function getFilePaths(conf) {
 
 	if (excludeRe.length) {
 		excludeRe
-			.map((el) => getFinalPattern(el, conf))
-			.forEach((re) => {
-				filesToInclude = filesToInclude.filter((el) => !el.match(re));
+			.map(el => getFinalPattern(el, conf))
+			.forEach(re => {
+				filesToInclude = filesToInclude.filter(el => !el.match(re));
 			});
 	}
 
 	if (excludeGlob.length) {
 		const filesToExclude = globs.sync(excludeGlob);
-		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(el));
+		filesToInclude = filesToInclude.filter(el => !filesToExclude.includes(el));
 	}
 
 	return filesToInclude;
