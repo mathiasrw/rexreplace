@@ -17,30 +17,27 @@
 		"rexreplace": "bin/rexreplace.cli.js"
 	},
 	"main": "src/engine.js",
+	"type": "module",
 	"scripts": {
-		"test": "bun test --bail",
-		"test-this": "cmdmix 'RR_TARGET=%1 RR_TYPE=%2 bun test --bail'",
-		"test-run": "cmdmix 'RR_TARGET=%1 bun test'",
-		"test-all": "yarn test-run-all && yarn build && yarn use-bundle test-run-all",
-		"test-run-all": "yarn test-run bun && yarn test-run node && yarn test-run deno",
+		"build": "bun build.sh",
+		"test": "bun test synthetic --bail",
+		"test-watch": "bun test synthetic --watch",
 		"test-cli": "sh test/sh/run.sh",
+		"test-this": "yarn build && cmdmix 'RR_TARGET=%1 RR_TYPE=%2 bun test cli --bail'",
+		"test-all": "yarn test && yarn build && yarn use-bundle test-run-all ",
+		"test-run": "cmdmix 'RR_TARGET=%1 bun test cli --bail '",
+		"test-run-all": "yarn test-run bun && yarn test-run node && yarn test-run deno",
 		"test-speed": "bash test/speed/run.sh",
 		"test-format": "prettier . --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
 		"test-ci": "yarn test-format && yarn test-all && yarn test-cli",
-		"use-bundle": "RR_TYPE=bundle yarn",
-		"postbuild": "cp bin/rexreplace.cli.js bin/rexreplace.cli.min.js",
-		"version": "yarn build-minify",
-		"build": "rollup -c --bundleConfigAsCjs",
-		"build-minify": "yarn build && yarn minify",
-		"minify": "cat bin/rexreplace.cli.js > bin/rexreplace.cli.min.js",
-		"prebuild": "rm -fr bin && yarn format",
-		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main",
-		"load-options": "# rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
+		"use-min": "RR_TYPE=bundle_min yarn",
 		"format": "prettier . --write",
+		"load-options": "# rr -h | rr 'Options:(.+)Examples:' _ -ms | rr ' {26,}| *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
 		"release": "yarn version",
 		"prerelease": "yarn is-git-clean && yarn test-ci && yarn test-minify && yarn load-options",
-		"postrelease": "npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\" && (open https://github.com/mathiasrw/rexreplace/releases || 1)"
+		"postrelease": "npm publish && git push && git push --tags && echo \"Successfully released version $npm_package_version\" && (open https://github.com/mathiasrw/rexreplace/releases || 1)",
+		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main"
 	},
 	"keywords": [
 		"search",
@@ -52,26 +49,25 @@
 		"sed"
 	],
 	"devDependencies": {
-		"@rollup/plugin-replace": "5",
+		"@rollup/plugin-replace": "^5.0.7",
 		"@rollup/plugin-swc": "^0.3.1",
 		"@swc/core": "^1.7.11",
 		"@types/node": "22.3.0",
-		"assert": "^2.0.0",
+		"bun-types": "^1.1.24",
 		"cmdmix": "^2.2.2",
-		"mocha": "10.7.3",
 		"prettier": "3.3.3",
-		"rollup": "4",
+		"rollup": "^4.20.0",
 		"yarn": "1.22.19"
-	},
-	"peerDependencies": {},
-	"resolutions": {
-		"glob": "9"
 	},
 	"directories": {
 		"test": "test"
 	},
 	"dependencies": {
+		"argmate": "0.8",
+		"esbuild": "^0.23.1",
+		"fast-glob": "^3.3.2",
+		"fs-extra": "^11.2.0",
 		"globs": "0.1.4",
-		"yargs": "16"
+		"yargs": "^16.2.0"
 	}
 }

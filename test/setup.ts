@@ -4,6 +4,9 @@ import {spawnSync} from 'child_process';
 import {beforeEach, afterAll} from 'bun:test';
 
 // @ts-ignore
+import Bun from 'bun';
+
+// @ts-ignore
 import {writeFileSync, readFileSync, rmSync} from 'fs';
 
 // Helper function to read file contents
@@ -16,37 +19,34 @@ console.log({target: process.env.RR_TARGET, type: process.env.RR_TYPE});
 let targetType = (process.env.RR_TARGET || '') + '_' + (process.env.RR_TYPE || '');
 
 let exeStr = '';
-switch (targetType) {
-	case 'node_':
+switch (targetType.replace(/^_+|_+$/g, '')) {
+	case '':
+	case 'bun_src':
+		exeStr = 'bun run --bun ./src/env/bun.ts';
+		break;
 	case 'node_src':
-		exeStr = 'node  src/env/node.ts';
+		exeStr = 'node  ./src/env/node.ts';
 		break;
-	case 'node_bundle':
-		exeStr = 'node  bin/rexreplace.cli.js';
-		break;
-	case 'node_bundle_min':
-		exeStr = 'node  bin/rexreplace.node.min.js';
-		break;
-	case 'deno_':
 	case 'deno_src':
-		exeStr = 'deno run -A src/cli/deno.ts';
+		exeStr = 'deno run -A src/env/deno.ts';
 		break;
-	case 'deno_bundle':
+	case 'bun':
+		exeStr = 'bun run --bun bin/rexreplace-cli.bun.js';
+		break;
+	case 'node':
+		exeStr = 'node  bin/rexreplace-cli.node.js';
+		break;
+	case 'deno':
 		exeStr = 'deno run -A bin/rexreplace.deno.js';
 		break;
-	case 'deno_bundle_min':
+	case 'bun_min':
+		exeStr = 'bun run --bun bin/rexreplace-cli.bun.min.js';
+		break;
+	case 'node_min':
+		exeStr = 'node  bin/rexreplace-cli.node.min.js';
+		break;
+	case 'deno_min':
 		exeStr = 'deno run -A bin/rexreplace.deno.min.js';
-		break;
-	case '_':
-	case 'bun_':
-	case 'bun_src':
-		exeStr = 'bun run src/cli.ts';
-		break;
-	case 'bun_bundle':
-		exeStr = 'bun run --bun bin/rexreplace.cli.js';
-		break;
-	case 'bun_bundle_min':
-		exeStr = 'bun run --bun bin/rexreplace.bun.min.js';
 		break;
 	default:
 		throw JSON.stringify({
@@ -60,6 +60,18 @@ switch (targetType) {
 
 console.log({exeStr});
 
+export async function $(str: any, ...args) {
+	const cmd = str
+		.map((str, i) => str + (args[i] || ''))
+		.join('')
+		.replace('rexreplace', exeStr);
+	return await Bun.$`${{raw: cmd}}`.text().catch(e => {
+		console.error(e);
+		console.warn('> ', cmd);
+		throw 'Test halted';
+	});
+}
+
 export function run(cmd) {
 	cmd = cmd.replace('rexreplace', exeStr);
 	const result = spawnSync(cmd, {shell: true, encoding: 'utf-8'});
@@ -67,7 +79,6 @@ export function run(cmd) {
 		console.error(result.stderr.trim());
 		console.warn('> ', cmd);
 		throw 'Test halted';
-		throw new Error(`Command failed with exit code ${result.status}: ${result.stderr}`);
 	}
 	return result.stdout.trim();
 }

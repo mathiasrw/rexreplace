@@ -1,60 +1,85 @@
 let font: any = {};
-font.red = font.green = font.gray = str => str;
+font.yellow = font.red = font.green = font.gray = str => str;
 // check for node version supporting chalk - if so overwrite `font`
-//const font = import('chalk');
+//font = import('chalk');
 
-let config: any = null;
+let conf: any = null;
+let logInfo: any = null;
+let logWarn: any = null;
+let logErr: any = null;
 
-export const outputConfig = function (_config) {
-	config = _config;
+export const outputConfig = function (
+	_conf,
+	_logInfo = console.log,
+	_logWarn = console.warn,
+	_logErr = console.error
+) {
+	conf = _conf;
+	logInfo = _logInfo;
+	logWarn = _logWarn;
+	logErr = _logErr;
 };
 
 export const info = function (msg, data = '') {
-	if (config.quiet || config.quietTotal) {
+	if (conf?.quiet || conf?.quietTotal) {
 		return;
 	}
-	console.error(font.gray(msg), data);
+	if (conf?.output || conf?.outputMatch) {
+		return logErr.apply(this, [font.gray(msg), data].filter(Boolean));
+	}
+	logInfo.apply(this, [msg, data].filter(Boolean));
 };
 
 export const chat = function (msg, data = '') {
-	if (config.verbose) {
+	if (conf?.verbose && !(conf?.output || conf?.outputMatch)) {
 		info(msg, data);
 	} else {
-		debug(msg + ' ' + data);
+		debug([msg, data].filter(Boolean).join(' '));
 	}
-};
-
-export const die = function (msg = '', data = '', displayHelp = false) {
-	if (displayHelp && !config.quietTotal) {
-		config.showHelp();
-	}
-	msg && error(' ❌ ' + msg, data);
-	kill();
 };
 
 export const error = function (msg, data = '') {
-	if (!config.quiet && !config.quietTotal) {
-		console.error(font.red(msg), data);
+	if (!conf?.quietTotal) {
+		logErr.apply(this, [' ❌', font.red(msg), data].filter(Boolean));
 	}
-	if (config.halt) {
-		kill(msg);
+	if (conf?.bail) {
+		return kill();
 	}
+
 	return false;
 };
 
-export function debug(data) {
-	if (config.debug) {
-		console.error(font.gray(JSON.stringify(data, null, 4)));
+export const warn = function (msg, data = '') {
+	if (!conf?.quiet && !conf?.quietTotal) {
+		logWarn.apply(this, [' 🟡', font.yellow(msg), data].filter(Boolean));
+	}
+
+	return false;
+};
+
+export const die = function (msg = '', data = '', displayHelp = false) {
+	if (displayHelp && !conf?.quietTotal) {
+		conf?.showHelp();
+	}
+	msg && error(msg, data);
+	kill();
+};
+
+export function debug(...data) {
+	if (conf?.debug) {
+		logErr(font.gray(JSON.stringify(data, null, 4)));
 	}
 }
 
 export function step(data) {
-	if (config.verbose) {
-		debug(data);
+	if (conf?.verbose && !(conf?.output || conf?.quiet || !conf?.quiet || !conf?.quietTotal)) {
+		logErr(font.gray(data));
 	}
 }
 
 function kill(error = 1, msg = '') {
-	msg && console.error(+msg);
-	process.exit(error);
+	if (!conf?.quietTotal && msg) {
+		logErr(+msg);
+	}
+	process.exit(+error);
 }

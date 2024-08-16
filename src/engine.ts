@@ -1,12 +1,13 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const path = require('path');
 
+const fGlob = require('fast-glob');
 const globs = require('globs');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, error, die} from './output.ts';
+import {chat, debug, die, error, info, outputConfig, step} from './output.ts';
 
 const re = {
 	euro: /€/g,
@@ -21,122 +22,134 @@ const re = {
 
 export const version = 'PACKAGE_VERSION';
 
-export function engine(config: any = {engine: 'V8'}) {
-	outputConfig(config);
+let runtime: Runtime;
+
+export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
+	runtime = _runtime;
+
+	outputConfig(conf);
 
 	step('Displaying steps for:');
-	step(config);
+	step(conf);
 
-	config.pattern = getFinalPattern(config.pattern, config) || '';
+	conf.pattern = getPattern(conf.pattern, conf) || '';
 
-	config.replacement = getFinalReplacement(config.replacement, config) || '';
+	conf.replacement = getReplacement(conf.replacement, conf) || '';
 
-	config.replacementOri = config.replacement;
+	if (conf.replacementJs) conf.replacementOri = conf.replacement;
 
-	config.regex = getFinalRegex(config.pattern, config) || '';
+	conf.regex = getRegex(conf.pattern, conf) || '';
 
-	step(config);
+	step(conf);
 
-	if (handlePipedData(config)) {
-		return doReplacement('Piped data', config, config.pipedData);
+	conf.files = getFilePaths(conf);
+
+	if (!conf.files.length) {
+		if (null !== conf.pipeData) {
+			return doReplacement('[pipe-data]', conf, conf.pipeData);
+		}
+
+		return error(conf.files.length + ' files found');
 	}
 
-	config.files = getFilePaths(config);
+	chat(conf.files.length + ' files found');
 
-	if (!config.files.length) {
-		return error(config.files.length + ' files found');
-	}
+	step(conf);
 
-	chat(config.files.length + ' files found');
-
-	step(config);
-
-	config.files
-		// Correct filepath
-		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
+	conf.files
 		// Find out if any filepaths are invalid
-		.filter(filepath => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
-
-		// Do the replacement
-		.forEach(filepath => openFile(filepath, config));
-}
-
-function openFile(file, config) {
-	if (config.voidAsync) {
-		chat('Open sync: ' + file);
-		var data = fs.readFileSync(file, config.encoding);
-		return doReplacement(file, config, data);
-	} else {
-		chat('Open async: ' + file);
-		fs.readFile(file, config.encoding, function (err, data) {
-			if (err) {
-				return error(err);
+		.filter(filepath => {
+			if (fs.statSync(filepath).isFile()) {
+				return true;
 			}
 
-			return doReplacement(file, config, data);
-		});
+			debug('Not a valid file:', filepath);
+			return false;
+		})
+		// Do the replacement
+		.forEach(filepath => openFile(filepath, conf));
+}
+
+function openFile(file, conf) {
+	if (conf.voidAsync) {
+		chat('Open sync: ' + file);
+		var data = runtime.fileReadSync(file, conf.encoding);
+		return doReplacement(file, conf, data);
 	}
+
+	chat('Open async: ' + file);
+
+	fs.readFile(file, conf.encoding, function (err, data) {
+		if (err) {
+			return error(err);
+		}
+		return doReplacement(file, conf, data);
+	});
 }
 
 // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
-function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
-	debug('Work on content from: ' + _file_rr);
+function doReplacement(filePath: string, conf: any, content: string) {
+	debug('Work on content from: ' + filePath);
 
 	// Variables to be accessible from js.
-	if (_config_rr.replacementJs) {
-		_config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
+	if (conf.replacementJs) {
+		conf.replacement = dynamicReplacement(filePath, conf, content);
 	}
 
-	// Main regexp of the whole thing
-	const result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
+	// Main regexp doing the replacement
+	const result = content.replace(conf.regex, conf.replacement);
 
 	// The output of matched strings is done from the replacement, so no need to continue
-	if (_config_rr.outputMatch) {
+	if (conf.outputMatch) {
 		return;
 	}
 
-	if (_config_rr.output) {
-		debug('Output result from: ' + _file_rr);
+	if (conf.output) {
+		if (conf.verbose || conf.debug) {
+			console.error(filePath);
+		}
 		return process.stdout.write(result);
 	}
 
 	// Nothing replaced = no need for writing file again
-	if (result === _data_rr) {
-		chat('Nothing changed in: ' + _file_rr);
+	if (result === content) {
+		debug('Nothing changed in: ' + filePath);
 		return;
 	}
 
 	// Release the memory while storing files
-	_data_rr = '';
+	content = '';
 
-	debug('Write new content to: ' + _file_rr);
+	if (conf.simulate) return info(filePath);
+
+	debug('Write updated content to: ' + filePath);
 
 	// Write directly to the same file (if the process is killed all new and old data is lost)
-	if (_config_rr.voidBackup) {
-		return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
+	if (conf.voidBackup) {
+		return fs.writeFile(filePath, result, conf.encoding, function (err) {
 			if (err) {
 				return error(err);
 			}
-			info(_file_rr);
+			return info(filePath);
 		});
 	}
 
 	//Make sure data is always on disk
-	const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+	const oriFile = path.normalize(path.join(process.cwd(), filePath));
 	const salt = new Date().toISOString().replace(re.colon, '_').replace('Z', '');
 	const backupFile = oriFile + '.' + salt + '.backup';
 
-	if (_config_rr.voidAsync) {
+	if (conf.voidAsync) {
 		try {
 			fs.renameSync(oriFile, backupFile);
-			fs.writeFileSync(oriFile, result, _config_rr.encoding);
-			if (!_config_rr.keepBackup) {
+			fs.writeFileSync(oriFile, result, conf.encoding);
+			if (!conf.keepBackup) {
 				fs.unlinkSync(backupFile);
 			}
 		} catch (e) {
 			return error(e);
 		}
-		return info(_file_rr);
+		return info(filePath);
 	}
 
 	// Let me know when fs gets promise'fied
@@ -145,46 +158,26 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 			return error(err);
 		}
 
-		fs.writeFile(oriFile, result, _config_rr.encoding, err => {
+		fs.writeFile(oriFile, result, conf.encoding, err => {
 			if (err) {
 				return error(err);
 			}
 
-			if (!_config_rr.keepBackup) {
-				fs.unlink(backupFile, err => {
+			if (!conf.keepBackup) {
+				return fs.unlink(backupFile, err => {
 					if (err) {
 						return error(err);
 					}
-					info(_file_rr);
+					return info(filePath);
 				});
-			} else {
-				info(_file_rr);
 			}
+
+			return info(filePath);
 		});
 	});
 }
 
-function handlePipedData(config) {
-	step('Check Piped Data');
-
-	if (config.includeGlob.length) {
-		if (!config.replacementJs && config.pipedData) {
-			chat('Piped data never used.');
-		}
-
-		return false;
-	}
-
-	if (null !== config.pipedData && !config.pipedDataUsed) {
-		config.dataIsPiped = true;
-		config.output = true;
-		return true;
-	}
-
-	return false;
-}
-
-function getFinalPattern(pattern, conf: any) {
+function getPattern(pattern, conf: any) {
 	step('Get final pattern');
 	pattern = replacePlaceholders(pattern, conf);
 
@@ -194,29 +187,20 @@ function getFinalPattern(pattern, conf: any) {
 
 	/*if (config.patternFile) {
 		pattern = fs.readFileSync(pattern, 'utf8');
-		pattern = new Function('return '+pattern)();
+		pattern = new Function('return '+pattern)(); // js code?!?
 	}*/
 
 	step(pattern);
 	return pattern;
 }
 
-function getFinalReplacement(replacement, conf: any) {
+function getReplacement(replacement, conf: any) {
 	step('Get final replacement');
 	/*if(config.replacementFile){
 		return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 	}*/
 
 	replacement = replacePlaceholders(replacement, conf);
-
-	if (conf.replacementPipe) {
-		step('Piping replacement');
-		conf.pipedDataUsed = true;
-		if (null === conf.pipedData) {
-			return die('No data piped into replacement');
-		}
-		replacement = conf.pipedData;
-	}
 
 	if (conf.outputMatch) {
 		step('Output match');
@@ -243,7 +227,6 @@ function getFinalReplacement(replacement, conf: any) {
 	}
 
 	// If captured groups then run dynamicly
-	//console.log(process);
 	if (
 		conf.replacementJs &&
 		re.capturedGroupRef.test(conf.replacement) &&
@@ -267,34 +250,33 @@ function getFinalReplacement(replacement, conf: any) {
 	}).join(' ');
 }*/
 
-function getFinalRegex(pattern, config) {
-	step('Get final regex with engine: ' + config.engine);
+function getRegex(pattern, conf) {
+	step('Get final regex with engine: ' + conf.engine);
 
 	let regex;
 
-	let flags = getFlags(config);
+	let flags = getFlags(conf);
 
-	switch (config.engine) {
+	switch (conf.engine) {
 		case 'V8':
 			try {
 				regex = new RegExp(pattern, flags);
 			} catch (e) {
-				if (config.debug) throw new Error(e);
+				if (conf.debug) throw new Error(e);
 				die(e.message);
 			}
 			break;
 		case 'RE2':
 			try {
-				//const RE2 = require('re2');
-				//regex = new RE2(pattern, flags);
-				regex = new RegExp(pattern, flags);
+				const RE2 = require('re2');
+				regex = new RE2(pattern, flags);
 			} catch (e) {
-				if (config.debug) throw new Error(e);
+				if (conf.debug) throw new Error(e);
 				die(e.message);
 			}
 			break;
 		default:
-			die(`Engine ${config.engine} not supported`);
+			die(`Engine ${conf.engine} not supported`);
 	}
 
 	step(regex);
@@ -302,28 +284,28 @@ function getFinalRegex(pattern, config) {
 	return regex;
 }
 
-function getFlags(config) {
+function getFlags(conf) {
 	step('Get flags');
 
 	let flags = '';
 
-	if (!config.voidGlobal) {
+	if (!conf.voidGlobal) {
 		flags += 'g';
 	}
 
-	if (!config.voidIgnoreCase) {
+	if (!conf.voidIgnoreCase) {
 		flags += 'i';
 	}
 
-	if (!config.voidMultiline) {
+	if (!conf.voidMultiline) {
 		flags += 'm';
 	}
 
-	if (config.dotAll) {
+	if (conf.dotAll) {
 		flags += 's';
 	}
 
-	if (config.unicode) {
+	if (conf.unicode) {
 		flags += 'u';
 	}
 
@@ -345,7 +327,7 @@ function readableSize(size) {
 function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	const _time_obj = now;
 	const _time = localTimeString(_time_obj);
-	const _pipe = _config_rr.pipedData,
+	const _pipe = _config_rr.pipeData,
 		_text = _data_rr,
 		_find = _config_rr.pattern,
 		code_rr = _config_rr.replacementOri,
@@ -374,25 +356,20 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'fs',
 			'globs',
 			'path',
-
 			'pipe',
 			'pipe_',
-
 			'find',
 			'find_',
 			'text',
 			'text_',
-
 			'file',
 			'file_',
 			'file_rel',
 			'file_rel_',
-
 			'dirpath',
 			'dirpath_',
 			'dirpath_rel',
 			'dirpath_rel_',
-
 			'dirname',
 			'dirname_',
 			'filename',
@@ -403,7 +380,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'ext_',
 			'cwd',
 			'cwd_',
-
 			'now',
 			'now_',
 			'time_obj',
@@ -415,7 +391,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'ctime_obj',
 			'ctime',
 			'ctime_',
-
 			'bytes',
 			'bytes_',
 			'size',
@@ -424,25 +399,25 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			'_',
 			'__code_rr',
 			'var path = require("path");' +
-			'var __require_ = require;' +
-			'var r = function(file){' +
-			'var result = null;' +
-			'try{' +
-			'result = __require_(file);' +
-			'} catch (e){' +
-			'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
-			'result = __require_(path.resolve(dir, file));' +
-			'};' +
-			'return result;' +
-			'};' +
-			'require = r;' +
-			'return eval(__code_rr);'
+				'var __require_ = require;' +
+				'var r = function(file){' +
+				'var result = null;' +
+				'try{' +
+				'result = __require_(file);' +
+				'} catch (e){' +
+				'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
+				'result = __require_(path.resolve(dir, file));' +
+				'};' +
+				'return result;' +
+				'};' +
+				'require = r;' +
+				'return eval(__code_rr);',
 		);
 
 	const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
 	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
 
-	if (!_config_rr.dataIsPiped) {
+	if (!_config_rr.contentWasPiped) {
 		_file = path.normalize(path.join(_cwd, _file_rr));
 		_file_rel = path.relative(_cwd, _file);
 		const pathInfo = path.parse(_file);
@@ -461,9 +436,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_ctime_obj = fileStats.ctime;
 			_mtime = localTimeString(_mtime_obj);
 			_ctime = localTimeString(_ctime_obj);
-
-			//console.log('filesize: ', fileStats.size);
-			//console.log('dataSize: ', _bytes);
 		}
 	}
 
@@ -472,12 +444,20 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 		_size = readableSize(_bytes);
 	}
 
+	const glob = (a, b) =>
+		fGlob.sync(a, {
+			unique: true,
+			caseSensitiveMatch: !_config_rr.voidIgnoreCase,
+			dot: true,
+			...b,
+		});
+
 	// Run only once if no captured groups (replacement cant change)
 	if (!/\$\d/.test(_config_rr.replacement)) {
 		return dynamicContent(
 			require,
 			fs,
-			globs,
+			glob,
 			path,
 			_pipe,
 			_pipe + _,
@@ -560,27 +540,22 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 		return dynamicContent(
 			require,
 			fs,
-			globs,
+			glob,
 			path,
-
 			__pipe,
 			__pipe + __,
-
 			__find,
 			__find + __,
 			__text,
 			__text + __,
-
 			__file,
 			__file + __,
 			__file_rel,
 			__file_rel + __,
-
 			__dirpath,
 			__dirpath + __,
 			__dirpath_rel,
 			__dirpath_rel + __,
-
 			__dirname,
 			__dirname + __,
 			__filename,
@@ -591,7 +566,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__ext + __,
 			__cwd,
 			__cwd + __,
-
 			__now,
 			__now + _,
 			__time_obj,
@@ -603,7 +577,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__ctime_obj,
 			__ctime,
 			__ctime + _,
-
 			__bytes,
 			__bytes + __,
 			__size,
@@ -638,21 +611,22 @@ function replacePlaceholders(str = '', conf: any) {
 }
 
 function getFilePaths(conf) {
-	let {includeGlob, excludeGlob, excludeRe} = conf;
+	const {includeGlob, excludeGlob, excludeRe, voidIgnoreCase} = conf;
 
-	let filesToInclude = globs.sync(includeGlob);
+	let filesToInclude: string[] = fGlob.sync(includeGlob, {
+		ignore: excludeGlob,
+		onlyFiles: true,
+		unique: true,
+		caseSensitiveMatch: !voidIgnoreCase,
+		dot: true,
+	});
 
-	if (excludeRe.length) {
+	if (excludeRe) {
 		excludeRe
-			.map(el => getFinalPattern(el, conf))
+			.map(el => getRegex(getPattern(el, conf), conf))
 			.forEach(re => {
 				filesToInclude = filesToInclude.filter(el => !el.match(re));
 			});
-	}
-
-	if (excludeGlob.length) {
-		const filesToExclude = globs.sync(excludeGlob);
-		filesToInclude = filesToInclude.filter(el => !filesToExclude.includes(el));
 	}
 
 	return filesToInclude;

@@ -1,5 +1,5 @@
 node_modules
-myfile
+my?file
 *.log
 *.file
 .rpt2_cache
@@ -11,3 +11,4 @@ package-lock.json
 
 v7/
 v8/
+*_old
