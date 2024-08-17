@@ -58,7 +58,7 @@
 		"mocha": "10.7.3",
 		"prettier": "3.3.3",
 		"rollup": "4",
-		"yarn": "1.22.19"
+		"yarn": "1.22.22"
 	},
 	"resolutions": {
 		"glob": "9"
