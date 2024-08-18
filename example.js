@@ -1,16 +1,21 @@
-/*import Bun from 'bun';
+import Bun from 'bun';
 
 let my = Bun.file('my.file');
 
-Bun.write(my, 'meeega');
-Bun.write(my, 'mee333ega');
+await Bun.write(my, 'meeega');
+await Bun.write(my, 'mee333ega');
 
-console.log(await my.text());
-*/
+// console.log(await my.text());
+
+console.log(await Bun.$`ls *.file.* | wc -l`.nothrow().text() | 0)
+
+
+//*/
 //await Bun.$`echo "Hello, world!" > ${my}`
 
 //console.log(await Bun.$`cat ${my}`.text())
 
+/*
 import { text } from 'node:stream/consumers';
 
 if (!process.stdin.isTTY) {
@@ -19,3 +24,4 @@ if (!process.stdin.isTTY) {
 } else {
 	console.log("No input provided via stdin.");
 }
+//*/

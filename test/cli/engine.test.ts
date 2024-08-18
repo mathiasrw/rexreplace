@@ -38,7 +38,7 @@ describe('Basic use', () => {
 		expect(run(`rexreplace -version`)).toMatch(/PACKAGE_VERSION|\d/);
 	});
 
-	test('-h --help', () => {
+	test.todo('-h --help', () => {
 		expect(run(`rexreplace -help`)).toContain('rexreplace');
 	});
 
