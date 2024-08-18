@@ -12,9 +12,10 @@ const re = {
 	unescape: /'/g,
 };
 
-//executeReplacement(cli2conf(process.argv.slice(2)), null);
-
 export function cli2conf(runtime: Runtime, args: string[]) {
+	if ('test' === process.env.NODE_ENV) {
+		outputConfig(null, runtime.logInfo, runtime.logWarn, runtime.logErr, runtime.exit);
+	}
 	let pattern, replacement;
 
 	// To avoid problems with patterns or replacements starting with '-' so the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
@@ -339,9 +340,9 @@ outro:
 	// All options into one big config object for the rexreplace engine
 	let conf: any = argv;
 
-	conf.showHelp = () => {
+	conf.showHelp = (exitCode = 0) => {
 		console.log('helpText()');
-		process.exit();
+		runtime.exit(exitCode);
 	};
 	conf.needHelp = needHelp;
 	conf.pattern = pattern;
@@ -363,8 +364,7 @@ function unescapeString(str = '') {
 
 export function executeReplacement(runtime: Runtime, conf, pipeData: string | null = null) {
 	if (0 < conf.needHelp) {
-		conf.showHelp();
-		runtime.exit(conf.needHelp - 1);
+		conf.showHelp(conf.needHelp - 1);
 	}
 
 	if (null === pipeData) return rexreplace.engine(runtime, conf);
@@ -418,6 +418,8 @@ export function executeReplacement(runtime: Runtime, conf, pipeData: string | nu
 	step('Content being piped');
 	conf.pipeData = pipeData;
 	conf.output = true;
-	process.stdout.setDefaultEncoding(conf.encoding);
+
+	runtime.setEncoding(conf.encoding);
+
 	return rexreplace.engine(runtime, conf);
 }

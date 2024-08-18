@@ -3,21 +3,18 @@ font.yellow = font.red = font.green = font.gray = str => str;
 // check for node version supporting chalk - if so overwrite `font`
 //font = import('chalk');
 
-let conf: any = null;
-let logInfo: any = null;
-let logWarn: any = null;
-let logErr: any = null;
+let conf: any = {},
+	logInfo = console.log,
+	logWarn = console.warn,
+	logErr = console.error,
+	exit = (Deno ? Deno : process).exit;
 
-export const outputConfig = function (
-	_conf,
-	_logInfo = console.log,
-	_logWarn = console.warn,
-	_logErr = console.error
-) {
+export const outputConfig = function (_conf, _logInfo?, _logWarn?, _logErr?, _exit?) {
 	conf = _conf;
-	logInfo = _logInfo;
-	logWarn = _logWarn;
-	logErr = _logErr;
+	if (_logInfo) logInfo = _logInfo;
+	if (_logWarn) logWarn = _logWarn;
+	if (_logErr) logErr = _logErr;
+	if (_exit) exit = _exit;
 };
 
 export const info = function (msg, data = '') {
@@ -81,5 +78,5 @@ function kill(error = 1, msg = '') {
 	if (!conf?.quietTotal && msg) {
 		logErr(+msg);
 	}
-	process.exit(+error);
+	exit(+error);
 }

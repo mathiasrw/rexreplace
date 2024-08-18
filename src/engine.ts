@@ -57,7 +57,7 @@ export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
 	step(conf);
 
 	conf.files
-		// Find out if any filepaths are invalid
+		/* // we will sort this out in getFilePaths
 		.filter(filepath => {
 			if (fs.statSync(filepath).isFile()) {
 				return true;
@@ -65,26 +65,25 @@ export function engine(_runtime: Runtime, conf: any = {engine: 'V8'}) {
 
 			debug('Not a valid file:', filepath);
 			return false;
-		})
-		// Do the replacement
+		})*/
 		.forEach(filepath => openFile(filepath, conf));
 }
 
-function openFile(file, conf) {
+async function openFile(file, conf) {
 	if (conf.voidAsync) {
 		chat('Open sync: ' + file);
-		var data = runtime.fileReadSync(file, conf.encoding);
+		const data = runtime.fileReadSync(file);
 		return doReplacement(file, conf, data);
 	}
 
 	chat('Open async: ' + file);
 
-	fs.readFile(file, conf.encoding, function (err, data) {
-		if (err) {
-			return error(err);
-		}
-		return doReplacement(file, conf, data);
-	});
+	const data =
+		(await runtime.fileReadAsync(file).catch(e => {
+			die(e.message);
+		})) || '';
+
+	return doReplacement(file, conf, data);
 }
 
 // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
@@ -613,17 +612,29 @@ function replacePlaceholders(str = '', conf: any) {
 function getFilePaths(conf) {
 	const {includeGlob, excludeGlob, excludeRe, voidIgnoreCase} = conf;
 
-	let filesToInclude: string[] = fGlob.sync(includeGlob, {
-		ignore: excludeGlob,
-		onlyFiles: true,
-		unique: true,
-		caseSensitiveMatch: !voidIgnoreCase,
-		dot: true,
+	let existingFiles = new Set();
+
+	let findGlobs: string[] = [];
+
+	includeGlob.forEach(e => {
+		if (runtime.isFileSync(e)) {
+			existingFiles.add(e);
+		} else {
+			findGlobs.push(e);
+		}
 	});
 
-	if (excludeRe) {
+	if (findGlobs.length) {
+		runtime
+			.globFiles(findGlobs, excludeGlob, voidIgnoreCase)
+			.forEach(e => existingFiles.add(e));
+	}
+
+	let filesToInclude: string[] = Array.from(existingFiles) as string[];
+
+	if (excludeRe && filesToInclude.length) {
 		excludeRe
-			.map(el => getRegex(getPattern(el, conf), conf))
+			.map(re => getRegex(getPattern(re, conf), conf))
 			.forEach(re => {
 				filesToInclude = filesToInclude.filter(el => !el.match(re));
 			});

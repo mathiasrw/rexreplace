@@ -9,6 +9,29 @@ await Bun.write(my, 'mee333ega');
 
 console.log(await Bun.$`ls *.file.* | wc -l`.nothrow().text() | 0)
 
+import { globSync } from 'glob';
+const lefiles = globSync('/Users/mwulff/git/CL/marketing-cloud/process/**/*.*', {
+	nodir: true, // Only match files
+});
+console.log(lefiles.length);
+
+
+let file = Bun.Glob('/Users/mwulff/git/CL/marketing-cloud/process/**/*.*');
+
+const files = file.scanSync({
+	dot: true,
+	absolute: true,
+	followSymlinks: true,
+	throwErrorOnBrokenSymlink: true,
+	onlyFiles: true
+});
+
+
+const filesArray = [...files];
+console.log(filesArray.length);
+
+
+
 
 //*/
 //await Bun.$`echo "Hello, world!" > ${my}`

@@ -19,7 +19,7 @@
 	"main": "src/engine.js",
 	"type": "module",
 	"scripts": {
-		"build": "bun build.sh",
+		"build": "bash build.sh",
 		"test": "bun test synthetic --bail",
 		"test-watch": "bun test synthetic --watch",
 		"test-cli": "sh test/sh/run.sh",
@@ -67,7 +67,9 @@
 		"esbuild": "^0.23.1",
 		"fast-glob": "^3.3.2",
 		"fs-extra": "^11.2.0",
+		"glob": "^11.0.0",
 		"globs": "0.1.4",
+		"graceful-fs": "^4.2.11",
 		"yargs": "^16.2.0"
 	}
 }
