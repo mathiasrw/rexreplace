@@ -15,10 +15,10 @@
     "@rollup/pluginutils" "^5.0.1"
     magic-string "^0.30.3"
 
-"@rollup/plugin-swc@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@rollup/plugin-swc/-/plugin-swc-0.3.1.tgz#aa22c5d4e5ed29d06ed5c3e4daded0037ad7044f"
-  integrity sha512-oqHt6W2J3CoIrdWpbLiRXdRkepEv+qwCgHMnSmh7waPFxaEeO3tocA1xy2p2qoJmk1zygDoxtPeP95z8bsJ+fA==
+"@rollup/plugin-swc@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-swc/-/plugin-swc-0.4.0.tgz#fb637e505dfd4506bd92258e8fc616d348a212be"
+  integrity sha512-oAtqXa8rOl7BOK1Rz3rRxI+LIL53S9SqO2KSq2UUUzWgOgXg6492Jh5mL2mv/f9cpit8zFWdwILuVeozZ0C8mg==
   dependencies:
     "@rollup/pluginutils" "^5.0.1"
     smob "^1.4.0"
