@@ -51,7 +51,7 @@
 	],
 	"devDependencies": {
 		"@rollup/plugin-replace": "5",
-		"@rollup/plugin-swc": "^0.3.1",
+		"@rollup/plugin-swc": "^0.4.0",
 		"@swc/core": "^1.7.11",
 		"@types/node": "22.5.4",
 		"assert": "^2.0.0",
