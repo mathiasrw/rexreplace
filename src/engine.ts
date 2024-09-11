@@ -84,11 +84,14 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 
 	// Variables to be accessible from js.
 	if (_config_rr.replacementJs) {
-		_config_rr.replacement = dynamicReplacement(_file_rr, _config_rr, _data_rr);
+		_config_rr.replacementDynamic = dynamicReplacement(_file_rr, _config_rr, _data_rr);
 	}
 
 	// Main regexp of the whole thing
-	const result = _data_rr.replace(_config_rr.regex, _config_rr.replacement);
+	const result = _data_rr.replace(
+		_config_rr.regex,
+		_config_rr.replacementJs ? _config_rr.replacementDynamic : _config_rr.replacement
+	);
 
 	// The output of matched strings is done from the replacement, so no need to continue
 	if (_config_rr.outputMatch) {

@@ -196,7 +196,12 @@ assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,
 reset
 assert		 		"rexreplace 'foo((b)ar)' '€1+€2' my.file -o --replacement-js"    'barb'
 
+## Test replacement-js on multiple files
+reset
+assert		 		"rexreplace 'foo((b)ar)' '€1+€2' *.file -o --replacement-js"    'barb\nabc123'
 
+reset
+assert		 		"rexreplace 'a(.+)' '\"_replace_\"+€1' *.file -o --replacement-js"    'foob_replace_r\n_replace_bc123'
 
 # Content manually testes
 # todo: automate test of content
