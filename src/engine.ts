@@ -49,6 +49,11 @@ export function engine(config: any = {engine: 'V8'}) {
 
 	chat(config.files.length + ' files found');
 
+	// Ensure predictable sequence of output
+	if (config.files.length > 1) {
+		config.voidAsync = config.voidAsync || config.outputMatch || config.output;
+	}
+
 	step(config);
 
 	config.files
@@ -658,5 +663,5 @@ function getFilePaths(conf) {
 		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(el));
 	}
 
-	return filesToInclude;
+	return filesToInclude.sort();
 }

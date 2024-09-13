@@ -52,13 +52,13 @@
 	"devDependencies": {
 		"@rollup/plugin-replace": "5",
 		"@rollup/plugin-swc": "^0.4.0",
-		"@swc/core": "^1.7.11",
+		"@swc/core": "1.7.26",
 		"@types/node": "22.5.4",
 		"assert": "^2.0.0",
 		"mocha": "10.7.3",
 		"prettier": "3.3.3",
-		"rollup": "4",
-		"yarn": "1.22.19"
+		"rollup": "4.21.3",
+		"yarn": "1.22.22"
 	},
 	"resolutions": {
 		"glob": "9"
