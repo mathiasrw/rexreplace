@@ -50,7 +50,7 @@
 		"sed"
 	],
 	"devDependencies": {
-		"@rollup/plugin-replace": "5",
+		"@rollup/plugin-replace": "6",
 		"@rollup/plugin-swc": "^0.4.0",
 		"@swc/core": "1.7.26",
 		"@types/node": "22.7.4",
