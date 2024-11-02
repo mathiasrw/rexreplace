@@ -57,7 +57,7 @@
 		"assert": "^2.0.0",
 		"mocha": "10.7.3",
 		"prettier": "3.3.3",
-		"rollup": "4.24.0",
+		"rollup": "4.24.3",
 		"yarn": "1.22.22"
 	},
 	"resolutions": {
