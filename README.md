@@ -264,7 +264,7 @@ Now, what is relevant to notice is how `sed` only takes 4.9 seconds longer for t
 ```
 Speed relative to fastest tool for each file size
 ---------------------------------------------------
-Bytes    sed    rr    Time it took longer (seconds)
+Bytes    sed    rr    Diff (seconds)
 1          1    39    0,5    <= sed is 39x faster
 5          1    32    0,4
 10         1    27    0,4
@@ -282,19 +282,13 @@ So even though the speed evolves very differently, there is only little practica
 
 Please note that speeds might look very different when files get as large as the memory available.
 
-Sure, I can help sharpen up the text for better clarity and impact. While I don't have specific knowledge about the rexreplace project, I understand the general idea conveyed in the text. Here's a revised version:
-
----
-
-Here's an improved version of the text for your README:
-
 ### Tips and Tricks for Performance
 
 Reading many files multiple times is far more time-consuming than creating a complex regex and reading each file once.
 
 > **Anecdote time**
 >
-> Imagine you need to duplicate a set of files, but each duplicate must have unique keys. To achieve this, you can append `_v2` to each key in the duplicated files. Running a separate `rexreplace` command for each key is a reasoable approach.
+> Imagine you need to duplicate a set of files, but within the content are references (let call them keys) that must be unique across both old and new files. We have the complete list of keys so a reasoable approach to append `_v2` to each old key in the new files by running a separate `rexreplace` command for each key.
 >
 > However, in a real-world scenario with 5,000 keys across 10,000 files, this approach took **57 minutes**. The bottleneck was identifying the 10,000 files 5,000 times, open + read each file 5000 times and the startup time of node x 5,000.
 >

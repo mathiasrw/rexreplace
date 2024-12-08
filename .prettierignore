@@ -2,3 +2,4 @@ legacy/
 dist/
 bin/
 *.md
+*.html
