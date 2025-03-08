@@ -56,7 +56,7 @@
 		"@types/node": "22.13.8",
 		"assert": "^2.0.0",
 		"mocha": "11.1.0",
-		"prettier": "3.5.2",
+		"prettier": "3.5.3",
 		"rollup": "4.34.9",
 		"yarn": "1.22.22"
 	},
