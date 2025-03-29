@@ -52,7 +52,7 @@
 	"devDependencies": {
 		"@rollup/plugin-replace": "6",
 		"@rollup/plugin-swc": "^0.4.0",
-		"@swc/core": "1.11.12",
+		"@swc/core": "1.11.13",
 		"@types/node": "22.13.11",
 		"assert": "^2.0.0",
 		"mocha": "11.1.0",
