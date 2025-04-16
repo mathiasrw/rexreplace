@@ -28,7 +28,7 @@
 		"test-js": "echo todo: async mocha",
 		"test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
 		"test-cli": "npm uninstall --location=global rexreplace && npm --location=global install ./ && yarn test-cli-only # why on earth are they depricating the -g flag",
-		"test-cli-only": "bash test/cli/run.sh",
+		"test-cli-only": "bash test/cli/run.sh && bash test/cli/run.ai.sh ",
 		"test-ci": "yarn test-format && yarn test && yarn test-minify",
 		"test-speed": "bash test/speed/run.sh",
 		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main",

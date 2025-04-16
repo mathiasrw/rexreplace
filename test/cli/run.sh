@@ -20,7 +20,9 @@ source $DIR/aserta.sh
 # assert_end "example"
 
 reset() {
-		echo 'Resetting testdata'
+		echo
+		echo "$(date +'%Y-%m-%d %H:%M:%S.%3N') - Reset test data "
+		rm -f *.file
         echo 'foobar' > my.file
         echo 'abc123' > your.file
 }
