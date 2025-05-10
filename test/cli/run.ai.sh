@@ -12,7 +12,7 @@ source "$DIR/aserta.sh"
 # Helper function to reset test files to a known state
 reset() {
         echo
-        echo "$(date +'%Y-%m-%d %H:%M:%S.%3N') - Reset AI test data " 
+        echo "$(date +'%Y-%m-%d %H:%M:%S') - Reset AI test data " 
 
         # Clean up potential leftovers from previous runs
         rm -f my.file.* your.file.* unicode.file.* trim.file.* read_only.file my.latin1.file file?.txt *.bak *.tmp *.log

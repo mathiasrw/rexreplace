@@ -21,7 +21,7 @@ source $DIR/aserta.sh
 
 reset() {
 		echo
-		echo "$(date +'%Y-%m-%d %H:%M:%S.%3N') - Reset test data "
+		echo "$(date +'%Y-%m-%d %H:%M:%S') - Reset test data "
 		rm -f *.file
         echo 'foobar' > my.file
         echo 'abc123' > your.file
