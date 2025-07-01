@@ -223,10 +223,10 @@
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.6.tgz#628effeeae2064a1b4e79f78e81d87b7e5fc7b50"
   integrity sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==
 
-"@types/node@22.15.30":
-  version "22.15.30"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.15.30.tgz#3a20431783e28dd0b0326f84ab386a2ec81d921d"
-  integrity sha512-6Q7lr06bEHdlfplU6YRbgG1SFBdlsfNC4/lX+SkhiTs0cpJkOElmWls8PxDFv4yY/xKb8Y6SO0OmSX4wgqTZbA==
+"@types/node@22.15.34":
+  version "22.15.34"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.15.34.tgz#3995a6461d2cfc51c81907da0065fc328f6a459e"
+  integrity sha512-8Y6E5WUupYy1Dd0II32BsWAx5MWdcnRd8L84Oys3veg1YrYtNtzgO4CFhiBg6MDSjk7Ay36HYOnU7/tuOzIzcw==
   dependencies:
     undici-types "~6.21.0"
 
