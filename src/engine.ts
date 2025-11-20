@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const path = require('path');
 
-const globs = require('globs');
+const globs = require('fast-glob');
 
 const now = new Date();
 
