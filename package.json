@@ -61,7 +61,7 @@
 		"yarn": "1.22.22"
 	},
 	"resolutions": {
-		"glob": "9"
+		"glob": "13"
 	},
 	"directories": {
 		"test": "test"
