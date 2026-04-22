@@ -25,7 +25,7 @@
 		"build-minify": "yarn build && yarn minify",
 		"minify": "cat bin/rexreplace.cli.js > bin/rexreplace.cli.min.js",
 		"prebuild": "rm -fr bin && yarn format",
-		"test-js": "echo todo: async mocha",
+		"test-js": "jest",
 		"test-minify": "yarn build-minify && yarn test-cli && yarn test-js",
 		"test-cli": "npm uninstall --location=global rexreplace && npm --location=global install ./ && yarn test-cli-only # why on earth are they depricating the -g flag",
 		"test-cli-only": "bash test/cli/run.sh && bash test/cli/run.ai.sh ",
@@ -55,7 +55,7 @@
 		"@swc/core": "1.15.21",
 		"@types/node": "24.12.0",
 		"assert": "^2.0.0",
-		"mocha": "11.7.5",
+		"jest": "30.3.0",
 		"prettier": "3.8.1",
 		"rollup": "4.60.1",
 		"yarn": "1.22.22"
