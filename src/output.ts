@@ -1,5 +1,5 @@
 let font: any = {};
-font.red = font.green = font.gray = (str) => str;
+font.yellow = font.red = font.green = font.gray = (str) => str;
 // check for node version supporting chalk - if so overwrite `font`
 //const font = import('chalk');
 
@@ -39,6 +39,14 @@ export const error = function (msg, data = '') {
 	if (config.halt) {
 		kill();
 	}
+	return false;
+};
+
+export const warn = function (msg, data = '') {
+	if (config?.quiet || config?.quietTotal) {
+		return false;
+	}
+	console.error(...[' 🟡', font.yellow(msg), data].filter(Boolean));
 	return false;
 };
 

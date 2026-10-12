@@ -6,7 +6,7 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, error, die} from './output.ts';
+import {outputConfig, step, debug, chat, info, warn, error, die} from './output.ts';
 
 const re = {
 	euro: /€/g,
@@ -156,6 +156,18 @@ function handlePipedData(config) {
 	step('Check Piped Data');
 
 	if (config.includeGlob.length) {
+		if (
+			!config.replacementJs &&
+			!config.replacementPipe &&
+			!config.pipedDataUsed &&
+			!config.voidPipe &&
+			config.pipedData &&
+			config.pipedData !== '\n' &&
+			config.pipedData !== '\r\n'
+		) {
+			warn('Data is piped in, but no flag tells what to do with it. It is not used.');
+		}
+
 		if (!config.replacementJs && config.pipedData) {
 			chat('Piped data never used.');
 		}

@@ -293,6 +293,28 @@ assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --replacement-js --voi
 assert_failure		"printf x | rexreplace 'b' _ my.file -P -R"
 assert_failure		"printf x | rexreplace 'b' _ my.file -P -T"
 
+# Warn when piped data is not used (#719)
+reset
+assert		 		"printf notes | rexreplace foo bar my.file 2>&1 1>/dev/null"    " 🟡 Data is piped in, but no flag tells what to do with it. It is not used.\nmy.file "
+assert		 		"cat my.file"    'barbar'
+
+reset
+assert		 		"printf notes | rexreplace foo bar my.file -q 2>&1 1>/dev/null"    ''
+
+reset
+assert		 		"printf notes | rexreplace foo bar my.file -Q 2>&1 1>/dev/null"    ''
+
+reset
+assert		 		"printf notes | rexreplace foo bar my.file -P 2>&1 1>/dev/null"    'my.file '
+
+reset
+assert		 		"printf '' | rexreplace foo bar my.file 2>&1 1>/dev/null"    'my.file '
+
+reset
+assert		 		"printf '\n' | rexreplace foo bar my.file 2>&1 1>/dev/null"    'my.file '
+
+
+
 
 	
 

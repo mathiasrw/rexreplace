@@ -364,7 +364,6 @@ _.oO(What should "sed" have looked like by now?)_
 - Let Pattern, replacement, and globs come from a file
 - Let pattern and glob be javascript code returning a string as the result
 - Auto string search / replace if no regex magic is used (and verify that speed is better)
-- Error != warning
 - Flag for String-literal (no regex, no special chars, no escape chars) to avoid backslashes or remembering which characters needs to be escaped
 - Check if https://github.com/eugeneware/replacestream is good to rely on
 - Check if regex engine from spider monkey can be wrapped in something that does not need node
