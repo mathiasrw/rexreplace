@@ -197,6 +197,19 @@ reset
 echo foo[bar] > my.file
 assert		 		"rexreplace '[§]]' '[' my.file -o --void-section"    'foo[bar]'
 
+# § works like \ in the replacement too (#700)
+reset
+rexreplace 'b' '§n' my.file
+assert		 		"cat my.file"    "foo\nar"
+
+reset
+rexreplace 'r' '§§' my.file
+assert		 		"cat my.file"    'fooba\\'
+
+reset
+rexreplace 'b' '§n' my.file --void-section
+assert		 		"cat my.file"    'foo§nar'
+
 
 # -j
 reset
@@ -277,6 +290,14 @@ reset
 					rexreplace 'b' '*+*' '*.file' -x ^y
 assert		 		"cat my.file"    					'foo*+*ar'
 assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file' -x ^Y
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file' -x ^Y --void-ignore-case
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'a*+*c123'
 
 
 # -X

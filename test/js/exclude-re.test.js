@@ -58,15 +58,12 @@ describe('--exclude-re', () => {
 		]);
 	});
 
-	test.todo(
-		'BUG #683: follows the regex flags of the main search (as the help text promises)',
-		() => {
-			const names = ['MY.file', 'your.file'];
-			expect(changed(names, {includeGlob: ['*.file'], excludeRe: ['^my']})).toEqual([
-				'your.file',
-			]);
-		}
-	);
+	test('follows the regex flags of the main search', () => {
+		const names = ['MY.file', 'your.file'];
+		expect(changed(names, {includeGlob: ['*.file'], excludeRe: ['^my']})).toEqual([
+			'your.file',
+		]);
+	});
 
 	describe('combined', () => {
 		test('with --exclude-glob both are used', () => {
