@@ -1,0 +1,84 @@
+import {describe, test, expect} from 'bun:test';
+import fs from 'fs';
+import {rr} from './helper.js';
+
+describe('--verbose', () => {
+	test('tells what is going on', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const result = rr('o', 'x', {includeGlob: ['my.file'], verbose: true});
+		expect(result.err).toBe('1 files found \nOpen sync: my.file \nmy.file \n');
+		expect(result.out).toBe('');
+	});
+
+	test('is not the default', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		expect(rr('o', 'x', {includeGlob: ['my.file']}).err).toBe('my.file \n');
+	});
+
+	test('tells when nothing was changed in a file', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const result = rr('nope', 'x', {includeGlob: ['my.file'], verbose: true});
+		expect(result.err).toContain('Nothing changed in: my.file');
+		expect(rr('nope', 'x', {includeGlob: ['my.file']}).err).toBe('');
+	});
+
+	test('tells how many files were found', () => {
+		['a', 'b', 'c'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+		expect(rr('o', 'x', {includeGlob: ['*.file'], verbose: true}).err).toContain(
+			'3 files found'
+		);
+	});
+
+	test('tells when piped data is not used', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const config = {includeGlob: ['my.file'], pipedData: 'boo'};
+		expect(rr('o', 'x', {...config, verbose: true}).err).toContain('Piped data never used.');
+		expect(rr('x', 'o', config).err).not.toContain('Piped data');
+	});
+
+	test('never writes to stdout', () => {
+		expect(rr('o', 'x', {pipedData: 'foobar', verbose: true}).out).toBe('fxxbar');
+	});
+
+	describe('combined', () => {
+		test('with --quiet or --quiet-total nothing is told', () => {
+			fs.writeFileSync('my.file', 'foobar');
+			const config = {includeGlob: ['my.file'], verbose: true};
+			expect(rr('o', 'x', {...config, quiet: true}).err).toBe('');
+			expect(rr('x', 'o', {...config, quietTotal: true}).err).toBe('');
+		});
+
+		test('with --debug every step and the full config is shown', () => {
+			const result = rr('o', 'x', {pipedData: 'foobar', verbose: true, debug: true});
+			expect(result.err).toContain('"Displaying steps for:"');
+			expect(result.err).toContain('"pattern": "o"');
+			expect(result.err).toContain('"Get final regex with engine: V8"');
+			expect(result.err).toContain('"gim"');
+			expect(result.out).toBe('fxxbar');
+		});
+
+		test('with --debug the steps are not shown without --verbose', () => {
+			const result = rr('o', 'x', {pipedData: 'foobar', debug: true});
+			expect(result.err).not.toContain('Displaying steps for');
+		});
+
+		test('with --output the result is still clean', () => {
+			fs.writeFileSync('my.file', 'foobar');
+			const result = rr('o', 'x', {includeGlob: ['my.file'], verbose: true, output: true});
+			expect(result.out).toBe('fxxbar');
+			expect(result.err).toBe('1 files found \nOpen sync: my.file \n');
+		});
+
+		test('with --replacement-js piped data counts as used', () => {
+			fs.writeFileSync('my.file', 'foobar');
+			const config = {
+				includeGlob: ['my.file'],
+				pipedData: 'boo',
+				verbose: true,
+				replacementJs: true,
+			};
+			expect(rr('foo', 'pipe', config).err).not.toContain('Piped data never used');
+			expect(fs.readFileSync('my.file', 'utf8')).toBe('boobar');
+		});
+	});
+});
