@@ -1,0 +1,38 @@
+{
+	"name": "rexreplace-bun",
+	"version": "7.1.14+bun",
+	"description": "RexReplace running on Bun: Search & replace across files with a CLI tool that makes you trust what you are doing.",
+	"author": "Mathias Rangel Wulff",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mathiasrw/rexreplace.git",
+		"directory": "npm/rexreplace-bun"
+	},
+	"bugs": {
+		"url": "https://github.com/mathiasrw/rexreplace/issues"
+	},
+	"homepage": "https://github.com/mathiasrw/rexreplace#readme",
+	"bin": {
+		"rr": "rr.js",
+		"rexreplace": "rexreplace.js",
+		"rexreplace-bun": "rexreplace.js"
+	},
+	"files": [
+		"rr.js",
+		"rexreplace.js"
+	],
+	"keywords": [
+		"search",
+		"find",
+		"replace",
+		"regex",
+		"regexp",
+		"regular expression",
+		"sed",
+		"bun"
+	],
+	"dependencies": {
+		"rexreplace": "7.1.14"
+	}
+}

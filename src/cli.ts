@@ -3,13 +3,17 @@
 import * as rexreplace from './engine.ts';
 import {outputConfig, die} from './output.ts';
 
+// Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
+// Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
+const version = rexreplace.version + (process.versions.bun ? '+bun' : '');
+
 let pattern, replacement;
 
 // To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = 0;
 if (process.argv.length < 4) {
 	if (/^(-v|--?version)$/.test(process.argv[process.argv.length - 1])) {
-		console.log(rexreplace.version);
+		console.log(version);
 		process.exitCode = 0;
 		process.exit();
 	} else if (/^(-h|--?help)$/.test(process.argv[process.argv.length - 1])) {
@@ -26,7 +30,7 @@ const yargs = require('yargs')
 
 	.usage(
 		'RexReplace ' +
-			rexreplace.version +
+			version +
 			': Regexp search and replace for files using lookahead and backreference to matching groups in the replacement. Defaults to global multiline case-insensitive search.\n\n' +
 			'> rexreplace pattern replacement [fileGlob|option]+'
 	)
@@ -50,7 +54,7 @@ const yargs = require('yargs')
 		`> rexreplace 'a' 'b' 'myfile.md' 'src/**/*.*' `,
 		`Provide multiple files or glob if needed`
 	)
-	.version('v', 'Print rexreplace version (can be given as only argument)', rexreplace.version)
+	.version('v', 'Print rexreplace version (can be given as only argument)', version)
 	.alias('v', 'version')
 
 	.boolean('V')
@@ -91,9 +95,12 @@ const yargs = require('yargs')
 	.describe('e', 'Encoding of files/piped data.')
 
 	.alias('E', 'engine')
-	.describe('E', 'What regex engine to use:')
-	.choices('E', ['V8' /*'RE2' /*'sd', 'stream'*/])
-	.default('E', 'V8')
+	.describe(
+		'E',
+		'What regex engine to use. `default` is the default engine of the runtime (`V8` for  Node and `JSC` (JavaScriptCore) for Bun.'
+	)
+	.choices('E', ['default', 'V8', 'JSC' /*'RE2' /*'sd', 'stream'*/])
+	.default('E', 'default')
 
 	.boolean('q')
 	.describe('q', 'Only display errors (no other info)')

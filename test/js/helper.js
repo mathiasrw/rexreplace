@@ -42,7 +42,7 @@ export function rr(pattern, replacement, config = {}) {
 
 	try {
 		engine({
-			engine: 'V8',
+			engine: 'default',
 			encoding: 'utf8',
 			pipedData: null,
 			includeGlob: [],
@@ -64,7 +64,29 @@ export function rr(pattern, replacement, config = {}) {
 	return result;
 }
 
+// The engine uses these when it handles files asynchronously. Each one starts the next from its callback.
+// Count the callbacks that have not returned yet, so until() knows when the engine has done its last step.
+let pending = 0;
+
+['readFile', 'rename', 'writeFile', 'unlink'].forEach((name) => {
+	const original = fs[name];
+
+	fs[name] = (...args) => {
+		const callback = args.pop();
+		pending++;
+
+		return original(...args, (...result) => {
+			try {
+				callback(...result);
+			} finally {
+				pending--;
+			}
+		});
+	};
+});
+
 // Wait for what the engine does asynchronously (--void-backup and when `voidAsync: false` is given).
+// It waits for `done` to be true and for the engine to have no more work, so nothing is printed or removed after the test.
 // Use `quiet: true` for those runs as the output comes after rr() has returned.
 export async function until(done) {
 	const isDone = () => {
@@ -75,7 +97,7 @@ export async function until(done) {
 		}
 	};
 
-	while (!isDone()) {
+	while (!isDone() || pending) {
 		await new Promise((resolve) => setTimeout(resolve, 1));
 	}
 }
