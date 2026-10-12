@@ -230,6 +230,12 @@ reset
 assert		 		"rexreplace 'foo' '2+2' my.file -o --replacement-js"    '4bar'
 
 reset
+assert		 		"rexreplace 'foo' '2+2' my.file -o -j"    '4bar'
+
+reset
+assert		 		"rexreplace 'foo' '2+2' my.file -o --js"    '4bar'
+
+reset
 assert		 		"rexreplace 'foo' 'var i = 2; i + 2' my.file -o --replacement-js"    '4bar'
 
 reset
