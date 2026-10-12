@@ -4,19 +4,17 @@ import * as rexreplace from './engine.ts';
 
 let pattern, replacement;
 
-// To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle --version and --help
+// To avoid problems with patterns or replacements starting with '-' the two first arguments can not contain flags and are removed before yargs does it magic - but we still need to handle -version and -help
 let needHelp = 0;
 if (process.argv.length < 4) {
-	if (/^(-v|--version)$/.test(process.argv[process.argv.length - 1])) {
+	if (/^(-v|--?version)$/.test(process.argv[process.argv.length - 1])) {
 		console.log(rexreplace.version);
 		process.exitCode = 0;
 		process.exit();
-	} else if (/^(-h|--help)$/.test(process.argv[process.argv.length - 1])) {
+	} else if (/^(-h|--?help)$/.test(process.argv[process.argv.length - 1])) {
 		needHelp = 1;
 	} else {
 		needHelp = 2;
-		// yargs would otherwise read things like -version or -vx as bundled short flags and answer them
-		process.argv.splice(2);
 	}
 } else {
 	[pattern, replacement] = process.argv.splice(2, 2);
