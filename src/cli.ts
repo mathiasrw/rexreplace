@@ -1,6 +1,7 @@
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
+import {outputConfig, die} from './output.ts';
 
 let pattern, replacement;
 
@@ -344,8 +345,22 @@ function backOut(exitcode = 1) {
 	process.exit();
 }
 
+const lineBreakEscapes = {'\n': '\\n', '\r': '\\r', '\u2028': '\\u2028', '\u2029': '\\u2029'};
+
+// Let javascript interpret escape sequences (like `\n` or `\x41`) by evaluating the replacement as the content of a single quoted string.
+// Anything that would end the string or break the source must be neutralised first: unescaped single quotes, real line breaks and a lone backslash at the end.
 function unescapeString(str = '') {
-	return new Function(`return '${str.replace(/'/g, "\\'")}'`)();
+	const source = str.replace(/\\([\s\S]?)|['\n\r\u2028\u2029]/g, (match, escaped) => {
+		if ('\\' === match) {
+			return '\\\\';
+		}
+		if ("'" === match) {
+			return "\\'";
+		}
+		// A real line break is kept as a line break - also with a backslash in front of it
+		return lineBreakEscapes[escaped !== undefined ? escaped : match] || match;
+	});
+	return new Function(`return '${source}'`)();
 }
 
 (function () {
@@ -381,7 +396,12 @@ function unescapeString(str = '') {
 	if (config.replacementJs) {
 		config.replacement = replacement;
 	} else {
-		config.replacement = unescapeString(replacement);
+		try {
+			config.replacement = unescapeString(replacement);
+		} catch (e) {
+			outputConfig(config);
+			return die('Invalid escape sequence in replacement:', replacement);
+		}
 	}
 
 	/*if(Boolean(process.stdout.isTTY)){

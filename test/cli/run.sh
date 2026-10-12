@@ -43,6 +43,20 @@ rexreplace "b" "\n" my.file
 assert		 		"cat my.file"    "foo\nar"
 
 
+# Replacement with a real line break, an escaped single quote or a lone backslash at the end (#691)
+reset
+rexreplace "b" $'\n' my.file
+assert		 		"cat my.file"    "foo\nar"
+
+reset
+rexreplace "b" "\\'" my.file
+assert		 		"cat my.file"    "foo'ar"
+
+reset
+rexreplace "r" '\' my.file
+assert		 		"cat my.file"    'fooba\\'
+
+
 # rr can handle a pattern and replcaement starting with '-'
 reset
 rexreplace '^(.+)$' '- $1' my.file
