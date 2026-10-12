@@ -120,11 +120,16 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 
 	debug('Write new content to: ' + _file_rr);
 
+	// Name as given, or full path from `/` with --absolute-path (same as `file` in --replacement-js)
+	const nameToPrint = _config_rr.absolutePath
+		? path.normalize(path.join(process.cwd(), _file_rr))
+		: _file_rr;
+
 	// Write directly to the same file (if the process is killed all new and old data is lost)
 	if (_config_rr.voidBackup) {
 		return fs.promises
 			.writeFile(_file_rr, result, _config_rr.encoding)
-			.then(() => printChangedName(_file_rr), error);
+			.then(() => printChangedName(nameToPrint), error);
 	}
 
 	//Make sure data is always on disk
@@ -142,14 +147,14 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 		} catch (e) {
 			return error(e);
 		}
-		return printChangedName(_file_rr);
+		return printChangedName(nameToPrint);
 	}
 
 	return fs.promises
 		.rename(oriFile, backupFile)
 		.then(() => fs.promises.writeFile(oriFile, result, _config_rr.encoding))
 		.then(() => _config_rr.keepBackup || fs.promises.unlink(backupFile))
-		.then(() => printChangedName(_file_rr), error);
+		.then(() => printChangedName(nameToPrint), error);
 }
 
 function handlePipedData(config) {

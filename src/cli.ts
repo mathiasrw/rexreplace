@@ -124,6 +124,13 @@ const yargs = require('yargs')
 	)
 	.conflicts('null', 'name-delimiter')
 
+	.boolean('a')
+	.alias('a', 'absolute-path')
+	.describe(
+		'a',
+		'Print each changed file name as a full path from `/`. Default is to print the path the way it was given.'
+	)
+
 	.boolean('H')
 	.describe('H', 'Halt on first error')
 	.alias('H', 'halt')

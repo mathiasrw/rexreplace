@@ -82,6 +82,29 @@ assert		 		"wc -c < stdout.log | tr -d ' '"    "8"
 reset
 assert_failure		"rexreplace o x my.file --null --name-delimiter ','"
 
+# --absolute-path / -a prints the full path; default keeps the path as given
+reset
+mkdir -p docs
+echo foo > docs/a.md
+rexreplace o x 'docs/*.md' > stdout.log 2> stderr.log
+assert		 		"cat stdout.log"    	"docs/a.md"
+assert		 		"cat stderr.log"    	""
+assert		 		"cat docs/a.md"     	"fxx"
+
+reset
+mkdir -p docs
+echo foo > docs/a.md
+rexreplace o x 'docs/*.md' --absolute-path > stdout.log 2> stderr.log
+assert_startswith	"cat stdout.log"    	"/"
+assert_endswith		"cat stdout.log"    	"/docs/a.md"
+assert		 		"cat stderr.log"    	""
+
+reset
+echo foobar > my.file
+rexreplace o x my.file -a > stdout.log 2> stderr.log
+assert_startswith	"cat stdout.log"    	"/"
+assert_endswith		"cat stdout.log"    	"/my.file"
+
 
 # Replacement with a real line break, an escaped single quote or a lone backslash at the end (#691)
 reset

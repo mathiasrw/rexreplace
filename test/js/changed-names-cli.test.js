@@ -47,6 +47,31 @@ describe('changed file names on stdout (CLI)', () => {
 	});
 });
 
+describe('--absolute-path / -a (CLI)', () => {
+	test('prints the full path', () => {
+		fs.mkdirSync('docs');
+		fs.writeFileSync('docs/a.md', 'foo');
+		const full = path.normalize(path.join(process.cwd(), 'docs/a.md'));
+		expect(run('o', 'x', 'docs/*.md', '--absolute-path')).toEqual({
+			out: full + '\n',
+			err: '',
+			exit: 0,
+		});
+	});
+
+	test('-a is an alias', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const full = path.normalize(path.join(process.cwd(), 'my.file'));
+		expect(run('o', 'x', 'my.file', '-a')).toEqual({out: full + '\n', err: '', exit: 0});
+	});
+
+	test('default still prints the path as given', () => {
+		fs.mkdirSync('docs');
+		fs.writeFileSync('docs/a.md', 'foo');
+		expect(run('o', 'x', 'docs/*.md').out).toBe('docs/a.md\n');
+	});
+});
+
 describe('--null / -0 (CLI)', () => {
 	test('ends names with NUL', () => {
 		fs.writeFileSync('a.file', 'foo');
