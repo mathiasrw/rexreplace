@@ -1,6 +1,19 @@
 import {describe, test, expect} from 'bun:test';
+import {spawnSync} from 'child_process';
 import fs from 'fs';
+import path from 'path';
 import {rr} from './helper.js';
+
+// --bail is a CLI alias for --halt, so these cases run the CLI itself (like test/js/fix/691.test.js).
+const cli = path.join(import.meta.dir, '../../src/cli.ts');
+
+function runCli(...args) {
+	const {stdout, stderr, status} = spawnSync(process.execPath, [cli, ...args], {
+		input: '',
+		encoding: 'utf8',
+	});
+	return {out: stdout, err: stderr, exit: status};
+}
 
 describe('--halt', () => {
 	test('stops the process on the first error', () => {
@@ -27,8 +40,30 @@ describe('--halt', () => {
 		expect(rr('(', 'x', {pipedData: 'foobar', halt: true}).exit).toBe(1);
 	});
 
-	// --bail is a CLI alias for --halt (src/cli.ts). The engine only sees the halt config key.
-	test.todo('--bail is an alias for --halt and is tested in test/cli/run.sh');
+	describe('--bail alias', () => {
+		test('is listed in --help with --halt', () => {
+			const result = runCli('--help');
+			expect(result.exit).toBe(0);
+			expect(result.out).toContain('--bail');
+			expect(result.out).toMatch(/-H,\s*--halt,\s*--bail/);
+		});
+
+		test.each(['--bail', '--halt', '-H'])(
+			'%s stops on the first error like --halt',
+			(flag) => {
+				const result = runCli('o', 'x', 'nope.file', flag);
+				expect(result.err).toContain('0 files found');
+				expect(result.exit).toBe(1);
+			}
+		);
+
+		test('--bail is accepted and changes nothing when all goes well', () => {
+			fs.writeFileSync('my.file', 'foobar');
+			const result = runCli('o', 'x', 'my.file', '--bail');
+			expect(result.exit).toBe(0);
+			expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
+		});
+	});
 
 	describe('combined', () => {
 		test.each(['quiet', 'quietTotal'])('with --%s it still stops', (flag) => {
