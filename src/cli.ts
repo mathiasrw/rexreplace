@@ -397,7 +397,10 @@ function unescapeString(str = '') {
 		config.replacement = replacement;
 	} else {
 		try {
-			config.replacement = unescapeString(replacement);
+			// `§` must be a `\` before the escape sequences are interpreted, so `§n` gives a line break just like `\n`
+			config.replacement = unescapeString(
+				config.voidSection ? replacement : replacement.replace(/§/g, '\\')
+			);
 		} catch (e) {
 			outputConfig(config);
 			return die('Invalid escape sequence in replacement:', replacement);
