@@ -3,17 +3,17 @@ import fs from 'fs';
 import {rr, random} from '../js/helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
-const changed = (names, config) => {
+const changed = async (names, config) => {
 	names.forEach((name) => {
 		fs.mkdirSync(name.replace(/[^/]*$/, '') || '.', {recursive: true});
 		fs.writeFileSync(name, 'foo');
 	});
-	rr('foo', 'x', config);
+	await rr('foo', 'x', config);
 	return names.filter((name) => 'x' === fs.readFileSync(name, 'utf8'));
 };
 
 describe('--exclude-re', () => {
-	test('leaves out exactly the files with a matching name', () => {
+	test('leaves out exactly the files with a matching name', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 100; i++) {
 			// One name per spelling, as some file systems ignore case
@@ -36,7 +36,7 @@ describe('--exclude-re', () => {
 				quiet: true,
 			};
 			expect(
-				changed(names, config).sort(),
+				(await changed(names, config)).sort(),
 				JSON.stringify({names, exclude, voidIgnoreCase})
 			).toEqual(expected);
 		}

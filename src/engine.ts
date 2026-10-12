@@ -23,10 +23,11 @@ const re = {
 export {version} from '../package.json';
 
 // The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
-const runtime = process.versions.bun ? 'Bun' : 'Nodepa';
+const runtime = process.versions.bun ? 'Bun' : 'Node';
 const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
-export function engine(config: any = {engine: 'default'}) {
+// Returns a promise that resolves when all files are done
+export async function engine(config: any = {engine: 'default'}) {
 	outputConfig(config);
 
 	step('Displaying steps for:');
@@ -61,14 +62,16 @@ export function engine(config: any = {engine: 'default'}) {
 
 	step(config);
 
-	config.files
+	const work = config.files
 		// Correct filepath
 		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
 		// Find out if any filepaths are invalid
 		.filter((filepath) => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
 
 		// Do the replacement
-		.forEach((filepath) => openFile(filepath, config));
+		.map((filepath) => openFile(filepath, config));
+
+	await Promise.all(work);
 }
 
 function openFile(file, config) {
@@ -78,13 +81,9 @@ function openFile(file, config) {
 		return doReplacement(file, config, data);
 	} else {
 		chat('Open async: ' + file);
-		fs.readFile(file, config.encoding, function (err, data) {
-			if (err) {
-				return error(err);
-			}
-
-			return doReplacement(file, config, data);
-		});
+		return fs.promises
+			.readFile(file, config.encoding)
+			.then((data) => doReplacement(file, config, data), error);
 	}
 }
 
@@ -123,12 +122,9 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 
 	// Write directly to the same file (if the process is killed all new and old data is lost)
 	if (_config_rr.voidBackup) {
-		return fs.writeFile(_file_rr, result, _config_rr.encoding, function (err) {
-			if (err) {
-				return error(err);
-			}
-			info(_file_rr);
-		});
+		return fs.promises
+			.writeFile(_file_rr, result, _config_rr.encoding)
+			.then(() => info(_file_rr), error);
 	}
 
 	//Make sure data is always on disk
@@ -149,29 +145,11 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 		return info(_file_rr);
 	}
 
-	// Let me know when fs gets promise'fied
-	fs.rename(oriFile, backupFile, (err) => {
-		if (err) {
-			return error(err);
-		}
-
-		fs.writeFile(oriFile, result, _config_rr.encoding, (err) => {
-			if (err) {
-				return error(err);
-			}
-
-			if (!_config_rr.keepBackup) {
-				fs.unlink(backupFile, (err) => {
-					if (err) {
-						return error(err);
-					}
-					info(_file_rr);
-				});
-			} else {
-				info(_file_rr);
-			}
-		});
-	});
+	return fs.promises
+		.rename(oriFile, backupFile)
+		.then(() => fs.promises.writeFile(oriFile, result, _config_rr.encoding))
+		.then(() => _config_rr.keepBackup || fs.promises.unlink(backupFile))
+		.then(() => info(_file_rr), error);
 }
 
 function handlePipedData(config) {

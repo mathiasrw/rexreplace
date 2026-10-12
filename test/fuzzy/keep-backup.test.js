@@ -5,7 +5,7 @@ import {rr, random} from '../js/helper.js';
 const backups = (dir = '.') => fs.readdirSync(dir).filter((name) => name.endsWith('.backup'));
 
 describe('--keep-backup', () => {
-	test('the backup is always the original and the file is always the result', () => {
+	test('the backup is always the original and the file is always the result', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 100; i++) {
 			const text = rnd.text('ab \r\n\tæ🦖', 0, 30);
@@ -15,7 +15,7 @@ describe('--keep-backup', () => {
 
 			fs.mkdirSync('run' + i);
 			fs.writeFileSync(`run${i}/my.file`, text);
-			rr(pattern, '_', {includeGlob: [`run${i}/my.file`], keepBackup: true});
+			await rr(pattern, '_', {includeGlob: [`run${i}/my.file`], keepBackup: true});
 
 			expect(fs.readFileSync(`run${i}/my.file`, 'utf8'), note).toBe(expected);
 			expect(backups('run' + i), note).toHaveLength(expected === text ? 0 : 1);

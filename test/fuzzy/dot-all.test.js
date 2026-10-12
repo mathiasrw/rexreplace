@@ -2,7 +2,7 @@ import {describe, test, expect} from 'bun:test';
 import {rr, random} from '../js/helper.js';
 
 describe('--dot-all', () => {
-	test('gives the same as String.replace with and without the s flag', () => {
+	test('gives the same as String.replace with and without the s flag', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 500; i++) {
 			const pattern = rnd.text('ab.*+?', 1, 4);
@@ -16,8 +16,10 @@ describe('--dot-all', () => {
 				continue;
 			}
 
-			expect(rr(pattern, '_', {pipedData: text}).out, note).toBe(text.replace(regex, '_'));
-			expect(rr(pattern, '_', {pipedData: text, dotAll: true}).out, note).toBe(
+			expect((await rr(pattern, '_', {pipedData: text})).out, note).toBe(
+				text.replace(regex, '_')
+			);
+			expect((await rr(pattern, '_', {pipedData: text, dotAll: true})).out, note).toBe(
 				text.replace(new RegExp(pattern, 'gims'), '_')
 			);
 		}
