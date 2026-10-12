@@ -199,6 +199,7 @@ const yargs = require('yargs')
 
 	.boolean('j')
 	.alias('j', 'replacement-js')
+	.alias('j', 'js')
 	.describe(
 		'j',
 		`Treat replacement as javascript source code. 
