@@ -113,11 +113,17 @@ const yargs = require('yargs')
 	.alias('d', 'debug')
 
 	.boolean('€')
-	.describe('€', "Void having '€' as alias for '$' in pattern and replacement parameters")
+	.describe(
+		'€',
+		"Void having '€' as alias for '$' in the pattern, replacement and --exclude-re parameters (the alias is never used for globs or piped data)"
+	)
 	.alias('€', 'void-euro')
 
 	.boolean('§')
-	.describe('§', "Void having '§' as alias for '\\' in pattern and replacement parameters")
+	.describe(
+		'§',
+		"Void having '§' as alias for '\\' in the pattern, replacement and --exclude-re parameters (the alias is never used for globs or piped data)"
+	)
 	.alias('§', 'void-section')
 
 	.boolean('o')
