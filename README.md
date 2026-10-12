@@ -252,7 +252,7 @@ The tests come in three groups:
 - **JS tests** in [`test/js/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/js) call the engine directly (no build and no CLI involved), so they are fast enough to run while developing. There is one file per flag, named after the long version of the flag.
 - **Fuzzy tests** in [`test/fuzzy/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/fuzzy) feed the engine random input and compare the result with what plain javascript gives.
 
-The JS and fuzzy tests are run by [bun](https://bun.sh). After `git clone`'ing the repo and `yarn install`'ing you can invoke the tests with:
+The build and the JS and fuzzy tests are run by [bun](https://bun.sh). After `git clone`'ing the repo and `yarn install`'ing you can invoke the tests with:
 
 ```bash
 > yarn test        # build + CLI tests + JS tests + fuzzy tests

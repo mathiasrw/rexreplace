@@ -1,6 +1,5 @@
 test/*
 gfx/*
-rollup.config.js
 tmp/*
 .*
 *.log

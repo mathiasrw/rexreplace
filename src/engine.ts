@@ -19,7 +19,8 @@ const re = {
 	folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
 };
 
-export const version = 'PACKAGE_VERSION';
+// Only the version ends up in the bundle
+export {version} from '../package.json';
 
 export function engine(config: any = {engine: 'V8'}) {
 	outputConfig(config);

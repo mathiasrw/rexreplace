@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+'use strict'; // Bun does not add this on its own when bundling to CommonJS
+
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
