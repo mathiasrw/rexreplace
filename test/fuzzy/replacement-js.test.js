@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random} from '../helper.js';
+import {rr, random} from '../js/helper.js';
 
 const js = (pattern, code, pipedData, config) =>
 	rr(pattern, code, {pipedData, replacementJs: true, ...config}).out;

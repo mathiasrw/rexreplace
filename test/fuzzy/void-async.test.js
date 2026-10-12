@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random, until} from '../helper.js';
+import {rr, random, until} from '../js/helper.js';
 
 describe('--void-async', () => {
 	test('the sync and the async flow end up with the same files', async () => {
