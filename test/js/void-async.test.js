@@ -8,21 +8,22 @@ describe('--void-async', () => {
 	test('is done with a file before the next one is opened', async () => {
 		['a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
 		const config = {includeGlob: ['*.file'], voidAsync: true, verbose: true};
-		expect((await rr('o', 'x', config)).err).toBe(
-			'2 files found \nOpen sync: a.file \na.file \nOpen sync: b.file \nb.file \n'
-		);
+		const result = await rr('o', 'x', config);
+		expect(result.err).toBe('2 files found \nOpen sync: a.file \nOpen sync: b.file \n');
+		expect(result.out).toBe('a.file\nb.file\n');
 	});
 
 	test('is not the default: all files are opened before the first one is done', async () => {
 		['a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
 		const config = {includeGlob: ['*.file'], voidAsync: false, verbose: true};
-		const lines = (await rr('o', 'x', config)).err.split(' \n');
+		const result = await rr('o', 'x', config);
+		const lines = result.err.split(' \n');
 		expect(lines.slice(0, 3)).toEqual([
 			'2 files found',
 			'Open async: a.file',
 			'Open async: b.file',
 		]);
-		expect(lines.slice(3).sort()).toEqual(['', 'a.file', 'b.file']);
+		expect(result.out.trim().split('\n').sort()).toEqual(['a.file', 'b.file']);
 		expect(['a', 'b'].map((name) => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
 			'fxx',
 			'fxx',
@@ -32,7 +33,8 @@ describe('--void-async', () => {
 	test('handles the files one by one in alphabetical order', async () => {
 		['c', 'a', 'd', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
 		const result = await rr('o', 'x', {includeGlob: ['*.file'], voidAsync: true});
-		expect(result.err).toBe('a.file \nb.file \nc.file \nd.file \n');
+		expect(result.out).toBe('a.file\nb.file\nc.file\nd.file\n');
+		expect(result.err).toBe('');
 	});
 
 	test('leaves no temporary files behind', async () => {

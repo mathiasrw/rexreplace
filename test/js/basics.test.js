@@ -82,11 +82,11 @@ describe('replacement', () => {
 });
 
 describe('files', () => {
-	test('are changed in place and named on stderr', async () => {
+	test('are changed in place and named on stdout', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file']});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
-		expect(result).toEqual({out: '', err: 'my.file \n', exit: null});
+		expect(result).toEqual({out: 'my.file\n', err: '', exit: null});
 		expect(fs.readdirSync('.')).toEqual(['my.file']);
 	});
 
@@ -129,7 +129,8 @@ describe('files', () => {
 			includeGlob: ['my.file', '*.file', './my.file', 'my.*'],
 		});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foooobar');
-		expect(result.err).toBe('my.file \n');
+		expect(result.out).toBe('my.file\n');
+		expect(result.err).toBe('');
 	});
 
 	test('are handled in alphabetical order', async () => {
@@ -207,7 +208,7 @@ describe('piped data', () => {
 	test('is ignored if files are given', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {pipedData: 'boo', includeGlob: ['my.file']});
-		expect(result.out).toBe('');
+		expect(result.out).toBe('my.file\n');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 	});
 

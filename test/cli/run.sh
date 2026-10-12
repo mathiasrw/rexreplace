@@ -48,6 +48,41 @@ rexreplace "b" "\n" my.file
 assert		 		"cat my.file"    "foo\nar"
 
 
+# Changed file names go to stdout; stderr stays clean (unless verbose/debug/errors)
+reset
+rexreplace o x my.file > stdout.log 2> stderr.log
+assert		 		"cat my.file"   		"fxxbar"
+assert		 		"cat stdout.log"    	"my.file"
+assert		 		"cat stderr.log"    	""
+
+reset
+rexreplace o x my.file --output > stdout.log 2> stderr.log
+assert		 		"cat my.file"   		"foobar"
+assert		 		"cat stdout.log"    	"fxxbar"
+assert		 		"cat stderr.log"    	""
+
+reset
+rexreplace o x my.file --verbose > stdout.log 2> stderr.log
+assert		 		"cat my.file"   		"fxxbar"
+assert		 		"cat stdout.log"    	"my.file"
+assert_contains		"cat stderr.log"    	"files found"
+
+reset
+assert		 		"rexreplace a x my.file your.file --name-delimiter ', ' --void-async"    "my.file, your.file"
+assert		 		"cat my.file"    "foobxr"
+assert		 		"cat your.file"  "xbc123"
+
+reset
+rexreplace o x my.file -0 > stdout.log 2> stderr.log
+assert		 		"cat my.file"    "fxxbar"
+assert		 		"cat stderr.log" ""
+# assert() cannot keep NUL bytes; check size: "my.file" (7) + NUL (1)
+assert		 		"wc -c < stdout.log | tr -d ' '"    "8"
+
+reset
+assert_failure		"rexreplace o x my.file --null --name-delimiter ','"
+
+
 # Replacement with a real line break, an escaped single quote or a lone backslash at the end (#691)
 reset
 rexreplace "b" $'\n' my.file

@@ -77,7 +77,9 @@ describe('every pair of flags', () => {
 					: 'o\no\n'
 				: config.output
 					? replaced
-					: ''
+					: written && !config.quiet && !config.quietTotal
+						? 'my.file\n'
+						: ''
 		);
 
 		expect(fs.readFileSync('my.file', 'utf8')).toBe(written ? replaced : 'foo');

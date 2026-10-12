@@ -12,7 +12,9 @@ describe('--output', () => {
 
 	test('is not the default for files', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		expect((await rr('o', 'x', {includeGlob: ['my.file']})).out).toBe('');
+		// Default in-place edit prints the changed file name on stdout (not the content)
+		expect((await rr('o', 'x', {includeGlob: ['my.file']})).out).toBe('my.file\n');
+		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 	});
 
 	test('sends the content even if nothing was replaced', async () => {

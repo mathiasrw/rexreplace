@@ -6,13 +6,13 @@ describe('--debug', () => {
 	test('prints what happens to a file', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], debug: true});
+		expect(result.out).toBe('my.file\n');
 		expect(result.err).toBe(
 			[
 				'"1 files found "',
 				'"Open sync: my.file "',
 				'"Work on content from: my.file"',
 				'"Write new content to: my.file"',
-				'my.file ',
 				'',
 			].join('\n')
 		);

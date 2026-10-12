@@ -6,13 +6,13 @@ describe('--verbose', () => {
 	test('tells what is going on', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], verbose: true});
-		expect(result.err).toBe('1 files found \nOpen sync: my.file \nmy.file \n');
-		expect(result.out).toBe('');
+		expect(result.err).toBe('1 files found \nOpen sync: my.file \n');
+		expect(result.out).toBe('my.file\n');
 	});
 
 	test('is not the default', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		expect((await rr('o', 'x', {includeGlob: ['my.file']})).err).toBe('my.file \n');
+		expect((await rr('o', 'x', {includeGlob: ['my.file']})).out).toBe('my.file\n');
 	});
 
 	test('tells when nothing was changed in a file', async () => {

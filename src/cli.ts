@@ -110,6 +110,20 @@ const yargs = require('yargs')
 	.describe('Q', 'Never display errors or info')
 	.alias('Q', 'quiet-total')
 
+	.boolean('null')
+	.alias('null', '0')
+	.describe(
+		'null',
+		'End each changed file name with a NUL byte instead of a line break (safe for paths with spaces or newlines). Conflicts with --name-delimiter.'
+	)
+
+	.string('name-delimiter')
+	.describe(
+		'name-delimiter',
+		'Put this string between changed file names instead of a line break. No delimiter after the last name. Escape sequences and €/§ aliases work like in the replacement. Conflicts with --null.'
+	)
+	.conflicts('null', 'name-delimiter')
+
 	.boolean('H')
 	.describe('H', 'Halt on first error')
 	.alias('H', 'halt')
@@ -418,6 +432,24 @@ function unescapeString(str = '') {
 		} catch (e) {
 			outputConfig(config);
 			return die('Invalid escape sequence in replacement:', replacement);
+		}
+	}
+
+	if (undefined !== config.nameDelimiter && null !== config.nameDelimiter) {
+		const rawDelimiter = config.nameDelimiter;
+		try {
+			let delimiter = rawDelimiter;
+			if (!config.voidSection) {
+				delimiter = delimiter.replace(/§/g, '\\');
+			}
+			delimiter = unescapeString(delimiter);
+			if (!config.voidEuro) {
+				delimiter = delimiter.replace(/€/g, '$');
+			}
+			config.nameDelimiter = delimiter;
+		} catch (e) {
+			outputConfig(config);
+			return die('Invalid escape sequence in --name-delimiter:', rawDelimiter);
 		}
 	}
 

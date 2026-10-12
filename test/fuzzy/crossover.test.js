@@ -70,7 +70,13 @@ describe('crossover', () => {
 
 			expect(result.exit, note).toBe(null);
 			expect(result.out, note).toBe(
-				config.outputMatch ? matches : config.output ? replaced : ''
+				config.outputMatch
+					? matches
+					: config.output
+						? replaced
+						: written && replaced !== text && !config.quiet && !config.quietTotal
+							? file + '\n'
+							: ''
 			);
 
 			const expected = written ? replaced : text;

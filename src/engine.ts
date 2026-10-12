@@ -6,7 +6,7 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, error, die} from './output.ts';
+import {outputConfig, step, debug, chat, printChangedName, error, die} from './output.ts';
 
 const re = {
 	euro: /€/g,
@@ -124,7 +124,7 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	if (_config_rr.voidBackup) {
 		return fs.promises
 			.writeFile(_file_rr, result, _config_rr.encoding)
-			.then(() => info(_file_rr), error);
+			.then(() => printChangedName(_file_rr), error);
 	}
 
 	//Make sure data is always on disk
@@ -142,14 +142,14 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 		} catch (e) {
 			return error(e);
 		}
-		return info(_file_rr);
+		return printChangedName(_file_rr);
 	}
 
 	return fs.promises
 		.rename(oriFile, backupFile)
 		.then(() => fs.promises.writeFile(oriFile, result, _config_rr.encoding))
 		.then(() => _config_rr.keepBackup || fs.promises.unlink(backupFile))
-		.then(() => info(_file_rr), error);
+		.then(() => printChangedName(_file_rr), error);
 }
 
 function handlePipedData(config) {

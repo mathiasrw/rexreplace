@@ -8,7 +8,8 @@ describe('--void-backup', () => {
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], voidBackup: true});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 		expect(fs.readdirSync('.')).toEqual(['my.file']);
-		expect(result.err).toBe('my.file \n');
+		expect(result.out).toBe('my.file\n');
+		expect(result.err).toBe('');
 	});
 
 	test('does not write a file where nothing was replaced', async () => {
