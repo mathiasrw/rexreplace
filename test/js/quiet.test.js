@@ -21,15 +21,6 @@ describe('--quiet', () => {
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
-	test.todo('BUG #682: errors are still displayed (as the help text promises)', () => {
-		expect(rr('(', 'x', {pipedData: 'foobar', quiet: true}).err).toContain(
-			'Invalid regular expression'
-		);
-		expect(rr('o', 'x', {includeGlob: ['nope.file'], quiet: true}).err).toContain(
-			'0 files found'
-		);
-	});
-
 	describe('combined', () => {
 		test('with --verbose it stays quiet', () => {
 			fs.writeFileSync('my.file', 'foobar');

@@ -33,7 +33,7 @@ export const die = function (msg = '', data = '', displayHelp = false) {
 };
 
 export const error = function (msg, data = '') {
-	if (!config.quiet && !config.quietTotal) {
+	if (!config.quietTotal) {
 		console.error(font.red(msg), data);
 	}
 	if (config.halt) {
