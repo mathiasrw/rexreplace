@@ -256,7 +256,7 @@ rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 
 The tests come in three groups:
 
-- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end. They are run with both Node.js and Bun (as [`rexreplace-bun`](https://github.com/mathiasrw/rexreplace/tree/main/npm/rexreplace-bun)) as the runtime.
+- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end. They are run with both Bun (`yarn test-cli-bun` installs [`rexreplace-bun`](https://github.com/mathiasrw/rexreplace/tree/main/npm/rexreplace-bun) globally) and Node.js (`yarn test-cli-node` installs `rexreplace` globally) as the runtime, so both must be available.
 - **JS tests** in [`test/js/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/js) call the engine directly (no build and no CLI involved), so they are fast enough to run while developing. There is one file per flag, named after the long version of the flag.
 - **Fuzzy tests** in [`test/fuzzy/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/fuzzy) feed the engine random input and compare the result with what plain javascript gives.
 
@@ -266,7 +266,7 @@ The build and the JS and fuzzy tests are run by [bun](https://bun.sh). After `gi
 > yarn test          # build + CLI tests + JS tests + fuzzy tests
 > yarn test-js       # only the JS tests
 > yarn test-fuzzy    # only the fuzzy tests
-> yarn test-cli-bun  # only the CLI tests with Bun as runtime (needs a build)
+> yarn test-cli      # only the CLI tests, with both Bun and Node.js as runtime (needs a build)
 ```
 
 The fuzzy tests get new input on every run, so they are not part of what the CI pipeline runs (`yarn test-ci`). The seed is printed, so a failing run can be repeated:
