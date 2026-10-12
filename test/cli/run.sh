@@ -197,7 +197,7 @@ reset
 echo foo[bar] > my.file
 assert		 		"rexreplace '[§]]' '[' my.file -o --void-section"    'foo[bar]'
 
-# § works like \ in the replacement too (#348)
+# § works like \ in the replacement too (#700)
 reset
 rexreplace 'b' '§n' my.file
 assert		 		"cat my.file"    "foo\nar"

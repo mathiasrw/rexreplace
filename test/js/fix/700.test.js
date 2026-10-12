@@ -1,4 +1,4 @@
-// https://github.com/mathiasrw/rexreplace/issues/348
+// https://github.com/mathiasrw/rexreplace/issues/700 (also reported as #348)
 // `§` is an alias for `\` but in the replacement it was converted after the escape sequences were interpreted, so `§n` gave a backslash and an `n` instead of a line break.
 // The replacement is unescaped by the CLI (not the engine), so these tests run the CLI itself.
 import {describe, test, expect} from 'bun:test';
@@ -19,8 +19,8 @@ function run(input, ...args) {
 // Replace the `b` in `foobar` with the replacement
 const replaceB = (replacement, ...flags) => run('foobar', 'b', replacement, ...flags);
 
-describe('#348 § is a full substitute for \\ in the replacement', () => {
-	test('the example from the issue', () => {
+describe('#700 § is a full substitute for \\ in the replacement', () => {
+	test('the example from #348', () => {
 		expect(run('abc\n', '§n', 'X§n')).toEqual({out: 'abcX\n', err: '', exit: 0});
 		expect(run('abc\n', '§n', 'X\\n')).toEqual({out: 'abcX\n', err: '', exit: 0});
 	});
