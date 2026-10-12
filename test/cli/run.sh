@@ -277,6 +277,14 @@ reset
 					rexreplace 'b' '*+*' '*.file' -x ^y
 assert		 		"cat my.file"    					'foo*+*ar'
 assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file' -x ^Y
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'abc123'
+reset
+					rexreplace 'b' '*+*' '*.file' -x ^Y --void-ignore-case
+assert		 		"cat my.file"    					'foo*+*ar'
+assert		 		"cat your.file"    					'a*+*c123'
 
 
 # -X

@@ -649,7 +649,7 @@ function getFilePaths(conf) {
 
 	if (excludeRe.length) {
 		excludeRe
-			.map((el) => getFinalPattern(el, conf))
+			.map((el) => getFinalRegex(getFinalPattern(el, conf), conf))
 			.forEach((re) => {
 				filesToInclude = filesToInclude.filter((el) => !el.match(re));
 			});
