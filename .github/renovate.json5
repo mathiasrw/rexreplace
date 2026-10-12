@@ -18,5 +18,4 @@
 	automerge: true,
 	automergeStrategy: 'squash',
 	dependencyDashboard: true,
-	ignorePaths: ['legacy/**/*'],
 }
