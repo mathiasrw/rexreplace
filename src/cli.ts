@@ -138,7 +138,7 @@ const yargs = require('yargs')
 	.boolean('B')
 	.describe(
 		'B',
-		'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is abrupted.'
+		'Avoid temporary backing up file. Works async (independent of -A flag) and will speed up things but at one point data lives only in memory, and you will lose the content if the process is interrupted.'
 	)
 	.alias('B', 'void-backup')
 
@@ -173,6 +173,15 @@ const yargs = require('yargs')
 		`Replacement will be piped in. You still need to provide a dummy value (like \`_\`) as replacement parameter.` +
 			''
 	)
+
+	.boolean('P')
+	.alias('P', 'void-pipe')
+	.describe(
+		'P',
+		`Ignore any pipe data - even if stdin is open. Can not be combined with -R or -T.`
+	)
+	.conflicts('P', 'R')
+	.conflicts('P', 'T')
 
 	.boolean('j')
 	.alias('j', 'replacement-js')
@@ -288,6 +297,37 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
         .describe('glob-js', "filename/globs are javascript source that will return a string with newline seperating each glob to work on")
 
 
+		
+		-S --stream-size
+		
+		-l --stream-line
+
+
+
+
+
+Upper Case Free	Lower Case Free
+	a
+C	c
+D	
+F	f
+	g
+	i
+J	
+K	k
+	l
+N	n
+O	
+P	p
+	r
+S	
+	t
+U	
+W	w
+Y	y
+Z	z
+
+		
     */
 
 	.help('h')
@@ -316,7 +356,7 @@ function unescapeString(str = '') {
 	// All options into one big config object for the rexreplace core
 	let config: any = {};
 
-	// Use only camelCase full lenght version of settings so we make sure the core can be documented propperly
+	// Use only camelCase full length version of settings so we make sure the core can be documented properly
 	Object.keys(yargs.argv).forEach((key) => {
 		if (1 < key.length && key.indexOf('-') < 0) {
 			config[key] = yargs.argv[key];
@@ -347,7 +387,7 @@ function unescapeString(str = '') {
 	/*if(Boolean(process.stdout.isTTY)){
         config.output = true;
     }*/
-	if (Boolean(process.stdin.isTTY)) {
+	if (config.voidPipe || Boolean(process.stdin.isTTY)) {
 		if (config.replacementPipe) {
 			return backOut();
 		}

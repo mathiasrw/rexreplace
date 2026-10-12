@@ -216,6 +216,15 @@ reset
 assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
 
 
+# -P
+reset
+assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --replacement-js"    'xbar'
+assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --replacement-js -P"    'nullbar'
+assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --replacement-js --void-pipe"    'nullbar'
+assert_failure		"printf x | rexreplace 'b' _ my.file -P -R"
+assert_failure		"printf x | rexreplace 'b' _ my.file -P -T"
+
+
 	
 
 # -L
