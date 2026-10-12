@@ -112,7 +112,7 @@ const yargs = require('yargs')
 
 	.boolean('H')
 	.describe('H', 'Halt on first error')
-	.alias('H', 'halt')
+	.alias('H', ['halt', 'bail'])
 	.default('H', false)
 
 	.boolean('d')
