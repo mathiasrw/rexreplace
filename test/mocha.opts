@@ -1,3 +1,0 @@
---require assert
---require test/helper
---ui bdd
