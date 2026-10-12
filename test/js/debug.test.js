@@ -3,9 +3,9 @@ import fs from 'fs';
 import {rr} from './helper.js';
 
 describe('--debug', () => {
-	test('prints what happens to a file', () => {
+	test('prints what happens to a file', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		const result = rr('o', 'x', {includeGlob: ['my.file'], debug: true});
+		const result = await rr('o', 'x', {includeGlob: ['my.file'], debug: true});
 		expect(result.err).toBe(
 			[
 				'"1 files found "',
@@ -18,62 +18,68 @@ describe('--debug', () => {
 		);
 	});
 
-	test('prints what happens to piped data', () => {
-		const result = rr('o', 'x', {pipedData: 'foobar', debug: true});
+	test('prints what happens to piped data', async () => {
+		const result = await rr('o', 'x', {pipedData: 'foobar', debug: true});
 		expect(result.err).toBe(
 			'"Work on content from: Piped data"\n"Output result from: Piped data"\n'
 		);
 	});
 
-	test('is not the default', () => {
-		expect(rr('o', 'x', {pipedData: 'foobar'}).err).toBe('');
+	test('is not the default', async () => {
+		expect((await rr('o', 'x', {pipedData: 'foobar'})).err).toBe('');
 	});
 
-	test('never writes to stdout', () => {
-		expect(rr('o', 'x', {pipedData: 'foobar', debug: true}).out).toBe('fxxbar');
+	test('never writes to stdout', async () => {
+		expect((await rr('o', 'x', {pipedData: 'foobar', debug: true})).out).toBe('fxxbar');
 	});
 
-	test('throws the full error for an invalid pattern', () => {
-		expect(() => rr('(', 'x', {pipedData: 'foobar', debug: true})).toThrow(
+	test('throws the full error for an invalid pattern', async () => {
+		await expect(rr('(', 'x', {pipedData: 'foobar', debug: true})).rejects.toThrow(
 			'Invalid regular expression'
 		);
 	});
 
 	describe('combined', () => {
-		test('with --verbose every step and the config is printed', () => {
+		test('with --verbose every step and the config is printed', async () => {
 			const config = {pipedData: 'foobar', debug: true, verbose: true, voidGlobal: true};
-			const result = rr('o', 'x', config);
+			const result = await rr('o', 'x', config);
 			expect(result.err).toContain('"Get flags"\n"im"');
 			expect(result.err).toContain('"voidGlobal": true');
 			expect(result.out).toBe('fxobar');
 		});
 
-		test('with --quiet and --quiet-total the debug info is still printed', () => {
+		test('with --quiet and --quiet-total the debug info is still printed', async () => {
 			const config = {pipedData: 'foobar', debug: true};
-			expect(rr('o', 'x', {...config, quiet: true}).err).toContain('Work on content from');
-			expect(rr('o', 'x', {...config, quietTotal: true}).err).toContain(
+			expect((await rr('o', 'x', {...config, quiet: true})).err).toContain(
+				'Work on content from'
+			);
+			expect((await rr('o', 'x', {...config, quietTotal: true})).err).toContain(
 				'Work on content from'
 			);
 		});
 
-		test('with --output', () => {
+		test('with --output', async () => {
 			fs.writeFileSync('my.file', 'foobar');
-			const result = rr('o', 'x', {includeGlob: ['my.file'], debug: true, output: true});
+			const result = await rr('o', 'x', {
+				includeGlob: ['my.file'],
+				debug: true,
+				output: true,
+			});
 			expect(result.out).toBe('fxxbar');
 			expect(result.err).toContain('"Output result from: my.file"');
 			expect(result.err).not.toContain('Write new content');
 		});
 
-		test('with a file where nothing is replaced', () => {
+		test('with a file where nothing is replaced', async () => {
 			fs.writeFileSync('my.file', 'foobar');
-			const result = rr('nope', 'x', {includeGlob: ['my.file'], debug: true});
+			const result = await rr('nope', 'x', {includeGlob: ['my.file'], debug: true});
 			expect(result.err).toContain('"Nothing changed in: my.file "');
 		});
 
-		test('with --replacement-js and --output-match', () => {
-			const js = rr('o', '1+1', {pipedData: 'fo', debug: true, replacementJs: true});
+		test('with --replacement-js and --output-match', async () => {
+			const js = await rr('o', '1+1', {pipedData: 'fo', debug: true, replacementJs: true});
 			expect(js.out).toBe('f2');
-			const match = rr('o', '_', {pipedData: 'fo', debug: true, outputMatch: true});
+			const match = await rr('o', '_', {pipedData: 'fo', debug: true, outputMatch: true});
 			expect(match.out).toBe('o\n');
 			expect(match.err).toBe('"Work on content from: Piped data"\n');
 		});

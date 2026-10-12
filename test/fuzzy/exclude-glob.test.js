@@ -3,17 +3,17 @@ import fs from 'fs';
 import {rr, random} from '../js/helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
-const changed = (names, config) => {
+const changed = async (names, config) => {
 	names.forEach((name) => {
 		fs.mkdirSync(name.replace(/[^/]*$/, '') || '.', {recursive: true});
 		fs.writeFileSync(name, 'foo');
 	});
-	rr('foo', 'x', config);
+	await rr('foo', 'x', config);
 	return names.filter((name) => 'x' === fs.readFileSync(name, 'utf8'));
 };
 
 describe('--exclude-glob', () => {
-	test('leaves out exactly the files the glob finds', () => {
+	test('leaves out exactly the files the glob finds', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 100; i++) {
 			const names = Array.from(
@@ -39,7 +39,9 @@ describe('--exclude-glob', () => {
 				excludeGlob: [`run${i}/${glob}`],
 				quiet: true,
 			};
-			expect(changed(names, config).sort(), JSON.stringify({names, glob})).toEqual(expected);
+			expect((await changed(names, config)).sort(), JSON.stringify({names, glob})).toEqual(
+				expected
+			);
 		}
 	});
 });

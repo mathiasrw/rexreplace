@@ -1,7 +1,7 @@
 // Random combinations of flags and input compared with what plain javascript gives
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random, until} from '../js/helper.js';
+import {rr, random} from '../js/helper.js';
 
 const flags = [
 	'verbose',
@@ -39,13 +39,6 @@ describe('crossover', () => {
 			const file = `run${i}/my.file`;
 
 			const written = !config.output && !config.outputMatch;
-			// What is sent to stdout can only be caught while rr() runs
-			config.voidAsync = config.voidAsync || !written;
-			const later = written && (config.voidBackup || !config.voidAsync);
-			if (later) {
-				// Anything told after rr() has returned would end up in the output of the test run
-				Object.assign(config, {quiet: true, verbose: false, debug: false});
-			}
 
 			const regex = new RegExp(
 				config.literal ? pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : pattern,
@@ -69,7 +62,7 @@ describe('crossover', () => {
 			fs.mkdirSync(`run${i}`);
 			fs.writeFileSync(file, text);
 
-			const result = rr(pattern, config.replacementPipe ? '_' : given, {
+			const result = await rr(pattern, config.replacementPipe ? '_' : given, {
 				...config,
 				includeGlob: [file],
 				pipedData: config.replacementPipe ? given : null,
@@ -84,20 +77,12 @@ describe('crossover', () => {
 			const files =
 				written && replaced !== text && config.keepBackup && !config.voidBackup ? 2 : 1;
 
-			if (later) {
-				await until(
-					() =>
-						expected === fs.readFileSync(file, 'utf8') &&
-						files === fs.readdirSync(`run${i}`).length
-				);
-			} else {
-				expect(fs.readFileSync(file, 'utf8'), note).toBe(expected);
-				expect(fs.readdirSync(`run${i}`), note).toHaveLength(files);
-			}
+			expect(fs.readFileSync(file, 'utf8'), note).toBe(expected);
+			expect(fs.readdirSync(`run${i}`), note).toHaveLength(files);
 		}
 	});
 
-	test('a file, piped data and --output all give the same', () => {
+	test('a file, piped data and --output all give the same', async () => {
 		const rnd = random(2);
 		for (let i = 0; i < 200; i++) {
 			const config = Object.fromEntries(
@@ -115,15 +100,21 @@ describe('crossover', () => {
 			const replacement = rnd.text(['x', '$&', '$1', '$$', '\n', '"'], 0, 3);
 			const note = JSON.stringify({config, pattern, text, replacement});
 
-			const piped = rr(pattern, replacement, {...config, pipedData: text}).out;
+			const piped = (await rr(pattern, replacement, {...config, pipedData: text})).out;
 
 			fs.writeFileSync('my.file', text);
 			expect(
-				rr(pattern, replacement, {...config, includeGlob: ['my.file'], output: true}).out,
+				(
+					await rr(pattern, replacement, {
+						...config,
+						includeGlob: ['my.file'],
+						output: true,
+					})
+				).out,
 				note
 			).toBe(piped);
 
-			rr(pattern, replacement, {...config, includeGlob: ['my.file']});
+			await rr(pattern, replacement, {...config, includeGlob: ['my.file']});
 			expect(fs.readFileSync('my.file', 'utf8'), note).toBe(piped);
 		}
 	});

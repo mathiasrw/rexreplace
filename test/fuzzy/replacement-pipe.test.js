@@ -3,7 +3,7 @@ import fs from 'fs';
 import {rr, random} from '../js/helper.js';
 
 describe('--replacement-pipe', () => {
-	test('inserts any piped text without a $ exactly as it is', () => {
+	test('inserts any piped text without a $ exactly as it is', async () => {
 		const rnd = random(1);
 		fs.writeFileSync('my.file', 'a-b-c');
 		for (let i = 0; i < 500; i++) {
@@ -14,13 +14,13 @@ describe('--replacement-pipe', () => {
 				pipedData,
 				output: true,
 			};
-			expect(rr('-', '_', config).out, JSON.stringify(pipedData)).toBe(
+			expect((await rr('-', '_', config)).out, JSON.stringify(pipedData)).toBe(
 				`a${pipedData}b${pipedData}c`
 			);
 		}
 	});
 
-	test('gives the same as the replacement given as parameter', () => {
+	test('gives the same as the replacement given as parameter', async () => {
 		const rnd = random(2);
 		fs.writeFileSync('my.file', 'abc abc');
 		for (let i = 0; i < 300; i++) {
@@ -32,9 +32,15 @@ describe('--replacement-pipe', () => {
 				voidSection: true,
 			};
 			expect(
-				rr('(a)(b)', '_', {...config, replacementPipe: true, pipedData: replacement}).out,
+				(
+					await rr('(a)(b)', '_', {
+						...config,
+						replacementPipe: true,
+						pipedData: replacement,
+					})
+				).out,
 				JSON.stringify(replacement)
-			).toBe(rr('(a)(b)', replacement, config).out);
+			).toBe((await rr('(a)(b)', replacement, config)).out);
 		}
 	});
 });

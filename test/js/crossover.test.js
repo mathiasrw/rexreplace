@@ -1,7 +1,7 @@
 // Flags combined with each other
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, until} from './helper.js';
+import {rr} from './helper.js';
 
 describe('regex flags', () => {
 	const flags = ['voidIgnoreCase', 'voidGlobal', 'voidMultiline', 'dotAll', 'unicode'];
@@ -15,7 +15,7 @@ describe('regex flags', () => {
 
 	test.each(combinations.map((on) => [on.join(' + ') || 'none', on]))(
 		'%s gives the same as String.replace',
-		(name, on) => {
+		async (name, on) => {
 			const config = Object.fromEntries(on.map((flag) => [flag, true]));
 			const jsFlags =
 				(config.voidGlobal ? '' : 'g') +
@@ -24,11 +24,11 @@ describe('regex flags', () => {
 				(config.dotAll ? 's' : '') +
 				(config.unicode ? 'u' : '');
 
-			patterns.forEach((pattern) => {
-				expect(rr(pattern, '<$&>', {pipedData: text, ...config}).out, pattern).toBe(
+			for (const pattern of patterns) {
+				expect((await rr(pattern, '<$&>', {pipedData: text, ...config})).out, pattern).toBe(
 					text.replace(new RegExp(pattern, jsFlags), '<$&>')
 				);
-			});
+			}
 		}
 	);
 });
@@ -62,11 +62,9 @@ describe('every pair of flags', () => {
 	// Replace "o" with "1" in a file containing "foo". The 1 works as plain text, as javascript and when piped in.
 	test.each(pairs)('%s + %s', async (first, second) => {
 		const config = {[first]: true, [second]: true};
-		// --void-backup tells about the file after rr() has returned
-		config.quiet = config.quiet || config.voidBackup;
 
 		fs.writeFileSync('my.file', 'foo');
-		const result = rr('o', '1', {includeGlob: ['my.file'], pipedData: '1', ...config});
+		const result = await rr('o', '1', {includeGlob: ['my.file'], pipedData: '1', ...config});
 
 		const replaced = config.voidGlobal ? 'f1o' : 'f11';
 		const written = !config.output && !config.outputMatch;
@@ -82,7 +80,7 @@ describe('every pair of flags', () => {
 					: ''
 		);
 
-		await until(() => (written ? replaced : 'foo') === fs.readFileSync('my.file', 'utf8'));
+		expect(fs.readFileSync('my.file', 'utf8')).toBe(written ? replaced : 'foo');
 		expect(fs.readdirSync('.')).toHaveLength(
 			written && config.keepBackup && !config.voidBackup ? 2 : 1
 		);
@@ -94,15 +92,15 @@ describe('same result no matter how it is delivered', () => {
 	const search = {literal: true, voidIgnoreCase: true, voidGlobal: true};
 	const expected = 'A.b [a.b] axb\n';
 
-	test('piped data', () => {
-		expect(rr('a.b', '[$&]', {pipedData: text, ...search}).out).toBe(expected);
+	test('piped data', async () => {
+		expect((await rr('a.b', '[$&]', {pipedData: text, ...search})).out).toBe(expected);
 	});
 
-	test('--output', () => {
+	test('--output', async () => {
 		fs.writeFileSync('my.file', text);
-		expect(rr('a.b', '[$&]', {includeGlob: ['my.file'], output: true, ...search}).out).toBe(
-			expected
-		);
+		expect(
+			(await rr('a.b', '[$&]', {includeGlob: ['my.file'], output: true, ...search})).out
+		).toBe(expected);
 	});
 
 	test.each([
@@ -114,34 +112,35 @@ describe('same result no matter how it is delivered', () => {
 		['--void-async, --void-backup and --keep-backup', {voidBackup: true, keepBackup: true}, 1],
 	])('a file written with %s', async (name, config, files) => {
 		fs.writeFileSync('my.file', text);
-		rr('a.b', '[$&]', {includeGlob: ['my.file'], quiet: true, ...search, ...config});
-		await until(
-			() =>
-				expected === fs.readFileSync('my.file', 'utf8') &&
-				files === fs.readdirSync('.').length
-		);
+		await rr('a.b', '[$&]', {includeGlob: ['my.file'], ...search, ...config});
+		expect(fs.readFileSync('my.file', 'utf8')).toBe(expected);
+		expect(fs.readdirSync('.')).toHaveLength(files);
 	});
 
-	test('--replacement-pipe and --replacement-js', () => {
+	test('--replacement-pipe and --replacement-js', async () => {
 		fs.writeFileSync('my.file', text);
 		const config = {includeGlob: ['my.file'], output: true, ...search};
-		expect(rr('a.b', '_', {...config, replacementPipe: true, pipedData: '[$&]'}).out).toBe(
+		expect(
+			(await rr('a.b', '_', {...config, replacementPipe: true, pipedData: '[$&]'})).out
+		).toBe(expected);
+		expect((await rr('a.b', '"[" + $0 + "]"', {...config, replacementJs: true})).out).toBe(
 			expected
 		);
-		expect(rr('a.b', '"[" + $0 + "]"', {...config, replacementJs: true}).out).toBe(expected);
 		expect(
-			rr('a.b', '_', {
-				...config,
-				replacementJs: true,
-				replacementPipe: true,
-				pipedData: '"[" + $0 + "]"',
-			}).out
+			(
+				await rr('a.b', '_', {
+					...config,
+					replacementJs: true,
+					replacementPipe: true,
+					pipedData: '"[" + $0 + "]"',
+				})
+			).out
 		).toBe(expected);
 	});
 });
 
 describe('many flags at once', () => {
-	test('pinpoint files, run javascript on each match and keep a backup', () => {
+	test('pinpoint files, run javascript on each match and keep a backup', async () => {
 		fs.mkdirSync('src/deep', {recursive: true});
 		fs.mkdirSync('dist');
 		fs.writeFileSync('src/a.js', 'VERSION version');
@@ -151,7 +150,7 @@ describe('many flags at once', () => {
 		fs.writeFileSync('dist/a.js', 'VERSION');
 		fs.writeFileSync('package.json', '{"version": "1.2.3"}');
 
-		const result = rr('(VERSION)', 'r("package.json").version + "@" + name', {
+		const result = await rr('(VERSION)', 'r("package.json").version + "@" + name', {
 			includeGlob: ['**/*.js', '!dist/**'],
 			excludeRe: ['§.test§.js€'],
 			excludeGlob: ['**/*.md'],
@@ -173,12 +172,12 @@ describe('many flags at once', () => {
 		);
 	});
 
-	test('list the first match of each line across files', () => {
+	test('list the first match of each line across files', async () => {
 		fs.writeFileSync('a.log', 'ERROR: disk\nINFO: ok\nerror: lowercase\n');
 		fs.writeFileSync('b.log', 'ERROR: net\n');
 		fs.writeFileSync('c.txt', 'ERROR: not a log\n');
 
-		const result = rr('^ERROR: (.*)$', '_', {
+		const result = await rr('^ERROR: (.*)$', '_', {
 			includeGlob: ['*'],
 			excludeGlob: ['*.txt'],
 			outputMatch: true,
@@ -189,10 +188,10 @@ describe('many flags at once', () => {
 		expect(result).toEqual({out: 'disk\nnet\n', err: '', exit: null});
 	});
 
-	test('all the search flags on a latin1 file with the replacement piped in', () => {
+	test('all the search flags on a latin1 file with the replacement piped in', async () => {
 		fs.writeFileSync('my.file', Buffer.from('Æ.æ\næ.æ æ.æ', 'latin1'));
 
-		rr('æ.æ€', '_', {
+		await rr('æ.æ€', '_', {
 			includeGlob: ['my.file'],
 			encoding: 'latin1',
 			replacementPipe: true,
@@ -211,7 +210,7 @@ describe('many flags at once', () => {
 
 		expect(fs.readFileSync('my.file', 'latin1')).toBe('Æ.æ\næ.æ æ.æ');
 
-		rr('æ.æ', '_', {
+		await rr('æ.æ', '_', {
 			includeGlob: ['my.file'],
 			encoding: 'latin1',
 			replacementPipe: true,
@@ -224,9 +223,9 @@ describe('many flags at once', () => {
 		expect(fs.readFileSync('my.file', 'latin1')).toBe('Æ.æ\n[æ.æ] æ.æ');
 	});
 
-	test('silence everything but the result', () => {
+	test('silence everything but the result', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		const result = rr('o', 'x', {
+		const result = await rr('o', 'x', {
 			includeGlob: ['my.file', 'nope.file'],
 			output: true,
 			quiet: true,

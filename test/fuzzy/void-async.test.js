@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random, until} from '../js/helper.js';
+import {rr, random} from '../js/helper.js';
 
 describe('--void-async', () => {
 	test('the sync and the async flow end up with the same files', async () => {
@@ -18,15 +18,13 @@ describe('--void-async', () => {
 				names.forEach((name, n) => fs.writeFileSync(dir + name, texts[n]));
 			});
 
-			rr(pattern, '_', {includeGlob: [sync + '*'], voidAsync: true});
-			rr(pattern, '_', {includeGlob: [async + '*'], voidAsync: false, quiet: true});
+			await rr(pattern, '_', {includeGlob: [sync + '*'], voidAsync: true});
+			await rr(pattern, '_', {includeGlob: [async + '*'], voidAsync: false});
 
-			expect(result(sync), JSON.stringify({pattern, texts})).toEqual(expected);
-			await until(
-				() =>
-					JSON.stringify(result(async)) === JSON.stringify(expected) &&
-					names.length === fs.readdirSync(async).length
-			);
+			const note = JSON.stringify({pattern, texts});
+			expect(result(sync), note).toEqual(expected);
+			expect(result(async), note).toEqual(expected);
+			expect(fs.readdirSync(async), note).toHaveLength(names.length);
 		}
 	});
 });

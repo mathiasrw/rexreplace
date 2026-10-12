@@ -3,7 +3,7 @@ import fs from 'fs';
 import {rr, random} from '../js/helper.js';
 
 describe('--encoding', () => {
-	test('latin1 leaves all bytes around the match alone', () => {
+	test('latin1 leaves all bytes around the match alone', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 200; i++) {
 			// Any byte but the letters of the needle
@@ -16,20 +16,20 @@ describe('--encoding', () => {
 			const [before, after] = [junk(), junk()];
 
 			fs.writeFileSync('my.file', Buffer.concat([before, Buffer.from('qzq'), after]));
-			rr('qzq', 'ok', {includeGlob: ['my.file'], encoding: 'latin1'});
+			await rr('qzq', 'ok', {includeGlob: ['my.file'], encoding: 'latin1'});
 			expect(fs.readFileSync('my.file')).toEqual(
 				Buffer.concat([before, Buffer.from('ok'), after])
 			);
 		}
 	});
 
-	test.each(['utf8', 'utf16le'])('%s keeps any unicode text intact', (encoding) => {
+	test.each(['utf8', 'utf16le'])('%s keeps any unicode text intact', async (encoding) => {
 		const rnd = random(2);
 		const alphabet = ['a', 'b', ' ', '\n', 'æ', 'ß', '中', '🦖', '👍🏽', 'é', '​', '€'];
 		for (let i = 0; i < 200; i++) {
 			const text = rnd.text(alphabet, 0, 30);
 			fs.writeFileSync('my.file', Buffer.from(text + 'x', encoding));
-			rr('x$', '🦕', {includeGlob: ['my.file'], encoding, voidMultiline: true});
+			await rr('x$', '🦕', {includeGlob: ['my.file'], encoding, voidMultiline: true});
 			expect(fs.readFileSync('my.file', encoding), JSON.stringify(text)).toBe(text + '🦕');
 		}
 	});

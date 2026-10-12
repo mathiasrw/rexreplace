@@ -4,7 +4,7 @@ import {rr, random} from '../js/helper.js';
 describe('--literal', () => {
 	const alphabet = 'abAB01 \t\n-[]{}()*+?.,/\\^$|#\'"`%&;<>!~=:@€§æ中';
 
-	test('finds any text exactly as given', () => {
+	test('finds any text exactly as given', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 500; i++) {
 			const pattern = rnd.text(alphabet, 1, 6);
@@ -21,18 +21,20 @@ describe('--literal', () => {
 			};
 
 			expect(
-				rr(pattern, replacement, config).out,
+				(await rr(pattern, replacement, config)).out,
 				JSON.stringify({pattern, replacement, text})
 			).toBe(text.split(pattern).join(replacement));
 		}
 	});
 
-	test('never changes a text that does not contain the pattern', () => {
+	test('never changes a text that does not contain the pattern', async () => {
 		const rnd = random(2);
 		for (let i = 0; i < 300; i++) {
 			const pattern = rnd.text('.*+?()[]{}|^$\\', 1, 5);
 			const text = rnd.text('abc \n', 0, 30);
-			expect(rr(pattern, 'x', {pipedData: text, literal: true}).out, pattern).toBe(text);
+			expect((await rr(pattern, 'x', {pipedData: text, literal: true})).out, pattern).toBe(
+				text
+			);
 		}
 	});
 });

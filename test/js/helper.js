@@ -20,9 +20,9 @@ afterEach(() => {
 });
 
 // Run the engine in this process (no CLI involved) with the defaults the CLI would give it.
-// Returns what was sent to stdout (`out`) and stderr (`err`) plus the exit code if the engine wanted to stop the process (`exit`).
-// Files are handled synchronously unless `voidAsync: false` or `voidBackup: true` is given, so the work is done when this returns.
-export function rr(pattern, replacement, config = {}) {
+// Gives what was sent to stdout (`out`) and stderr (`err`) plus the exit code if the engine wanted to stop the process (`exit`).
+// Files are handled one at a time unless `voidAsync: false` is given, so the output comes in the same order on every run.
+export async function rr(pattern, replacement, config = {}) {
 	const result = {out: '', err: '', exit: null};
 	const halt = {};
 
@@ -41,7 +41,7 @@ export function rr(pattern, replacement, config = {}) {
 	];
 
 	try {
-		engine({
+		await engine({
 			engine: 'default',
 			encoding: 'utf8',
 			pipedData: null,
@@ -62,44 +62,6 @@ export function rr(pattern, replacement, config = {}) {
 	}
 
 	return result;
-}
-
-// The engine uses these when it handles files asynchronously. Each one starts the next from its callback.
-// Count the callbacks that have not returned yet, so until() knows when the engine has done its last step.
-let pending = 0;
-
-['readFile', 'rename', 'writeFile', 'unlink'].forEach((name) => {
-	const original = fs[name];
-
-	fs[name] = (...args) => {
-		const callback = args.pop();
-		pending++;
-
-		return original(...args, (...result) => {
-			try {
-				callback(...result);
-			} finally {
-				pending--;
-			}
-		});
-	};
-});
-
-// Wait for what the engine does asynchronously (--void-backup and when `voidAsync: false` is given).
-// It waits for `done` to be true and for the engine to have no more work, so nothing is printed or removed after the test.
-// Use `quiet: true` for those runs as the output comes after rr() has returned.
-export async function until(done) {
-	const isDone = () => {
-		try {
-			return done();
-		} catch (e) {
-			return false;
-		}
-	};
-
-	while (!isDone() || pending) {
-		await new Promise((resolve) => setTimeout(resolve, 1));
-	}
 }
 
 // Fuzz tests get new input on every run. Set RR_FUZZ_SEED to repeat a run.
