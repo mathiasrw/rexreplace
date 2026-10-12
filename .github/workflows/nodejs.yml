@@ -20,5 +20,6 @@ jobs:
               uses: actions/setup-node@v7
               with:
                   node-version: ${{ matrix.node-version }}
+            - uses: oven-sh/setup-bun@v2
             - run: yarn install
             - run: yarn test-ci
