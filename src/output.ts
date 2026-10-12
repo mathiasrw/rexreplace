@@ -5,50 +5,56 @@ font.red = font.green = font.gray = (str) => str;
 
 let config: any = null;
 
-// Tracks whether a changed-file name has already been written, so --name-delimiter
-// can separate names without a trailing delimiter after the last one.
-let namePrinted = false;
+// Same path must not be reported twice (e.g. overlapping globs)
+const reported = new Set();
 
 export const outputConfig = function (_config) {
 	config = _config;
-	namePrinted = false;
+	reported.clear();
+	if (config) {
+		config.changedNames = [];
+	}
 };
 
-// Verbose / informational messages stay on stderr (errors, --verbose, --debug).
+// Names of files changed in place go to stdout (like grep -l / gofmt -l / prettier --write).
+// config.nameDelimiter is '\n' by default, '\0' with --null, or the custom --name-delimiter.
+// A custom delimiter is joined between names only (no trailing delimiter); see flushChangedNames.
 export const info = function (msg, data = '') {
 	if (config.quiet || config.quietTotal) {
 		return;
 	}
-	console.error(font.gray(msg), data);
+
+	const name =
+		'' === data || undefined === data || null === data ? String(msg) : String(msg) + data;
+	if (reported.has(name)) {
+		return;
+	}
+	reported.add(name);
+
+	if (config.nameDelimiterBetween) {
+		config.changedNames.push(name);
+		return;
+	}
+
+	process.stdout.write(name + config.nameDelimiter);
 };
 
-// Names of files changed in place go to stdout (like grep -l / gofmt -l / prettier --write).
-// Not used together with --output, --output-match or piped data (those paths never call this).
-export const printChangedName = function (name) {
-	if (config.quiet || config.quietTotal) {
+// Write custom --name-delimiter names in one go (no delimiter after the last name)
+export const flushChangedNames = function () {
+	if (config.quiet || config.quietTotal || !config.nameDelimiterBetween) {
 		return;
 	}
-
-	if (config.null) {
-		process.stdout.write(name + '\0');
-		return;
+	if (config.changedNames && config.changedNames.length) {
+		process.stdout.write(config.changedNames.join(config.nameDelimiter));
 	}
-
-	if (undefined !== config.nameDelimiter && null !== config.nameDelimiter) {
-		if (namePrinted) {
-			process.stdout.write(config.nameDelimiter);
-		}
-		process.stdout.write(name);
-		namePrinted = true;
-		return;
-	}
-
-	process.stdout.write(name + '\n');
 };
 
+// Verbose chatter stays on stderr (errors, --verbose, --debug)
 export const chat = function (msg, data = '') {
 	if (config.verbose) {
-		info(msg, data);
+		if (!(config.quiet || config.quietTotal)) {
+			console.error(font.gray(msg), data);
+		}
 	} else {
 		debug(msg + ' ' + data);
 	}

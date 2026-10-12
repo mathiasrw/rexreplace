@@ -428,6 +428,12 @@ function unescapeString(str = '') {
 
 	config.excludeRe = [].concat(yargs.argv.excludeRe).filter(Boolean);
 
+	// Ending after each changed name: NUL with --null, custom --name-delimiter, else newline
+	const customNameDelimiter =
+		!config.null && undefined !== config.nameDelimiter && null !== config.nameDelimiter;
+	config.nameDelimiterBetween = !!customNameDelimiter;
+	const rawNameDelimiter = customNameDelimiter ? config.nameDelimiter : null;
+
 	if (config.replacementJs) {
 		config.replacement = replacement;
 	} else {
@@ -442,27 +448,20 @@ function unescapeString(str = '') {
 		}
 	}
 
-	if (undefined !== config.nameDelimiter && null !== config.nameDelimiter) {
-		const rawDelimiter = config.nameDelimiter;
+	if (config.null) {
+		config.nameDelimiter = '\0';
+	} else if (customNameDelimiter) {
+		// Same treatment as the replacement (§ before unescape; €/§ again in the engine)
 		try {
-			// Same treatment as the replacement: § → \ before unescaping (so §n is a newline),
-			// then after unescaping apply the €/$ and §/\ aliases again (so \u00a7 becomes \).
-			let delimiter = rawDelimiter;
-			if (!config.voidSection) {
-				delimiter = delimiter.replace(/§/g, '\\');
-			}
-			delimiter = unescapeString(delimiter);
-			if (!config.voidEuro) {
-				delimiter = delimiter.replace(/€/g, '$');
-			}
-			if (!config.voidSection) {
-				delimiter = delimiter.replace(/§/g, '\\');
-			}
-			config.nameDelimiter = delimiter;
+			config.nameDelimiter = unescapeString(
+				config.voidSection ? rawNameDelimiter : String(rawNameDelimiter).replace(/§/g, '\\')
+			);
 		} catch (e) {
 			outputConfig(config);
-			return die('Invalid escape sequence in --name-delimiter:', rawDelimiter);
+			return die('Invalid escape sequence in --name-delimiter:', rawNameDelimiter);
 		}
+	} else {
+		config.nameDelimiter = '\n';
 	}
 
 	/*if(Boolean(process.stdout.isTTY)){

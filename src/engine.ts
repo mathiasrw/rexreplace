@@ -6,7 +6,7 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, printChangedName, error, die} from './output.ts';
+import {outputConfig, step, debug, chat, info, flushChangedNames, error, die} from './output.ts';
 
 const re = {
 	euro: /€/g,
@@ -28,6 +28,18 @@ const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
 // Returns a promise that resolves when all files are done
 export async function engine(config: any = {engine: 'default'}) {
+	// Ending after each changed name (CLI may already have set these)
+	if (config.null) {
+		config.nameDelimiter = '\0';
+		config.nameDelimiterBetween = false;
+	} else if (null == config.nameDelimiter || undefined === config.nameDelimiter) {
+		config.nameDelimiter = '\n';
+		config.nameDelimiterBetween = false;
+	} else if (undefined === config.nameDelimiterBetween) {
+		// Engine called directly with a custom delimiter
+		config.nameDelimiterBetween = true;
+	}
+
 	outputConfig(config);
 
 	step('Displaying steps for:');
@@ -40,6 +52,9 @@ export async function engine(config: any = {engine: 'default'}) {
 	config.replacementOri = config.replacement;
 
 	config.regex = getFinalRegex(config.pattern, config) || '';
+
+	// nameDelimiter is treated like the replacement (€ / § aliases)
+	config.nameDelimiter = replacePlaceholders(config.nameDelimiter, config);
 
 	step(config);
 
@@ -72,6 +87,7 @@ export async function engine(config: any = {engine: 'default'}) {
 		.map((filepath) => openFile(filepath, config));
 
 	await Promise.all(work);
+	flushChangedNames();
 }
 
 function openFile(file, config) {
@@ -129,7 +145,7 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	if (_config_rr.voidBackup) {
 		return fs.promises
 			.writeFile(_file_rr, result, _config_rr.encoding)
-			.then(() => printChangedName(nameToPrint), error);
+			.then(() => info(nameToPrint), error);
 	}
 
 	//Make sure data is always on disk
@@ -147,14 +163,14 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 		} catch (e) {
 			return error(e);
 		}
-		return printChangedName(nameToPrint);
+		return info(nameToPrint);
 	}
 
 	return fs.promises
 		.rename(oriFile, backupFile)
 		.then(() => fs.promises.writeFile(oriFile, result, _config_rr.encoding))
 		.then(() => _config_rr.keepBackup || fs.promises.unlink(backupFile))
-		.then(() => printChangedName(nameToPrint), error);
+		.then(() => info(nameToPrint), error);
 }
 
 function handlePipedData(config) {
@@ -656,5 +672,6 @@ function getFilePaths(conf) {
 		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(el));
 	}
 
-	return filesToInclude.sort();
+	// Do not process the same file multiple times (overlapping globs)
+	return [...new Set(filesToInclude)].sort();
 }
