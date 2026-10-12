@@ -6,5 +6,4 @@ tmp/*
 *.txt
 *.file
 *.lock
-legacy/
 npm/
