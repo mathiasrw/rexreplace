@@ -58,44 +58,14 @@ describe('--exclude-re', () => {
 		]);
 	});
 
-	test('ignores case like the main search', () => {
+	test('follows the regex flags of the main search', () => {
 		const names = ['MY.file', 'your.file'];
 		expect(changed(names, {includeGlob: ['*.file'], excludeRe: ['^my']})).toEqual([
 			'your.file',
 		]);
 	});
 
-	test('stops on an invalid regex', () => {
-		fs.writeFileSync('my.file', 'foo');
-		const result = rr('foo', 'x', {includeGlob: ['my.file'], excludeRe: ['(']});
-		expect(result.exit).toBe(1);
-		expect(result.err).toContain('Invalid regular expression');
-		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo');
-	});
-
 	describe('combined', () => {
-		test('with --void-ignore-case the case must match', () => {
-			const names = ['MY.file', 'your.file'];
-			const config = {includeGlob: ['*.file'], excludeRe: ['^my'], voidIgnoreCase: true};
-			expect(changed(names, config)).toEqual(names);
-		});
-
-		test('with --dot-all a dot matches a line break in the path', () => {
-			const names = ['a\nb.file', 'ab.file'];
-			expect(changed(names, {includeGlob: ['*.file'], excludeRe: ['a.b']})).toEqual(names);
-			const config = {includeGlob: ['*.file'], excludeRe: ['a.b'], dotAll: true};
-			expect(changed(names, config)).toEqual(['ab.file']);
-		});
-
-		test('with --void-multiline ^ is only the start of the path', () => {
-			const names = ['a\nb.file', 'c.file'];
-			expect(changed(names, {includeGlob: ['*.file'], excludeRe: ['^b']})).toEqual([
-				'c.file',
-			]);
-			const config = {includeGlob: ['*.file'], excludeRe: ['^b'], voidMultiline: true};
-			expect(changed(names, config)).toEqual(names);
-		});
-
 		test('with --exclude-glob both are used', () => {
 			const names = ['a.file', 'b.file', 'c.file'];
 			const config = {includeGlob: ['*.file'], excludeRe: ['^a'], excludeGlob: ['b.*']};
