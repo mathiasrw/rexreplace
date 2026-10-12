@@ -256,7 +256,7 @@ rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 
 The tests come in three groups:
 
-- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end. They are run with both Bun (`yarn test-cli-bun` installs [`rexreplace-bun`](https://github.com/mathiasrw/rexreplace/tree/main/npm/rexreplace-bun) globally) and Node.js (`yarn test-cli-node` installs `rexreplace` globally) as the runtime, so both must be available.
+- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end. They are run with both Bun (as [`rexreplace-bun`](https://github.com/mathiasrw/rexreplace/tree/main/npm/rexreplace-bun)) and Node.js as the runtime, so both must be available. The scripts in [test/runtime](https://github.com/mathiasrw/rexreplace/tree/main/test/runtime) install the command into a temporary folder and remove it again afterwards, so what you have installed globally is left alone.
 - **JS tests** in [`test/js/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/js) call the engine directly (no build and no CLI involved), so they are fast enough to run while developing. There is one file per flag, named after the long version of the flag.
 - **Fuzzy tests** in [`test/fuzzy/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/fuzzy) feed the engine random input and compare the result with what plain javascript gives.
 
