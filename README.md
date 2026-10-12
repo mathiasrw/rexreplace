@@ -246,10 +246,24 @@ rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 
 ### Regression
 
-All CLI end to end tests are defined in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) and all unit tests are described in [`test/*.js`](https://github.com/mathiasrw/rexreplace/tree/main/test). After `git clone`'ing the repo and `npm install`'ing you can invoke them with:
+The tests come in three groups:
+
+- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end.
+- **JS tests** in [`test/js/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/js) call the engine directly (no build and no CLI involved), so they are fast enough to run while developing. There is one file per flag, named after the long version of the flag.
+- **Fuzzy tests** in [`test/js/fuzzy/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/js/fuzzy) feed the engine random input and compare the result with what plain javascript gives.
+
+The JS and fuzzy tests are run by [bun](https://bun.sh). After `git clone`'ing the repo and `yarn install`'ing you can invoke the tests with:
 
 ```bash
-> npm test
+> yarn test        # build + CLI tests + JS tests + fuzzy tests
+> yarn test-js     # only the JS tests
+> yarn test-fuzzy  # only the fuzzy tests
+```
+
+The fuzzy tests get new input on every run, so they are not part of what the CI pipeline runs (`yarn test-ci`). The seed is printed, so a failing run can be repeated:
+
+```bash
+> RR_FUZZ_SEED=1234 yarn test-fuzzy
 ```
 
 ## Performance
