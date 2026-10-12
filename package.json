@@ -30,7 +30,7 @@
 		"test-js": "AGENT=1 bun test ./test/js",
 		"test-fuzzy": "AGENT=1 bun test ./test/fuzzy",
 		"test-minify": "AGENT=1 yarn build-minify && yarn test-cli && yarn test-js",
-		"test-cli": "yarn test-cli-bun && yarn test-cli-node",
+		"test-cli": "yarn test-cli-node && yarn test-cli-bun",
 		"test-cli-node": "AGENT=1 bash test/runtime/node.sh",
 		"test-cli-bun": "AGENT=1 bash test/runtime/bun.sh",
 		"test-cli-only": "AGENT=1 bash test/cli/run.sh && bash test/cli/run.ai.sh ",

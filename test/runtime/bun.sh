@@ -1,33 +1,30 @@
 #!/usr/bin/env bash
 
-# Runs the CLI tests with Bun as runtime.
-# rexreplace-bun gets installed the way a global install is done, but into a temporary folder, so what is installed on the machine is left alone. The folder is removed again when done.
+# Runs the CLI tests with Bun as runtime for each command of both rexreplace and rexreplace-bun
 
-ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
+source "$( dirname "${BASH_SOURCE[0]}" )/common.sh"
+
 PKG="$ROOT/npm/rexreplace-bun"
-PREFIX="$(mktemp -d)"
 
 teardown() {
-	rm -rf "$PREFIX"
+	rm -rf "$TMP"
 	rm -f "$PKG/node_modules/rexreplace"
 	rmdir "$PKG/node_modules" 2> /dev/null
 }
-trap teardown EXIT
 
 # rexreplace-bun depends on rexreplace in the exact same version. To have the local build tested instead of the published one it is linked in as that dependency before installing.
 mkdir -p "$PKG/node_modules"
 ln -sfn ../../.. "$PKG/node_modules/rexreplace"
 
-npm install --location=global --prefix "$PREFIX" "$PKG" || exit 1
-export PATH="$PREFIX/bin:$PATH"
+install rexreplace "$ROOT"
+install rexreplace-bun "$PKG"
 
-# The version ends with +bun when Bun is the runtime
-case "$(rexreplace --version)" in
-	*+bun) ;;
-	*)
-		echo "rexreplace-bun is not running on Bun"
-		exit 1
-		;;
-esac
+# rexreplace asks for `node`, so let that be Bun (this is how `bunx --bun rexreplace` does it)
+mkdir "$TMP/node-is-bun"
+ln -s "$(command -v bun)" "$TMP/node-is-bun/node"
 
-bash "$ROOT/test/cli/run.sh" && bash "$ROOT/test/cli/run.ai.sh"
+PATH="$TMP/node-is-bun:$PATH" cli_tests rexreplace rr bun &&
+	PATH="$TMP/node-is-bun:$PATH" cli_tests rexreplace rexreplace bun &&
+	cli_tests rexreplace-bun rr bun &&
+	cli_tests rexreplace-bun rexreplace bun &&
+	cli_tests rexreplace-bun rexreplace-bun bun

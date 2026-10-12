@@ -1,25 +1,10 @@
 #!/usr/bin/env bash
 
-# Runs the CLI tests with Node.js as runtime.
-# rexreplace gets installed the way a global install is done, but into a temporary folder, so what is installed on the machine is left alone. The folder is removed again when done.
+# Runs the CLI tests with Node.js as runtime for each command of rexreplace
 
-ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
-PREFIX="$(mktemp -d)"
+source "$( dirname "${BASH_SOURCE[0]}" )/common.sh"
 
-teardown() {
-	rm -rf "$PREFIX"
-}
-trap teardown EXIT
+install rexreplace "$ROOT"
 
-npm install --location=global --prefix "$PREFIX" "$ROOT" || exit 1
-export PATH="$PREFIX/bin:$PATH"
-
-# The version ends with +bun when Bun is the runtime
-case "$(rexreplace --version)" in
-	*+bun)
-		echo "rexreplace is not running on Node.js"
-		exit 1
-		;;
-esac
-
-bash "$ROOT/test/cli/run.sh" && bash "$ROOT/test/cli/run.ai.sh"
+cli_tests rexreplace rr node &&
+	cli_tests rexreplace rexreplace node
