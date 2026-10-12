@@ -22,5 +22,5 @@ To run it without installing:
 
 - Bun must be installed.
 - Regular expressions are run by the regex engine of Bun (JavaScriptCore) instead of the one in Node.js (V8). The two agree on everyday patterns, but can differ in edge cases.
-- The version is always the same as the version of `rexreplace` it runs, and `rexreplace --version` adds `-bun` to it so you can see what runtime is in use.
+- The version is always the same as the version of `rexreplace` it runs, with `+bun` added (like `7.1.14+bun`) so you can see what runtime is in use. That is also what `rexreplace --version` gives you.
 - Starting up is a few milliseconds faster than with Node.js, and large files (tens of megabytes) are handled about twice as fast.

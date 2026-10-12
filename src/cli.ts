@@ -6,8 +6,9 @@
 import * as rexreplace from './engine.ts';
 import {outputConfig, die} from './output.ts';
 
-// Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.js
-const version = rexreplace.version + (process.versions.bun ? '-bun' : '');
+// Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.js.
+// Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
+const version = rexreplace.version + (process.versions.bun ? '+bun' : '');
 
 let pattern, replacement;
 

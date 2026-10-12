@@ -16,9 +16,9 @@ ln -s "$PREFIX/node_modules/rexreplace-bun/index.js" "$PREFIX/bin/rexreplace"
 
 export PATH="$PREFIX/bin:$PATH"
 
-# The version ends with -bun when Bun is the runtime
+# The version ends with +bun when Bun is the runtime
 case "$(rexreplace --version)" in
-	*-bun) ;;
+	*+bun) ;;
 	*)
 		echo "rexreplace-bun is not running on Bun"
 		exit 1

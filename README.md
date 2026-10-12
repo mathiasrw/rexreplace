@@ -45,7 +45,7 @@ To have RexReplace run on [Bun](https://bun.sh) instead of Node.js, install [`re
 > bun install -g rexreplace-bun
 ```
 
-When Bun is the runtime `-bun` is added to the version (`rexreplace --version`), as regular expressions are then run by the regex engine of Bun (JavaScriptCore) instead of the one in Node.js (V8).
+When Bun is the runtime `+bun` is added to the version (`rexreplace --version` gives something like `7.1.14+bun`), as regular expressions are then run by the regex engine of Bun (JavaScriptCore) instead of the one in Node.js (V8).
 
 ## Examples
 

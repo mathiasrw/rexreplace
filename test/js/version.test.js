@@ -8,8 +8,8 @@ describe('--version', () => {
 		expect(version).toBe(pkg.version);
 	});
 
-	test('rexreplace-bun has the same version and depends on exactly that version', () => {
-		expect(pkgBun.version).toBe(pkg.version);
+	test('rexreplace-bun has the same version marked with +bun and depends on exactly that version', () => {
+		expect(pkgBun.version).toBe(pkg.version + '+bun');
 		expect(pkgBun.dependencies.rexreplace).toBe(pkg.version);
 	});
 
