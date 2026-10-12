@@ -35,8 +35,10 @@ describe('#691 replacement that used to crash the CLI', () => {
 		expect(replaceO('x\\').out).toBe('fx\\x\\bar');
 	});
 
-	test('a backslash in front of a real line break keeps the line break', () => {
-		expect(replaceO('a\\\nb').out).toBe('fa\nba\nbbar');
+	test('a backslash in front of a real line break still joins the lines (as before)', () => {
+		expect(replaceO('a\\\nb')).toEqual({out: 'fababbar', err: '', exit: 0});
+		expect(replaceO('a\\\r\nb').out).toBe('fababbar');
+		expect(replaceO('a \\\n  b \\\n  c').out).toBe('fa   b   ca   b   cbar');
 	});
 
 	test('the replacement can not run as code', () => {

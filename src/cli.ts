@@ -350,15 +350,15 @@ const lineBreakEscapes = {'\n': '\\n', '\r': '\\r', '\u2028': '\\u2028', '\u2029
 // Let javascript interpret escape sequences (like `\n` or `\x41`) by evaluating the replacement as the content of a single quoted string.
 // Anything that would end the string or break the source must be neutralised first: unescaped single quotes, real line breaks and a lone backslash at the end.
 function unescapeString(str = '') {
-	const source = str.replace(/\\([\s\S]?)|['\n\r\u2028\u2029]/g, (match, escaped) => {
+	const source = str.replace(/\\(?:\r\n|[\s\S])?|['\n\r\u2028\u2029]/g, (match) => {
 		if ('\\' === match) {
 			return '\\\\';
 		}
-		if ("'" === match) {
-			return "\\'";
+		// Escape sequences are left for javascript - including a backslash in front of a real line break (a line continuation, so both are removed)
+		if ('\\' === match[0]) {
+			return match;
 		}
-		// A real line break is kept as a line break - also with a backslash in front of it
-		return lineBreakEscapes[escaped !== undefined ? escaped : match] || match;
+		return "'" === match ? "\\'" : lineBreakEscapes[match];
 	});
 	return new Function(`return '${source}'`)();
 }
