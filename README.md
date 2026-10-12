@@ -39,7 +39,7 @@ To use RexReplace from an npm build script:
 > npm install rexreplace --save-dev
 ```
 
-To have RexReplace run on [Bun](https://bun.sh) instead of Node.js, install [`rexreplace-bun`](https://www.npmjs.com/package/rexreplace-bun). It is the same code in the same version and gives you the same `rexreplace` and `rr` commands, so install one or the other globally - not both.
+RexReplace also runs on [Bun](https://bun.sh). The command `rexreplace-bun` comes along with `rexreplace` and `rr`, and uses Bun as the runtime instead of Node.js. To have `rexreplace` and `rr` use Bun too, install [`rexreplace-bun`](https://www.npmjs.com/package/rexreplace-bun). It is the same code in the same version and gives you the same commands, so install one or the other globally - not both.
 
 ```bash
 > bun install -g rexreplace-bun
@@ -256,7 +256,7 @@ rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 
 The tests come in three groups:
 
-- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end. They are run for each command (`rr` and `rexreplace`) with Node.js as the runtime, again with Bun as the runtime, and finally for each command of [`rexreplace-bun`](https://github.com/mathiasrw/rexreplace/tree/main/npm/rexreplace-bun) - so both Node.js and Bun must be available. The scripts in [test/runtime](https://github.com/mathiasrw/rexreplace/tree/main/test/runtime) install the packages into a temporary folder and remove it again afterwards, so what you have installed globally is left alone.
+- **CLI tests** in [test/cli/run.sh](https://github.com/mathiasrw/rexreplace/blob/main/test/cli/run.sh) run the built command end to end. They are run for `rr` and `rexreplace` with Node.js as the runtime, for all three commands (including `rexreplace-bun`) with Bun as the runtime, and finally for each command of [`rexreplace-bun`](https://github.com/mathiasrw/rexreplace/tree/main/npm/rexreplace-bun) - so both Node.js and Bun must be available. The scripts in [test/runtime](https://github.com/mathiasrw/rexreplace/tree/main/test/runtime) install the packages into `tmp/runtime` in the repo and remove it again afterwards, so what you have installed globally is left alone.
 - **JS tests** in [`test/js/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/js) call the engine directly (no build and no CLI involved), so they are fast enough to run while developing. There is one file per flag, named after the long version of the flag.
 - **Fuzzy tests** in [`test/fuzzy/*.test.js`](https://github.com/mathiasrw/rexreplace/tree/main/test/fuzzy) feed the engine random input and compare the result with what plain javascript gives.
 

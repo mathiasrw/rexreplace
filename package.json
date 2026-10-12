@@ -14,7 +14,8 @@
 	"homepage": "https://github.com/mathiasrw/rexreplace#readme",
 	"bin": {
 		"rr": "bin/rexreplace.cli.min.js",
-		"rexreplace": "bin/rexreplace.cli.js"
+		"rexreplace": "bin/rexreplace.cli.js",
+		"rexreplace-bun": "src/bun.cli.js"
 	},
 	"main": "src/engine.js",
 	"scripts": {

@@ -1,20 +1,27 @@
 #!/usr/bin/env bash
 
 # Shared by the scripts running the CLI tests with a specific runtime.
-# Everything is placed in a temporary folder, so what is installed on the machine is left alone. The folder is removed again when done.
+# Everything is placed in a folder in the repo, so what is installed on the machine is left alone. The folder is removed again when done.
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
-TMP="$(mktemp -d)"
+
+# Work from the root of the repo with relative paths, so only things in the repo can get removed
+cd "$ROOT" || exit 1
+TMP=tmp/runtime
 
 teardown() {
-	rm -rf "$TMP"
+	rm -rf "./$TMP"
+	rmdir ./tmp 2> /dev/null
 }
 trap teardown EXIT
+
+# Leftovers from a run that got interrupted
+rm -rf "./$TMP"
 
 # Installs a package the way a global install is done
 # install <package> <folder of package>
 install() {
-	npm install --location=global --prefix "$TMP/$1" "$2" || exit 1
+	npm install --location=global --prefix "./$TMP/$1" "$2" || exit 1
 }
 
 # Runs the CLI tests with one of the commands of an installed package.
@@ -22,14 +29,14 @@ install() {
 # cli_tests <package> <command> <expected runtime: node|bun>
 cli_tests() {
 	local as="$TMP/as/$1/$2"
-	mkdir -p "$as"
-	ln -sfn "$TMP/$1/bin/$2" "$as/rexreplace"
+	mkdir -p "./$as"
+	ln -sfn "$ROOT/$TMP/$1/bin/$2" "./$as/rexreplace"
 
 	echo
 	echo "CLI tests of \`$2\` from $1 with $3 as runtime"
 
 	(
-		export PATH="$as:$PATH"
+		export PATH="$ROOT/$as:$PATH"
 
 		# The version ends with +bun when Bun is the runtime
 		case "$(rexreplace --version)" in
@@ -38,6 +45,6 @@ cli_tests() {
 			*) [ "$3" = node ] || { echo "\`$2\` from $1 is not running on Bun" && exit 1; } ;;
 		esac
 
-		bash "$ROOT/test/cli/run.sh" && bash "$ROOT/test/cli/run.ai.sh"
+		bash test/cli/run.sh && bash test/cli/run.ai.sh
 	)
 }

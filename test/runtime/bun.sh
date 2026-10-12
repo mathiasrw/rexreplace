@@ -4,27 +4,28 @@
 
 source "$( dirname "${BASH_SOURCE[0]}" )/common.sh"
 
-PKG="$ROOT/npm/rexreplace-bun"
-
-teardown() {
-	rm -rf "$TMP"
-	rm -f "$PKG/node_modules/rexreplace"
-	rmdir "$PKG/node_modules" 2> /dev/null
-}
+PKG=npm/rexreplace-bun
 
 # rexreplace-bun depends on rexreplace in the exact same version. To have the local build tested instead of the published one it is linked in as that dependency before installing.
-mkdir -p "$PKG/node_modules"
-ln -sfn ../../.. "$PKG/node_modules/rexreplace"
+unlink_local() {
+	rm -f "./$PKG/node_modules/rexreplace"
+	rmdir "./$PKG/node_modules" 2> /dev/null
+}
+trap 'unlink_local; teardown' EXIT
 
-install rexreplace "$ROOT"
-install rexreplace-bun "$PKG"
+mkdir -p "./$PKG/node_modules"
+ln -sfn ../../.. "./$PKG/node_modules/rexreplace"
 
-# rexreplace asks for `node`, so let that be Bun (this is how `bunx --bun rexreplace` does it)
-mkdir "$TMP/node-is-bun"
-ln -s "$(command -v bun)" "$TMP/node-is-bun/node"
+install rexreplace .
+install rexreplace-bun "./$PKG"
 
-PATH="$TMP/node-is-bun:$PATH" cli_tests rexreplace rr bun &&
-	PATH="$TMP/node-is-bun:$PATH" cli_tests rexreplace rexreplace bun &&
+# `rr` and `rexreplace` from rexreplace ask for `node`, so let that be Bun (this is how `bunx --bun rexreplace` does it)
+mkdir -p "./$TMP/node-is-bun"
+ln -sfn "$(command -v bun)" "./$TMP/node-is-bun/node"
+
+PATH="$ROOT/$TMP/node-is-bun:$PATH" cli_tests rexreplace rr bun &&
+	PATH="$ROOT/$TMP/node-is-bun:$PATH" cli_tests rexreplace rexreplace bun &&
+	cli_tests rexreplace rexreplace-bun bun &&
 	cli_tests rexreplace-bun rr bun &&
 	cli_tests rexreplace-bun rexreplace bun &&
 	cli_tests rexreplace-bun rexreplace-bun bun
