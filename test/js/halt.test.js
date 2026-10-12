@@ -48,14 +48,11 @@ describe('--halt', () => {
 			expect(result.out).toMatch(/-H,\s*--halt,\s*--bail/);
 		});
 
-		test.each(['--bail', '--halt', '-H'])(
-			'%s stops on the first error like --halt',
-			(flag) => {
-				const result = runCli('o', 'x', 'nope.file', flag);
-				expect(result.err).toContain('0 files found');
-				expect(result.exit).toBe(1);
-			}
-		);
+		test.each(['--bail', '--halt', '-H'])('%s stops on the first error like --halt', (flag) => {
+			const result = runCli('o', 'x', 'nope.file', flag);
+			expect(result.err).toContain('0 files found');
+			expect(result.exit).toBe(1);
+		});
 
 		test('--bail is accepted and changes nothing when all goes well', () => {
 			fs.writeFileSync('my.file', 'foobar');
