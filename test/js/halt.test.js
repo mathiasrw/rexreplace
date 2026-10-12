@@ -22,13 +22,10 @@ describe('--halt', () => {
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 	});
 
-	test.todo(
-		'BUG #681: stops with a number as exit code (now the error message is used as exit code)',
-		() => {
-			expect(rr('o', 'x', {includeGlob: ['nope.file'], halt: true}).exit).toBe(1);
-			expect(rr('(', 'x', {pipedData: 'foobar', halt: true}).exit).toBe(1);
-		}
-	);
+	test('stops with a number as exit code', () => {
+		expect(rr('o', 'x', {includeGlob: ['nope.file'], halt: true}).exit).toBe(1);
+		expect(rr('(', 'x', {pipedData: 'foobar', halt: true}).exit).toBe(1);
+	});
 
 	describe('combined', () => {
 		test.each(['quiet', 'quietTotal'])('with --%s it still stops', (flag) => {

@@ -37,7 +37,7 @@ export const error = function (msg, data = '') {
 		console.error(font.red(msg), data);
 	}
 	if (config.halt) {
-		kill(msg);
+		kill();
 	}
 	return false;
 };
@@ -54,7 +54,6 @@ export function step(data) {
 	}
 }
 
-function kill(error = 1, msg = '') {
-	msg && console.error(+msg);
-	process.exit(error);
+function kill(exitCode = 1) {
+	process.exit(exitCode);
 }
