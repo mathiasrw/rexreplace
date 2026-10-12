@@ -87,6 +87,12 @@ describe('--name-delimiter (CLI)', () => {
 		expect(run('o', 'x', '*.file', '--name-delimiter', '§t', '--void-async').out).toBe(
 			'a.file\tb.file'
 		);
+		// § from a unicode escape is turned into \ after unescaping (same as replacement)
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
+		expect(run('o', 'x', '*.file', '--name-delimiter', '\\u00a7', '--void-async').out).toBe(
+			'a.file\\b.file'
+		);
 	});
 
 	test('understands € as $ unless --void-euro', () => {

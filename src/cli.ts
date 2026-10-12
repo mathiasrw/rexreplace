@@ -438,6 +438,8 @@ function unescapeString(str = '') {
 	if (undefined !== config.nameDelimiter && null !== config.nameDelimiter) {
 		const rawDelimiter = config.nameDelimiter;
 		try {
+			// Same treatment as the replacement: § → \ before unescaping (so §n is a newline),
+			// then after unescaping apply the €/$ and §/\ aliases again (so \u00a7 becomes \).
 			let delimiter = rawDelimiter;
 			if (!config.voidSection) {
 				delimiter = delimiter.replace(/§/g, '\\');
@@ -445,6 +447,9 @@ function unescapeString(str = '') {
 			delimiter = unescapeString(delimiter);
 			if (!config.voidEuro) {
 				delimiter = delimiter.replace(/€/g, '$');
+			}
+			if (!config.voidSection) {
+				delimiter = delimiter.replace(/§/g, '\\');
 			}
 			config.nameDelimiter = delimiter;
 		} catch (e) {
