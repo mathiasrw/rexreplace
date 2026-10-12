@@ -59,11 +59,23 @@ assert		 		"cat my.file | rexreplace foo xxx"    "xxxbar"
 # -v
 reset
 assert_success		"rexreplace -version"
+assert		 		"rexreplace -v"    "$(rexreplace --version)"
+assert		 		"rexreplace --version"    "$(rexreplace -version)"
+
+# a single argument only containing -v is not a request for the version (-V is verbose)
+assert_failure		"rexreplace my-vile"
+assert_failure		"rexreplace -V"
 
 
 # -h
 reset
 assert_success		"rexreplace -help"
+assert_success		"rexreplace -h"
+assert_success		"rexreplace --help"
+
+# a single argument only containing -h is not a request for help (-H is halt)
+assert_failure		"rexreplace o-ho"
+assert_failure		"rexreplace -H"
 
 
 # -o

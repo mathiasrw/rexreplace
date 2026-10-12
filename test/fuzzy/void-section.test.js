@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random} from '../helper.js';
+import {rr, random} from '../js/helper.js';
 
 describe('--void-section', () => {
 	test('§ and \\ can be swapped freely unless voided', () => {

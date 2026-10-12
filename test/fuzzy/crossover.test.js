@@ -1,7 +1,7 @@
 // Random combinations of flags and input compared with what plain javascript gives
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random, until} from '../helper.js';
+import {rr, random, until} from '../js/helper.js';
 
 const flags = [
 	'verbose',

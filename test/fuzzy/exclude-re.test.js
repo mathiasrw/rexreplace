@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random} from '../helper.js';
+import {rr, random} from '../js/helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
 const changed = (names, config) => {
