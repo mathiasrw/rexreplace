@@ -25,7 +25,7 @@
 		"build-minify": "yarn build && yarn minify",
 		"minify": "cat bin/rexreplace.cli.js > bin/rexreplace.cli.min.js",
 		"prebuild": "rm -fr bin && yarn format",
-		"test-js": "AGENT=1 bun test ./test/js/*.test.js",
+		"test-js": "AGENT=1 bun test ./test/js/*.test.js ./test/js/fix",
 		"test-fuzzy": "AGENT=1 bun test ./test/js/fuzzy",
 		"test-minify": "AGENT=1 yarn build-minify && yarn test-cli && yarn test-js",
 		"test-cli": "AGENT=1 npm uninstall --location=global rexreplace && npm --location=global install ./ && yarn test-cli-only # why on earth are they depricating the -g flag",
