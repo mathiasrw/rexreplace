@@ -27,6 +27,9 @@ describe('--halt', () => {
 		expect(rr('(', 'x', {pipedData: 'foobar', halt: true}).exit).toBe(1);
 	});
 
+	// --bail is a CLI alias for --halt (src/cli.ts). The engine only sees the halt config key.
+	test.todo('--bail is an alias for --halt and is tested in test/cli/run.sh');
+
 	describe('combined', () => {
 		test.each(['quiet', 'quietTotal'])('with --%s it still stops', (flag) => {
 			const result = rr('o', 'x', {includeGlob: ['nope.file'], halt: true, [flag]: true});

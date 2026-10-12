@@ -96,6 +96,16 @@ assert_success		"rexreplace --help"
 assert_failure		"rexreplace o-ho"
 assert_failure		"rexreplace -H"
 
+# -H, --halt, --bail
+reset
+assert_success		"rexreplace --help | grep -F -- '--bail' >/dev/null"
+assert_raises		"rexreplace o x nope.file --bail" 1
+assert_raises		"rexreplace o x nope.file --halt" 1
+assert_raises		"rexreplace o x nope.file -H" 1
+# --bail is accepted (not an unknown argument) and leaves files untouched when nothing fails
+assert_success		"rexreplace o x my.file --bail"
+assert				"cat my.file" "fxxbar"
+
 
 # -o
 reset
@@ -372,10 +382,6 @@ assert		 		"cat your.file"    					'abc123'
 
 # Todo: test -Q
 # assert		 		"rexreplace ??? ??? my.file -Q"    "foobar"
-# reset
-
-# Todo: test -H
-# assert		 		"rexreplace ??? ??? my.file -H"    "foobar"
 # reset
 
 # Todo: test -d
