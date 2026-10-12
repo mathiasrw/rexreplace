@@ -52,7 +52,8 @@ describe('--verbose', () => {
 			const result = rr('o', 'x', {pipedData: 'foobar', verbose: true, debug: true});
 			expect(result.err).toContain('"Displaying steps for:"');
 			expect(result.err).toContain('"pattern": "o"');
-			expect(result.err).toContain('"Get final regex with engine: V8"');
+			// The tests are run by Bun, and Bun has JSC
+			expect(result.err).toContain('"Get final regex with engine: JSC"');
 			expect(result.err).toContain('"gim"');
 			expect(result.out).toBe('fxxbar');
 		});

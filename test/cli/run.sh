@@ -4,6 +4,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $DIR/aserta.sh
 
+# The tests call `rexreplace`. Set RR to test another command (like `rr` or `bun run rexreplace-bun`).
+if [ -n "$RR" ]; then
+	rexreplace() { command $RR "$@"; }
+fi
+
 # # Command exit codes
 # assert_success    "true"
 # assert_failure    "false"
@@ -101,9 +106,18 @@ assert		 		"rexreplace o x my.file --output"    "fxxbar"
 
 
 # -E 
+# `default` is the engine of the runtime: V8 with Node and JSC with Bun. The engine of the other runtime can not be picked.
 reset
 # assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"		# RE2	 depricated
-assert		 		"rexreplace o x my.file --output --engine V8"    "fxxbar"
+assert		 		"rexreplace o x my.file --output --engine default"    "fxxbar"
+
+if [[ "$(rexreplace --version)" == *+bun ]]; then
+	assert		 		"rexreplace o x my.file --output --engine JSC"    "fxxbar"
+	assert_failure		"rexreplace o x my.file --output --engine V8"
+else
+	assert		 		"rexreplace o x my.file --output --engine V8"    "fxxbar"
+	assert_failure		"rexreplace o x my.file --output --engine JSC"
+fi
 
 
 # -b
@@ -371,7 +385,7 @@ assert		 		"cat your.file"    					'abc123'
 rm my.file
 rm your.file
 
-assert_end 			"rexreplace"
+assert_end 			"rexreplace cli"
 
 
 

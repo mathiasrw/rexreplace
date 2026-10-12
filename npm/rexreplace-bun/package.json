@@ -14,12 +14,13 @@
 	},
 	"homepage": "https://github.com/mathiasrw/rexreplace#readme",
 	"bin": {
-		"rr": "index.js",
-		"rexreplace": "index.js",
-		"rexreplace-bun": "index.js"
+		"rr": "rr.js",
+		"rexreplace": "rexreplace.js",
+		"rexreplace-bun": "rexreplace.js"
 	},
 	"files": [
-		"index.js"
+		"rr.js",
+		"rexreplace.js"
 	],
 	"keywords": [
 		"search",

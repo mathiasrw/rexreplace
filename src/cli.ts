@@ -1,12 +1,9 @@
-#!/usr/bin/env node
-'use strict'; // Bun does not add this on its own when bundling to CommonJS
-
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
 import {outputConfig, die} from './output.ts';
 
-// Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.js.
+// Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
 // Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
 const version = rexreplace.version + (process.versions.bun ? '+bun' : '');
 
@@ -98,9 +95,12 @@ const yargs = require('yargs')
 	.describe('e', 'Encoding of files/piped data.')
 
 	.alias('E', 'engine')
-	.describe('E', 'What regex engine to use:')
-	.choices('E', ['V8' /*'RE2' /*'sd', 'stream'*/])
-	.default('E', 'V8')
+	.describe(
+		'E',
+		'What regex engine to use. `default` is the default engine of the runtime (`V8` for  Node and `JSC` (JavaScriptCore) for Bun.'
+	)
+	.choices('E', ['default', 'V8', 'JSC' /*'RE2' /*'sd', 'stream'*/])
+	.default('E', 'default')
 
 	.boolean('q')
 	.describe('q', 'Only display errors (no other info)')

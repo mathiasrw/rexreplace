@@ -1,31 +1,52 @@
 #!/usr/bin/env bash
 
-# Runs the CLI tests with Bun as runtime for each command of both rexreplace and rexreplace-bun
+# Runs the CLI tests with `bun run` on rexreplace and on rexreplace-bun
 
-source "$( dirname "${BASH_SOURCE[0]}" )/common.sh"
+set -e
 
-PKG=npm/rexreplace-bun
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-# rexreplace-bun depends on rexreplace in the exact same version. To have the local build tested instead of the published one it is linked in as that dependency before installing.
-unlink_local() {
-	rm -f "./$PKG/node_modules/rexreplace"
-	rmdir "./$PKG/node_modules" 2> /dev/null
+cleanup() {
+	rm -rf ./tmp/runtime
+	rm -f ./npm/rexreplace-bun/node_modules/rexreplace
+	rmdir ./npm/rexreplace-bun/node_modules ./tmp 2> /dev/null || true
 }
-trap 'unlink_local; teardown' EXIT
+trap cleanup EXIT
+cleanup
 
-mkdir -p "./$PKG/node_modules"
-ln -sfn ../../.. "./$PKG/node_modules/rexreplace"
+# rexreplace-bun must use the local build of rexreplace, not the published one
+mkdir -p ./npm/rexreplace-bun/node_modules
+ln -sfn ../../.. ./npm/rexreplace-bun/node_modules/rexreplace
 
-install rexreplace .
-install rexreplace-bun "./$PKG"
+# Install in ./tmp/runtime, so the global install on the machine is not changed
+npm install --location=global --prefix ./tmp/runtime/rexreplace .
+npm install --location=global --prefix ./tmp/runtime/rexreplace-bun ./npm/rexreplace-bun
 
-# `rr` and `rexreplace` from rexreplace ask for `node`, so let that be Bun (this is how `bunx --bun rexreplace` does it)
-mkdir -p "./$TMP/node-is-bun"
-ln -sfn "$(command -v bun)" "./$TMP/node-is-bun/node"
+# The commands of rexreplace
+export PATH="$PWD/tmp/runtime/rexreplace/bin:$PATH"
 
-PATH="$ROOT/$TMP/node-is-bun:$PATH" cli_tests rexreplace rr bun &&
-	PATH="$ROOT/$TMP/node-is-bun:$PATH" cli_tests rexreplace rexreplace bun &&
-	cli_tests rexreplace rexreplace-bun bun &&
-	cli_tests rexreplace-bun rr bun &&
-	cli_tests rexreplace-bun rexreplace bun &&
-	cli_tests rexreplace-bun rexreplace-bun bun
+echo "CLI tests of rr from rexreplace (it asks for Node, so Bun starts it with Node)"
+bun run rr --version
+RR="bun run rr" bash test/cli/run.sh
+RR="bun run rr" bash test/cli/run.ai.sh
+
+echo "CLI tests of rexreplace-bun from rexreplace"
+bun run rexreplace-bun --version
+RR="bun run rexreplace-bun" bash test/cli/run.sh
+RR="bun run rexreplace-bun" bash test/cli/run.ai.sh
+
+# The commands of rexreplace-bun
+export PATH="$PWD/tmp/runtime/rexreplace-bun/bin:$PATH"
+
+echo "CLI tests of rr from rexreplace-bun"
+bun run rr --version
+RR="bun run rr" bash test/cli/run.sh
+RR="bun run rr" bash test/cli/run.ai.sh
+
+echo "CLI tests of rexreplace-bun from rexreplace-bun"
+bun run rexreplace-bun --version
+RR="bun run rexreplace-bun" bash test/cli/run.sh
+RR="bun run rexreplace-bun" bash test/cli/run.ai.sh
+
+# rexreplace-bun must use Bun. The version then ends with +bun.
+bun run rr --version | grep -q '+bun$'

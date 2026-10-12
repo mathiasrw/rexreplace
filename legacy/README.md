@@ -10,7 +10,7 @@ Regex replace in files from your CLI - with a tiny footprint.
 > npm install -g rreplace
 ```
 
-Works on any version of Node.js since 0.6
+Works on any version of Node since 0.6
 
 ### Usage
 

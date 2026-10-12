@@ -22,7 +22,11 @@ const re = {
 // Only the version ends up in the bundle
 export {version} from '../package.json';
 
-export function engine(config: any = {engine: 'V8'}) {
+// The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
+const runtime = process.versions.bun ? 'Bun' : 'Nodepa';
+const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
+
+export function engine(config: any = {engine: 'default'}) {
 	outputConfig(config);
 
 	step('Displaying steps for:');
@@ -274,20 +278,28 @@ function getFinalReplacement(replacement, conf: any) {
 }*/
 
 function getFinalRegex(pattern, config) {
-	step('Get final regex with engine: ' + config.engine);
+	const engine = 'default' === config.engine ? runtimeEngine : config.engine;
+
+	step('Get final regex with engine: ' + engine);
 
 	let regex;
 
 	let flags = getFlags(config);
 
-	switch (config.engine) {
-		case 'V8':
+	switch (engine) {
+		case runtimeEngine:
 			try {
 				regex = new RegExp(pattern, flags);
 			} catch (e) {
 				if (config.debug) throw new Error(e);
 				die(e.message);
 			}
+			break;
+		case 'V8':
+		case 'JSC':
+			die(
+				`When running via the ${runtime} runtime you can only use default or ${runtimeEngine} as engine`
+			);
 			break;
 		case 'RE2':
 			try {

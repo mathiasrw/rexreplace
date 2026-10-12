@@ -9,6 +9,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Source the assertion library, assuming it's in the same directory
 source "$DIR/aserta.sh"
 
+# The tests call `rexreplace`. Set RR to test another command (like `rr` or `bun run rexreplace-bun`).
+if [ -n "$RR" ]; then
+	rexreplace() { command $RR "$@"; }
+fi
+
 # Helper function to reset test files to a known state
 reset() {
         echo

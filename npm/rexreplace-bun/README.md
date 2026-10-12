@@ -1,8 +1,8 @@
 # rexreplace-bun
 
-[RexReplace](https://www.npmjs.com/package/rexreplace) with [Bun](https://bun.sh) as the runtime instead of Node.js.
+[RexReplace](https://www.npmjs.com/package/rexreplace) with [Bun](https://bun.sh) as the runtime.
 
-This package holds no code of its own. It depends on the exact same version of `rexreplace` and starts it with Bun, so everything in the [RexReplace documentation](https://github.com/mathiasrw/rexreplace#readme) applies.
+This package has no code of its own. It starts the same version of `rexreplace` with Bun. Read the [RexReplace documentation](https://github.com/mathiasrw/rexreplace#readme) to learn how to use it.
 
 ### Installation
 
@@ -10,9 +10,9 @@ This package holds no code of its own. It depends on the exact same version of `
 > bun install -g rexreplace-bun
 ```
 
-It provides the same `rexreplace` and `rr` commands as `rexreplace`, so install one or the other globally - not both.
+The commands are `rexreplace`, `rr` and `rexreplace-bun`. Do not install `rexreplace` and `rexreplace-bun` globally at the same time.
 
-To run it without installing:
+To use it without an installation:
 
 ```bash
 > bunx rexreplace-bun pattern replacement [fileGlob|option]+
@@ -20,7 +20,7 @@ To run it without installing:
 
 ### Good to know
 
-- Bun must be installed.
-- Regular expressions are run by the regex engine of Bun (JavaScriptCore) instead of the one in Node.js (V8). The two agree on everyday patterns, but can differ in edge cases.
-- The version is always the same as the version of `rexreplace` it runs, with `+bun` added (like `7.1.14+bun`) so you can see what runtime is in use. That is also what `rexreplace --version` gives you.
-- Starting up is a few milliseconds faster than with Node.js, and large files (tens of megabytes) are handled about twice as fast.
+- You must have Bun.
+- The version is the version of `rexreplace` with `+bun` added (`7.1.14+bun`).
+- The regex engine is JavaScriptCore (Node has V8). The result can be different for unusual patterns.
+- Bun starts a few milliseconds faster than Node. Large files (tens of megabytes) take half the time.
