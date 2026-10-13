@@ -16,6 +16,11 @@ export const info = function (msg, data = '') {
 	console.error(font.gray(msg), data);
 };
 
+export const warn = function (msg) {
+	// The line break gives an empty line under the warning
+	info(' 🟡 ' + msg, '\n');
+};
+
 export const chat = function (msg, data = '') {
 	if (config.verbose) {
 		info(msg, data);
@@ -28,7 +33,8 @@ export const die = function (msg = '', data = '', displayHelp = false) {
 	if (displayHelp && !config.quietTotal) {
 		config.showHelp();
 	}
-	msg && error(' ❌ ' + msg, data);
+	// The line break gives an empty line under the error
+	msg && error(' ❌ ' + msg, data + '\n');
 	kill();
 };
 

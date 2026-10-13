@@ -47,7 +47,7 @@ describe('#700 § is a full substitute for \\ in the replacement', () => {
 	test('an invalid escape sequence gives the same error as with a backslash', () => {
 		expect(replaceB('§x4')).toEqual({
 			out: '',
-			err: ' ❌ Invalid escape sequence in replacement: §x4\n',
+			err: ' ❌ Invalid escape sequence in replacement: §x4\n\n',
 			exit: 1,
 		});
 	});

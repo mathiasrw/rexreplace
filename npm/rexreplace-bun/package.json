@@ -1,6 +1,6 @@
 {
 	"name": "rexreplace-bun",
-	"version": "7.1.14+bun",
+	"version": "8.0.0-dev+bun",
 	"description": "RexReplace running on Bun: Search & replace across files with a CLI tool that makes you trust what you are doing.",
 	"author": "Mathias Rangel Wulff",
 	"license": "MIT",
@@ -33,6 +33,6 @@
 		"bun"
 	],
 	"dependencies": {
-		"rexreplace": "7.1.14"
+		"rexreplace": "8.0.0-dev"
 	}
 }

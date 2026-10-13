@@ -1,7 +1,7 @@
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
-import {outputConfig, die} from './output.ts';
+import {outputConfig, die, warn} from './output.ts';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
 // Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
@@ -193,7 +193,8 @@ const yargs = require('yargs')
 	.alias('P', 'void-pipe')
 	.describe(
 		'P',
-		`Ignore any pipe data - even if stdin is open. Can not be combined with -R or -T.`
+		`Ignore any pipe data - even if stdin is open. Can not be combined with -R or -T. ` +
+			`Can also be set via the environment variable RR_VOID_PIPE.`
 	)
 	.conflicts('P', 'R')
 	.conflicts('P', 'T')
@@ -393,6 +394,8 @@ function unescapeString(str = '') {
 		}
 	});
 
+	outputConfig(config);
+
 	let pipeInUse = false;
 	let pipeData = '';
 
@@ -417,7 +420,6 @@ function unescapeString(str = '') {
 				config.voidSection ? replacement : replacement.replace(/§/g, '\\')
 			);
 		} catch (e) {
-			outputConfig(config);
 			return die('Invalid escape sequence in replacement:', replacement);
 		}
 	}
@@ -425,10 +427,15 @@ function unescapeString(str = '') {
 	/*if(Boolean(process.stdout.isTTY)){
         config.output = true;
     }*/
+
+	if (process.env.RR_VOID_PIPE) {
+		const conflict = ' conflicts with the env. var RR_VOID_PIPE as no data will be piped.';
+		config.replacementPipe && warn('The flag --replacement-pipe' + conflict);
+		config.trimPipe && warn('The flag --trim-pipe' + conflict);
+		config.voidPipe = true;
+	}
+
 	if (config.voidPipe || Boolean(process.stdin.isTTY)) {
-		if (config.replacementPipe) {
-			return backOut();
-		}
 		rexreplace.engine(config);
 	} else {
 		process.stdin.setEncoding(config.encoding);
