@@ -294,6 +294,34 @@ assert_failure		"printf x | rexreplace 'b' _ my.file -P -R"
 assert_failure		"printf x | rexreplace 'b' _ my.file -P -T"
 
 
+# Warning when piped data is not used
+reset
+assert		 		"printf x | rexreplace 'o' 'x' my.file 2>&1 | grep 'Data is piped in'"    ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used. '
+assert		 		"cat my.file"    'fxxbar'
+assert_failure		"printf x | rexreplace 'o' 'x' my.file -q 2>&1 | grep 'Data is piped in'"
+assert_failure		"printf x | rexreplace 'o' 'x' my.file -P 2>&1 | grep 'Data is piped in'"
+assert_failure		"printf x | rexreplace 'b' _ my.file -R 2>&1 | grep 'Data is piped in'"
+assert_failure		"printf x | rexreplace 'b' 'pipe' my.file -j 2>&1 | grep 'Data is piped in'"
+
+
+# RR_VOID_PIPE
+reset
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'foo' 'pipe' my.file -o --replacement-js 2>&1"    'nullbar'
+assert		 		"printf x | RR_VOID_PIPE= rexreplace 'foo' 'pipe' my.file -o --replacement-js"    'xbar'
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'foo' 'pipe' my.file -o --replacement-js -T"    'nullbar'
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'foo' 'pipe' my.file -o --replacement-js -T 2>&1 >/dev/null"    ' 🟡 The flag --trim-pipe conflicts with the env. var RR_VOID_PIPE as no data will be piped. '
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'foo' 'pipe' my.file -o --replacement-js -T -q 2>&1"    'nullbar'
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'foo' 'pipe' my.file -o --replacement-js -T -Q 2>&1"    'nullbar'
+assert_failure		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R"
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R 2>&1 | grep -E 'RR_VOID_PIPE as|No data piped'"    ' 🟡 The flag --replacement-pipe conflicts with the env. var RR_VOID_PIPE as no data will be piped. \n ❌ No data piped into replacement '
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R -T 2>&1 | grep -E 'RR_VOID_PIPE as|No data piped'"    ' 🟡 The flag --replacement-pipe conflicts with the env. var RR_VOID_PIPE as no data will be piped. \n 🟡 The flag --trim-pipe conflicts with the env. var RR_VOID_PIPE as no data will be piped. \n ❌ No data piped into replacement '
+assert_failure		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R -q"
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R -q 2>&1 | grep -v 'exited with code'"    ' ❌ No data piped into replacement '
+assert_failure		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R -Q"
+assert		 		"printf x | RR_VOID_PIPE=1 rexreplace 'b' _ my.file -R -Q 2>&1 | grep -v 'exited with code'"    ''
+assert		 		"cat my.file"    'foobar'
+
+
 	
 
 # -L

@@ -6,7 +6,7 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, error, die} from './output.ts';
+import {outputConfig, step, debug, chat, info, warn, error, die} from './output.ts';
 
 const re = {
 	euro: /€/g,
@@ -128,7 +128,7 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	}
 
 	//Make sure data is always on disk
-	const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+	const oriFile = path.resolve(_file_rr);
 	const salt = new Date().toISOString().replace(re.colon, '_').replace('Z', '');
 	const backupFile = oriFile + '.' + salt + '.backup';
 
@@ -156,8 +156,14 @@ function handlePipedData(config) {
 	step('Check Piped Data');
 
 	if (config.includeGlob.length) {
-		if (!config.replacementJs && config.pipedData) {
-			chat('Piped data never used.');
+		// Empty piped data (or only a line break) is not worth a warning
+		if (
+			!config.replacementJs &&
+			!config.pipedDataUsed &&
+			config.pipedData &&
+			'\n' !== config.pipedData
+		) {
+			warn('Data is piped in, but no flag tells what to do with it. It is not used.');
 		}
 
 		return false;
@@ -439,7 +445,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
 
 	if (!_config_rr.dataIsPiped) {
-		_file = path.normalize(path.join(_cwd, _file_rr));
+		_file = path.resolve(_cwd, _file_rr);
 		_file_rel = path.relative(_cwd, _file);
 		const pathInfo = path.parse(_file);
 		_dirpath = pathInfo.dir;

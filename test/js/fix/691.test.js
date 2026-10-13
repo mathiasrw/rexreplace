@@ -53,7 +53,7 @@ describe('#691 replacement that used to crash the CLI', () => {
 	test('an invalid escape sequence gives an error message and no stack trace', () => {
 		const result = replaceO('\\x4');
 		expect(result.out).toBe('');
-		expect(result.err).toBe(' ❌ Invalid escape sequence in replacement: \\x4\n');
+		expect(result.err).toBe(' ❌ Invalid escape sequence in replacement: \\x4\n\n');
 		expect(result.exit).toBe(1);
 		expect(replaceO('\\x4', '--quiet-total')).toEqual({out: '', err: '', exit: 1});
 	});
