@@ -302,6 +302,9 @@ assert_failure		"printf x | rexreplace 'o' 'x' my.file -q 2>&1 | grep 'Data is p
 assert_failure		"printf x | rexreplace 'o' 'x' my.file -P 2>&1 | grep 'Data is piped in'"
 assert_failure		"printf x | rexreplace 'b' _ my.file -R 2>&1 | grep 'Data is piped in'"
 assert_failure		"printf x | rexreplace 'b' 'pipe' my.file -j 2>&1 | grep 'Data is piped in'"
+assert_failure		"printf '' | rexreplace 'o' 'x' my.file 2>&1 | grep 'Data is piped in'"
+assert_failure		"printf '\n' | rexreplace 'o' 'x' my.file 2>&1 | grep 'Data is piped in'"
+assert_failure		"printf '\r\n' | rexreplace 'o' 'x' my.file 2>&1 | grep 'Data is piped in'"
 
 
 # RR_VOID_PIPE

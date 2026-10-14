@@ -36,7 +36,7 @@ describe('#719 a warning when piped data is not used', () => {
 		expect(await Bun.file('my.file').text()).toBe('fooxar');
 	});
 
-	test.each([null, '', '\n'])('is not given when %j is piped in', async (pipedData) => {
+	test.each([null, '', '\n', '\r\n'])('is not given when %j is piped in', async (pipedData) => {
 		expect((await piped({pipedData})).err).toBe('my.file \n');
 	});
 
