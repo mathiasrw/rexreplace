@@ -161,7 +161,8 @@ function handlePipedData(config) {
 			!config.replacementJs &&
 			!config.pipedDataUsed &&
 			config.pipedData &&
-			'\n' !== config.pipedData
+			'\n' !== config.pipedData &&
+			'\r\n' !== config.pipedData
 		) {
 			warn('Data is piped in, but no flag tells what to do with it. It is not used.');
 		}
