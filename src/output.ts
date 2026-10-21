@@ -55,7 +55,7 @@ export const printDone = function () {
 	});
 };
 
-// The name of an affected file goes to stdout so the names can be piped
+// The name of a changed file goes to stdout so the names can be piped
 export const info = function (name) {
 	if (config.quiet || config.quietTotal) {
 		return;

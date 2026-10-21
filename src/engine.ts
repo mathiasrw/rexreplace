@@ -130,7 +130,7 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 			debug('Output result from: ' + _file_rr);
 			print(result, _config_rr.contentDelimiter, _config_rr.contentDelimiterTail);
 		}
-		// The file is not changed, but it is still named if something was found in it
+		// The file is not changed, but it is still named if its content would change
 		if ((_config_rr.nameAll || result !== _data_rr) && !_config_rr.dataIsPiped) {
 			info(_file_rr);
 		}

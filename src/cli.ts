@@ -112,19 +112,19 @@ const yargs = require('yargs')
 	.alias('Q', 'quiet-total')
 
 	.boolean('a')
-	.describe('a', 'Print the full path of affected files instead of the relative path.')
+	.describe('a', 'Print the full path of the named files instead of the relative path.')
 	.alias('a', 'absolute-path')
 
 	.boolean('name-all')
 	.describe(
 		'name-all',
-		'Print the names of all identified files instead of just the files with content matching the search.'
+		'Print the names of all files found by the globs, also the ones where nothing was changed.'
 	)
 
 	.string('name-delimiter')
 	.describe(
 		'name-delimiter',
-		'String printed between the names of the relevant files. Default is a line break, unless the name already ends with one.'
+		'String printed between the names of the files. Default is a line break, unless the name already ends with one.'
 	)
 	.string('content-delimiter')
 	.describe(
