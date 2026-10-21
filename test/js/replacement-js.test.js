@@ -128,10 +128,17 @@ describe('--replacement-js', () => {
 
 		test('pipe is the piped data', async () => {
 			expect(await js('o', 'pipe', 'fo')).toBe('ffo');
+			expect(await js('o', 'pipe_', 'fo')).toBe('ffo ');
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {includeGlob: ['my.file'], replacementJs: true, output: true};
 			expect((await rr('foo', 'pipe', {...config, pipedData: 'boo'})).out).toBe('boobar');
-			expect((await rr('foo', 'String(pipe)', config)).out).toBe('nullbar');
+		});
+
+		test('pipe is null and pipe_ is ❌ without piped data', async () => {
+			fs.writeFileSync('my.file', 'foobar');
+			const config = {includeGlob: ['my.file'], replacementJs: true, output: true};
+			expect((await rr('foo', 'String(pipe) + pipe_', config)).out).toBe('null❌ bar');
+			expect((await rr('(o)', 'pipe_ + €1', config)).out).toBe('f❌ o❌ obar');
 		});
 
 		test('file, file_rel, dirpath, dirpath_rel, dirname, filename, name and ext tell about the file', async () => {
@@ -218,7 +225,6 @@ describe('--replacement-js', () => {
 
 		test('most variables come in a version with a space after', async () => {
 			const names = [
-				'pipe',
 				'find',
 				'text',
 				'file',

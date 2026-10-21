@@ -1,7 +1,7 @@
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
-import {outputConfig, die, warn} from './output.ts';
+import {outputConfig, die} from './output.ts';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
 // Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
@@ -189,15 +189,12 @@ const yargs = require('yargs')
 			''
 	)
 
-	.boolean('P')
-	.alias('P', 'void-pipe')
-	.describe(
-		'P',
-		`Ignore any pipe data - even if stdin is open. Can not be combined with -R or -T. ` +
-			`Can also be set via the environment variable RR_VOID_PIPE.`
-	)
-	.conflicts('P', 'R')
-	.conflicts('P', 'T')
+	.boolean('p')
+	.alias('p', 'pipe')
+	.describe('p', `Read the piped data and make it available to --replacement-js as \`pipe\`.`)
+
+	.boolean('js-pipe')
+	.describe('js-pipe', `Shorthand for --replacement-js --pipe (-jp).`)
 
 	.boolean('j')
 	.alias('j', 'js')
@@ -216,7 +213,7 @@ The code has access to the following variables:
 \`fs\` from node, 
 \`path\` from node, 
 \`globs\` from npm, 
-\`pipe\`: the data piped into the command (null if no piped data), 
+\`pipe\`: the data piped into the command with --pipe (null if no piped data, and \`pipe_\` is \`❌ \`), 
 \`find\`: pattern searched for (the needle), 
 \`text\`: full text being searched i.e. file content or piped data (the haystack), 
 \`bytes\`: total size of the haystack in bytes, 
@@ -335,7 +332,7 @@ K	k
 	l
 N	n
 O	
-P	p
+P	
 	r
 S	
 	t
@@ -394,6 +391,10 @@ function unescapeString(str = '') {
 		}
 	});
 
+	if (config.jsPipe) {
+		config.replacementJs = config.pipe = true;
+	}
+
 	outputConfig(config);
 
 	let pipeInUse = false;
@@ -428,38 +429,34 @@ function unescapeString(str = '') {
         config.output = true;
     }*/
 
-	if (process.env.RR_VOID_PIPE) {
-		const conflict = ' conflicts with the env. var RR_VOID_PIPE as no data will be piped.';
-		config.replacementPipe && warn('The flag --replacement-pipe' + conflict);
-		config.trimPipe && warn('The flag --trim-pipe' + conflict);
-		config.voidPipe = true;
+	// Like grep, stdin is only read when piped data is expected. An open pipe that nobody writes to would make the run wait forever.
+	const pipeDataExpected = !config.includeGlob.length || config.replacementPipe || config.pipe;
+
+	if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
+		return rexreplace.engine(config);
 	}
 
-	if (config.voidPipe || Boolean(process.stdin.isTTY)) {
-		rexreplace.engine(config);
-	} else {
-		process.stdin.setEncoding(config.encoding);
+	process.stdin.setEncoding(config.encoding);
 
-		process.stdin.on('readable', () => {
-			let chunk = process.stdin.read();
+	process.stdin.on('readable', () => {
+		let chunk = process.stdin.read();
 
-			if (null !== chunk) {
-				pipeInUse = true;
+		if (null !== chunk) {
+			pipeInUse = true;
+			pipeData += chunk;
+			while ((chunk = process.stdin.read())) {
 				pipeData += chunk;
-				while ((chunk = process.stdin.read())) {
-					pipeData += chunk;
-				}
 			}
-		});
+		}
+	});
 
-		process.stdin.on('end', () => {
-			if (pipeInUse) {
-				if (yargs.argv.trimPipe) {
-					pipeData = pipeData.trim();
-				}
-				config.pipedData = pipeData;
+	process.stdin.on('end', () => {
+		if (pipeInUse) {
+			if (yargs.argv.trimPipe) {
+				pipeData = pipeData.trim();
 			}
-			rexreplace.engine(config);
-		});
-	}
+			config.pipedData = pipeData;
+		}
+		rexreplace.engine(config);
+	});
 })();
