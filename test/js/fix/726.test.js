@@ -25,7 +25,7 @@ describe('#726 a file given with an absolute path is changed', () => {
 	test.each(flows)('as a path with %s', async (name, flags) => {
 		const file = await outside('my.file');
 		const result = await rr('o', 'x', {includeGlob: [file], ...flags});
-		expect(result).toEqual({out: '', err: file + ' \n', exit: null});
+		expect(result).toEqual({out: file + '\n', err: '', exit: null});
 		expect(await Bun.file(file).text()).toBe('fxxbar');
 		expect(fs.readdirSync(path.dirname(file))).toEqual(['my.file']);
 	});
@@ -34,7 +34,7 @@ describe('#726 a file given with an absolute path is changed', () => {
 		const file = await outside('my.file');
 		const glob = path.join(path.dirname(file), '*.file');
 		const result = await rr('o', 'x', {includeGlob: [glob], ...flags});
-		expect(result).toEqual({out: '', err: file + ' \n', exit: null});
+		expect(result).toEqual({out: file + '\n', err: '', exit: null});
 		expect(await Bun.file(file).text()).toBe('fxxbar');
 		expect(fs.readdirSync(path.dirname(file))).toEqual(['my.file']);
 	});
@@ -43,7 +43,7 @@ describe('#726 a file given with an absolute path is changed', () => {
 		await Bun.write('my.file', 'foobar');
 		const file = path.resolve('my.file');
 		const result = await rr('o', 'x', {includeGlob: [file]});
-		expect(result).toEqual({out: '', err: file + ' \n', exit: null});
+		expect(result).toEqual({out: file + '\n', err: '', exit: null});
 		expect(await Bun.file(file).text()).toBe('fxxbar');
 		expect(fs.readdirSync('.')).toEqual(['my.file']);
 	});
@@ -82,7 +82,7 @@ describe('#726 a file given with an absolute path is changed', () => {
 				path.join('..', 'other', 'my.file'),
 				path.join('..', 'other'),
 				'string',
-			].join('|')
+			].join('|') + '\n'
 		);
 	});
 

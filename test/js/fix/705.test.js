@@ -25,7 +25,7 @@ describe('#705 the engine returns a promise that resolves when all files are don
 	])('nothing is left to do with %s', async (name, flags, files) => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], ...flags});
-		expect(result).toEqual({out: '', err: 'my.file \n', exit: null});
+		expect(result).toEqual({out: 'my.file\n', err: '', exit: null});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 		expect(fs.readdirSync('.')).toHaveLength(files);
 	});
@@ -37,7 +37,7 @@ describe('#705 the engine returns a promise that resolves when all files are don
 		const result = await rr('o', 'x', {includeGlob: ['*.file'], voidAsync: false});
 
 		expect(content(names)).toEqual(names.map(() => 'fxx'));
-		expect(result.err.trim().split(' \n').sort()).toEqual(names.sort());
+		expect(result.out.trim().split('\n').sort()).toEqual(names.sort());
 		expect(fs.readdirSync('.')).toHaveLength(names.length);
 	});
 

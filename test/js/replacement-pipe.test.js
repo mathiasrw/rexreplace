@@ -17,23 +17,23 @@ describe('--replacement-pipe', () => {
 			pipedData: 'x',
 			output: true,
 		};
-		expect((await rr('b', 'ignored $& $1', config)).out).toBe('fooxar');
+		expect((await rr('b', 'ignored $& $1', config)).out).toBe('fooxar\n');
 	});
 
 	test('is not the default', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const config = {includeGlob: ['my.file'], pipedData: 'x', output: true};
-		expect((await rr('b', '_', config)).out).toBe('foo_ar');
+		expect((await rr('b', '_', config)).out).toBe('foo_ar\n');
 	});
 
 	test('uses the piped data exactly as it is', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const config = {includeGlob: ['my.file'], replacementPipe: true, output: true};
-		expect((await rr('b', '_', {...config, pipedData: ' x\n'})).out).toBe('foo x\nar');
-		expect((await rr('b', '_', {...config, pipedData: `'"\`\\n`})).out).toBe(`foo'"\`\\nar`);
-		expect((await rr('b', '_', {...config, pipedData: '€§'})).out).toBe('foo€§ar');
+		expect((await rr('b', '_', {...config, pipedData: ' x\n'})).out).toBe('foo x\nar\n');
+		expect((await rr('b', '_', {...config, pipedData: `'"\`\\n`})).out).toBe(`foo'"\`\\nar\n`);
+		expect((await rr('b', '_', {...config, pipedData: '€§'})).out).toBe('foo€§ar\n');
 		expect((await rr('b', '_', {...config, pipedData: 'line 1\nline 2\n'})).out).toBe(
-			'fooline 1\nline 2\nar'
+			'fooline 1\nline 2\nar\n'
 		);
 	});
 
@@ -41,7 +41,7 @@ describe('--replacement-pipe', () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const config = {includeGlob: ['my.file'], replacementPipe: true, output: true};
 		expect((await rr('(o)(b)', '_', {...config, pipedData: '$2$1[$&]'})).out).toBe(
-			'fobo[ob]ar'
+			'fobo[ob]ar\n'
 		);
 	});
 
@@ -53,7 +53,7 @@ describe('--replacement-pipe', () => {
 			pipedData: '',
 			output: true,
 		};
-		expect((await rr('o', '_', config)).out).toBe('fbar');
+		expect((await rr('o', '_', config)).out).toBe('fbar\n');
 	});
 
 	test('stops with an error if nothing is piped in', async () => {
@@ -66,7 +66,7 @@ describe('--replacement-pipe', () => {
 
 	test('does not treat the piped data as content to search in', async () => {
 		const result = await rr('o', '_', {replacementPipe: true, pipedData: 'foo'});
-		expect(result).toEqual({out: '', err: '0 files found \n', exit: null});
+		expect(result).toEqual({out: '', err: '0 files found\n', exit: null});
 	});
 
 	describe('combined', () => {
@@ -79,7 +79,7 @@ describe('--replacement-pipe', () => {
 				output: true,
 			};
 			expect((await rr('(o+)', '_', {...config, pipedData: '$1.length + name'})).out).toBe(
-				'f2mybar'
+				'f2mybar\n'
 			);
 		});
 
@@ -92,7 +92,7 @@ describe('--replacement-pipe', () => {
 				literal: true,
 				output: true,
 			};
-			expect((await rr('.', '_', config)).out).toBe('a[.]b');
+			expect((await rr('.', '_', config)).out).toBe('a[.]b\n');
 		});
 
 		test('with --void-global and --void-ignore-case', async () => {
@@ -131,9 +131,9 @@ describe('--replacement-pipe', () => {
 				pipedData: '€1§n',
 				output: true,
 			};
-			expect((await rr('(b)', '_', config)).out).toBe('foo€1§nar');
+			expect((await rr('(b)', '_', config)).out).toBe('foo€1§nar\n');
 			expect((await rr('(b)', '_', {...config, voidEuro: true, voidSection: true})).out).toBe(
-				'foo€1§nar'
+				'foo€1§nar\n'
 			);
 		});
 	});

@@ -8,14 +8,14 @@ describe('--debug', () => {
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], debug: true});
 		expect(result.err).toBe(
 			[
-				'"1 files found "',
-				'"Open sync: my.file "',
+				'"1 files found"',
+				'"Open sync: my.file"',
 				'"Work on content from: my.file"',
 				'"Write new content to: my.file"',
-				'my.file ',
 				'',
 			].join('\n')
 		);
+		expect(result.out).toBe('my.file\n');
 	});
 
 	test('prints what happens to piped data', async () => {
@@ -65,7 +65,7 @@ describe('--debug', () => {
 				debug: true,
 				output: true,
 			});
-			expect(result.out).toBe('fxxbar');
+			expect(result.out).toBe('fxxbar\n');
 			expect(result.err).toContain('"Output result from: my.file"');
 			expect(result.err).not.toContain('Write new content');
 		});
@@ -73,7 +73,7 @@ describe('--debug', () => {
 		test('with a file where nothing is replaced', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const result = await rr('nope', 'x', {includeGlob: ['my.file'], debug: true});
-			expect(result.err).toContain('"Nothing changed in: my.file "');
+			expect(result.err).toContain('"Nothing changed in: my.file"');
 		});
 
 		test('with --replacement-js and --output-match', async () => {

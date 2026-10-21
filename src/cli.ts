@@ -2,6 +2,7 @@
 
 import * as rexreplace from './engine.ts';
 import {outputConfig, die} from './output.ts';
+import {alias} from './alias.ts';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
 // Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
@@ -112,6 +113,64 @@ const yargs = require('yargs')
 	.describe('Q', 'Never display errors or info')
 	.alias('Q', 'quiet-total')
 
+	.boolean('a')
+	.describe('a', 'Print the full path of the named files instead of the relative path.')
+	.alias('a', 'absolute-path')
+
+	.boolean('name-all')
+	.describe(
+		'name-all',
+		'Print the names of all files found by the globs, also the ones where nothing was changed.'
+	)
+
+	.string('name-delimiter')
+	.describe(
+		'name-delimiter',
+		'String printed between the names of the files. Default is a line break, unless the name already ends with one.'
+	)
+	.string('content-delimiter')
+	.describe(
+		'content-delimiter',
+		'String printed between the content of each file for --output, or between the matches for --output-match. Default is a line break, unless the content already ends with one.'
+	)
+
+	.string('delimiter')
+	.describe(
+		'delimiter',
+		'Sets --name-delimiter and --content-delimiter to the same value. Supports escape sequences like `\\t`, `\\n` and the `€` and `§` aliases.'
+	)
+
+	.boolean('null')
+	.describe(
+		'null',
+		"Shorthand for --delimiter '\\0'. Useful for piping content with spaces or line breaks (like for `xargs -0`). The specific delimiter values win over --delimiter, and --delimiter wins over --null."
+	)
+
+	.boolean('name-delimiter-tail')
+	.describe(
+		'name-delimiter-tail',
+		'Print the name delimiter after the last name. Defaults to true. Use --no-name-delimiter-tail or --name-delimiter-tail=false to not print the delimiter after the last name.'
+	)
+
+	.boolean('content-delimiter-tail')
+	.describe(
+		'content-delimiter-tail',
+		'Print the content delimiter after the last content. Defaults to true, but to false when piped data is printed, so it is left as it came in. Matches from --output-match always get it, from a file or a pipe.'
+	)
+
+	.boolean('tail')
+	.describe(
+		'tail',
+		'Shorthand for setting both --name-delimiter-tail and --content-delimiter-tail. Use --no-tail to not print the delimiter after the last name and the last content. The specific tail flags win over --tail.'
+	)
+
+	.boolean('l')
+	.describe(
+		'l',
+		'Let what is printed to stdout and stderr (the names, or the content from -o, -m or piped data) always end with a new line. No extra new line if it already ends with a new line, or if nothing was printed.'
+	)
+	.alias('l', 'nl')
+
 	.boolean('H')
 	.describe('H', 'Halt on first error')
 	.alias('H', 'halt')
@@ -125,14 +184,14 @@ const yargs = require('yargs')
 	.boolean('€')
 	.describe(
 		'€',
-		"Void having '€' as alias for '$' in the pattern, replacement and --exclude-re parameters (the alias is never used for globs or piped data)"
+		"Void having '€' as alias for '$'. The alias is used in all inputs, but never in globs, file names or piped data."
 	)
 	.alias('€', 'void-euro')
 
 	.boolean('§')
 	.describe(
 		'§',
-		"Void having '§' as alias for '\\' in the pattern, replacement and --exclude-re parameters (the alias is never used for globs or piped data)"
+		"Void having '§' as alias for '\\'. The alias is used in all inputs, but never in globs, file names or piped data."
 	)
 	.alias('§', 'void-section')
 
@@ -414,17 +473,33 @@ function unescapeString(str = '') {
 
 	config.excludeRe = [].concat(yargs.argv.excludeRe).filter(Boolean);
 
-	if (config.replacementJs) {
-		config.replacement = replacement;
-	} else {
+	config.replacement = replacement;
+
+	// The aliases come before the escape sequences are interpreted, so `§n` gives a line break just like `\n`
+	const typed = {...config};
+	alias(config);
+
+	// The error shows the value as it was typed
+	const unescape = (key, name) => {
 		try {
-			// `§` must be a `\` before the escape sequences are interpreted, so `§n` gives a line break just like `\n`
-			config.replacement = unescapeString(
-				config.voidSection ? replacement : replacement.replace(/§/g, '\\')
-			);
+			config[key] = unescapeString(config[key]);
 		} catch (e) {
-			return die('Invalid escape sequence in replacement:', replacement);
+			die('Invalid escape sequence in ' + name + ':', typed[key]);
 		}
+	};
+
+	if (!config.replacementJs) {
+		unescape('replacement', 'replacement');
+	}
+
+	if (config.delimiter) {
+		unescape('delimiter', '--delimiter');
+	}
+	if (config.nameDelimiter) {
+		unescape('nameDelimiter', '--name-delimiter');
+	}
+	if (config.contentDelimiter) {
+		unescape('contentDelimiter', '--content-delimiter');
 	}
 
 	/*if(Boolean(process.stdout.isTTY)){

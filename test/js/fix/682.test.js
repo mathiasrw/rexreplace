@@ -25,7 +25,7 @@ describe('#682 --quiet still displays errors', () => {
 		);
 	});
 
-	test('still hides the info about changed files', async () => {
+	test('still hides the info about affected files', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		expect((await rr('o', 'x', {includeGlob: ['my.file'], quiet: true})).err).toBe('');
 	});

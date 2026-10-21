@@ -86,8 +86,8 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 				pipedData: '[€1§n]',
 				output: true,
 			};
-			expect((await rr('(b)', '_', config)).out).toBe('foo[€1§n]ar');
-			expect((await rr('(b)', '_', {...config, ...voided})).out).toBe('foo[€1§n]ar');
+			expect((await rr('(b)', '_', config)).out).toBe('foo[€1§n]ar\n');
+			expect((await rr('(b)', '_', {...config, ...voided})).out).toBe('foo[€1§n]ar\n');
 		});
 	});
 

@@ -92,7 +92,7 @@ describe('--encoding', () => {
 		test('with --output the result is sent as text', async () => {
 			fs.writeFileSync('my.file', latin1());
 			const config = {includeGlob: ['my.file'], encoding: 'latin1', output: true};
-			expect((await rr('o', 'x', config)).out).toBe('fæx');
+			expect((await rr('o', 'x', config)).out).toBe('fæx\n');
 			expect(fs.readFileSync('my.file')).toEqual(latin1());
 		});
 
@@ -122,7 +122,7 @@ describe('--encoding', () => {
 				replacementJs: true,
 				output: true,
 			};
-			expect((await rr('æ', 'text.length + text', config)).out).toBe('f3fæoo');
+			expect((await rr('æ', 'text.length + text', config)).out).toBe('f3fæoo\n');
 		});
 
 		test.todo(

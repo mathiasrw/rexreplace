@@ -35,7 +35,7 @@ describe('--output-match', () => {
 	test('does not change the file', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('[fb].', '_', {includeGlob: ['my.file'], outputMatch: true});
-		expect(result).toEqual({out: 'fo\nba\n', err: '', exit: null});
+		expect(result).toEqual({out: 'fo\nba\n', err: 'my.file\n', exit: null});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 		expect(fs.readdirSync('.')).toEqual(['my.file']);
 	});
@@ -56,13 +56,13 @@ describe('--output-match', () => {
 		expect((await rr('^', '_', {pipedData: 'a\nb', outputMatch: true})).out).toBe('\n\n');
 	});
 
-	test.todo('BUG #684: a group that did not take part in the match prints nothing', async () => {
+	test('prints nothing for a group that did not take part in the match (#684)', async () => {
 		expect((await rr('(f)|(b)', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe(
 			'f\nb\n'
 		);
 	});
 
-	test.todo('BUG #685: named groups are printed like any other group', async () => {
+	test('prints named groups like any other group (#685)', async () => {
 		expect(
 			(await rr('(?<first>f)(?<second>o)', '_', {pipedData: 'foobar', outputMatch: true})).out
 		).toBe('fo\n');

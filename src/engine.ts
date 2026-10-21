@@ -6,11 +6,20 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, step, debug, chat, info, warn, error, die} from './output.ts';
+import {
+	outputConfig,
+	step,
+	debug,
+	chat,
+	info,
+	print,
+	printDone,
+	warn,
+	error,
+	die,
+} from './output.ts';
 
 const re = {
-	euro: /€/g,
-	section: /§/g,
 	mctime: /[mc]time/,
 	colon: /:/g,
 	capturedGroupRef: /\$\d/,
@@ -46,12 +55,28 @@ export async function engine(config: any = {engine: 'default'}) {
 
 	config.replacementOri = config.replacement;
 
+	// The most specific delimiter wins. Without one there is a line break after each item, unless it already ends with one.
+	const delimiter = config.delimiter ?? (config.null ? '\0' : null);
+	config.nameDelimiter = config.nameDelimiter ?? delimiter;
+	config.contentDelimiter = config.contentDelimiter ?? delimiter;
+
+	// --output-match wins over --output
+	config.output = config.output && !config.outputMatch;
+
 	config.regex = getFinalRegex(config.pattern, config) || '';
 
 	step(config);
 
-	if (handlePipedData(config)) {
-		return doReplacement('Piped data', config, config.pipedData);
+	const piped = handlePipedData(config);
+
+	// The more specific tail wins. Piped data that is printed is left as it came in, but matches are matches, from a file or a pipe.
+	config.nameDelimiterTail = config.nameDelimiterTail ?? config.tail ?? true;
+	config.contentDelimiterTail =
+		config.contentDelimiterTail ?? config.tail ?? !(piped && config.output);
+
+	if (piped) {
+		doReplacement('Piped data', config, config.pipedData);
+		return printDone();
 	}
 
 	config.files = getFilePaths(config);
@@ -79,6 +104,7 @@ export async function engine(config: any = {engine: 'default'}) {
 		.map((filepath) => openFile(filepath, config));
 
 	await Promise.all(work);
+	return printDone();
 }
 
 function openFile(file, config) {
@@ -106,19 +132,25 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 			: _config_rr.replacement
 	);
 
-	// The output of matched strings is done from the replacement, so no need to continue
-	if (_config_rr.outputMatch) {
+	if (_config_rr.output || _config_rr.outputMatch) {
+		// With --output-match the matches are printed by the replacement
+		if (_config_rr.output) {
+			debug('Output result from: ' + _file_rr);
+			print(result, _config_rr.contentDelimiter, _config_rr.contentDelimiterTail);
+		}
+		// The file is not changed, but it is still named if its content would change
+		if ((_config_rr.nameAll || result !== _data_rr) && !_config_rr.dataIsPiped) {
+			info(_file_rr);
+		}
 		return;
-	}
-
-	if (_config_rr.output) {
-		debug('Output result from: ' + _file_rr);
-		return process.stdout.write(result);
 	}
 
 	// Nothing replaced = no need for writing file again
 	if (result === _data_rr) {
 		chat('Nothing changed in: ' + _file_rr);
+		if (_config_rr.nameAll) {
+			info(_file_rr);
+		}
 		return;
 	}
 
@@ -179,7 +211,8 @@ function handlePipedData(config) {
 
 	if (null !== config.pipedData && !config.pipedDataUsed) {
 		config.dataIsPiped = true;
-		config.output = true;
+		// Piped data is printed, unless only the matches are
+		config.output = !config.outputMatch;
 		return true;
 	}
 
@@ -188,7 +221,6 @@ function handlePipedData(config) {
 
 function getFinalPattern(pattern, conf: any) {
 	step('Get final pattern');
-	pattern = replacePlaceholders(pattern, conf);
 
 	if (conf.literal) {
 		pattern = pattern.replace(re.regexSpecialChars, '\\$&');
@@ -209,8 +241,6 @@ function getFinalReplacement(replacement, conf: any) {
 		return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 	}*/
 
-	replacement = replacePlaceholders(replacement, conf);
-
 	if (conf.replacementPipe) {
 		step('Piping replacement');
 		conf.pipedDataUsed = true;
@@ -227,19 +257,17 @@ function getFinalReplacement(replacement, conf: any) {
 			return die('outputMatch is only supported in node 6+');
 		}
 
-		return function () {
+		return function (match, ...rest) {
 			step(arguments);
 
-			if (arguments.length === 3) {
-				step('Printing full match');
-				process.stdout.write(arguments[0] + '\n');
-				return '';
-			}
-
-			for (var i = 1; i < arguments.length - 2; i++) {
-				process.stdout.write(arguments[i]);
-			}
-			process.stdout.write('\n');
+			// The groups are followed by the offset and the full text, and by the named groups if the pattern has any.
+			// Without groups the full match is printed, otherwise the groups are printed together.
+			const groups = rest.slice(0, 'object' === typeof rest[rest.length - 1] ? -3 : -2);
+			print(
+				groups.length ? groups.join('') : match,
+				conf.contentDelimiter,
+				conf.contentDelimiterTail
+			);
 			return '';
 		};
 	}
@@ -636,18 +664,6 @@ function localTimeString(dateObj = new Date()) {
 	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }
 
-function replacePlaceholders(str = '', conf: any) {
-	if (!conf.voidEuro) {
-		str = str.replace(re.euro, '$');
-	}
-
-	if (!conf.voidSection) {
-		str = str.replace(re.section, '\\');
-	}
-
-	return str;
-}
-
 function getFilePaths(conf) {
 	let {includeGlob, excludeGlob, excludeRe} = conf;
 
@@ -666,5 +682,8 @@ function getFilePaths(conf) {
 		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(el));
 	}
 
-	return filesToInclude.sort();
+	filesToInclude.sort();
+
+	// With --absolute-path each file is known by its full path from here on, so that is the name that is printed
+	return conf.absolutePath ? filesToInclude.map((file) => path.resolve(file)) : filesToInclude;
 }

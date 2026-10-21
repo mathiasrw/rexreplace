@@ -47,7 +47,7 @@ describe('--exclude-re', () => {
 	test('reports when all files are left out', async () => {
 		fs.writeFileSync('my.file', 'foo');
 		const result = await rr('foo', 'x', {includeGlob: ['my.file'], excludeRe: ['.']});
-		expect(result.err).toBe('0 files found \n');
+		expect(result.err).toBe('0 files found\n');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo');
 	});
 
@@ -101,7 +101,7 @@ describe('--exclude-re', () => {
 			fs.writeFileSync('a.file', 'foo');
 			fs.writeFileSync('b.file', 'boo');
 			const config = {includeGlob: ['*.file'], excludeRe: ['^a'], output: true};
-			expect((await rr('o', 'x', config)).out).toBe('bxx');
+			expect((await rr('o', 'x', config)).out).toBe('bxx\n');
 		});
 
 		test('with piped data it has nothing to do', async () => {

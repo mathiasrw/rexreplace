@@ -201,8 +201,8 @@ assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' my.file -o"    "barfoo"
 
 # globs
 reset
-echo foobar >> my_file
-assert		 		"rexreplace o x my*le -o"    "fxxbar\nfxxbar"
+echo barfoo > my_file
+assert		 		"rexreplace o x my*le -o"    "fxxbar\nbarfxx"
 rm my_file
 
 
@@ -306,7 +306,7 @@ assert		 		"printf ' x ' | rexreplace 'foo' 'pipe' my.file -o --js-pipe -T"    '
 
 # Warning when piped data is not used
 reset
-assert		 		"printf x | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"    ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used. '
+assert		 		"printf x | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"    ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used.'
 assert		 		"cat my.file"    'fxxbar'
 assert_failure		"printf x | rexreplace 'o' 'x' my.file 2>&1 | grep 'Data is piped in'"
 assert_failure		"printf x | rexreplace 'o' 'x' my.file --pipe -q 2>&1 | grep 'Data is piped in'"
@@ -315,6 +315,142 @@ assert_failure		"printf x | rexreplace 'b' 'pipe' my.file --js-pipe 2>&1 | grep 
 assert_failure		"printf '' | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"
 assert_failure		"printf '\n' | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"
 assert_failure		"printf '\r\n' | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"
+
+
+# Names of affected files go to stdout (#703)
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A"    'my.file\nyour.file'
+assert		 		"cat my.file"    'fooxar'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file 2>&1 >/dev/null"    ''
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file -V 2>/dev/null"    'my.file'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file -V 2>&1 >/dev/null | grep -c 'my.file'"    '1'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file -q"    ''
+assert		 		"cat my.file"    'fooxar'
+
+# With --output and --output-match stdout has the result, so the names go to stderr
+reset
+assert		 		"rexreplace 'b' 'x' my.file -o 2>/dev/null"    'fooxar'
+assert		 		"rexreplace 'b' 'x' my.file -o 2>&1 >/dev/null"    'my.file'
+assert		 		"rexreplace 'b' 'x' my.file -o -q 2>&1 >/dev/null"    ''
+assert		 		"rexreplace 'z' 'x' my.file -o 2>&1 >/dev/null"    ''
+assert		 		"rexreplace 'b' _ my.file -m 2>/dev/null"    'b'
+assert		 		"rexreplace 'b' _ my.file -m 2>&1 >/dev/null"    'my.file'
+assert		 		"rexreplace 'b' _ my.file -m -q 2>&1 >/dev/null"    ''
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --name-delimiter ', ' 2>&1 >/dev/null"    'my.file, your.file, '
+assert		 		"cat my.file"    'foobar'
+
+reset
+assert		 		"rexreplace 'b' 'x' '*.file' -A | xargs cat"    'fooxar\naxc123'
+
+# --null
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --null | tr '\0' '|'"    'my.file|your.file|'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --null | xargs -0 cat"    'fooxar\naxc123'
+
+# --name-delimiter
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', '"    'my.file, your.file, '
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter '\t§t€'"    'my.file\t\t$your.file\t\t$'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ',' --null"    'my.file,your.file,'
+
+# --no-name-delimiter-tail
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', ' --no-name-delimiter-tail"    'my.file, your.file'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', ' --name-delimiter-tail=false"    'my.file, your.file'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file --name-delimiter ', ' --no-name-delimiter-tail"    'my.file'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter '§t€' --no-name-delimiter-tail -§ -€"    'my.file§t€your.file'
+
+# --name-all
+reset
+assert		 		"rexreplace 'z' 'x' my.file your.file -A --name-all"    'my.file\nyour.file'
+assert		 		"cat my.file"    'foobar'
+
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --name-all 2>&1 >/dev/null"    'my.file\nyour.file'
+
+# By default there is a line break after the content of each file, unless it already ends with one (tr shows the line breaks)
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -o 2>/dev/null | tr '\n' '+'"    'fooxar+axc123+'
+printf foo > a.file
+printf bar > b.file
+assert		 		"rexreplace 'o' 'x' a.file b.file -o 2>/dev/null | tr '\n' '+'"    'fxx+bar+'
+assert		 		"rexreplace '[ab]' _ a.file b.file -m 2>/dev/null | tr '\n' '+'"    'b+a+'
+assert		 		"printf foo | rexreplace 'o' 'x' | tr '\n' '+'"    'fxx'
+
+# A given --content-delimiter is used as it is
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '' 2>/dev/null"    'fooxar\naxc123'
+assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' 2>/dev/null"    'b,b,c,'
+assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --no-tail 2>/dev/null"    'b,b,c'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --content-delimiter '§t-\n' 2>/dev/null"    'fooxar\n\t-\naxc123\n\t-'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --content-delimiter '|' --no-content-delimiter-tail 2>/dev/null"    'fooxar\n|axc123'
+assert		 		"printf foo | rexreplace 'o' 'x' --content-delimiter '|'"    'fxx'
+assert		 		"printf foo | rexreplace 'o' 'x' --content-delimiter '|' --content-delimiter-tail"    'fxx|'
+assert		 		"cat my.file"    'foobar'
+
+# --delimiter sets both, and the most specific flag wins
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' 2>/dev/null"    'fooxar\n|axc123\n|'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' 2>&1 >/dev/null"    'my.file|your.file|'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --null 2>/dev/null | tr '\0' '|'"    'fooxar\n|axc123\n|'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --null --delimiter ', ' 2>&1 >/dev/null"    'my.file, your.file, '
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter ', ' --content-delimiter '|' 2>/dev/null"    'fooxar\n|axc123\n|'
+
+# --tail sets both tails, and the specific tail flag wins
+reset
+assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --tail 2>/dev/null"    'b,b,c,'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' --no-tail 2>&1 >/dev/null"    'my.file|your.file'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' --tail 2>/dev/null"    'fooxar\n|axc123\n|'
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' --no-tail --name-delimiter-tail 2>&1 >/dev/null"    'my.file|your.file|'
+
+# --nl ends stdout and stderr with a line break, unless they already do (tr shows the line breaks)
+reset
+assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --no-tail --nl 2>/dev/null | tr '\n' '+'"    'b,b,c+'
+assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --no-tail -l 2>/dev/null | tr '\n' '+'"    'b,b,c+'
+assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --tail --nl 2>/dev/null | tr '\n' '+'"    'b,b,c,+'
+assert		 		"rexreplace 'b' 'x' my.file -o --nl 2>/dev/null | tr '\n' '+'"    'fooxar+'
+assert		 		"printf foo | rexreplace 'o' 'x' --nl | tr '\n' '+'"    'fxx+'
+assert		 		"printf foo | rexreplace 'nope' 'x' -m --nl | tr '\n' '+'"    ''
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --name-delimiter ',' --no-name-delimiter-tail --nl 2>&1 >/dev/null | tr '\n' '+'"    'my.file,your.file+'
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ',' --no-name-delimiter-tail --nl | tr '\n' '+'"    'my.file,your.file+'
+
+reset
+assert_failure		"rexreplace 'b' 'x' my.file --name-delimiter '\x4'"
+assert		 		"rexreplace 'b' 'x' my.file --name-delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --name-delimiter'"    '1'
+assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --content-delimiter'"    '1'
+assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
+assert		 		"cat my.file"    'foobar'
+
+# --absolute-path
+reset
+assert		 		"rexreplace 'b' 'x' my.file -a"    "$(pwd -P)/my.file"
+
+reset
+assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file"    "$(pwd -P)/my.file"
+
+reset
+assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file --absolute-path"    "$(pwd -P)/my.file"
+assert		 		"cat my.file"    'fooxar'
 
 
 	

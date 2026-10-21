@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random} from '../js/helper.js';
+import {rr, random, ended} from '../js/helper.js';
 
 describe('--replacement-pipe', () => {
 	test('inserts any piped text without a $ exactly as it is', async () => {
@@ -15,7 +15,7 @@ describe('--replacement-pipe', () => {
 				output: true,
 			};
 			expect((await rr('-', '_', config)).out, JSON.stringify(pipedData)).toBe(
-				`a${pipedData}b${pipedData}c`
+				`a${pipedData}b${pipedData}c\n`
 			);
 		}
 	});

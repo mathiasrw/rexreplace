@@ -4,6 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {engine} from '../../src/engine.ts';
+import {alias} from '../../src/alias.ts';
 
 // Every test runs in its own empty directory
 const root = process.cwd();
@@ -19,7 +20,7 @@ afterEach(() => {
 	fs.rmSync(dir, {recursive: true, force: true});
 });
 
-// Run the engine in this process (no CLI involved) with the defaults the CLI would give it.
+// Run the engine in this process (no CLI involved) with the defaults and the `€` and `§` aliases the CLI would give it.
 // Gives what was sent to stdout (`out`) and stderr (`err`) plus the exit code if the engine wanted to stop the process (`exit`).
 // Files are handled one at a time unless `voidAsync: false` is given, so the output comes in the same order on every run.
 export async function rr(pattern, replacement, config = {}) {
@@ -34,6 +35,10 @@ export async function rr(pattern, replacement, config = {}) {
 		spyOn(console, 'error').mockImplementation((...data) => {
 			result.err += data.join(' ') + '\n';
 		}),
+		spyOn(process.stderr, 'write').mockImplementation((data) => {
+			result.err += data;
+			return true;
+		}),
 		spyOn(process, 'exit').mockImplementation((code) => {
 			result.exit = code;
 			throw halt;
@@ -41,7 +46,7 @@ export async function rr(pattern, replacement, config = {}) {
 	];
 
 	try {
-		await engine({
+		const options = {
 			engine: 'default',
 			encoding: 'utf8',
 			pipedData: null,
@@ -52,7 +57,9 @@ export async function rr(pattern, replacement, config = {}) {
 			pattern,
 			replacement,
 			...config,
-		});
+		};
+		alias(options);
+		await engine(options);
 	} catch (e) {
 		if (e !== halt) {
 			throw e;
@@ -62,6 +69,11 @@ export async function rr(pattern, replacement, config = {}) {
 	}
 
 	return result;
+}
+
+// What the content of the files gives by default: a line break after each item, unless it already ends with one
+export function ended(...items) {
+	return items.map((item) => (item.endsWith('\n') ? item : item + '\n')).join('');
 }
 
 // Fuzz tests get new input on every run. Set RR_FUZZ_SEED to repeat a run.

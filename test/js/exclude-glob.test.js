@@ -46,7 +46,7 @@ describe('--exclude-glob', () => {
 	test('reports when all files are left out', async () => {
 		fs.writeFileSync('my.file', 'foo');
 		const result = await rr('foo', 'x', {includeGlob: ['*.file'], excludeGlob: ['*.file']});
-		expect(result.err).toBe('0 files found \n');
+		expect(result.err).toBe('0 files found\n');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo');
 	});
 

@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random} from '../js/helper.js';
+import {rr, random, ended} from '../js/helper.js';
 
 describe('basics', () => {
 	test('gives the same as String.replace with the flags gim', async () => {
@@ -36,7 +36,7 @@ describe('basics', () => {
 			fs.writeFileSync('my.file', text);
 			expect(
 				(await rr(pattern, replacement, {includeGlob: ['my.file'], output: true})).out
-			).toBe(expected);
+			).toBe(ended(expected));
 
 			await rr(pattern, replacement, {includeGlob: ['my.file']});
 			expect(

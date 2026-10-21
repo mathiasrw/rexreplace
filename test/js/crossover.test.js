@@ -76,8 +76,10 @@ describe('every pair of flags', () => {
 					? 'o\n'
 					: 'o\no\n'
 				: config.output
-					? replaced
-					: ''
+					? replaced + '\n'
+					: config.quiet || config.quietTotal
+						? ''
+						: 'my.file\n'
 		);
 
 		expect(fs.readFileSync('my.file', 'utf8')).toBe(written ? replaced : 'foo');
@@ -233,6 +235,6 @@ describe('many flags at once', () => {
 			verbose: true,
 			halt: true,
 		});
-		expect(result).toEqual({out: 'fxxbar', err: '', exit: null});
+		expect(result).toEqual({out: 'fxxbar\n', err: '', exit: null});
 	});
 });
