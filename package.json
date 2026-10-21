@@ -42,7 +42,7 @@
 		"test-ci": "yarn test-format && yarn build && yarn test-cli && yarn test-js && yarn test-minify",
 		"test-speed": "bash test/speed/run.sh",
 		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main",
-		"load-options": "# rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jsT",
+		"load-options": "# rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jspT",
 		"test-format": "prettier . --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
 		"format": "prettier . --write",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",

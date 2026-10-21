@@ -483,7 +483,8 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			globs,
 			path,
 			_pipe,
-			_pipe + _,
+			// Without piped data `pipe` is null, while `pipe_` is `❌ ` like the file variables
+			(_pipe ?? '❌') + _,
 			_find,
 			_find + _,
 			_text,
@@ -567,7 +568,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			path,
 
 			__pipe,
-			__pipe + __,
+			(__pipe ?? '❌') + __,
 
 			__find,
 			__find + __,
