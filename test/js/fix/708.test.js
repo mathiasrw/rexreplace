@@ -49,6 +49,17 @@ describe('#708 the number of files in work at the same time is limited', () => {
 		expect(mostReading).toBeLessThanOrEqual(workers);
 	});
 
+	test('the number of CPU cores is not asked for with 16 files or fewer', async () => {
+		await makeFiles(16);
+		const spy = spyOn(os, 'availableParallelism');
+		try {
+			await rr('o', 'x', {includeGlob: ['*.txt'], voidAsync: false});
+			expect(spy).not.toHaveBeenCalled();
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
 	test('one file is handled in the synchronous flow', async () => {
 		await Bun.write('my.file', 'foo');
 		const result = await rr('o', 'x', {

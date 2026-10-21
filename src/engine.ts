@@ -100,8 +100,12 @@ export async function engine(config: any = {engine: 'default'}) {
 	);
 
 	// A limited number of files are in work at the same time, so the memory and the open files stay within bounds.
-	// Each worker takes the next file when it is done with one.
-	const workers = config.voidAsync ? 1 : Math.max(16, os.availableParallelism() * 2);
+	// Each worker takes the next file when it is done with one. Up to 16 files are all handled at once.
+	const workers = config.voidAsync
+		? 1
+		: files.length <= 16
+			? files.length
+			: Math.max(16, os.availableParallelism() * 2);
 	let next = 0;
 	const worker = async () => {
 		while (next < files.length) {
