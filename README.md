@@ -288,7 +288,6 @@ Use --js-pipe to access the pipe data in your javascript code.
 ### Limitations
 
 - RexReplace reads each file fully into memory, so working on your 8Gb log files will probably not be ideal.
-- At most 16 files (or two per CPU core, if that is more) are handled at the same time, so many files do not fill up the memory or hit the limit of open files.
 - For versions of Node prior to 6, please use version 2.2.x. For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
 
 ### Priorities
