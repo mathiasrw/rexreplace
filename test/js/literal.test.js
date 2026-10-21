@@ -67,7 +67,7 @@ describe('--literal', () => {
 		test('with --output-match', async () => {
 			expect(
 				(await rr('o.', '_', {pipedData: 'foo. o.k', literal: true, outputMatch: true})).out
-			).toBe('o.\no.');
+			).toBe('o.\no.\n');
 		});
 
 		test('with --replacement-js', async () => {

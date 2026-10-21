@@ -62,9 +62,10 @@ export async function engine(config: any = {engine: 'default'}) {
 
 	const piped = handlePipedData(config);
 
-	// The more specific tail wins. Piped data is left as it is.
+	// The more specific tail wins. Piped data that is printed is left as it came in, but matches are matches, from a file or a pipe.
 	config.nameDelimiterTail = config.nameDelimiterTail ?? config.tail ?? true;
-	config.contentDelimiterTail = config.contentDelimiterTail ?? config.tail ?? !piped;
+	config.contentDelimiterTail =
+		config.contentDelimiterTail ?? config.tail ?? !(piped && config.output);
 
 	if (piped) {
 		doReplacement('Piped data', config, config.pipedData);
@@ -252,8 +253,9 @@ function getFinalReplacement(replacement, conf: any) {
 		return function (match, ...rest) {
 			step(arguments);
 
-			// Without groups the full match is printed, otherwise the groups are printed together
-			const groups = rest.slice(0, -2);
+			// The groups are followed by the offset and the full text, and by the named groups if the pattern has any.
+			// Without groups the full match is printed, otherwise the groups are printed together.
+			const groups = rest.slice(0, 'object' === typeof rest[rest.length - 1] ? -3 : -2);
 			print(
 				groups.length ? groups.join('') : match,
 				conf.contentDelimiter,

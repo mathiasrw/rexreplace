@@ -46,7 +46,7 @@ describe('--dot-all', () => {
 
 		test('with --output-match a match can span lines', async () => {
 			const config = {pipedData: 'a\nb a\nc', dotAll: true, outputMatch: true};
-			expect((await rr('a.b', '_', config)).out).toBe('a\nb');
+			expect((await rr('a.b', '_', config)).out).toBe('a\nb\n');
 		});
 
 		test('with --literal the dot is just a dot', async () => {

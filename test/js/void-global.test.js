@@ -28,7 +28,7 @@ describe('--void-global', () => {
 	describe('combined', () => {
 		test('with --output-match only the first match is printed', async () => {
 			const config = {pipedData: 'foobar', outputMatch: true, voidGlobal: true};
-			expect((await rr('[fb].', '_', config)).out).toBe('fo');
+			expect((await rr('[fb].', '_', config)).out).toBe('fo\n');
 		});
 
 		test('with the default multiline only the first line is touched', async () => {

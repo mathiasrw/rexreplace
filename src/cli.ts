@@ -153,7 +153,7 @@ const yargs = require('yargs')
 	.boolean('content-delimiter-tail')
 	.describe(
 		'content-delimiter-tail',
-		'Print the content delimiter after the last content. Defaults to true, but to false for piped data so it is left as it is.'
+		'Print the content delimiter after the last content. Defaults to true, but to false when piped data is printed, so it is left as it came in. Matches from --output-match always get it, from a file or a pipe.'
 	)
 
 	.boolean('tail')

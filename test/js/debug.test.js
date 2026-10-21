@@ -80,7 +80,7 @@ describe('--debug', () => {
 			const js = await rr('o', '1+1', {pipedData: 'fo', debug: true, replacementJs: true});
 			expect(js.out).toBe('f2');
 			const match = await rr('o', '_', {pipedData: 'fo', debug: true, outputMatch: true});
-			expect(match.out).toBe('o');
+			expect(match.out).toBe('o\n');
 			expect(match.err).toBe('"Work on content from: Piped data"\n');
 		});
 	});

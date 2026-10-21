@@ -47,7 +47,7 @@ describe('#703 the names of affected files', () => {
 	test('are not printed for piped data', async () => {
 		expect(await rr('o', 'x', {pipedData: 'foo'})).toEqual({out: 'fxx', err: '', exit: null});
 		expect(await rr('o', 'x', {pipedData: 'foo', outputMatch: true})).toEqual({
-			out: 'o\no',
+			out: 'o\no\n',
 			err: '',
 			exit: null,
 		});
@@ -222,6 +222,14 @@ describe('#703 the names of affected files', () => {
 			expect((await rr('o', 'x', {pipedData: 'foo', contentDelimiter: ', '})).out).toBe(
 				'fxx'
 			);
+		});
+
+		test('is put after the last match, from a file or a pipe', async () => {
+			await Bun.write('a.file', 'foo');
+			const fromFile = await rr('o', '_', {includeGlob: ['a.file'], outputMatch: true});
+			const fromPipe = await rr('o', '_', {pipedData: 'foo', outputMatch: true});
+			expect(fromFile.out).toBe('o\no\n');
+			expect(fromPipe.out).toBe('o\no\n');
 		});
 
 		test('is put after piped data with --content-delimiter-tail', async () => {
