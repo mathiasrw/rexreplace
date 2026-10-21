@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const os = require('os');
+
 const path = require('path');
 
 const globs = require('fast-glob');
@@ -87,30 +89,39 @@ export async function engine(config: any = {engine: 'default'}) {
 
 	chat(config.files.length + ' files found');
 
-	// Ensure predictable sequence of output
-	if (config.files.length > 1) {
-		config.voidAsync = config.voidAsync || config.outputMatch || config.output;
-	}
+	// One file needs no async flow, and with -o or -m one file at a time gives the output in order
+	config.voidAsync =
+		config.voidAsync || 1 === config.files.length || config.output || config.outputMatch;
 
 	step(config);
 
-	const work = config.files
-		// Correct filepath
-		//.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
-		// Find out if any filepaths are invalid
-		.filter((filepath) => (fs.existsSync(filepath) ? true : error('File not found:', filepath)))
+	const files = config.files.filter((filepath) =>
+		fs.existsSync(filepath) ? true : error('File not found:', filepath)
+	);
 
-		// Do the replacement
-		.map((filepath) => openFile(filepath, config));
+	// A limited number of files are in work at the same time, so the memory and the open files stay within bounds.
+	// Each worker takes the next file when it is done with one.
+	const workers = config.voidAsync ? 1 : Math.max(16, os.availableParallelism() * 2);
+	let next = 0;
+	const worker = async () => {
+		while (next < files.length) {
+			await openFile(files[next++], config);
+		}
+	};
 
-	await Promise.all(work);
+	await Promise.all(Array.from({length: workers}, worker));
 	return printDone();
 }
 
 function openFile(file, config) {
 	if (config.voidAsync) {
 		chat('Open sync: ' + file);
-		var data = fs.readFileSync(file, config.encoding);
+		let data;
+		try {
+			data = fs.readFileSync(file, config.encoding);
+		} catch (e) {
+			return error(e);
+		}
 		return doReplacement(file, config, data);
 	} else {
 		chat('Open async: ' + file);
