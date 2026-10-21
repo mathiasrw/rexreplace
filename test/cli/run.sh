@@ -130,6 +130,16 @@ else
 fi
 
 
+# -e
+# An unknown encoding stops the run with an error, both for files and for piped data (#690)
+reset
+assert_failure		"rexreplace o x my.file -e nope"
+assert		 		"cat my.file"    'foobar'
+assert_failure		"printf foo | rexreplace o x -e nope"
+assert		 		"printf foo | rexreplace o x -e nope 2>&1 | grep -v 'exited with code' | tail -1"    'Unknown encoding: nope'
+assert		 		"printf foo | rexreplace o x -e LATIN1"    'fxx'
+
+
 # -b
 reset
 rexreplace o x my.file --keep-backup

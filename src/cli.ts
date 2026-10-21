@@ -93,6 +93,8 @@ const yargs = require('yargs')
 	.default('e', 'utf8')
 	.alias('e', 'encoding')
 	.describe('e', 'Encoding of files/piped data.')
+	// Not .choices() as node takes the name of an encoding in any case, like `UTF8`
+	.check((argv) => Buffer.isEncoding(argv.encoding) || `Unknown encoding: ${argv.encoding}`)
 
 	.alias('E', 'engine')
 	.describe(
