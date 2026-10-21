@@ -100,6 +100,28 @@ Require has been given the alias `r` and both are expanded to understand relativ
 > rexreplace 'VERSION' 'r("package").version' -j dist/*.js
 ```
 
+---
+
+#### Piping data in
+
+Pipe data in without giving any files, and the piped data is the text to search (unless `-R` uses it as the replacement). The result is printed.
+
+```bash
+> cat myfile.md | rexreplace 'foo' 'bar'
+```
+
+Let the output of another command be the replacement with `-R`. The piped data is then used as the replacement, so give the files to work on. Here the hash of the latest commit goes into your distribution js files (use the string `COMMIT` in your source files). The `_` is a dummy value, as the replacement comes from the pipe, and `-T` trims away the line break at the end.
+
+```bash
+> git rev-parse --short HEAD | rexreplace 'COMMIT' _ -R -T dist/*.js
+```
+
+Want to shape the piped data first? `--js-pipe` hands it to your javascript as `pipe`.
+
+```bash
+> git log -1 --format=%an | rexreplace 'AUTHOR' 'pipe.trim().toUpperCase()' --js-pipe docs/*.md
+```
+
 #### Reference a matching group
 
 Let 'foobar' become 'barfoo' in myfile.md
@@ -265,7 +287,7 @@ Let both `"foo 'is' bar"` and `' foo "was" bar'` become `» foo ... bar «` inde
 - Pattern defaults to global multiline case-insensitive search
 - Supports regex lookaheads in the pattern
 - Supports backreference to matching groups in the replacement
-- Data to be treated can be piped in
+- Data can be piped in, both as the text to search and as the replacement
 - The names of the affected files are printed to stdout, so they can be piped on (to stderr with `--output` and `--output-match`)
 - Pick the delimiter between names and between the content of files, like `--null` for `xargs -0`
 - See the [release note](https://github.com/mathiasrw/rexreplace/releases) for a log of changes. Descriptions are given in latest patch version.
@@ -279,6 +301,8 @@ Let both `"foo 'is' bar"` and `' foo "was" bar'` become `» foo ... bar «` inde
 - Per default `§` is treated as an alias for `\` in the pattern, the replacement and `--exclude-re`. The main reason is for you not to worry about escaping the escape of an escape. Use the `-§` flag if you need to search or replace the actual section char.
 
 - The `€` and `§` aliases are only for what you write as pattern, replacement (also with `--replacement-js`), `--exclude-re` and the delimiters. File globs, `--exclude-glob` and piped data (both content to search and a replacement given with `--replacement-pipe`) are used exactly as they are, so a file named `price€.txt` is found without any flags.
+
+- Just like `grep`, RexReplace only waits for piped data when it needs it: when no files are given, or when you ask for it with `-R` or `--pipe`. So a CI runner, a cron job or `docker exec` that leaves stdin open only makes it wait when piped data is expected.
 
 
 ### Limitations
