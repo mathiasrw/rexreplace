@@ -49,11 +49,25 @@ describe('--encoding', () => {
 		);
 	});
 
-	test('BUG #690: an unknown encoding gives an error message instead of crashing', async () => {
+	// The error message, and not the stack trace from deep inside node, when an encoding is unknown (#690)
+	const unknownEncoding = {out: '', err: ' ❌ Unknown encoding: nope\n\n', exit: 1};
+
+	test('stops the run with an error if it is unknown (#690)', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		const result = await rr('o', 'x', {includeGlob: ['my.file'], encoding: 'nope'});
-		expect(result.exit).toBe(1);
-		expect(result.err).toContain('nope');
+		expect(await rr('o', 'x', {includeGlob: ['my.file'], encoding: 'nope'})).toEqual(
+			unknownEncoding
+		);
+		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
+	});
+
+	test('stops the run with an error if it is unknown, also for piped data (#690)', async () => {
+		expect(await rr('o', 'x', {pipedData: 'foo', encoding: 'nope'})).toEqual(unknownEncoding);
+	});
+
+	test('is known in any case', async () => {
+		fs.writeFileSync('my.file', latin1());
+		await rr('æ', 'ø', {includeGlob: ['my.file'], encoding: 'LATIN1'});
+		expect(fs.readFileSync('my.file')).toEqual(Buffer.from([0x66, 0xf8, 0x6f]));
 	});
 
 	describe('combined', () => {
