@@ -26,7 +26,7 @@ export {version} from '../package.json';
 const runtime = process.versions.bun ? 'Bun' : 'Node';
 const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
-export function validateEncoding(encoding = 'utf8') {
+function validateEncoding(encoding = 'utf8') {
 	if (!Buffer.isEncoding(encoding)) {
 		die('Unknown encoding:', encoding);
 	}
