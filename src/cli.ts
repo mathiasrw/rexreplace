@@ -395,6 +395,7 @@ function unescapeString(str = '') {
 	});
 
 	outputConfig(config);
+	rexreplace.validateEncoding(config.encoding);
 
 	let pipeInUse = false;
 	let pipeData = '';

@@ -49,15 +49,12 @@ describe('--encoding', () => {
 		);
 	});
 
-	test.todo(
-		'BUG #690: an unknown encoding gives an error message instead of crashing',
-		async () => {
-			fs.writeFileSync('my.file', 'foobar');
-			const result = await rr('o', 'x', {includeGlob: ['my.file'], encoding: 'nope'});
-			expect(result.exit).toBe(1);
-			expect(result.err).toContain('nope');
-		}
-	);
+	test('BUG #690: an unknown encoding gives an error message instead of crashing', async () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const result = await rr('o', 'x', {includeGlob: ['my.file'], encoding: 'nope'});
+		expect(result.exit).toBe(1);
+		expect(result.err).toContain('nope');
+	});
 
 	describe('combined', () => {
 		test.each([
