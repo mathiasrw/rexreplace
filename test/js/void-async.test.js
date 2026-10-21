@@ -7,22 +7,33 @@ import {rr} from './helper.js';
 describe('--void-async', () => {
 	test('is done with a file before the next one is opened', async () => {
 		['a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
-		const config = {includeGlob: ['*.file'], voidAsync: true, verbose: true};
-		expect((await rr('o', 'x', config)).err).toBe(
-			'2 files found \nOpen sync: a.file \na.file \nOpen sync: b.file \nb.file \n'
-		);
+		const config = {includeGlob: ['*.file'], voidAsync: true, debug: true};
+		const result = await rr('o', 'x', config);
+		expect(result.err.trim().split('\n')).toEqual([
+			'"2 files found"',
+			'"Open sync: a.file"',
+			'"Work on content from: a.file"',
+			'"Write new content to: a.file"',
+			'"Open sync: b.file"',
+			'"Work on content from: b.file"',
+			'"Write new content to: b.file"',
+		]);
+		expect(result.out).toBe('a.file\nb.file\n');
 	});
 
 	test('is not the default: all files are opened before the first one is done', async () => {
 		['a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
-		const config = {includeGlob: ['*.file'], voidAsync: false, verbose: true};
-		const lines = (await rr('o', 'x', config)).err.split(' \n');
+		const config = {includeGlob: ['*.file'], voidAsync: false, debug: true};
+		const result = await rr('o', 'x', config);
+		const lines = result.err.split('\n');
 		expect(lines.slice(0, 3)).toEqual([
-			'2 files found',
-			'Open async: a.file',
-			'Open async: b.file',
+			'"2 files found"',
+			'"Open async: a.file"',
+			'"Open async: b.file"',
 		]);
-		expect(lines.slice(3).sort()).toEqual(['', 'a.file', 'b.file']);
+		// Either file can be read first
+		expect(lines[3]).toMatch(/^"Work on content from: [ab]\.file"$/);
+		expect(result.out.split('\n').sort()).toEqual(['', 'a.file', 'b.file']);
 		expect(['a', 'b'].map((name) => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
 			'fxx',
 			'fxx',
@@ -32,7 +43,7 @@ describe('--void-async', () => {
 	test('handles the files one by one in alphabetical order', async () => {
 		['c', 'a', 'd', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
 		const result = await rr('o', 'x', {includeGlob: ['*.file'], voidAsync: true});
-		expect(result.err).toBe('a.file \nb.file \nc.file \nd.file \n');
+		expect(result.out).toBe('a.file\nb.file\nc.file\nd.file\n');
 	});
 
 	test('leaves no temporary files behind', async () => {

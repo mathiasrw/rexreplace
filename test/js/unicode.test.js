@@ -63,7 +63,7 @@ describe('--unicode', () => {
 
 		test('with --output-match', async () => {
 			const config = {pipedData: 'a🦖 b🦕', unicode: true, outputMatch: true};
-			expect((await rr('\\w(.)', '_', config)).out).toBe('🦖\n🦕\n');
+			expect((await rr('\\w(.)', '_', config)).out).toBe('🦖\n🦕');
 		});
 
 		test('with --replacement-js', async () => {

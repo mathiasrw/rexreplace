@@ -52,7 +52,7 @@ describe('--void-multiline', () => {
 
 		test('with --output-match', async () => {
 			const config = {pipedData: 'ab\ncd\nef', voidMultiline: true, outputMatch: true};
-			expect((await rr('^.|.$', '_', config)).out).toBe('a\nf\n');
+			expect((await rr('^.|.$', '_', config)).out).toBe('a\nf');
 		});
 
 		test('with --replacement-js', async () => {

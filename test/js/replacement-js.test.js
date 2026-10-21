@@ -15,6 +15,8 @@ const inFile = async (code, text = 'foobar', file = 'my.file') => {
 			includeGlob: [file],
 			replacementJs: true,
 			output: true,
+			// Without the tail only the value of the code is given
+			contentDelimiterTail: false,
 			voidMultiline: true,
 		})
 	).out;
@@ -130,8 +132,8 @@ describe('--replacement-js', () => {
 			expect(await js('o', 'pipe', 'fo')).toBe('ffo');
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {includeGlob: ['my.file'], replacementJs: true, output: true};
-			expect((await rr('foo', 'pipe', {...config, pipedData: 'boo'})).out).toBe('boobar');
-			expect((await rr('foo', 'String(pipe)', config)).out).toBe('nullbar');
+			expect((await rr('foo', 'pipe', {...config, pipedData: 'boo'})).out).toBe('boobar\n');
+			expect((await rr('foo', 'String(pipe)', config)).out).toBe('nullbar\n');
 		});
 
 		test('file, file_rel, dirpath, dirpath_rel, dirname, filename, name and ext tell about the file', async () => {
@@ -202,7 +204,12 @@ describe('--replacement-js', () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const longAgo = new Date('2001-02-03T04:05:06.789Z');
 			fs.utimesSync('my.file', longAgo, longAgo);
-			const config = {includeGlob: ['my.file'], replacementJs: true, output: true};
+			const config = {
+				includeGlob: ['my.file'],
+				replacementJs: true,
+				output: true,
+				contentDelimiterTail: false,
+			};
 
 			expect((await rr('foobar', 'mtime', config)).out).toMatch(timestamp);
 			expect((await rr('foobar', 'mtime_obj.toISOString()', config)).out).toBe(
@@ -321,7 +328,7 @@ describe('--replacement-js', () => {
 				replacementJs: true,
 				output: true,
 			};
-			expect((await rr('foo', 'name', config)).out).toBe('b');
+			expect((await rr('foo', 'name', config)).out).toBe('b\n');
 		});
 	});
 });

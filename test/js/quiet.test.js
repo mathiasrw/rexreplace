@@ -12,7 +12,7 @@ describe('--quiet', () => {
 
 	test('is not the default', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		expect((await rr('o', 'x', {includeGlob: ['my.file']})).err).toBe('my.file \n');
+		expect((await rr('o', 'x', {includeGlob: ['my.file']})).out).toBe('my.file\n');
 	});
 
 	test('still stops on an invalid pattern', async () => {
@@ -42,7 +42,7 @@ describe('--quiet', () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const result = await rr('o', 'x', {includeGlob: ['my.file'], quiet: true, debug: true});
 			expect(result.err).toContain('Work on content from: my.file');
-			expect(result.err).not.toContain('my.file \n');
+			expect(result.out).toBe('');
 		});
 
 		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async (flag) => {

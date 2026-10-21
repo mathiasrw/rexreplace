@@ -1,7 +1,7 @@
 // Random combinations of flags and input compared with what plain javascript gives
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random} from '../js/helper.js';
+import {rr, random, ended} from '../js/helper.js';
 
 const flags = [
 	'verbose',
@@ -49,12 +49,11 @@ describe('crossover', () => {
 					(config.unicode ? 'u' : '')
 			);
 			const replaced = text.replace(regex, () => replacement);
-			const matches = (
-				config.voidGlobal ? [text.match(regex)] : Array.from(text.matchAll(regex))
-			)
-				.filter(Boolean)
-				.map((match) => (1 < match.length ? match.slice(1).join('') : match[0]) + '\n')
-				.join('');
+			const matches = ended(
+				...(config.voidGlobal ? [text.match(regex)] : Array.from(text.matchAll(regex)))
+					.filter(Boolean)
+					.map((match) => (1 < match.length ? match.slice(1).join('') : match[0]))
+			);
 
 			const given = config.replacementJs ? JSON.stringify(replacement) : replacement;
 			const note = JSON.stringify({config, pattern, text, replacement});
@@ -69,8 +68,16 @@ describe('crossover', () => {
 			});
 
 			expect(result.exit, note).toBe(null);
+			// The name of the file is only printed if the file was changed
+			const named = replaced !== text && !config.quiet && !config.quietTotal;
 			expect(result.out, note).toBe(
-				config.outputMatch ? matches : config.output ? replaced : ''
+				config.outputMatch
+					? matches
+					: config.output
+						? ended(replaced)
+						: named
+							? file + '\n'
+							: ''
 			);
 
 			const expected = written ? replaced : text;
@@ -112,7 +119,7 @@ describe('crossover', () => {
 					})
 				).out,
 				note
-			).toBe(piped);
+			).toBe(ended(piped));
 
 			await rr(pattern, replacement, {...config, includeGlob: ['my.file']});
 			expect(fs.readFileSync('my.file', 'utf8'), note).toBe(piped);

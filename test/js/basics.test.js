@@ -1,6 +1,7 @@
 // What rexreplace does when no flags are given
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
+import path from 'path';
 import {rr} from './helper.js';
 
 describe('pattern', () => {
@@ -82,11 +83,11 @@ describe('replacement', () => {
 });
 
 describe('files', () => {
-	test('are changed in place and named on stderr', async () => {
+	test('are changed in place and named on stdout', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file']});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
-		expect(result).toEqual({out: '', err: 'my.file \n', exit: null});
+		expect(result).toEqual({out: 'my.file\n', err: '', exit: null});
 		expect(fs.readdirSync('.')).toEqual(['my.file']);
 	});
 
@@ -129,13 +130,13 @@ describe('files', () => {
 			includeGlob: ['my.file', '*.file', './my.file', 'my.*'],
 		});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foooobar');
-		expect(result.err).toBe('my.file \n');
+		expect(result.out).toBe('my.file\n');
 	});
 
 	test('are handled in alphabetical order', async () => {
 		['c', 'a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', name));
 		expect((await rr('$', '!', {includeGlob: ['c.file', '*.file'], output: true})).out).toBe(
-			'a!b!c!'
+			'a!\nb!\nc!\n'
 		);
 	});
 
@@ -176,13 +177,24 @@ describe('files', () => {
 		fs.mkdirSync('dir.file');
 		fs.writeFileSync('.hidden.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['*']});
-		expect(result.err).toBe('0 files found \n');
+		expect(result.err).toBe('0 files found\n');
 		expect(fs.readFileSync('.hidden.file', 'utf8')).toBe('foobar');
+	});
+
+	// The file names are read by src/cli.ts, so this runs the CLI itself
+	test.todo('BUG #733: can have a name that is only a number', async () => {
+		await Bun.write('2024', 'foobar');
+		const cli = path.join(import.meta.dir, '../../src/cli.ts');
+		const {stdout, exitCode} = Bun.spawnSync([process.execPath, cli, 'o', 'x', '2024'], {
+			stdin: 'ignore',
+		});
+		expect({out: stdout.toString(), exit: exitCode}).toEqual({out: '2024\n', exit: 0});
+		expect(await Bun.file('2024').text()).toBe('fxxbar');
 	});
 
 	test('are reported if none are found', async () => {
 		const result = await rr('o', 'x', {includeGlob: ['nope.file']});
-		expect(result.err).toBe('0 files found \n');
+		expect(result.err).toBe('0 files found\n');
 		expect(result.out).toBe('');
 	});
 });
@@ -207,7 +219,7 @@ describe('piped data', () => {
 	test('is ignored if files are given', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {pipedData: 'boo', includeGlob: ['my.file']});
-		expect(result.out).toBe('');
+		expect(result.out).toBe('my.file\n');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 	});
 
@@ -217,6 +229,6 @@ describe('piped data', () => {
 	});
 
 	test('leaves nothing to do if neither data nor files are given', async () => {
-		expect(await rr('o', 'x')).toEqual({out: '', err: '0 files found \n', exit: null});
+		expect(await rr('o', 'x')).toEqual({out: '', err: '0 files found\n', exit: null});
 	});
 });

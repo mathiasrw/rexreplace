@@ -31,7 +31,7 @@ describe('--halt', () => {
 	test('changes nothing when all goes well', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], halt: true});
-		expect(result).toEqual({out: '', err: 'my.file \n', exit: null});
+		expect(result).toEqual({out: 'my.file\n', err: '', exit: null});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 	});
 

@@ -70,9 +70,9 @@ describe('--void-euro', () => {
 		test('with --replacement-pipe the piped replacement is never converted', async () => {
 			fs.writeFileSync('my.file', 'foo');
 			const config = {includeGlob: ['my.file'], output: true, replacementPipe: true};
-			expect((await rr('(o)', '_', {...config, pipedData: '€1'})).out).toBe('f€1€1');
+			expect((await rr('(o)', '_', {...config, pipedData: '€1'})).out).toBe('f€1€1\n');
 			expect((await rr('(o)', '_', {...config, pipedData: '€1', voidEuro: true})).out).toBe(
-				'f€1€1'
+				'f€1€1\n'
 			);
 		});
 

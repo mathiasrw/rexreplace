@@ -8,7 +8,7 @@ describe('--void-backup', () => {
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], voidBackup: true});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
 		expect(fs.readdirSync('.')).toEqual(['my.file']);
-		expect(result.err).toBe('my.file \n');
+		expect(result.out).toBe('my.file\n');
 	});
 
 	test('does not write a file where nothing was replaced', async () => {
@@ -47,7 +47,7 @@ describe('--void-backup', () => {
 		test('with --output the file is left alone', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {includeGlob: ['my.file'], voidBackup: true, output: true};
-			expect((await rr('o', 'x', config)).out).toBe('fxxbar');
+			expect((await rr('o', 'x', config)).out).toBe('fxxbar\n');
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 		});
 

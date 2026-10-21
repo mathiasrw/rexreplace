@@ -39,7 +39,7 @@ describe('--void-ignore-case', () => {
 
 		test('with --output-match', async () => {
 			const config = {pipedData: 'foo Foo FOO', outputMatch: true, voidIgnoreCase: true};
-			expect((await rr('F.o', '_', config)).out).toBe('Foo\n');
+			expect((await rr('F.o', '_', config)).out).toBe('Foo');
 		});
 
 		test('with --replacement-js', async () => {

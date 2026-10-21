@@ -11,7 +11,7 @@ describe('--output-match', () => {
 			expect(
 				(await rr(pattern, '_', {pipedData: text, outputMatch: true})).out,
 				JSON.stringify({pattern, text})
-			).toBe(matches.map((match) => match + '\n').join(''));
+			).toBe(matches.join('\n'));
 		}
 	});
 
@@ -24,7 +24,7 @@ describe('--output-match', () => {
 			expect(
 				(await rr(pattern, '_', {pipedData: text, outputMatch: true})).out,
 				JSON.stringify({pattern, text})
-			).toBe(matches.map((match) => match.slice(1).join('') + '\n').join(''));
+			).toBe(matches.map((match) => match.slice(1).join('')).join('\n'));
 		}
 	});
 });
