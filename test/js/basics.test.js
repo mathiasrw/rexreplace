@@ -229,6 +229,6 @@ describe('piped data', () => {
 	});
 
 	test('leaves nothing to do if neither data nor files are given', async () => {
-		expect(await rr('o', 'x')).toEqual({out: '', err: '0 files found\n', exit: null});
+		expect(await rr('o', 'x')).toEqual({out: '', err: '0 files found\n', exit: 1});
 	});
 });

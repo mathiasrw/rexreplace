@@ -105,6 +105,8 @@ export const error = function (msg, data = '') {
 	if (config.halt) {
 		kill();
 	}
+	// The run goes on, but the exit code tells that something went wrong
+	process.exitCode = 1;
 	return false;
 };
 

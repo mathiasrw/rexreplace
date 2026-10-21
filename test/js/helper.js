@@ -27,6 +27,9 @@ export async function rr(pattern, replacement, config = {}) {
 	const result = {out: '', err: '', exit: null};
 	const halt = {};
 
+	// An error lets the run go on, but sets the exit code for when the process ends. Start from no error.
+	process.exitCode = 0;
+
 	const spies = [
 		spyOn(process.stdout, 'write').mockImplementation((data) => {
 			result.out += data;
@@ -66,6 +69,7 @@ export async function rr(pattern, replacement, config = {}) {
 		}
 	} finally {
 		spies.forEach((spy) => spy.mockRestore());
+		result.exit ??= process.exitCode || null;
 	}
 
 	return result;
