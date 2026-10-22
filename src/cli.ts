@@ -106,7 +106,10 @@ const yargs = require('yargs')
 	.alias('x', 'exclude-re')
 
 	.string('X')
-	.describe('X', 'Exclude files found with this glob. Can be used multiple times.')
+	.describe(
+		'X',
+		'Exclude this file, or the files found with this glob. A path to a file only excludes that file. Can be used multiple times.'
+	)
 	.alias('X', 'exclude-glob')
 
 	.alias('E', 'engine')
