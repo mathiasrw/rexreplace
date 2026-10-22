@@ -182,15 +182,25 @@ describe('files', () => {
 	});
 
 	// The file names are read by src/cli.ts, so this runs the CLI itself
-	test.todo('BUG #733: can have a name that is only a number', async () => {
-		await Bun.write('2024', 'foobar');
-		const cli = path.join(import.meta.dir, '../../src/cli.ts');
-		const {stdout, exitCode} = Bun.spawnSync([process.execPath, cli, 'o', 'x', '2024'], {
-			stdin: 'ignore',
-		});
-		expect({out: stdout.toString(), exit: exitCode}).toEqual({out: '2024\n', exit: 0});
-		expect(await Bun.file('2024').text()).toBe('fxxbar');
-	});
+	test.each(['2024', '1e3', '0x10'])(
+		'can have a name that reads as a number, like %s (#733)',
+		async (name) => {
+			await Bun.write(name, 'foobar');
+			const cli = path.join(import.meta.dir, '../../src/cli.ts');
+			const {stdout, stderr, exitCode} = Bun.spawnSync(
+				[process.execPath, cli, 'o', 'x', name],
+				{
+					stdin: 'ignore',
+				}
+			);
+			expect({out: stdout.toString(), err: stderr.toString(), exit: exitCode}).toEqual({
+				out: name + '\n',
+				err: '',
+				exit: 0,
+			});
+			expect(await Bun.file(name).text()).toBe('fxxbar');
+		}
+	);
 
 	test('are reported if none are found', async () => {
 		const result = await rr('o', 'x', {includeGlob: ['nope.file']});
