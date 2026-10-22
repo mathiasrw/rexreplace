@@ -8,19 +8,7 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {
-	outputConfig,
-	errorCount,
-	step,
-	debug,
-	chat,
-	info,
-	print,
-	printDone,
-	warn,
-	error,
-	die,
-} from './output.ts';
+import {outputConfig, chat, info, print, printDone, warn, error, die} from './output.ts';
 
 const re = {
 	mctime: /[mc]time/,
@@ -32,7 +20,8 @@ const re = {
 };
 
 // Only the version ends up in the bundle
-export {version} from '../package.json';
+import {version} from '../package.json';
+export {version};
 
 // The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
 const runtime = process.versions.bun ? 'Bun' : 'Node';
@@ -44,18 +33,48 @@ function validateEncoding(encoding = 'utf8') {
 	}
 }
 
-// Returns a promise that resolves with the number of errors when all files are done
+// Resolves with the status of the run when all files are done.
+// When the run can not go on, a panic is thrown with the status so far.
 export async function engine(config: any = {engine: 'default'}) {
-	await run(config);
-	return errorCount();
+	config.statusInfo = newStatus(config);
+	outputConfig(config);
+	try {
+		await run(config);
+	} catch (e) {
+		if (e?.panic) {
+			e.status = config.statusInfo;
+		}
+		throw e;
+	} finally {
+		printDone();
+	}
+	return config.statusInfo;
+}
+
+function newStatus(config) {
+	const status: any = {files: {searched: [], updated: []}, pipe: null, warnings: [], errors: []};
+
+	// The status report with --verbose also tells what went into the engine and what it did.
+	// The config is copied before it gets the status, and the piped data is told about in `pipe`.
+	if (config.verbose && (config.status || config.statusCompact)) {
+		status.engine = {
+			version,
+			runtime: runtime + ' ' + runtimeEngine,
+			config: JSON.parse(
+				JSON.stringify(config, (key, value) =>
+					'statusInfo' === key || 'pipedData' === key ? undefined : value
+				)
+			),
+			execution: null,
+			steps: [],
+		};
+	}
+
+	return status;
 }
 
 async function run(config) {
-	outputConfig(config);
 	validateEncoding(config.encoding);
-
-	step('Displaying steps for:');
-	step(config);
 
 	config.pattern = getFinalPattern(config.pattern, config) || '';
 
@@ -73,9 +92,26 @@ async function run(config) {
 
 	config.regex = getFinalRegex(config.pattern, config) || '';
 
-	step(config);
+	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
+	if (config.statusInfo.engine) {
+		config.statusInfo.engine.execution = {
+			search: config.regex.source,
+			flags: config.regex.flags,
+			replacement: config.replacementJs || config.outputMatch ? null : config.replacement,
+			replacementSrc:
+				config.replacementJs && !config.outputMatch ? config.replacementOri : null,
+		};
+	}
 
 	const piped = handlePipedData(config);
+
+	if (null !== config.pipedData) {
+		config.statusInfo.pipe = {
+			bytes: Buffer.byteLength(config.pipedData, config.encoding),
+			type: pipeType(config, piped),
+			updated: false,
+		};
+	}
 
 	// The more specific tail wins. Piped data that is printed is left as it came in, but matches are matches, from a file or a pipe.
 	config.nameDelimiterTail = config.nameDelimiterTail ?? config.tail ?? true;
@@ -83,8 +119,7 @@ async function run(config) {
 		config.contentDelimiterTail ?? config.tail ?? !(piped && config.output);
 
 	if (piped) {
-		doReplacement('Piped data', config, config.pipedData);
-		return printDone();
+		return doReplacement('Piped data', config, config.pipedData);
 	}
 
 	config.files = getFilePaths(config);
@@ -98,8 +133,6 @@ async function run(config) {
 	// One file needs no async flow, and with -o or -m one file at a time gives the output in order
 	config.voidAsync =
 		config.voidAsync || 1 === config.files.length || config.output || config.outputMatch;
-
-	step(config);
 
 	const files = config.files.filter((filepath) =>
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
@@ -120,10 +153,10 @@ async function run(config) {
 	};
 
 	await Promise.all(Array.from({length: workers}, worker));
-	return printDone();
 }
 
 function openFile(file, config) {
+	config.statusInfo.files.searched.push(file);
 	if (config.voidAsync) {
 		chat('Open sync: ' + file);
 		let data;
@@ -143,7 +176,7 @@ function openFile(file, config) {
 
 // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
 function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
-	debug('Work on content from: ' + _file_rr);
+	chat('Work on content from: ' + _file_rr);
 
 	// Main regexp of the whole thing
 	const result = _data_rr.replace(
@@ -156,11 +189,15 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	if (_config_rr.output || _config_rr.outputMatch) {
 		// With --output-match the matches are printed by the replacement
 		if (_config_rr.output) {
-			debug('Output result from: ' + _file_rr);
+			chat('Output result from: ' + _file_rr);
 			print(result, _config_rr.contentDelimiter, _config_rr.contentDelimiterTail);
 		}
 		// The file is not changed, but it is still named if its content would change
-		if ((_config_rr.nameAll || result !== _data_rr) && !_config_rr.dataIsPiped) {
+		if (_config_rr.dataIsPiped) {
+			_config_rr.statusInfo.pipe.updated = result !== _data_rr;
+		} else if (result !== _data_rr) {
+			updated(_file_rr, _config_rr);
+		} else if (_config_rr.nameAll) {
 			info(_file_rr);
 		}
 		return;
@@ -178,13 +215,13 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	// Release the memory while storing files
 	_data_rr = '';
 
-	debug('Write new content to: ' + _file_rr);
+	chat('Write new content to: ' + _file_rr);
 
 	// Write directly to the same file (if the process is killed all new and old data is lost)
 	if (_config_rr.voidBackup) {
 		return fs.promises
 			.writeFile(_file_rr, result, _config_rr.encoding)
-			.then(() => info(_file_rr), error);
+			.then(() => updated(_file_rr, _config_rr), error);
 	}
 
 	//Make sure data is always on disk
@@ -202,19 +239,37 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 		} catch (e) {
 			return error(e);
 		}
-		return info(_file_rr);
+		return updated(_file_rr, _config_rr);
 	}
 
 	return fs.promises
 		.rename(oriFile, backupFile)
 		.then(() => fs.promises.writeFile(oriFile, result, _config_rr.encoding))
 		.then(() => _config_rr.keepBackup || fs.promises.unlink(backupFile))
-		.then(() => info(_file_rr), error);
+		.then(() => updated(_file_rr, _config_rr), error);
+}
+
+// The content of the file was changed, or would be with --output and --output-match, so it is named
+function updated(file, config) {
+	config.statusInfo.files.updated.push(file);
+	info(file);
+}
+
+// How the piped data was used
+function pipeType(config, piped) {
+	if (piped) {
+		return 'CONTENT';
+	}
+	if (config.replacementJs) {
+		return 'JS';
+	}
+	if (config.replacementPipe) {
+		return 'REPLACEMENT';
+	}
+	return 'UNUSED';
 }
 
 function handlePipedData(config) {
-	step('Check Piped Data');
-
 	if (config.includeGlob.length) {
 		// Empty piped data (or only a line break) is not worth a warning
 		if (
@@ -241,8 +296,6 @@ function handlePipedData(config) {
 }
 
 function getFinalPattern(pattern, conf: any) {
-	step('Get final pattern');
-
 	if (conf.literal) {
 		pattern = pattern.replace(re.regexSpecialChars, '\\$&');
 	}
@@ -252,18 +305,15 @@ function getFinalPattern(pattern, conf: any) {
 		pattern = new Function('return '+pattern)();
 	}*/
 
-	step(pattern);
 	return pattern;
 }
 
 function getFinalReplacement(replacement, conf: any) {
-	step('Get final replacement');
 	/*if(config.replacementFile){
 		return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
 	}*/
 
 	if (conf.replacementPipe) {
-		step('Piping replacement');
 		conf.pipedDataUsed = true;
 		if (null === conf.pipedData) {
 			return die('No data piped into replacement');
@@ -272,15 +322,11 @@ function getFinalReplacement(replacement, conf: any) {
 	}
 
 	if (conf.outputMatch) {
-		step('Output match');
-
 		if (parseInt(process.versions.node) < 6) {
 			return die('outputMatch is only supported in node 6+');
 		}
 
 		return function (match, ...rest) {
-			step(arguments);
-
 			// The groups are followed by the offset and the full text, and by the named groups if the pattern has any.
 			// Without groups the full match is printed, otherwise the groups are printed together.
 			const groups = rest.slice(0, 'object' === typeof rest[rest.length - 1] ? -3 : -2);
@@ -303,8 +349,6 @@ function getFinalReplacement(replacement, conf: any) {
 		return die('Captured groups for javascript replacement is only supported in node 6+');
 	}
 
-	step(replacement);
-
 	return replacement;
 }
 
@@ -321,8 +365,6 @@ function getFinalReplacement(replacement, conf: any) {
 function getFinalRegex(pattern, config) {
 	const engine = 'default' === config.engine ? runtimeEngine : config.engine;
 
-	step('Get final regex with engine: ' + engine);
-
 	let regex;
 
 	let flags = getFlags(config);
@@ -332,7 +374,6 @@ function getFinalRegex(pattern, config) {
 			try {
 				regex = new RegExp(pattern, flags);
 			} catch (e) {
-				if (config.debug) throw new Error(e);
 				die(e.message);
 			}
 			break;
@@ -348,7 +389,6 @@ function getFinalRegex(pattern, config) {
 				//regex = new RE2(pattern, flags);
 				regex = new RegExp(pattern, flags);
 			} catch (e) {
-				if (config.debug) throw new Error(e);
 				die(e.message);
 			}
 			break;
@@ -356,14 +396,10 @@ function getFinalRegex(pattern, config) {
 			die(`Engine ${config.engine} not supported`);
 	}
 
-	step(regex);
-
 	return regex;
 }
 
 function getFlags(config) {
-	step('Get flags');
-
 	let flags = '';
 
 	if (!config.voidGlobal) {
@@ -385,8 +421,6 @@ function getFlags(config) {
 	if (config.unicode) {
 		flags += 'u';
 	}
-
-	step(flags);
 
 	return flags;
 }
@@ -585,8 +619,6 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	}
 	// Capture groups used, so need to run once per match
 	return function () {
-		step(arguments);
-
 		const __pipe = _pipe,
 			__text = _text,
 			__find = _find,

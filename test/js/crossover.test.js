@@ -45,7 +45,6 @@ describe('every pair of flags', () => {
 		'quiet',
 		'quietTotal',
 		'halt',
-		'debug',
 		'voidEuro',
 		'voidSection',
 		'output',

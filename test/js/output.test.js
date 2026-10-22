@@ -61,9 +61,9 @@ describe('--output', () => {
 			expect((await rr('o', 'x', {...config, quietTotal: true})).out).toBe('fxxbar\n');
 		});
 
-		test('with --verbose and --debug the chatter goes to stderr only', async () => {
+		test('with --verbose the chatter goes to stderr only', async () => {
 			fs.writeFileSync('my.file', 'foobar');
-			const config = {includeGlob: ['my.file'], output: true, verbose: true, debug: true};
+			const config = {includeGlob: ['my.file'], output: true, verbose: true};
 			const result = await rr('o', 'x', config);
 			expect(result.out).toBe('fxxbar\n');
 			expect(result.err).toContain('Output result from: my.file');

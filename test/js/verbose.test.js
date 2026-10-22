@@ -6,7 +6,9 @@ describe('--verbose', () => {
 	test('tells what is going on', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], verbose: true});
-		expect(result.err).toBe('1 files found\nOpen sync: my.file\n');
+		expect(result.err).toBe(
+			'1 files found\nOpen sync: my.file\nWork on content from: my.file\nWrite new content to: my.file\n'
+		);
 		expect(result.out).toBe('my.file\n');
 	});
 
@@ -45,26 +47,16 @@ describe('--verbose', () => {
 	});
 
 	describe('combined', () => {
-		test('with --quiet or --quiet-total nothing is told', async () => {
+		test('is not hidden by --quiet, as it was asked for', async () => {
 			fs.writeFileSync('my.file', 'foobar');
-			const config = {includeGlob: ['my.file'], verbose: true};
-			expect((await rr('o', 'x', {...config, quiet: true})).err).toBe('');
-			expect((await rr('x', 'o', {...config, quietTotal: true})).err).toBe('');
+			const config = {includeGlob: ['my.file'], verbose: true, quiet: true};
+			expect((await rr('o', 'x', config)).err).toContain('Open sync: my.file');
 		});
 
-		test('with --debug every step and the full config is shown', async () => {
-			const result = await rr('o', 'x', {pipedData: 'foobar', verbose: true, debug: true});
-			expect(result.err).toContain('"Displaying steps for:"');
-			expect(result.err).toContain('"pattern": "o"');
-			// The tests are run by Bun, and Bun has JSC
-			expect(result.err).toContain('"Get final regex with engine: JSC"');
-			expect(result.err).toContain('"gim"');
-			expect(result.out).toBe('fxxbar');
-		});
-
-		test('with --debug the steps are not shown without --verbose', async () => {
-			const result = await rr('o', 'x', {pipedData: 'foobar', debug: true});
-			expect(result.err).not.toContain('Displaying steps for');
+		test('is hidden by --quiet-total, as it wins', async () => {
+			fs.writeFileSync('my.file', 'foobar');
+			const config = {includeGlob: ['my.file'], verbose: true, quietTotal: true};
+			expect((await rr('o', 'x', config)).err).toBe('');
 		});
 
 		test('with --output the result is still clean', async () => {
@@ -75,7 +67,9 @@ describe('--verbose', () => {
 				output: true,
 			});
 			expect(result.out).toBe('fxxbar\n');
-			expect(result.err).toBe('1 files found\nOpen sync: my.file\nmy.file\n');
+			expect(result.err).toBe(
+				'1 files found\nOpen sync: my.file\nWork on content from: my.file\nOutput result from: my.file\nmy.file\n'
+			);
 		});
 
 		test('with --replacement-js piped data counts as used', async () => {

@@ -30,15 +30,10 @@ describe('--quiet-total', () => {
 	});
 
 	describe('combined', () => {
-		test('with --quiet and --verbose it stays silent', async () => {
+		test('with --verbose it stays silent, as --quiet-total wins', async () => {
 			fs.writeFileSync('my.file', 'foobar');
-			const config = {includeGlob: ['my.file'], quietTotal: true, quiet: true, verbose: true};
-			expect((await rr('o', 'x', config)).err).toBe('');
-		});
-
-		test('with --debug the debug info is still shown', async () => {
-			const result = await rr('o', 'x', {pipedData: 'foobar', quietTotal: true, debug: true});
-			expect(result.err).toContain('Work on content from: Piped data');
+			const config = {includeGlob: ['my.file'], quietTotal: true, verbose: true};
+			expect(await rr('o', 'x', config)).toEqual({out: '', err: '', exit: null});
 		});
 
 		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async (flag) => {

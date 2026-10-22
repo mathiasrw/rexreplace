@@ -32,8 +32,8 @@ describe('#703 the names of affected files', () => {
 		expect(result.err).toBe('');
 	});
 
-	test('are alone on stdout with --verbose and --debug', async () => {
-		const result = await run({verbose: true, debug: true});
+	test('are alone on stdout with --verbose', async () => {
+		const result = await run({verbose: true});
 		expect(result.out).toBe('a.file\nc.file\n');
 		expect(result.err).toContain('Open sync: a.file');
 		expect(result.err).toContain('Nothing changed in: b.file');

@@ -21,11 +21,20 @@ afterEach(() => {
 });
 
 // Run the engine in this process (no CLI involved) with the defaults and the `€` and `§` aliases the CLI would give it.
-// Gives what was sent to stdout (`out`) and stderr (`err`) plus the exit code if the engine wanted to stop the process (`exit`).
+// Gives what was sent to stdout (`out`) and stderr (`err`) plus the exit code the CLI would give (`exit`).
 // Files are handled one at a time unless `voidAsync: false` is given, so the output comes in the same order on every run.
 export async function rr(pattern, replacement, config = {}) {
+	return (await run(pattern, replacement, config)).result;
+}
+
+// The same run as rr(), but gives the status the engine resolves with (or the status of a panic)
+export async function rrStatus(pattern, replacement, config = {}) {
+	return (await run(pattern, replacement, config)).status;
+}
+
+async function run(pattern, replacement, config) {
 	const result = {out: '', err: '', exit: null};
-	const halt = {};
+	let status;
 
 	const spies = [
 		spyOn(process.stdout, 'write').mockImplementation((data) => {
@@ -39,9 +48,9 @@ export async function rr(pattern, replacement, config = {}) {
 			result.err += data;
 			return true;
 		}),
-		spyOn(process, 'exit').mockImplementation((code) => {
-			result.exit = code;
-			throw halt;
+		// Only the CLI acts on the process
+		spyOn(process, 'exit').mockImplementation(() => {
+			throw new Error('The engine must not end the process');
 		}),
 	];
 
@@ -59,19 +68,23 @@ export async function rr(pattern, replacement, config = {}) {
 			...config,
 		};
 		alias(options);
+		status = await engine(options);
 		// Like the CLI, an error gives the exit code 1 when the run is done
-		if (await engine(options)) {
+		if (status.errors.length) {
 			result.exit = 1;
 		}
 	} catch (e) {
-		if (e !== halt) {
+		// Like the CLI, a panic stops the run with the exit code 1
+		if (!e?.panic) {
 			throw e;
 		}
+		status = e.status;
+		result.exit = 1;
 	} finally {
 		spies.forEach((spy) => spy.mockRestore());
 	}
 
-	return result;
+	return {result, status};
 }
 
 // What the content of the files gives by default: a line break after each item, unless it already ends with one

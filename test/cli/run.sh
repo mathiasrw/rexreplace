@@ -329,7 +329,7 @@ reset
 assert		 		"rexreplace 'b' 'x' my.file -V 2>/dev/null"    'my.file'
 
 reset
-assert		 		"rexreplace 'b' 'x' my.file -V 2>&1 >/dev/null | grep -c 'my.file'"    '1'
+assert		 		"rexreplace 'b' 'x' my.file -V 2>&1 >/dev/null | grep -cx 'my.file'"    '0'
 
 reset
 assert		 		"rexreplace 'b' 'x' my.file -q"    ''
