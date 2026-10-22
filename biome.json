@@ -23,7 +23,7 @@
 	},
 	"linter": {
 		"enabled": true,
-		"includes": ["**"],
+		"includes": ["**", "!bench/**", "!test/manual/**"],
 		"rules": {
 			"correctness": {
 				"preset": "recommended"
@@ -63,6 +63,6 @@
 		}
 	],
 	"files": {
-		"includes": ["**", "!**/dist", "!**/bin", "!**/node_modules", "!**/*.html"]
+		"includes": ["**", "!**/dist", "!**/bin", "!**/node_modules"]
 	}
 }
