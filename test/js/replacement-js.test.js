@@ -269,13 +269,10 @@ describe('--replacement-js', () => {
 		});
 	});
 
-	test.todo(
-		'BUG #689: the result of the code is inserted as it is (now $& and $$ in it are expanded)',
-		async () => {
-			expect(await js('o', '"$" + "&"', 'fo')).toBe('f$&');
-			expect(await js('o', '"$" + "$"', 'fo')).toBe('f$$');
-		}
-	);
+	test('the result of the code is inserted as it is, also $& and $$ (#689)', async () => {
+		expect(await js('o', '"$" + "&"', 'fo')).toBe('f$&');
+		expect(await js('o', '"$" + "$"', 'fo')).toBe('f$$');
+	});
 
 	describe('combined', () => {
 		test('with --void-euro there is only the $ to get to the groups', async () => {
