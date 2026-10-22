@@ -563,7 +563,8 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	}
 
 	if (needsByteOrSize && -1 === _bytes) {
-		_bytes = Buffer.from(_text).length;
+		// The size in the encoding of the file, not of the text as utf8
+		_bytes = Buffer.byteLength(_text, _config_rr.encoding);
 		_size = readableSize(_bytes);
 	}
 
