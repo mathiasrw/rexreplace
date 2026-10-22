@@ -194,7 +194,7 @@ describe('--replacement-js', () => {
 			expect(await js('foobar', 'bytes + "|" + size', 'foobar')).toBe('6|6 Bytes');
 		});
 
-		test.todo('BUG #687: size of empty content is "0 Bytes"', async () => {
+		test('size of empty content is "0 Bytes" (#687)', async () => {
 			expect(await inFile('bytes + "|" + size', '')).toBe('0|0 Bytes');
 		});
 

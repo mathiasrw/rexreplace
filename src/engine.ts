@@ -430,7 +430,8 @@ function readableSize(size) {
 	if (1 === size) {
 		return '1 Byte';
 	}
-	const i = Math.floor(Math.log(size) / Math.log(1024));
+	// 0 has no logarithm, so it is counted in bytes
+	const i = size ? Math.floor(Math.log(size) / Math.log(1024)) : 0;
 	return (
 		(size / Math.pow(1024, i)).toFixed(!!i ? 1 : 0) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB'][i]
 	);
