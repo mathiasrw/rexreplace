@@ -212,7 +212,7 @@ echo foo > 'a[1].file'
 echo foo > a1.file
 assert		 		"rexreplace o x 'a[1].file'"    'a[1].file'
 assert		 		"cat a1.file"    'foo'
-assert		 		"rexreplace o y '*.file' -X 'a[1].file' -X 'my.file' -X 'your.file'"    'a1.file'
+assert		 		"rexreplace o y '*.file' -X 'a\\[1\\].file' -X 'my.file' -X 'your.file'"    'a1.file'
 assert		 		"cat 'a[1].file'"    'fxx'
 
 

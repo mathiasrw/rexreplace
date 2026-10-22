@@ -101,19 +101,30 @@ describe('#718 together with globs', () => {
 });
 
 describe('#718 with --exclude-glob', () => {
-	test('a name with glob characters only leaves out that file', async () => {
-		makeFiles('a[1].file', 'a1.file');
-		const config = {includeGlob: ['*.file'], excludeGlob: ['a[1].file']};
-		expect((await rr('o', 'x', config)).out).toBe('a1.file\n');
+	test('it is always a glob, also when it is the name of a file', async () => {
+		// As a glob, `a[1].file` finds both `a[1].file` and `a1.file`
+		makeFiles('a[1].file', 'a1.file', 'b.file');
+		const config = {
+			includeGlob: ['a[1].file', 'a1.file', 'b.file'],
+			excludeGlob: ['a[1].file'],
+		};
+		expect((await rr('o', 'x', config)).out).toBe('b.file\n');
 		expect(content('a[1].file')).toBe('foo');
-		expect(content('a1.file')).toBe('fxx');
+		expect(content('a1.file')).toBe('foo');
 	});
 
-	test('a name leaves out a file that is also given by its name', async () => {
+	test('a name with glob characters is left out when they are escaped', async () => {
 		makeFiles('a[1].file', 'a1.file');
-		const config = {includeGlob: ['a[1].file', 'a1.file'], excludeGlob: ['a[1].file']};
+		const config = {includeGlob: ['*.file'], excludeGlob: ['a\\[1\\].file']};
 		expect((await rr('o', 'x', config)).out).toBe('a1.file\n');
 		expect(content('a[1].file')).toBe('foo');
+	});
+
+	test('all of them are globbed together, so a glob that starts with ! keeps a file', async () => {
+		makeFiles('a.file', 'b.file');
+		const config = {includeGlob: ['*.file'], excludeGlob: ['*.file', '!a.file']};
+		expect((await rr('o', 'x', config)).out).toBe('a.file\n');
+		expect(content('b.file')).toBe('foo');
 	});
 
 	test('a glob leaves out a file given by its name', async () => {
@@ -137,5 +148,16 @@ describe('#718 with --exclude-re', () => {
 		const config = {includeGlob: ['a[1].file', 'a1.file'], excludeRe: ['\\[']};
 		expect((await rr('o', 'x', config)).out).toBe('a1.file\n');
 		expect(content('a[1].file')).toBe('foo');
+	});
+
+	test('it sees the full path with --absolute-path', async () => {
+		makeFiles('a.file');
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], excludeRe: ['^/']})).out).toBe(
+			'a.file\n'
+		);
+		fs.writeFileSync('a.file', 'foo');
+		const config = {includeGlob: ['a.file'], excludeRe: ['^/'], absolutePath: true};
+		expect((await rr('o', 'x', config)).exit).toBe(1);
+		expect(content('a.file')).toBe('foo');
 	});
 });

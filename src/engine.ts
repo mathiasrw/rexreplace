@@ -723,27 +723,28 @@ function localTimeString(dateObj = new Date()) {
 }
 
 function getFilePaths(conf) {
-	let {includeGlob, excludeGlob, excludeRe} = conf;
+	const {includeGlob, excludeGlob, excludeRe} = conf;
 
-	let filesToInclude = findFiles(includeGlob);
+	let files = findFiles(includeGlob);
 
-	if (excludeRe.length) {
-		excludeRe
-			.map((el) => getFinalRegex(getFinalPattern(el, conf), conf))
-			.forEach((re) => {
-				filesToInclude = filesToInclude.filter((el) => !el.match(re));
-			});
+	// With --absolute-path each file is known by its full path from here on. That is what --exclude-re sees, and the name that is printed.
+	if (conf.absolutePath) {
+		files = files.map((file) => path.resolve(file));
 	}
 
+	// --exclude-glob is always globs, also for the name of a file. They are used together, and the files they find are taken away.
 	if (excludeGlob.length) {
-		const filesToExclude = findFiles(excludeGlob).map((file) => path.resolve(file));
-		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(path.resolve(el)));
+		const excluded = new Set(globs.sync(excludeGlob).map((file) => path.resolve(file)));
+		files = files.filter((file) => !excluded.has(path.resolve(file)));
 	}
 
-	filesToInclude.sort();
+	excludeRe
+		.map((el) => getFinalRegex(getFinalPattern(el, conf), conf))
+		.forEach((re) => {
+			files = files.filter((file) => !file.match(re));
+		});
 
-	// With --absolute-path each file is known by its full path from here on, so that is the name that is printed
-	return conf.absolutePath ? filesToInclude.map((file) => path.resolve(file)) : filesToInclude;
+	return files.sort();
 }
 
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.

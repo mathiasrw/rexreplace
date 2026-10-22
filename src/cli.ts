@@ -101,14 +101,14 @@ const yargs = require('yargs')
 	.string('x')
 	.describe(
 		'x',
-		'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.'
+		'Files with a path that matches this regular expression will be excluded from processing. Can be provided multiple times.'
 	)
 	.alias('x', 'exclude-re')
 
 	.string('X')
 	.describe(
 		'X',
-		'Exclude this file, or the files found with this glob. A path to a file only excludes that file. Can be used multiple times.'
+		'Files found with this glob will be excluded from being processed. Can be provided multiple times and will act as one group of globs, meaning you can use ! notation to negate.'
 	)
 	.alias('X', 'exclude-glob')
 
