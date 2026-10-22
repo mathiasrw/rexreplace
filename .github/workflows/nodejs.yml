@@ -3,8 +3,8 @@ name: CI-test
 on:
     push:
         branches: [main]
+    # Every PR, also one that is based on another PR
     pull_request:
-        branches: [main]
 
 jobs:
     build:
