@@ -725,7 +725,7 @@ function localTimeString(dateObj = new Date()) {
 function getFilePaths(conf) {
 	let {includeGlob, excludeGlob, excludeRe} = conf;
 
-	let filesToInclude = globs.sync(includeGlob);
+	let filesToInclude = findFiles(includeGlob);
 
 	if (excludeRe.length) {
 		excludeRe
@@ -736,12 +736,37 @@ function getFilePaths(conf) {
 	}
 
 	if (excludeGlob.length) {
-		const filesToExclude = globs.sync(excludeGlob);
-		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(el));
+		const filesToExclude = findFiles(excludeGlob).map((file) => path.resolve(file));
+		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(path.resolve(el)));
 	}
 
 	filesToInclude.sort();
 
 	// With --absolute-path each file is known by its full path from here on, so that is the name that is printed
 	return conf.absolutePath ? filesToInclude.map((file) => path.resolve(file)) : filesToInclude;
+}
+
+// A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
+// The other paths are globbed together, so a pattern that starts with `!` can take files away from the other patterns.
+function findFiles(paths) {
+	const files = [];
+	const patterns = [];
+	paths.forEach((file) => {
+		if (fs.statSync(file, {throwIfNoEntry: false})?.isFile()) {
+			files.push(file);
+		} else {
+			patterns.push(file);
+		}
+	});
+
+	// A file given by its name and also found by a glob is only handled once
+	const seen = new Set();
+	return files.concat(patterns.length ? globs.sync(patterns) : []).filter((file) => {
+		const fullPath = path.resolve(file);
+		if (seen.has(fullPath)) {
+			return false;
+		}
+		seen.add(fullPath);
+		return true;
+	});
 }
