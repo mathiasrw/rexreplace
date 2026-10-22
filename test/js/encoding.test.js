@@ -126,14 +126,17 @@ describe('--encoding', () => {
 		});
 
 		test('with --replacement-js `bytes` and `size` are the size of the file in its encoding (#688)', async () => {
-			fs.writeFileSync('my.file', latin1());
+			// 1500 times `æ`: one byte each in latin1, but two in utf8 (that would give 3000 and 2.9 KB)
+			fs.writeFileSync('my.file', Buffer.alloc(1500, 0xe6));
 			const config = {
 				includeGlob: ['my.file'],
 				encoding: 'latin1',
 				replacementJs: true,
 				output: true,
 			};
-			expect((await rr('^', 'bytes + ":" + size + ":"', config)).out).toBe('3:3 Bytes:fæo\n');
+			expect((await rr('^', 'bytes + ":" + size + ":"', config)).out).toBe(
+				'1500:1.5 KB:' + 'æ'.repeat(1500) + '\n'
+			);
 		});
 	});
 });
