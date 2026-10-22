@@ -10,6 +10,7 @@ const now = new Date();
 
 import {
 	outputConfig,
+	errorCount,
 	step,
 	debug,
 	chat,
@@ -43,8 +44,13 @@ function validateEncoding(encoding = 'utf8') {
 	}
 }
 
-// Returns a promise that resolves when all files are done
+// Returns a promise that resolves with the number of errors when all files are done
 export async function engine(config: any = {engine: 'default'}) {
+	await run(config);
+	return errorCount();
+}
+
+async function run(config) {
 	outputConfig(config);
 	validateEncoding(config.encoding);
 

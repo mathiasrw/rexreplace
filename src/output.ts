@@ -11,11 +11,17 @@ const lastItemChar = new Map();
 // The char code of the last character printed to each stream
 const lastPrintedChar = new Map();
 
+// The number of errors in this run, so the CLI can give an exit code
+let errors = 0;
+
 export const outputConfig = function (_config) {
 	config = _config;
 	lastItemChar.clear();
 	lastPrintedChar.clear();
+	errors = 0;
 };
+
+export const errorCount = () => errors;
 
 // Everything is printed from here, so the last character of each stream is known
 const write = function (text, stream) {
@@ -105,8 +111,7 @@ export const error = function (msg, data = '') {
 	if (config.halt) {
 		kill();
 	}
-	// The run goes on, but the exit code tells that something went wrong
-	process.exitCode = 1;
+	errors++;
 	return false;
 };
 
