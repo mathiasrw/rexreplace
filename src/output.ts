@@ -11,17 +11,17 @@ const lastItemChar = new Map();
 // The char code of the last character printed to each stream
 const lastPrintedChar = new Map();
 
-// The number of errors in this run, so the CLI can give an exit code
-let errors = 0;
-
 export const outputConfig = function (_config) {
 	config = _config;
 	lastItemChar.clear();
 	lastPrintedChar.clear();
-	errors = 0;
 };
 
-export const errorCount = () => errors;
+// Thrown when the run can not go on. The engine adds the status so far, and the CLI ends the process.
+export class Panic extends Error {
+	panic = true;
+	status = null;
+}
 
 // Everything is printed from here, so the last character of each stream is known
 const write = function (text, stream) {
@@ -79,15 +79,17 @@ const note = function (msg) {
 };
 
 export const warn = function (msg) {
+	config.statusInfo?.warnings.push(msg);
 	// The line break gives an empty line under the warning
 	note(' 🟡 ' + msg + '\n');
 };
 
+// --verbose was asked for, so --quiet does not hide it. --quiet-total wins and hides it too.
+// The status report keeps the same lines in `engine.steps`, so they are there even when they are not printed.
 export const chat = function (msg) {
-	if (config.verbose) {
-		note(msg);
-	} else {
-		debug(msg);
+	config.statusInfo?.engine?.steps.push(msg);
+	if (config.verbose && !config.quietTotal) {
+		write(font.gray(msg) + '\n', process.stderr);
 	}
 };
 
@@ -95,40 +97,23 @@ export const die = function (msg = '', data = '', displayHelp = false) {
 	if (displayHelp && !config.quietTotal) {
 		config.showHelp();
 	}
-	// The line break gives an empty line under the error
-	if (msg && data) {
-		error(' ❌ ' + msg, data + '\n');
-	} else if (msg) {
-		error(' ❌ ' + msg + '\n');
+	const text = msg + (data ? ' ' + data : '');
+	config.statusInfo?.errors.push(text);
+	if (!config.quietTotal) {
+		// The line break gives an empty line under the error
+		write(font.red(' ❌ ' + text) + '\n\n', process.stderr);
 	}
-	kill();
+	throw new Panic(text);
 };
 
 export const error = function (msg, data = '') {
+	const text = msg + (data ? ' ' + data : '');
+	config.statusInfo?.errors.push(text);
 	if (!config.quietTotal) {
-		write(font.red(msg) + (data ? ' ' + data : '') + '\n', process.stderr);
+		write(font.red(text) + '\n', process.stderr);
 	}
 	if (config.halt) {
-		kill();
+		throw new Panic(text);
 	}
-	errors++;
 	return false;
 };
-
-export function debug(data) {
-	if (config.debug) {
-		write(font.gray(JSON.stringify(data, null, 4)) + '\n', process.stderr);
-	}
-}
-
-export function step(data) {
-	if (config.verbose) {
-		debug(data);
-	}
-}
-
-function kill(exitCode = 1) {
-	// What was printed before the stop still ends with a line break
-	printDone();
-	process.exit(exitCode);
-}

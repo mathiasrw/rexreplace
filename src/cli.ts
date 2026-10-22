@@ -15,8 +15,7 @@ let needHelp = 0;
 if (process.argv.length < 4) {
 	if (/^(-v|--?version)$/.test(process.argv[process.argv.length - 1])) {
 		console.log(version);
-		process.exitCode = 0;
-		process.exit();
+		process.exit(0);
 	} else if (/^(-h|--?help)$/.test(process.argv[process.argv.length - 1])) {
 		needHelp = 1;
 	} else {
@@ -97,6 +96,17 @@ const yargs = require('yargs')
 	// Not .choices() as node takes the name of an encoding in any case, like `UTF8`
 	.check((argv) => Buffer.isEncoding(argv.encoding) || `Unknown encoding: ${argv.encoding}`)
 
+	.string('x')
+	.describe(
+		'x',
+		'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.'
+	)
+	.alias('x', 'exclude-re')
+
+	.string('X')
+	.describe('X', 'Exclude files found with this glob. Can be used multiple times.')
+	.alias('X', 'exclude-glob')
+
 	.alias('E', 'engine')
 	.describe(
 		'E',
@@ -176,10 +186,6 @@ const yargs = require('yargs')
 	.alias('H', 'halt')
 	.alias('H', 'bail')
 	.default('H', false)
-
-	.boolean('d')
-	.describe('d', 'Print debug info')
-	.alias('d', 'debug')
 
 	.boolean('€')
 	.describe(
@@ -302,16 +308,6 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
 	)
-	.string('x')
-	.describe(
-		'x',
-		'Exclude files with a path that matches this regular expression. Will follow same regex flags and setup as the main search. Can be used multiple times.'
-	)
-	.alias('x', 'exclude-re')
-
-	.string('X')
-	.describe('X', 'Exclude files found with this glob. Can be used multiple times.')
-	.alias('X', 'exclude-glob')
 
 	/*
         .boolean('N')
@@ -395,7 +391,6 @@ N	n
 O	
 P	
 	r
-S	
 	t
 U	
 W	w
@@ -404,6 +399,25 @@ Z	z
 
 		
     */
+	.boolean('S')
+	.alias('S', 'status-compact')
+	.describe(
+		'S',
+		'As the last thing before ending any execution a status report will be printed as one line of JSON. Will print even in combination with `--quiet-total`. Will incude extra info about the inner workings of the engine in combination with the `--verbose` flag.'
+	)
+
+	.boolean('status')
+	.describe(
+		'status',
+		'Same as `--status-compact`, but always starting with a `\n` followed by pretty printed JSON'
+	)
+
+	.boolean('d')
+	.describe(
+		'd',
+		'Print only the status report, with what went into the engine and what it did. Does not block the output of --output and --output-match.'
+	)
+	.alias('d', 'debug')
 
 	.help('h')
 	.describe('h', 'Display help.')
@@ -411,12 +425,30 @@ Z	z
 
 	.epilog(`Inspiration: .oO(What should 'sed' have been by now?)`);
 
+// The engine resolves with the status of the run, or throws a panic when the run can not go on.
+// The CLI is the only part that acts on the process.
+function printStatus(config, status) {
+	if (config.status) {
+		process.stdout.write('\n' + JSON.stringify(status, null, 2) + '\n');
+	} else if (config.statusCompact) {
+		process.stdout.write(JSON.stringify(status) + '\n');
+	}
+}
+
+function exitOnPanic(config, e) {
+	if (!e?.panic) {
+		throw e;
+	}
+	// A panic from the CLI itself comes before the engine has a status
+	if (e.status) {
+		printStatus(config, e.status);
+	}
+	process.exit(1);
+}
+
 function backOut(exitcode = 1) {
-	const help = yargs.showHelp();
-	const io = exitcode ? console.error : console.log;
-	//io(help);
-	process.exitCode = exitcode;
-	process.exit();
+	yargs.showHelp();
+	process.exit(exitcode);
 }
 
 const lineBreakEscapes = {'\n': '\\n', '\r': '\\r', '\u2028': '\\u2028', '\u2029': '\\u2029'};
@@ -437,111 +469,108 @@ function unescapeString(str = '') {
 	return new Function(`return '${source}'`)();
 }
 
-(function () {
-	if (0 < needHelp) {
-		return backOut(needHelp - 1);
+if (0 < needHelp) {
+	backOut(needHelp - 1);
+}
+
+// All options into one big config object for the rexreplace core
+const config: any = {};
+
+// Use only camelCase full length version of settings so we make sure the core can be documented properly
+Object.keys(yargs.argv).forEach((key) => {
+	if (1 < key.length && key.indexOf('-') < 0) {
+		config[key] = yargs.argv[key];
 	}
+});
 
-	// All options into one big config object for the rexreplace core
-	let config: any = {};
+if (config.jsPipe) {
+	config.replacementJs = config.pipe = true;
+}
 
-	// Use only camelCase full length version of settings so we make sure the core can be documented properly
-	Object.keys(yargs.argv).forEach((key) => {
-		if (1 < key.length && key.indexOf('-') < 0) {
-			config[key] = yargs.argv[key];
-		}
-	});
+if (config.debug) {
+	config.status = config.verbose = config.quietTotal = true;
+}
 
-	if (config.jsPipe) {
-		config.replacementJs = config.pipe = true;
-	}
+outputConfig(config);
 
-	outputConfig(config);
+config.pipedData = null;
 
-	let pipeInUse = false;
-	let pipeData = '';
+config.showHelp = yargs.showHelp;
 
-	config.pipedData = null;
+config.pattern = pattern;
 
-	config.showHelp = yargs.showHelp;
+config.includeGlob = yargs.argv._;
 
-	config.pattern = pattern;
+config.excludeGlob = [].concat(yargs.argv.excludeGlob).filter(Boolean);
 
-	config.includeGlob = yargs.argv._;
+config.excludeRe = [].concat(yargs.argv.excludeRe).filter(Boolean);
 
-	config.excludeGlob = [].concat(yargs.argv.excludeGlob).filter(Boolean);
+config.replacement = replacement;
 
-	config.excludeRe = [].concat(yargs.argv.excludeRe).filter(Boolean);
+// The aliases come before the escape sequences are interpreted, so `§n` gives a line break just like `\n`
+const typed = {...config};
+alias(config);
 
-	config.replacement = replacement;
-
-	// The aliases come before the escape sequences are interpreted, so `§n` gives a line break just like `\n`
-	const typed = {...config};
-	alias(config);
-
-	// The error shows the value as it was typed
-	const unescape = (key, name) => {
+// The error shows the value as it was typed
+const unescape = (key, name) => {
+	try {
+		config[key] = unescapeString(config[key]);
+	} catch (e) {
+		// The engine is not running yet, so the panic is caught here
 		try {
-			config[key] = unescapeString(config[key]);
-		} catch (e) {
 			die('Invalid escape sequence in ' + name + ':', typed[key]);
+		} catch (panic) {
+			exitOnPanic(config, panic);
 		}
-	};
-
-	if (!config.replacementJs) {
-		unescape('replacement', 'replacement');
 	}
+};
 
-	if (config.delimiter) {
-		unescape('delimiter', '--delimiter');
-	}
-	if (config.nameDelimiter) {
-		unescape('nameDelimiter', '--name-delimiter');
-	}
-	if (config.contentDelimiter) {
-		unescape('contentDelimiter', '--content-delimiter');
-	}
+if (!config.replacementJs) {
+	unescape('replacement', 'replacement');
+}
 
-	/*if(Boolean(process.stdout.isTTY)){
-        config.output = true;
-    }*/
+if (config.delimiter) {
+	unescape('delimiter', '--delimiter');
+}
+if (config.nameDelimiter) {
+	unescape('nameDelimiter', '--name-delimiter');
+}
+if (config.contentDelimiter) {
+	unescape('contentDelimiter', '--content-delimiter');
+}
 
-	// The engine tells how many errors there were, and the CLI turns that into the exit code
-	const run = () =>
-		rexreplace.engine(config).then((errors) => {
-			if (errors) {
+// The exit code is only set, so the process ends by itself when all output is written
+const run = () =>
+	rexreplace.engine(config).then(
+		(status) => {
+			printStatus(config, status);
+			if (status.errors.length) {
 				process.exitCode = 1;
 			}
-		});
+		},
+		(e) => exitOnPanic(config, e)
+	);
 
-	// Like grep, stdin is only read when piped data is expected. An open pipe that nobody writes to would make the run wait forever.
-	const pipeDataExpected = !config.includeGlob.length || config.replacementPipe || config.pipe;
+// Like grep, stdin is only read when piped data is expected. An open pipe that nobody writes to would make the run wait forever.
+const pipeDataExpected = !config.includeGlob.length || config.replacementPipe || config.pipe;
 
-	if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
-		return run();
-	}
+if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
+	run();
+} else {
+	// Stays null when nothing comes through the pipe
+	let pipeData = null;
 
 	process.stdin.setEncoding(config.encoding);
 
-	process.stdin.on('readable', () => {
-		let chunk = process.stdin.read();
-
-		if (null !== chunk) {
-			pipeInUse = true;
-			pipeData += chunk;
-			while ((chunk = process.stdin.read())) {
-				pipeData += chunk;
-			}
-		}
+	process.stdin.on('data', (chunk) => {
+		pipeData = (pipeData ?? '') + chunk;
 	});
 
 	process.stdin.on('end', () => {
-		if (pipeInUse) {
-			if (yargs.argv.trimPipe) {
-				pipeData = pipeData.trim();
-			}
-			config.pipedData = pipeData;
+		if (null !== pipeData && config.trimPipe) {
+			pipeData = pipeData.trim();
 		}
+		config.pipedData = pipeData;
 		run();
 	});
-})();
+}

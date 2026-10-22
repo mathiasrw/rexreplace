@@ -95,12 +95,6 @@ describe('#705 the engine returns a promise that resolves when all files are don
 	});
 
 	describe('the promise is rejected when the work can not be done', () => {
-		test('like with an invalid pattern in debug mode', async () => {
-			fs.writeFileSync('my.file', 'foo');
-			const flags = {includeGlob: ['my.file'], debug: true};
-			await expect(rr('(', 'x', flags)).rejects.toThrow('Invalid regular expression');
-		});
-
 		test.each(flows)('like with code that fails with %s', async (name, flags) => {
 			fs.writeFileSync('my.file', 'foo');
 			const config = {includeGlob: ['my.file'], replacementJs: true, ...flags};

@@ -31,18 +31,15 @@ describe('--quiet', () => {
 	});
 
 	describe('combined', () => {
-		test('with --verbose it stays quiet', async () => {
+		test('with --verbose the chatter is still shown, as it was asked for', async () => {
 			fs.writeFileSync('my.file', 'foobar');
-			expect(
-				(await rr('o', 'x', {includeGlob: ['my.file'], quiet: true, verbose: true})).err
-			).toBe('');
-		});
-
-		test('with --debug the debug info is still shown', async () => {
-			fs.writeFileSync('my.file', 'foobar');
-			const result = await rr('o', 'x', {includeGlob: ['my.file'], quiet: true, debug: true});
-			expect(result.err).toContain('Work on content from: my.file');
+			const result = await rr('o', 'x', {
+				includeGlob: ['my.file'],
+				quiet: true,
+				verbose: true,
+			});
 			expect(result.out).toBe('');
+			expect(result.err).toContain('Open sync: my.file');
 		});
 
 		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async (flag) => {

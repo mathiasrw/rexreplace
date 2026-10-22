@@ -1,87 +1,64 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from './helper.js';
+import path from 'path';
+
+// --debug is set by the CLI, so these cases run the CLI itself
+const cli = path.join(import.meta.dir, '../../src/cli.ts');
+
+function runCli(...args) {
+	const {stdout, stderr, exitCode} = Bun.spawnSync([process.execPath, cli, ...args], {
+		stdin: 'ignore',
+	});
+	return {out: stdout.toString(), err: stderr.toString(), exit: exitCode};
+}
 
 describe('--debug', () => {
-	test('prints what happens to a file', async () => {
-		fs.writeFileSync('my.file', 'foobar');
-		const result = await rr('o', 'x', {includeGlob: ['my.file'], debug: true});
-		expect(result.err).toBe(
-			[
-				'"1 files found"',
-				'"Open sync: my.file"',
-				'"Work on content from: my.file"',
-				'"Write new content to: my.file"',
-				'',
-			].join('\n')
-		);
-		expect(result.out).toBe('my.file\n');
-	});
-
-	test('prints what happens to piped data', async () => {
-		const result = await rr('o', 'x', {pipedData: 'foobar', debug: true});
-		expect(result.err).toBe(
-			'"Work on content from: Piped data"\n"Output result from: Piped data"\n'
-		);
-	});
-
-	test('is not the default', async () => {
-		expect((await rr('o', 'x', {pipedData: 'foobar'})).err).toBe('');
-	});
-
-	test('never writes to stdout', async () => {
-		expect((await rr('o', 'x', {pipedData: 'foobar', debug: true})).out).toBe('fxxbar');
-	});
-
-	test('throws the full error for an invalid pattern', async () => {
-		await expect(rr('(', 'x', {pipedData: 'foobar', debug: true})).rejects.toThrow(
-			'Invalid regular expression'
-		);
-	});
-
-	describe('combined', () => {
-		test('with --verbose every step and the config is printed', async () => {
-			const config = {pipedData: 'foobar', debug: true, verbose: true, voidGlobal: true};
-			const result = await rr('o', 'x', config);
-			expect(result.err).toContain('"Get flags"\n"im"');
-			expect(result.err).toContain('"voidGlobal": true');
-			expect(result.out).toBe('fxobar');
-		});
-
-		test('with --quiet and --quiet-total the debug info is still printed', async () => {
-			const config = {pipedData: 'foobar', debug: true};
-			expect((await rr('o', 'x', {...config, quiet: true})).err).toContain(
-				'Work on content from'
-			);
-			expect((await rr('o', 'x', {...config, quietTotal: true})).err).toContain(
-				'Work on content from'
-			);
-		});
-
-		test('with --output', async () => {
+	test.each(['--debug', '-d'])(
+		'%s prints only the status report, with what went into the engine and what it did',
+		(flag) => {
 			fs.writeFileSync('my.file', 'foobar');
-			const result = await rr('o', 'x', {
-				includeGlob: ['my.file'],
-				debug: true,
-				output: true,
+			const result = runCli('o', 'x', 'my.file', flag);
+			expect(result.err).toBe('');
+			expect(result.exit).toBe(0);
+			expect(result.out.startsWith('\n{')).toBe(true);
+			const status = JSON.parse(result.out);
+			expect(status.files).toEqual({searched: ['my.file'], updated: ['my.file']});
+			expect(status.engine.config).toMatchObject({pattern: 'o', replacement: 'x'});
+			expect(status.engine.execution).toEqual({
+				search: 'o',
+				flags: 'gim',
+				replacement: 'x',
+				replacementSrc: null,
 			});
-			expect(result.out).toBe('fxxbar\n');
-			expect(result.err).toContain('"Output result from: my.file"');
-			expect(result.err).not.toContain('Write new content');
-		});
+			expect(status.engine.steps).toEqual([
+				'1 files found',
+				'Open sync: my.file',
+				'Work on content from: my.file',
+				'Write new content to: my.file',
+			]);
+			expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');
+		}
+	);
 
-		test('with a file where nothing is replaced', async () => {
-			fs.writeFileSync('my.file', 'foobar');
-			const result = await rr('nope', 'x', {includeGlob: ['my.file'], debug: true});
-			expect(result.err).toContain('"Nothing changed in: my.file"');
-		});
+	test('still prints the result of --output before the status report', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const result = runCli('o', 'x', 'my.file', '--debug', '--output');
+		expect(result.out.startsWith('fxxbar\n\n{')).toBe(true);
+		expect(JSON.parse(result.out.slice('fxxbar\n'.length)).files.updated).toEqual(['my.file']);
+	});
 
-		test('with --replacement-js and --output-match', async () => {
-			const js = await rr('o', '1+1', {pipedData: 'fo', debug: true, replacementJs: true});
-			expect(js.out).toBe('f2');
-			const match = await rr('o', '_', {pipedData: 'fo', debug: true, outputMatch: true});
-			expect(match.out).toBe('o\n');
-			expect(match.err).toBe('"Work on content from: Piped data"\n');
-		});
+	test('gives the errors in the status report, and the exit code 1', () => {
+		const result = runCli('o', 'x', 'nope.file', '--debug');
+		expect(result.err).toBe('');
+		expect(result.exit).toBe(1);
+		expect(JSON.parse(result.out).errors).toEqual(['0 files found']);
+	});
+
+	test('gives the error of an invalid pattern in the status report', () => {
+		fs.writeFileSync('my.file', 'foobar');
+		const result = runCli('(', 'x', 'my.file', '--debug');
+		expect(result.err).toBe('');
+		expect(result.exit).toBe(1);
+		expect(JSON.parse(result.out).errors[0]).toContain('Invalid regular expression');
 	});
 });

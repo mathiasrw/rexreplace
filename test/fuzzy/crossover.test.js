@@ -14,7 +14,6 @@ const flags = [
 	'quiet',
 	'quietTotal',
 	'halt',
-	'debug',
 	'voidEuro',
 	'voidSection',
 	'output',
