@@ -125,18 +125,15 @@ describe('--encoding', () => {
 			expect((await rr('æ', 'text.length + text', config)).out).toBe('f3fæoo\n');
 		});
 
-		test.todo(
-			'BUG #688: with --replacement-js `bytes` is the size of the file in its encoding',
-			async () => {
-				fs.writeFileSync('my.file', latin1());
-				const config = {
-					includeGlob: ['my.file'],
-					encoding: 'latin1',
-					replacementJs: true,
-					output: true,
-				};
-				expect((await rr('^', 'bytes + ":"', config)).out).toBe('3:fæo');
-			}
-		);
+		test('with --replacement-js `bytes` and `size` are the size of the file in its encoding (#688)', async () => {
+			fs.writeFileSync('my.file', latin1());
+			const config = {
+				includeGlob: ['my.file'],
+				encoding: 'latin1',
+				replacementJs: true,
+				output: true,
+			};
+			expect((await rr('^', 'bytes + ":" + size + ":"', config)).out).toBe('3:3 Bytes:fæo\n');
+		});
 	});
 });
