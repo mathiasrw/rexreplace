@@ -83,18 +83,12 @@ describe('--literal', () => {
 			expect(fs.readFileSync('axfile', 'utf8')).toBe('fxxbar');
 		});
 
-		test.todo(
-			'BUG #686: with --unicode a pattern containing - , # or whitespace is rejected as invalid',
-			async () => {
-				for (const char of '-,# ') {
-					const result = await rr(`a${char}b`, 'x', {
-						pipedData: `a${char}b`,
-						literal: true,
-						unicode: true,
-					});
-					expect(result.exit, char).toBe(null);
-					expect(result.out, char).toBe('x');
-				}
+		test.each([...'-,# []{}()*+?./\\^$|'])(
+			'with --unicode finds a pattern with %j in it (#686)',
+			async (char) => {
+				const pattern = `a${char}b`;
+				const config = {pipedData: pattern, literal: true, unicode: true};
+				expect(await rr(pattern, 'x', config)).toEqual({out: 'x', err: '', exit: null});
 			}
 		);
 	});

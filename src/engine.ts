@@ -14,7 +14,8 @@ const re = {
 	mctime: /[mc]time/,
 	colon: /:/g,
 	capturedGroupRef: /\$\d/,
-	regexSpecialChars: /[-\[\]{}()*+?.,\/\\^$|#\s]/g,
+	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
+	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
 	byteOrSize: /bytes|size/,
 	folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
 };
