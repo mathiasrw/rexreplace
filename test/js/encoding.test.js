@@ -44,9 +44,7 @@ describe('--encoding', () => {
 			encoding: 'latin1',
 			voidIgnoreCase: true,
 		});
-		expect(fs.readFileSync('my.file')).toEqual(
-			Buffer.concat([bytes, Buffer.from('bar'), bytes])
-		);
+		expect(fs.readFileSync('my.file')).toEqual(Buffer.concat([bytes, Buffer.from('bar'), bytes]));
 	});
 
 	// The error message, and not the stack trace from deep inside node, when an encoding is unknown (#690)
@@ -85,7 +83,7 @@ describe('--encoding', () => {
 		test('with --keep-backup the backup has the original bytes', async () => {
 			fs.writeFileSync('my.file', latin1());
 			await rr('æ', 'ø', {includeGlob: ['my.file'], encoding: 'latin1', keepBackup: true});
-			const backup = fs.readdirSync('.').find((name) => name.endsWith('.backup'));
+			const backup = fs.readdirSync('.').find(name => name.endsWith('.backup'));
 			expect(fs.readFileSync(backup)).toEqual(latin1());
 		});
 

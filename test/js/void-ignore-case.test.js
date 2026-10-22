@@ -26,9 +26,7 @@ describe('--void-ignore-case', () => {
 
 	test('applies to backreferences inside the pattern', async () => {
 		expect((await rr('(a)\\1', '_', {pipedData: 'aA aa'})).out).toBe('_ _');
-		expect((await rr('(a)\\1', '_', {pipedData: 'aA aa', voidIgnoreCase: true})).out).toBe(
-			'aA _'
-		);
+		expect((await rr('(a)\\1', '_', {pipedData: 'aA aa', voidIgnoreCase: true})).out).toBe('aA _');
 	});
 
 	describe('combined', () => {

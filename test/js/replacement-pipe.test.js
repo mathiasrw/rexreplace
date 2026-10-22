@@ -40,9 +40,7 @@ describe('--replacement-pipe', () => {
 	test('lets the piped data refer to the match and its groups', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const config = {includeGlob: ['my.file'], replacementPipe: true, output: true};
-		expect((await rr('(o)(b)', '_', {...config, pipedData: '$2$1[$&]'})).out).toBe(
-			'fobo[ob]ar\n'
-		);
+		expect((await rr('(o)(b)', '_', {...config, pipedData: '$2$1[$&]'})).out).toBe('fobo[ob]ar\n');
 	});
 
 	test('can be an empty string to remove what is matched', async () => {

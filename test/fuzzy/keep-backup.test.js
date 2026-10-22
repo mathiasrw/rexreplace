@@ -2,7 +2,7 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr, random} from '../js/helper.js';
 
-const backups = (dir = '.') => fs.readdirSync(dir).filter((name) => name.endsWith('.backup'));
+const backups = (dir = '.') => fs.readdirSync(dir).filter(name => name.endsWith('.backup'));
 
 describe('--keep-backup', () => {
 	test('the backup is always the original and the file is always the result', async () => {
@@ -19,7 +19,7 @@ describe('--keep-backup', () => {
 
 			expect(fs.readFileSync(`run${i}/my.file`, 'utf8'), note).toBe(expected);
 			expect(backups('run' + i), note).toHaveLength(expected === text ? 0 : 1);
-			backups('run' + i).forEach((name) =>
+			backups('run' + i).forEach(name =>
 				expect(fs.readFileSync(`run${i}/${name}`, 'utf8'), note).toBe(text)
 			);
 		}

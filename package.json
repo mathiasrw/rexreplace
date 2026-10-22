@@ -43,8 +43,8 @@
 		"test-speed": "bash test/speed/run.sh",
 		"rebase": "yarn is-git-clean && git fetch && git rebase origin/main",
 		"load-options": "# rr -h | rr 'Options:(.+)Examples:' _ -ms | rr '\\n {26,}|\\n\\n *' ' ' | rr \"'\" '`'  | rr '^  (-.+?), (--[^ ]+) *' '`€1` | **`€2`** ' | rr '(^---- . ----).+?(## Good to know)' '€1 + nl + pipe + nl + nl + €2' readme.md -jspT",
-		"test-format": "prettier . --list-different || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
-		"format": "prettier . --write",
+		"test-format": "biome format || (echo 'Please correct file formatting using `yarn format` and try again.' && exit 1)",
+		"format": "biome format --write",
 		"is-git-clean": "(git diff --quiet --exit-code --cached && git diff --quiet --exit-code) || (echo Please commit or stash changes && exit 1)",
 		"release": "yarn version",
 		"prerelease": "yarn is-git-clean && yarn test && yarn test-minify && yarn load-options",
@@ -60,9 +60,9 @@
 		"sed"
 	],
 	"devDependencies": {
+		"@biomejs/biome": "2.5.15",
 		"@types/node": "24.19.1",
 		"assert": "^2.0.0",
-		"prettier": "3.9.9",
 		"yarn": "1.22.22"
 	},
 	"resolutions": {

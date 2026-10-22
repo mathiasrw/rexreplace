@@ -16,9 +16,7 @@ describe('--dot-all', () => {
 				continue;
 			}
 
-			expect((await rr(pattern, '_', {pipedData: text})).out, note).toBe(
-				text.replace(regex, '_')
-			);
+			expect((await rr(pattern, '_', {pipedData: text})).out, note).toBe(text.replace(regex, '_'));
 			expect((await rr(pattern, '_', {pipedData: text, dotAll: true})).out, note).toBe(
 				text.replace(new RegExp(pattern, 'gims'), '_')
 			);

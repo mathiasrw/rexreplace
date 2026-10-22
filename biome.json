@@ -1,0 +1,68 @@
+{
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "off"
+			}
+		}
+	},
+	"formatter": {
+		"indentStyle": "tab",
+		"lineWidth": 100,
+		"bracketSpacing": false
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"trailingCommas": "es5",
+			"arrowParentheses": "asNeeded"
+		}
+	},
+	"json": {
+		"formatter": {"indentStyle": "tab"}
+	},
+	"linter": {
+		"enabled": true,
+		"includes": ["**"],
+		"rules": {
+			"correctness": {
+				"preset": "recommended"
+			},
+			"suspicious": {
+				"preset": "recommended",
+				"noApproximativeNumericConstant": "off",
+				"noExplicitAny": "off"
+			},
+			"style": {
+				"preset": "recommended",
+				"useTemplate": "off"
+			},
+			"complexity": {
+				"preset": "recommended"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["test/**"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off",
+						"noUnusedFunctionParameters": "off"
+					},
+					"suspicious": {
+						"noImplicitAnyLet": "off"
+					},
+					"complexity": {
+						"useLiteralKeys": "off"
+					}
+				}
+			}
+		}
+	],
+	"files": {
+		"includes": ["**", "!**/dist", "!**/bin", "!**/node_modules", "!**/*.html"]
+	}
+}

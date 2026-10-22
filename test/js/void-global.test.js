@@ -32,12 +32,8 @@ describe('--void-global', () => {
 		});
 
 		test('with the default multiline only the first line is touched', async () => {
-			expect((await rr('^', '> ', {pipedData: 'a\nb\nc', voidGlobal: true})).out).toBe(
-				'> a\nb\nc'
-			);
-			expect((await rr('$', '!', {pipedData: 'a\nb\nc', voidGlobal: true})).out).toBe(
-				'a!\nb\nc'
-			);
+			expect((await rr('^', '> ', {pipedData: 'a\nb\nc', voidGlobal: true})).out).toBe('> a\nb\nc');
+			expect((await rr('$', '!', {pipedData: 'a\nb\nc', voidGlobal: true})).out).toBe('a!\nb\nc');
 		});
 
 		test('with --void-multiline $ is the end of the content', async () => {

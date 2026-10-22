@@ -12,10 +12,9 @@ describe('--void-ignore-case', () => {
 			expect((await rr(pattern, '_', {pipedData: text})).out, note).toBe(
 				text.replace(new RegExp(pattern || '(?:)', 'gim'), '_')
 			);
-			expect(
-				(await rr(pattern, '_', {pipedData: text, voidIgnoreCase: true})).out,
-				note
-			).toBe(text.replace(new RegExp(pattern || '(?:)', 'gm'), '_'));
+			expect((await rr(pattern, '_', {pipedData: text, voidIgnoreCase: true})).out, note).toBe(
+				text.replace(new RegExp(pattern || '(?:)', 'gm'), '_')
+			);
 		}
 	});
 });

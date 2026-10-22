@@ -10,20 +10,18 @@ describe('--encoding', () => {
 			const junk = () =>
 				Buffer.from(
 					Array.from({length: rnd.int(40)}, () => rnd.int(255)).filter(
-						(byte) => !'qQzZ'.includes(String.fromCharCode(byte))
+						byte => !'qQzZ'.includes(String.fromCharCode(byte))
 					)
 				);
 			const [before, after] = [junk(), junk()];
 
 			fs.writeFileSync('my.file', Buffer.concat([before, Buffer.from('qzq'), after]));
 			await rr('qzq', 'ok', {includeGlob: ['my.file'], encoding: 'latin1'});
-			expect(fs.readFileSync('my.file')).toEqual(
-				Buffer.concat([before, Buffer.from('ok'), after])
-			);
+			expect(fs.readFileSync('my.file')).toEqual(Buffer.concat([before, Buffer.from('ok'), after]));
 		}
 	});
 
-	test.each(['utf8', 'utf16le'])('%s keeps any unicode text intact', async (encoding) => {
+	test.each(['utf8', 'utf16le'])('%s keeps any unicode text intact', async encoding => {
 		const rnd = random(2);
 		const alphabet = ['a', 'b', ' ', '\n', 'æ', 'ß', '中', '🦖', '👍🏽', 'é', '​', '€'];
 		for (let i = 0; i < 200; i++) {

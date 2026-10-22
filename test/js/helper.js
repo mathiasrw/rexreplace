@@ -37,14 +37,14 @@ async function run(pattern, replacement, config) {
 	let status;
 
 	const spies = [
-		spyOn(process.stdout, 'write').mockImplementation((data) => {
+		spyOn(process.stdout, 'write').mockImplementation(data => {
 			result.out += data;
 			return true;
 		}),
 		spyOn(console, 'error').mockImplementation((...data) => {
 			result.err += data.join(' ') + '\n';
 		}),
-		spyOn(process.stderr, 'write').mockImplementation((data) => {
+		spyOn(process.stderr, 'write').mockImplementation(data => {
 			result.err += data;
 			return true;
 		}),
@@ -81,7 +81,7 @@ async function run(pattern, replacement, config) {
 		status = e.status;
 		result.exit = 1;
 	} finally {
-		spies.forEach((spy) => spy.mockRestore());
+		spies.forEach(spy => spy.mockRestore());
 	}
 
 	return {result, status};
@@ -89,7 +89,7 @@ async function run(pattern, replacement, config) {
 
 // What the content of the files gives by default: a line break after each item, unless it already ends with one
 export function ended(...items) {
-	return items.map((item) => (item.endsWith('\n') ? item : item + '\n')).join('');
+	return items.map(item => (item.endsWith('\n') ? item : item + '\n')).join('');
 }
 
 // Fuzz tests get new input on every run. Set RR_FUZZ_SEED to repeat a run.
@@ -113,13 +113,11 @@ export function random(id) {
 	};
 
 	const rnd = {
-		int: (max) => Math.floor(next() * (max + 1)),
-		pick: (list) => list[rnd.int(list.length - 1)],
+		int: max => Math.floor(next() * (max + 1)),
+		pick: list => list[rnd.int(list.length - 1)],
 		// String of min to max elements from alphabet (a string or an array of strings)
 		text: (alphabet, min, max) =>
-			Array.from({length: min + rnd.int(max - min)}, () =>
-				rnd.pick(Array.from(alphabet))
-			).join(''),
+			Array.from({length: min + rnd.int(max - min)}, () => rnd.pick(Array.from(alphabet))).join(''),
 	};
 
 	return rnd;

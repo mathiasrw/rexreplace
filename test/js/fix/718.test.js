@@ -4,12 +4,12 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../helper.js';
 
-const content = (name) => fs.readFileSync(name, 'utf8');
+const content = name => fs.readFileSync(name, 'utf8');
 
 describe('#718 a path that is a file is used as it is', () => {
 	test.each(['my (1).file', '(draft).file', '{a,b}.file', '!important.file', 'a+(b).file'])(
 		'%s is found',
-		async (name) => {
+		async name => {
 			fs.writeFileSync(name, 'foo');
 			expect(await rr('o', 'x', {includeGlob: [name]})).toEqual({
 				out: name + '\n',

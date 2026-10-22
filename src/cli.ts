@@ -96,7 +96,7 @@ const yargs = require('yargs')
 	.alias('e', 'encoding')
 	.describe('e', 'Encoding of files/piped data.')
 	// Not .choices() as node takes the name of an encoding in any case, like `UTF8`
-	.check((argv) => Buffer.isEncoding(argv.encoding) || `Unknown encoding: ${argv.encoding}`)
+	.check(argv => Buffer.isEncoding(argv.encoding) || `Unknown encoding: ${argv.encoding}`)
 
 	.string('x')
 	.describe(
@@ -458,7 +458,7 @@ const lineBreakEscapes = {'\n': '\\n', '\r': '\\r', '\u2028': '\\u2028', '\u2029
 // Let javascript interpret escape sequences (like `\n` or `\x41`) by evaluating the replacement as the content of a single quoted string.
 // Anything that would end the string or break the source must be neutralised first: unescaped single quotes, real line breaks and a lone backslash at the end.
 function unescapeString(str = '') {
-	const source = str.replace(/\\(?:\r\n|[\s\S])?|['\n\r\u2028\u2029]/g, (match) => {
+	const source = str.replace(/\\(?:\r\n|[\s\S])?|['\n\r\u2028\u2029]/g, match => {
 		if ('\\' === match) {
 			return '\\\\';
 		}
@@ -479,7 +479,7 @@ if (0 < needHelp) {
 const config: any = {};
 
 // Use only camelCase full length version of settings so we make sure the core can be documented properly
-Object.keys(yargs.argv).forEach((key) => {
+Object.keys(yargs.argv).forEach(key => {
 	if (1 < key.length && key.indexOf('-') < 0) {
 		config[key] = yargs.argv[key];
 	}
@@ -544,13 +544,13 @@ if (config.contentDelimiter) {
 // The exit code is only set, so the process ends by itself when all output is written
 const run = () =>
 	rexreplace.engine(config).then(
-		(status) => {
+		status => {
 			printStatus(config, status);
 			if (status.errors.length) {
 				process.exitCode = 1;
 			}
 		},
-		(e) => exitOnPanic(config, e)
+		e => exitOnPanic(config, e)
 	);
 
 // Like grep, stdin is only read when piped data is expected. An open pipe that nobody writes to would make the run wait forever.
@@ -564,7 +564,7 @@ if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
 
 	process.stdin.setEncoding(config.encoding);
 
-	process.stdin.on('data', (chunk) => {
+	process.stdin.on('data', chunk => {
 		pipeData = (pipeData ?? '') + chunk;
 	});
 

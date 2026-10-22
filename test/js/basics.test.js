@@ -56,9 +56,9 @@ describe('replacement', () => {
 	});
 
 	test('can refer to named groups', async () => {
-		expect(
-			(await rr('(?<first>f)(?<rest>.*)', '$<rest>$<first>', {pipedData: 'foobar'})).out
-		).toBe('oobarf');
+		expect((await rr('(?<first>f)(?<rest>.*)', '$<rest>$<first>', {pipedData: 'foobar'})).out).toBe(
+			'oobarf'
+		);
 	});
 
 	test('can refer to the full match and what is around it', async () => {
@@ -134,7 +134,7 @@ describe('files', () => {
 	});
 
 	test('are handled in alphabetical order', async () => {
-		['c', 'a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', name));
+		['c', 'a', 'b'].forEach(name => fs.writeFileSync(name + '.file', name));
 		expect((await rr('$', '!', {includeGlob: ['c.file', '*.file'], output: true})).out).toBe(
 			'a!\nb!\nc!\n'
 		);
@@ -157,7 +157,7 @@ describe('files', () => {
 	});
 
 	test('can be pinpointed with braces and negation', async () => {
-		['a', 'b', 'c'].forEach((name) => fs.writeFileSync(name + '.file', 'foobar'));
+		['a', 'b', 'c'].forEach(name => fs.writeFileSync(name + '.file', 'foobar'));
 		await rr('foo', '1', {includeGlob: ['{a,b}.file']});
 		await rr('bar', '2', {includeGlob: ['*.file', '!b.file']});
 		expect(fs.readFileSync('a.file', 'utf8')).toBe('12');
@@ -184,15 +184,12 @@ describe('files', () => {
 	// The file names are read by src/cli.ts, so this runs the CLI itself
 	test.each(['2024', '1e3', '0x10'])(
 		'can have a name that reads as a number, like %s (#733)',
-		async (name) => {
+		async name => {
 			await Bun.write(name, 'foobar');
 			const cli = path.join(import.meta.dir, '../../src/cli.ts');
-			const {stdout, stderr, exitCode} = Bun.spawnSync(
-				[process.execPath, cli, 'o', 'x', name],
-				{
-					stdin: 'ignore',
-				}
-			);
+			const {stdout, stderr, exitCode} = Bun.spawnSync([process.execPath, cli, 'o', 'x', name], {
+				stdin: 'ignore',
+			});
 			expect({out: stdout.toString(), err: stderr.toString(), exit: exitCode}).toEqual({
 				out: name + '\n',
 				err: '',

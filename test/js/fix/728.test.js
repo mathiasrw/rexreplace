@@ -44,7 +44,7 @@ describe('#728 the exit code is 1 when a file gives an error', () => {
 		}
 	});
 
-	test.each(['quiet', 'quietTotal'])('also with --%s', async (flag) => {
+	test.each(['quiet', 'quietTotal'])('also with --%s', async flag => {
 		expect((await rr('o', 'x', {...oneUnreadable(), [flag]: true})).exit).toBe(1);
 	});
 });

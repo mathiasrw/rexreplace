@@ -99,8 +99,7 @@ async function run(config) {
 			search: config.regex.source,
 			flags: config.regex.flags,
 			replacement: config.replacementJs || config.outputMatch ? null : config.replacement,
-			replacementSrc:
-				config.replacementJs && !config.outputMatch ? config.replacementOri : null,
+			replacementSrc: config.replacementJs && !config.outputMatch ? config.replacementOri : null,
 		};
 	}
 
@@ -135,7 +134,7 @@ async function run(config) {
 	config.voidAsync =
 		config.voidAsync || 1 === config.files.length || config.output || config.outputMatch;
 
-	const files = config.files.filter((filepath) =>
+	const files = config.files.filter(filepath =>
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
 	);
 
@@ -171,7 +170,7 @@ function openFile(file, config) {
 		chat('Open async: ' + file);
 		return fs.promises
 			.readFile(file, config.encoding)
-			.then((data) => doReplacement(file, config, data), error);
+			.then(data => doReplacement(file, config, data), error);
 	}
 }
 
@@ -449,7 +448,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 		_ = ' ',
 		_nl = '\n';
 
-	// prettier-ignore
+	// biome-ignore format: one variable on each line
 	let _file = '❌',
 		_file_rel = '❌',
 		_dirpath = '❌',
@@ -715,9 +714,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 function localTimeString(dateObj = new Date()) {
 	return `${dateObj.getFullYear()}-${('0' + (dateObj.getMonth() + 1)).slice(-2)}-${(
 		'0' + dateObj.getDate()
-	).slice(
-		-2
-	)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
+	).slice(-2)} ${('0' + dateObj.getHours()).slice(-2)}:${('0' + dateObj.getMinutes()).slice(-2)}:${(
 		'0' + dateObj.getSeconds()
 	).slice(-2)}.${('00' + dateObj.getMilliseconds()).slice(-3)}`;
 }
@@ -729,21 +726,21 @@ function getFilePaths(conf) {
 
 	if (excludeRe.length) {
 		excludeRe
-			.map((el) => getFinalRegex(getFinalPattern(el, conf), conf))
-			.forEach((re) => {
-				filesToInclude = filesToInclude.filter((el) => !el.match(re));
+			.map(el => getFinalRegex(getFinalPattern(el, conf), conf))
+			.forEach(re => {
+				filesToInclude = filesToInclude.filter(el => !el.match(re));
 			});
 	}
 
 	if (excludeGlob.length) {
-		const filesToExclude = findFiles(excludeGlob).map((file) => path.resolve(file));
-		filesToInclude = filesToInclude.filter((el) => !filesToExclude.includes(path.resolve(el)));
+		const filesToExclude = findFiles(excludeGlob).map(file => path.resolve(file));
+		filesToInclude = filesToInclude.filter(el => !filesToExclude.includes(path.resolve(el)));
 	}
 
 	filesToInclude.sort();
 
 	// With --absolute-path each file is known by its full path from here on, so that is the name that is printed
-	return conf.absolutePath ? filesToInclude.map((file) => path.resolve(file)) : filesToInclude;
+	return conf.absolutePath ? filesToInclude.map(file => path.resolve(file)) : filesToInclude;
 }
 
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
@@ -751,7 +748,7 @@ function getFilePaths(conf) {
 function findFiles(paths) {
 	const files = [];
 	const patterns = [];
-	paths.forEach((file) => {
+	paths.forEach(file => {
 		if (fs.statSync(file, {throwIfNoEntry: false})?.isFile()) {
 			files.push(file);
 		} else {
@@ -761,7 +758,7 @@ function findFiles(paths) {
 
 	// A file given by its name and also found by a glob is only handled once
 	const seen = new Set();
-	return files.concat(patterns.length ? globs.sync(patterns) : []).filter((file) => {
+	return files.concat(patterns.length ? globs.sync(patterns) : []).filter(file => {
 		const fullPath = path.resolve(file);
 		if (seen.has(fullPath)) {
 			return false;

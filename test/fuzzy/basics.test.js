@@ -34,15 +34,14 @@ describe('basics', () => {
 			const expected = (await rr(pattern, replacement, {pipedData: text})).out;
 
 			fs.writeFileSync('my.file', text);
-			expect(
-				(await rr(pattern, replacement, {includeGlob: ['my.file'], output: true})).out
-			).toBe(ended(expected));
+			expect((await rr(pattern, replacement, {includeGlob: ['my.file'], output: true})).out).toBe(
+				ended(expected)
+			);
 
 			await rr(pattern, replacement, {includeGlob: ['my.file']});
-			expect(
-				fs.readFileSync('my.file', 'utf8'),
-				JSON.stringify({pattern, replacement, text})
-			).toBe(expected);
+			expect(fs.readFileSync('my.file', 'utf8'), JSON.stringify({pattern, replacement, text})).toBe(
+				expected
+			);
 		}
 	});
 });

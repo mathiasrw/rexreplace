@@ -39,7 +39,7 @@ describe('#703 the names of affected files', () => {
 		expect(result.err).toContain('Nothing changed in: b.file');
 	});
 
-	test.each(['quiet', 'quietTotal'])('are not printed with --%s', async (flag) => {
+	test.each(['quiet', 'quietTotal'])('are not printed with --%s', async flag => {
 		expect(await run({[flag]: true})).toEqual({out: '', err: '', exit: null});
 		expect(await Bun.file('c.file').text()).toBe('fxx');
 	});
@@ -68,9 +68,7 @@ describe('#703 the names of affected files', () => {
 
 		test('keeps a name with a line break in one piece', async () => {
 			await Bun.write('my\n.file', 'foo');
-			expect((await rr('o', 'x', {includeGlob: ['*.file'], null: true})).out).toBe(
-				'my\n.file\0'
-			);
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], null: true})).out).toBe('my\n.file\0');
 		});
 	});
 
@@ -89,12 +87,8 @@ describe('#703 the names of affected files', () => {
 
 		test('has the € and § aliases like the replacement', async () => {
 			expect((await run({nameDelimiter: '€§'})).out).toBe('a.file$\\c.file$\\');
-			expect((await run({nameDelimiter: '€§', voidEuro: true})).out).toBe(
-				'a.file€\\c.file€\\'
-			);
-			expect((await run({nameDelimiter: '€§', voidSection: true})).out).toBe(
-				'a.file$§c.file$§'
-			);
+			expect((await run({nameDelimiter: '€§', voidEuro: true})).out).toBe('a.file€\\c.file€\\');
+			expect((await run({nameDelimiter: '€§', voidSection: true})).out).toBe('a.file$§c.file$§');
 		});
 	});
 
@@ -219,9 +213,7 @@ describe('#703 the names of affected files', () => {
 
 		test('leaves piped data as it is by default', async () => {
 			expect((await rr('o', 'x', {pipedData: 'foo'})).out).toBe('fxx');
-			expect((await rr('o', 'x', {pipedData: 'foo', contentDelimiter: ', '})).out).toBe(
-				'fxx'
-			);
+			expect((await rr('o', 'x', {pipedData: 'foo', contentDelimiter: ', '})).out).toBe('fxx');
 		});
 
 		test('is put after the last match, from a file or a pipe', async () => {
@@ -292,9 +284,7 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('adds nothing when nothing is printed', async () => {
-			expect(
-				(await rr('nope', 'x', {pipedData: 'foo', outputMatch: true, nl: true})).out
-			).toBe('');
+			expect((await rr('nope', 'x', {pipedData: 'foo', outputMatch: true, nl: true})).out).toBe('');
 			await Bun.write('a.file', 'foo');
 			expect((await rr('nope', 'x', {includeGlob: ['a.file'], nl: true})).out).toBe('');
 		});
@@ -329,9 +319,7 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('the most specific delimiter wins', async () => {
-			expect((await run({output: true, delimiter: ', ', null: true})).out).toBe(
-				'fxx, bar, fxx, '
-			);
+			expect((await run({output: true, delimiter: ', ', null: true})).out).toBe('fxx, bar, fxx, ');
 			expect(
 				await run({
 					output: true,
@@ -362,7 +350,7 @@ describe('#703 the names of affected files', () => {
 			expect((await run({[flag]: true})).err).toBe((await run()).out);
 		});
 
-		test.each(['quiet', 'quietTotal'])('are not printed with --%s', async (quiet) => {
+		test.each(['quiet', 'quietTotal'])('are not printed with --%s', async quiet => {
 			expect(await run({[flag]: true, [quiet]: true})).toEqual({out, err: '', exit: null});
 		});
 
@@ -389,9 +377,7 @@ describe('#703 the names of affected files', () => {
 			const file = path.resolve('other', 'my.file');
 			await Bun.write(file, 'foo');
 			process.chdir('work');
-			expect((await rr('o', 'x', {includeGlob: [file], absolutePath: true})).out).toBe(
-				file + '\n'
-			);
+			expect((await rr('o', 'x', {includeGlob: [file], absolutePath: true})).out).toBe(file + '\n');
 			expect(await Bun.file(file).text()).toBe('fxx');
 		});
 

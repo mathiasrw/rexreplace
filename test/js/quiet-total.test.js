@@ -13,9 +13,9 @@ describe('--quiet-total', () => {
 	test('does not display errors', async () => {
 		expect((await rr('(', 'x', {pipedData: 'foobar', quietTotal: true})).err).toBe('');
 		expect((await rr('o', 'x', {includeGlob: ['nope.file'], quietTotal: true})).err).toBe('');
-		expect(
-			(await rr('o', 'x', {pipedData: 'foobar', engine: 'nope', quietTotal: true})).err
-		).toBe('');
+		expect((await rr('o', 'x', {pipedData: 'foobar', engine: 'nope', quietTotal: true})).err).toBe(
+			''
+		);
 	});
 
 	test('is not the default', async () => {
@@ -36,7 +36,7 @@ describe('--quiet-total', () => {
 			expect(await rr('o', 'x', config)).toEqual({out: '', err: '', exit: null});
 		});
 
-		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async (flag) => {
+		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async flag => {
 			fs.writeFileSync('my.file', 'foobar');
 			const result = await rr('o', 'x', {
 				includeGlob: ['my.file'],
