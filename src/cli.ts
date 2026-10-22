@@ -26,6 +26,8 @@ if (process.argv.length < 4) {
 }
 
 const yargs = require('yargs')
+	// A file can be named with only digits, like `2024`, so each glob is kept as the string that was given
+	.parserConfiguration({'parse-positional-numbers': false})
 	.strict()
 
 	.usage(
