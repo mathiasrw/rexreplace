@@ -95,7 +95,7 @@ reset
 echo assert                "rexreplace foo xxx my.file -q" ""
 # Error run (file not found) should still print error to stderr (tested indirectly via assert_raises failure message)
 # We can't easily assert stderr content with aserta, but we can check it doesn't suppress errors needed for failure
-echo assert_raises         "rexreplace foo xxx non_existent_file.txt -q" 1 # Exit code should still be non-zero
+assert_raises         "rexreplace foo xxx non_existent_file.txt -q" 1 # Exit code should still be non-zero
 
 # -Q, --quiet-total
 reset
@@ -103,7 +103,7 @@ reset
 echo assert                "rexreplace foo xxx my.file -Q" ""
 # Error run should have NO output at all (stdout or stderr)
 # Check exit code is still non-zero, but no output should be printed by aserta on failure if rexreplace is truly quiet
-echo assert_raises         "rexreplace foo xxx non_existent_file.txt -Q" 1
+assert_raises         "rexreplace foo xxx non_existent_file.txt -Q" 1
 
 # -H, --halt
 reset

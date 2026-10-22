@@ -81,7 +81,7 @@ describe('#705 the engine returns a promise that resolves when all files are don
 			const result = await rr('o', 'x', {includeGlob: ['*.file'], ...flags});
 
 			expect(result.err).toContain('ENAMETOOLONG');
-			expect(result.exit).toBe(null);
+			expect(result.exit).toBe(1);
 			expect(content(['a.file', tooLong, 'c.file'])).toEqual(['fxx', 'foo', 'fxx']);
 			expect(fs.readdirSync('.')).toHaveLength(3);
 		});

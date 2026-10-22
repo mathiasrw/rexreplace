@@ -15,7 +15,7 @@ describe('#683 --exclude-re follows the regex flags of the main search', () => {
 	test('the example from the issue', async () => {
 		fs.writeFileSync('a.file', 'x\n');
 		const config = {includeGlob: ['a.file'], excludeRe: ['A'], output: true};
-		expect(await rr('x', 'y', config)).toEqual({out: '', err: '0 files found\n', exit: null});
+		expect(await rr('x', 'y', config)).toEqual({out: '', err: '0 files found\n', exit: 1});
 		expect((await rr('x', 'y', {...config, voidIgnoreCase: true})).out).toBe('y\n');
 	});
 

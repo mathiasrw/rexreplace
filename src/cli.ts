@@ -506,11 +506,19 @@ function unescapeString(str = '') {
         config.output = true;
     }*/
 
+	// The engine tells how many errors there were, and the CLI turns that into the exit code
+	const run = () =>
+		rexreplace.engine(config).then((errors) => {
+			if (errors) {
+				process.exitCode = 1;
+			}
+		});
+
 	// Like grep, stdin is only read when piped data is expected. An open pipe that nobody writes to would make the run wait forever.
 	const pipeDataExpected = !config.includeGlob.length || config.replacementPipe || config.pipe;
 
 	if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
-		return rexreplace.engine(config);
+		return run();
 	}
 
 	process.stdin.setEncoding(config.encoding);
@@ -534,6 +542,6 @@ function unescapeString(str = '') {
 			}
 			config.pipedData = pipeData;
 		}
-		rexreplace.engine(config);
+		run();
 	});
 })();

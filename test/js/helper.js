@@ -59,7 +59,10 @@ export async function rr(pattern, replacement, config = {}) {
 			...config,
 		};
 		alias(options);
-		await engine(options);
+		// Like the CLI, an error gives the exit code 1 when the run is done
+		if (await engine(options)) {
+			result.exit = 1;
+		}
 	} catch (e) {
 		if (e !== halt) {
 			throw e;
