@@ -451,6 +451,13 @@ assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 
 assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
 assert		 		"cat my.file"    'foobar'
 
+# --simulate: the files that would be changed are named, but nothing is written (#710)
+reset
+assert		 		"rexreplace 'oo' 'x' my.file your.file --simulate"    'my.file'
+assert		 		"cat my.file"    'foobar'
+assert		 		"rexreplace 'b' 'x' my.file -S"    'my.file'
+assert		 		"cat my.file"    'foobar'
+
 # --full-path
 reset
 assert		 		"rexreplace 'b' 'x' my.file -f"    "$(pwd -P)/my.file"

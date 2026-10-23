@@ -233,6 +233,13 @@ const yargs = require('yargs')
 	.describe('b', 'Keep a backup file of the original content.')
 	.alias('b', 'keep-backup')
 
+	.boolean('S')
+	.describe(
+		'S',
+		'Do everything but write the files. The names of the files that would be changed are printed as usual, and no backup is made.'
+	)
+	.alias('S', 'simulate')
+
 	.boolean('m')
 	.describe(
 		'm',
@@ -384,7 +391,7 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
 
 Upper Case Free	Lower Case Free
 	a
-C	c
+C	
 D	
 F	
 	g
@@ -403,10 +410,10 @@ Z	z
 
 		
     */
-	.boolean('S')
-	.alias('S', 'status-compact')
+	.boolean('c')
+	.alias('c', 'status-compact')
 	.describe(
-		'S',
+		'c',
 		'As the last thing before ending any execution a status report will be printed as one line of JSON. Will print even in combination with `--quiet-total`. Will incude extra info about the inner workings of the engine in combination with the `--verbose` flag.'
 	)
 
