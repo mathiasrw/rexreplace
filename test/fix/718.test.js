@@ -51,7 +51,7 @@ describe('#718 together with globs', () => {
 	test('a path that is not a file is still a glob', async () => {
 		fs.writeFileSync('a[1].file', 'foo');
 		fs.writeFileSync('a1.file', 'foo');
-		expect((await rr('o', 'x', {includeGlob: ['*.file']})).out).toBe('a1.file\na[1].file\n');
+		expect((await rr('o', 'x', {includeGlob: ['*.file']})).out).toBe('a[1].file\na1.file\n');
 	});
 
 	test('a path to a folder is not a file, so it is still a glob', async () => {

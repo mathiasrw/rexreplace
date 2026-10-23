@@ -10,7 +10,7 @@ describe('#716 the globs are case-insensitive like the search', () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.writeFileSync('B.FILE', 'foo');
 		expect(await rr('o', 'x', {includeGlob: ['*.file']})).toEqual({
-			out: 'B.FILE\na.file\n',
+			out: 'a.file\nB.FILE\n',
 			err: '',
 			exit: null,
 		});
@@ -32,6 +32,6 @@ describe('#716 the globs are case-insensitive like the search', () => {
 		expect((await rr('o', 'x', config)).out).toBe('a.file\n');
 		fs.writeFileSync('a.file', 'foo');
 		const excluded = {includeGlob: ['*.*'], excludeGlob: ['b.*'], voidIgnoreCase: true};
-		expect((await rr('o', 'x', excluded)).out).toBe('B.FILE\na.file\n');
+		expect((await rr('o', 'x', excluded)).out).toBe('a.file\nB.FILE\n');
 	});
 });

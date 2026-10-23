@@ -265,6 +265,21 @@ const yargs = require('yargs')
 	)
 	.alias('S', 'simulate')
 
+	.string('sort')
+	.describe(
+		'sort',
+		'Process the files one at a time, in a sorted order. The order is chosen from 6 values: `natural` (numbers compared as numbers, and case ignored), `ascii` (alphabetic), `modified`, `created`, `size`, or `none` (the order of the input: the files given first, and then the files found by globs). Files that sort the same (like the same size) are ordered by ascii sort. Without --sort the files are processed asynchronously, so the order of the output can not be guaranteed, but the processing is started in natural order.'
+	)
+	// Any case, and true and yes are natural
+	.coerce('sort', value => {
+		const name = String(value).toLowerCase();
+		return 'true' === name || 'yes' === name ? 'natural' : name;
+	})
+	.choices('sort', ['natural', 'ascii', 'modified', 'created', 'size', 'none'])
+
+	.boolean('sort-reverse')
+	.describe('sort-reverse', 'Turn the order of the files around.')
+
 	// Checks for a CI step. When one is not met, the exit code is 1.
 	.boolean('F')
 	.describe('F', 'Check that at least one file is found. The exit code is 1 if not.')
