@@ -70,7 +70,7 @@ const yargs = require('yargs')
 	.alias('L', 'literal')
 
 	.boolean('I')
-	.describe('I', 'Void case insensitive search pattern.')
+	.describe('I', 'Void case insensitive search. Applies to the pattern and to all globs.')
 	.alias('I', 'void-ignore-case')
 
 	.boolean('G')
