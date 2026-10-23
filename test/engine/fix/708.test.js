@@ -7,16 +7,10 @@ import {rr} from '../../helper.js';
 
 const workers = Math.max(16, os.availableParallelism() * 2);
 
-// Make `count` files with the content `foo` and give their names
-async function makeFiles(count) {
-	const names = Array.from({length: count}, (_, i) => `file-${i}.txt`);
-	await Promise.all(names.map(name => Bun.write(name, 'foo')));
-	return names;
-}
-
 describe('#708 the number of files in work at the same time is limited', () => {
 	test('all files are changed when there are more files than workers', async () => {
-		const names = await makeFiles(workers * 3);
+		const names = Array.from({length: workers * 3}, (_, i) => `file-${i}.txt`);
+		await Promise.all(names.map(name => Bun.write(name, 'foo')));
 		const result = await rr('o', 'x', {includeGlob: ['*.txt'], voidAsync: false});
 		expect(result.err).toBe('');
 		expect(result.out.split('\n').sort()).toEqual(['', ...names].sort());
@@ -26,7 +20,8 @@ describe('#708 the number of files in work at the same time is limited', () => {
 	});
 
 	test(`at most ${workers} files are read at the same time`, async () => {
-		await makeFiles(workers * 3);
+		const names = Array.from({length: workers * 3}, (_, i) => `file-${i}.txt`);
+		await Promise.all(names.map(name => Bun.write(name, 'foo')));
 		const readFile = fs.promises.readFile;
 		let reading = 0;
 		let mostReading = 0;
@@ -50,7 +45,8 @@ describe('#708 the number of files in work at the same time is limited', () => {
 	});
 
 	test('the number of CPU cores is not asked for with 16 files or fewer', async () => {
-		await makeFiles(16);
+		const names = Array.from({length: 16}, (_, i) => `file-${i}.txt`);
+		await Promise.all(names.map(name => Bun.write(name, 'foo')));
 		const spy = spyOn(os, 'availableParallelism');
 		try {
 			await rr('o', 'x', {includeGlob: ['*.txt'], voidAsync: false});
