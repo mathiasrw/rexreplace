@@ -39,10 +39,12 @@ describe('--debug', () => {
 	});
 
 	test('gives the errors in the status report, and the exit code 1', async () => {
-		const result = await sh($`bun ${cli} o x nope.file --debug`);
+		fs.writeFileSync('a.file', 'foo');
+		fs.chmodSync('a.file', 0);
+		const result = await sh($`bun ${cli} o x a.file --debug`);
 		expect(result.err).toBe('');
 		expect(result.exit).toBe(1);
-		expect(JSON.parse(result.out).errors).toEqual(['0 files found']);
+		expect(JSON.parse(result.out).errors[0]).toContain('EACCES');
 	});
 
 	test('gives the error of an invalid pattern in the status report', async () => {

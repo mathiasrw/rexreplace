@@ -13,10 +13,10 @@ describe('#682 --quiet still displays errors', () => {
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
-	test('no files found', async () => {
-		expect((await rr('o', 'x', {includeGlob: ['nope.file'], quiet: true})).err).toContain(
-			'0 files found'
-		);
+	test('a file that can not be read', async () => {
+		fs.writeFileSync('a.file', 'foo');
+		fs.chmodSync('a.file', 0);
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], quiet: true})).err).toContain('EACCES');
 	});
 
 	test('piped data with invalid regular expression', async () => {

@@ -311,6 +311,8 @@ Files identified for potential processing are identified by:
 
 - Piped data that is printed is left as it came in, so no delimiter is added after the end of it. Matches from `--output-match` are different: they are new output, so they get the delimiter whether they come from a file or from piped data. 
 
+- Finding no files is a warning (🟡) and not an error, so the exit code is 0. Nothing went wrong, there was just nothing to do. Errors start with ❌ and give the exit code 1.
+
 
 
 ### Limitations

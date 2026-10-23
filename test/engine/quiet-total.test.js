@@ -54,8 +54,10 @@ describe('--quiet-total', () => {
 		});
 
 		test('with --halt it stops in silence', async () => {
+			fs.writeFileSync('a.file', 'foo');
+			fs.chmodSync('a.file', 0);
 			const result = await rr('o', 'x', {
-				includeGlob: ['nope.file'],
+				includeGlob: ['a.file'],
 				quietTotal: true,
 				halt: true,
 			});

@@ -176,13 +176,13 @@ describe('files', () => {
 		fs.mkdirSync('dir.file');
 		fs.writeFileSync('.hidden.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['*']});
-		expect(result.err).toBe('0 files found\n');
+		expect(result.err).toBe(' 🟡 0 files found\n\n');
 		expect(fs.readFileSync('.hidden.file', 'utf8')).toBe('foobar');
 	});
 
 	test('are reported if none are found', async () => {
 		const result = await rr('o', 'x', {includeGlob: ['nope.file']});
-		expect(result.err).toBe('0 files found\n');
+		expect(result.err).toBe(' 🟡 0 files found\n\n');
 		expect(result.out).toBe('');
 	});
 });
@@ -217,6 +217,6 @@ describe('piped data', () => {
 	});
 
 	test('leaves nothing to do if neither data nor files are given', async () => {
-		expect(await rr('o', 'x')).toEqual({out: '', err: '0 files found\n', exit: 1});
+		expect(await rr('o', 'x')).toEqual({out: '', err: ' 🟡 0 files found\n\n', exit: null});
 	});
 });

@@ -54,10 +54,15 @@ assert_failure		"rexreplace my-vile"
 assert_failure		"rexreplace o-ho"
 
 
-# --halt (or --bail) stops at the first error
+# --halt (or --bail) stops at the first error, here that my.file can not be read
 reset
-assert_raises		"rexreplace o x nope.file --halt"    1
-assert_raises		"rexreplace o x nope.file --bail"    1
+chmod 000 my.file
+assert_raises		"rexreplace b x my.file your.file --halt"    1
+assert_raises		"rexreplace b x my.file your.file --bail"    1
+assert			"cat your.file"    "abc123"
+
+# Finding no files is a warning and not an error
+assert_raises		"rexreplace o x nope.file"    0
 
 
 # --output prints the result and leaves the file as it is

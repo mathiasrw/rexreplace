@@ -136,8 +136,9 @@ async function run(config) {
 
 	config.files = getFilePaths(config);
 
+	// Nothing to do is not an error, so a glob or a pipe that gives no files does not stop a script
 	if (!config.files.length) {
-		return error(config.files.length + ' files found');
+		return warn('0 files found');
 	}
 
 	chat(config.files.length + ' files found');

@@ -65,8 +65,8 @@ describe('#711 --glob-pipe', () => {
 	test('with nothing piped in and no arguments there are no files', async () => {
 		expect(await rr('o', 'x', {pipedData: '', globPipe: true})).toEqual({
 			out: '',
-			err: '0 files found\n',
-			exit: 1,
+			err: ' 🟡 0 files found\n\n',
+			exit: null,
 		});
 	});
 

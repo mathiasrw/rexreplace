@@ -25,9 +25,9 @@ describe('--quiet', () => {
 		expect((await rr('(', 'x', {pipedData: 'foobar', quiet: true})).err).toContain(
 			'Invalid regular expression'
 		);
-		expect((await rr('o', 'x', {includeGlob: ['nope.file'], quiet: true})).err).toContain(
-			'0 files found'
-		);
+		fs.writeFileSync('a.file', 'foo');
+		fs.chmodSync('a.file', 0);
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], quiet: true})).err).toContain('EACCES');
 	});
 
 	describe('combined', () => {

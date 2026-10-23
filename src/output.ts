@@ -110,7 +110,8 @@ export const error = function (msg, data = '') {
 	const text = msg + (data ? ' ' + data : '');
 	config.statusInfo?.errors.push(text);
 	if (!config.quietTotal) {
-		write(font.red(text) + '\n', process.stderr);
+		// The line break gives an empty line under the error
+		write(font.red(' ❌ ' + text) + '\n\n', process.stderr);
 	}
 	if (config.halt) {
 		throw new Panic(text);

@@ -34,8 +34,10 @@ describe('#742 the CLI', () => {
 	);
 
 	test('sets the exit code to 1 when a file gives an error, and prints the status report', async () => {
-		const result = await sh($`bun ${cli} o x nope.file --status-compact --quiet-total`);
-		expect(JSON.parse(result.out).errors).toEqual(['0 files found']);
+		fs.writeFileSync('a.file', 'foo');
+		fs.chmodSync('a.file', 0);
+		const result = await sh($`bun ${cli} o x a.file --status-compact --quiet-total`);
+		expect(JSON.parse(result.out).errors[0]).toContain('EACCES');
 		expect(result.exit).toBe(1);
 	});
 

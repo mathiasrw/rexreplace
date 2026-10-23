@@ -33,14 +33,18 @@ describe('--halt', () => {
 	});
 
 	test('stops with a number as exit code', async () => {
-		expect((await rr('o', 'x', {includeGlob: ['nope.file'], halt: true})).exit).toBe(1);
+		fs.writeFileSync('a.file', 'foo');
+		fs.chmodSync('a.file', 0);
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], halt: true})).exit).toBe(1);
 		expect((await rr('(', 'x', {pipedData: 'foobar', halt: true})).exit).toBe(1);
 	});
 
 	describe('combined', () => {
 		test.each(['quiet', 'quietTotal'])('with --%s it still stops', async flag => {
+			fs.writeFileSync('a.file', 'foo');
+			fs.chmodSync('a.file', 0);
 			const result = await rr('o', 'x', {
-				includeGlob: ['nope.file'],
+				includeGlob: ['a.file'],
 				halt: true,
 				[flag]: true,
 			});
@@ -62,10 +66,14 @@ describe('--halt', () => {
 			expect(await rr('f', 'x', config)).toEqual({out: 'Foo xoo', err: '', exit: null});
 		});
 
-		test('with --exclude-glob leaving no files', async () => {
+		test('with --exclude-glob leaving no files it does not stop, as that is a warning', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {includeGlob: ['my.file'], excludeGlob: ['*.file'], halt: true};
-			expect((await rr('o', 'x', config)).exit).not.toBe(null);
+			expect(await rr('o', 'x', config)).toEqual({
+				out: '',
+				err: ' 🟡 0 files found\n\n',
+				exit: null,
+			});
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 		});
 	});
