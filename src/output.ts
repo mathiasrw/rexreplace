@@ -1,3 +1,4 @@
+// Test of stacked PRs (devops/stack/b, commit 1). Not to be merged.
 let font: any = {};
 font.red = font.green = font.gray = (str) => str;
 // check for node version supporting chalk - if so overwrite `font`
