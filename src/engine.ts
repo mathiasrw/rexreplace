@@ -724,8 +724,8 @@ function getFilePaths(conf) {
 
 	let files = findFiles(includeGlob);
 
-	// With --absolute-path each file is known by its full path from here on. That is what --exclude-re sees, and the name that is printed.
-	if (conf.absolutePath) {
+	// With --full-path each file is known by its full path from here on. That is what --exclude-re sees, and the name that is printed.
+	if (conf.fullPath) {
 		files = files.map(file => path.resolve(file));
 	}
 

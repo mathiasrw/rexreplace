@@ -354,18 +354,18 @@ describe('#703 the names of affected files', () => {
 			expect(await run({[flag]: true, [quiet]: true})).toEqual({out, err: '', exit: null});
 		});
 
-		test('follow --null, --name-delimiter and --absolute-path', async () => {
+		test('follow --null, --name-delimiter and --full-path', async () => {
 			expect((await run({[flag]: true, null: true})).err).toBe('a.file\0c.file\0');
 			expect((await run({[flag]: true, nameDelimiter: ', '})).err).toBe('a.file, c.file, ');
-			expect((await run({[flag]: true, absolutePath: true})).err).toBe(
+			expect((await run({[flag]: true, fullPath: true})).err).toBe(
 				path.resolve('a.file') + '\n' + path.resolve('c.file') + '\n'
 			);
 		});
 	});
 
-	describe('--absolute-path', () => {
+	describe('--full-path', () => {
 		test('prints the full path of each name', async () => {
-			expect(await run({absolutePath: true})).toEqual({
+			expect(await run({fullPath: true})).toEqual({
 				out: path.resolve('a.file') + '\n' + path.resolve('c.file') + '\n',
 				err: '',
 				exit: null,
@@ -377,7 +377,7 @@ describe('#703 the names of affected files', () => {
 			const file = path.resolve('other', 'my.file');
 			await Bun.write(file, 'foo');
 			process.chdir('work');
-			expect((await rr('o', 'x', {includeGlob: [file], absolutePath: true})).out).toBe(file + '\n');
+			expect((await rr('o', 'x', {includeGlob: [file], fullPath: true})).out).toBe(file + '\n');
 			expect(await Bun.file(file).text()).toBe('fxx');
 		});
 
@@ -385,7 +385,7 @@ describe('#703 the names of affected files', () => {
 			['null', {null: true}, '\0', '\0'],
 			['name-delimiter', {nameDelimiter: ', ', nameDelimiterTail: false}, ', ', ''],
 		])('works with --%s', async (name, flags, between, last) => {
-			expect((await run({absolutePath: true, ...flags})).out).toBe(
+			expect((await run({fullPath: true, ...flags})).out).toBe(
 				path.resolve('a.file') + between + path.resolve('c.file') + last
 			);
 		});

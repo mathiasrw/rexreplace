@@ -451,15 +451,15 @@ assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 
 assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
 assert		 		"cat my.file"    'foobar'
 
-# --absolute-path
+# --full-path
 reset
-assert		 		"rexreplace 'b' 'x' my.file -a"    "$(pwd -P)/my.file"
+assert		 		"rexreplace 'b' 'x' my.file -f"    "$(pwd -P)/my.file"
 
 reset
 assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file"    "$(pwd -P)/my.file"
 
 reset
-assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file --absolute-path"    "$(pwd -P)/my.file"
+assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file --full-path"    "$(pwd -P)/my.file"
 assert		 		"cat my.file"    'fooxar'
 
 
