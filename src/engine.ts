@@ -300,10 +300,10 @@ function renameFiles(files, config) {
 		return {old: file, new: file.replace(config.regex, replacement)};
 	});
 	const renames = plan.filter(item => item.new !== item.old);
-	config.statusInfo.renames.push(...renames);
 
 	// With --output-match the matches are printed by the replacement, and the names go to stderr
 	if (config.outputMatch) {
+		config.statusInfo.renames.push(...renames);
 		return plan.forEach(item =>
 			item.new !== item.old ? updated(item.old, config) : config.nameAll && info(item.old)
 		);
@@ -319,6 +319,7 @@ function renameFiles(files, config) {
 		// --simulate and --output do everything but rename
 		if (config.simulate || config.output) {
 			config.statusInfo.files.updated.push(item.old);
+			config.statusInfo.renames.push(item);
 			return nameRename(item, config);
 		}
 		renameFile(item, config);
@@ -346,9 +347,8 @@ function findClashes(plan, renames, config) {
 	});
 	// All files in the run, also the ones that keep their name
 	const inRun = new Set(plan.map(item => pathKey(item.old)));
-	const targets = new Set(byTarget.keys());
-	const ontoRun = targets.intersection(inRun);
-	const ontoOthers = targets.difference(inRun);
+	const inRunExact = new Set(plan.map(item => path.resolve(item.old)));
+	const ontoRun = new Set(byTarget.keys()).intersection(inRun);
 
 	// Each path on its own line, so long paths can be read
 	const clash = (title, items) =>
@@ -356,16 +356,19 @@ function findClashes(plan, renames, config) {
 
 	const clashes = [];
 	byTarget.forEach((items, target) => {
+		const [item] = items;
+		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)
+		const other = isOtherFile(item.old, item.new);
+		const self = pathKey(item.old) === target;
 		if (1 < items.length) {
 			clashes.push(clash('Renames to the same path are not allowed.', items));
-		} else if (ontoRun.has(target) && pathKey(items[0].old) !== target) {
+		} else if (
+			ontoRun.has(target) &&
+			(!self || (other && inRunExact.has(path.resolve(item.new))))
+		) {
 			// Not even --rename-force writes over a file in the run. A file can still change the case of its own name.
 			clashes.push(clash('Renames clashing with other files in this run are not allowed.', items));
-		} else if (
-			ontoOthers.has(target) &&
-			!config.renameForce &&
-			isOtherFile(items[0].old, items[0].new)
-		) {
+		} else if (other && !config.renameForce) {
 			clashes.push(
 				clash(
 					'Renames clashing with files that are there already are not allowed without --rename-force.',
@@ -418,6 +421,7 @@ function renameFile(item, config) {
 		return error(e);
 	}
 	config.statusInfo.files.updated.push(item.old);
+	config.statusInfo.renames.push(item);
 	info(item.new);
 }
 
