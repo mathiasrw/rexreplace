@@ -47,15 +47,8 @@ describe('#742 the engine resolves with a status', () => {
 	});
 
 	test('with the warnings, also when --quiet hides them', async () => {
-		fs.writeFileSync('a.file', 'foo');
-		const status = await rrStatus('o', 'x', {
-			includeGlob: ['a.file'],
-			pipedData: 'x',
-			quiet: true,
-		});
-		expect(status.warnings).toEqual([
-			'Data is piped in, but no flag tells what to do with it. It is not used.',
-		]);
+		const status = await rrStatus('o', 'x', {includeGlob: ['nope.file'], quiet: true});
+		expect(status.warnings).toEqual(['0 files found']);
 	});
 });
 

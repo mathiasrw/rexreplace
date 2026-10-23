@@ -193,10 +193,6 @@ assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxa
 reset
 assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --js-pipe"    'xbar'
 
-# Data that is piped in but not used gives a warning
-reset
-assert		 		"printf x | rexreplace 'o' 'x' my.file --pipe 2>&1 >/dev/null | grep -c 'Data is piped in'"    '1'
-
 
 # The names of the changed files go to stdout, so they can be piped on
 reset

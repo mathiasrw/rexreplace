@@ -22,15 +22,16 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 | `print(item, delimiter, tail, stream)` | Always | The result. Puts the delimiter after each item, or only between them without a tail. Without a delimiter it is a line break, unless the item already ends with one. | A name, the content of a file, a match |
 | `printDone()` | At the end of a run, also when it is stopped | Ends stdout and stderr with a line break when `--nl` is set | |
 | `info(name)` | Unless `--quiet` | The name of an affected file. stdout, or stderr when stdout has content. | `a.md` |
-| `warn(msg)` | Unless `--quiet` | Something is likely a mistake, but the run goes on. Also added to `status.warnings`. | `Data is piped in, but no flag tells what to do with it` |
+| `warn(msg)` | Unless `--quiet` | Something is likely a mistake, or there is nothing to do, but the run goes on. Starts with 🟡. Also added to `status.warnings`. | `0 files found` |
 | `error(msg, data)` | Unless `--quiet-total` | Something went wrong. Starts with ❌. The run goes on, unless `--halt` is set: then a panic is thrown. Also added to `status.errors`, so the CLI gives the exit code 2. | `File not found: a.md` |
-| `panic(msg, data, help)` | Unless `--quiet-total` | Something went wrong and the run can not go on. Starts with ❌ and ends with `No further processing.` Throws a panic, and the CLI exits with 3. Also added to `status.errors`. | `No data piped into replacement` |
+| `checkFailed(text)` | Unless `--quiet-total` | A check from `--expect-*` that is not met. An error, also in `status.checks`, so the CLI gives the exit code 1 when the failed checks are the only errors. | `Expected a diff, but nothing was changed` |
+| `panic(msg, data, help)` | Unless `--quiet-total` | Something went wrong and the run can not go on. Starts with ❌, ends with `No further processing.`, and throws a panic, so the CLI exits with 3. Also added to `status.errors`. | `No data piped into replacement` |
 | `chat(msg)` | `--verbose`, also with `--quiet`, but not with `--quiet-total` | The user: what happens to each file. Only ever to stderr. Also kept in `engine.steps` of the status report. | `Open sync: a.md`, `Nothing changed in: a.md` |
 
 - What the run did is in the status report: the engine resolves with it, and `--status` prints it. So there is no extra debug output to print along the way.
 - `--debug` prints only the status report, with what went into the engine and what it did.
-- `warn()`, `error()` and `panic()` add to the status report as they go, also when the quiet flags hide what they print.
-- The exit code is 0 when the run is done, 2 when a file gave an error, and 3 for a panic or wrong flags. 1 is kept for a check that says no, like `grep`. See Exit codes in the README.
+- `warn()`, `error()`, `checkFailed()` and `panic()` add to the status report as they go, also when the quiet flags hide what they print.
+- The exit code is 0 when the run is done, 1 when a check from `--expect-*` is not met, 2 when a file gave an error, and 3 for a panic or wrong flags. See Exit codes in the README.
 
 ## Tests
 

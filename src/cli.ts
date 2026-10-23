@@ -312,12 +312,11 @@ const yargs = require('yargs')
 			''
 	)
 
-	.boolean('p')
-	.alias('p', 'pipe')
-	.describe('p', `Read the piped data and make it available to --js as \`pipe\`.`)
-
 	.boolean('js-pipe')
-	.describe('js-pipe', `Shorthand for --js --pipe (-jp).`)
+	.describe(
+		'js-pipe',
+		`Treat the replacement as javascript, and give the code the piped data as \`pipe\`.`
+	)
 
 	.boolean('g')
 	.alias('g', 'glob-pipe')
@@ -326,7 +325,7 @@ const yargs = require('yargs')
 		'Each line of the piped data is a path or a glob of the files to work on. They are used together with the ones given as arguments.'
 	)
 	// The piped data can only be one thing
-	.conflicts('g', ['R', 'p', 'js-pipe'])
+	.conflicts('g', ['R', 'js-pipe'])
 
 	.boolean('null-in')
 	.describe(
@@ -352,7 +351,7 @@ The code has access to the following variables:
 \`fs\` from node, 
 \`path\` from node, 
 \`globs\` from npm, 
-\`pipe\`: the data piped into the command with --pipe (null if no piped data, and \`pipe_\` is \`❌ \`), 
+\`pipe\`: the data piped into the command with --js-pipe (null if no piped data, and \`pipe_\` is \`❌ \`), 
 \`find\`: pattern searched for (the needle), 
 \`text\`: full text being searched i.e. file content or piped data (the haystack), 
 \`bytes\`: total size of the haystack in bytes, 
