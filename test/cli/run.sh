@@ -233,6 +233,26 @@ assert		 		"rexreplace 'oo' 'x' my.file your.file --simulate"    'my.file'
 assert		 		"cat my.file"    'foobar'
 
 
+# --rename (-r) does the search and replace on the name, and renames the file to the result
+reset
+assert		 		"rexreplace '^my' 'our' my.file --rename"    'our.file'
+assert		 		"cat our.file"    'foobar'
+# --rename-path does it on the whole path, so the file can be moved
+assert		 		"rexreplace '^' 'sub/' our.file --rename-path"    'sub/our.file'
+assert		 		"cat sub/our.file"    'foobar'
+rm -rf sub
+
+# --rename with --simulate prints the old names to stderr and the new ones to stdout
+reset
+assert		 		"rexreplace '^my' 'our' my.file -r --simulate 2>/dev/null"    'our.file'
+assert		 		"rexreplace '^my' 'our' my.file -r --simulate 2>&1 >/dev/null"    'my.file'
+
+# If two planned renames clash, the run stops before any file is renamed
+reset
+assert_raises		"rexreplace '^(my|your)' 'our' my.file your.file -r"    3
+assert		 		"cat my.file"    'foobar'
+
+
 # --full-path prints the full path of each name
 reset
 assert		 		"rexreplace 'b' 'x' my.file --full-path"    "$(pwd -P)/my.file"

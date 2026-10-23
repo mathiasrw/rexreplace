@@ -10,6 +10,8 @@ const now = new Date();
 
 import {outputConfig, chat, info, print, printDone, warn, error, panic} from './output.ts';
 
+import './shim.ts';
+
 const re = {
 	mctime: /[mc]time/,
 	colon: /:/g,
@@ -54,6 +56,11 @@ export async function engine(config: any = {engine: 'default'}) {
 
 function newStatus(config) {
 	const status: any = {files: {searched: [], updated: []}, pipe: null, warnings: [], errors: []};
+
+	// The old and the new path of each file that is renamed, or would be
+	if (config.rename || config.renamePath) {
+		status.renames = [];
+	}
 
 	// The status report with --verbose also tells what went into the engine and what it did.
 	// The config is copied before it gets the status, and the piped data is told about in `pipe`.
@@ -130,6 +137,18 @@ async function run(config) {
 	config.contentDelimiterTail =
 		config.contentDelimiterTail ?? config.tail ?? !(piped && config.output);
 
+	if (config.rename && config.renamePath) {
+		panic('--rename can not be used with --rename-path');
+	}
+
+	if (config.renameForce && !config.rename && !config.renamePath) {
+		panic('--rename-force needs --rename or --rename-path');
+	}
+
+	if ((config.rename || config.renamePath) && piped) {
+		panic('--rename and --rename-path need files, as piped data has no name to change');
+	}
+
 	if (piped) {
 		return doReplacement('Piped data', config, config.pipedData);
 	}
@@ -150,6 +169,10 @@ async function run(config) {
 	const files = config.files.filter(filepath =>
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
 	);
+
+	if (config.rename || config.renamePath) {
+		return renameFiles(files, config);
+	}
 
 	// A limited number of files are in work at the same time, so the memory and the open files stay within bounds.
 	// Each worker takes the next file when it is done with one. Up to 16 files are all handled at once.
@@ -271,6 +294,160 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 function updated(file, config) {
 	config.statusInfo.files.updated.push(file);
 	info(file);
+}
+
+// --rename: the name of each file is the text that is searched and replaced, and the file is renamed to the result.
+// --rename-path: the same with the whole path, so the file can be moved.
+function renameFiles(files, config) {
+	// With --rename a / in the new name would move the file
+	const slashed = [];
+	const plan = files.map(file => {
+		config.statusInfo.files.searched.push(file);
+		const text = config.renamePath ? file : path.basename(file);
+		chat('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
+		const replacement =
+			config.replacementJs && !config.outputMatch
+				? dynamicReplacement(file, config, text)
+				: config.replacement;
+		const result = text.replace(config.regex, replacement);
+		if (result === text) {
+			return {old: file, new: file};
+		}
+		if (config.renamePath) {
+			return {old: file, new: result};
+		}
+		const item = {old: file, new: path.join(path.dirname(file), result)};
+		if (/[\\/]/.test(result)) {
+			slashed.push(item);
+		}
+		return item;
+	});
+	const renames = plan.filter(item => item.new !== item.old);
+
+	// With --output-match the matches are printed by the replacement, and the names go to stderr.
+	// The replacement is not used, so nothing would be renamed: no clash check and no renames in the status.
+	if (config.outputMatch) {
+		return plan.forEach(item =>
+			item.new !== item.old ? updated(item.old, config) : config.nameAll && info(item.old)
+		);
+	}
+
+	findClashes(plan, renames, slashed, config);
+
+	plan.forEach(item => {
+		if (item.new === item.old) {
+			chat('Same name: ' + item.old);
+			return config.nameAll && nameRename(item, config);
+		}
+		// --simulate and --output do everything but rename
+		if (config.simulate || config.output) {
+			config.statusInfo.files.updated.push(item.old);
+			config.statusInfo.renames.push(item);
+			return nameRename(item, config);
+		}
+		renameFile(item, config);
+	});
+}
+
+// With --simulate and --output the old name goes to stderr and the new one to stdout, so they come in pairs in a terminal
+function nameRename(item, config) {
+	if (config.simulate || config.output) {
+		info(item.old, process.stderr);
+	}
+	info(item.new, process.stdout);
+}
+
+// If planned renames clash the process is halted and no change is applied to any file.
+// The paths are compared as absolute paths, as two relative paths can lead to the same file,
+// and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
+const pathKey = file => path.resolve(file).toLowerCase();
+
+function findClashes(plan, renames, slashed, config) {
+	const byTarget = new Map();
+	renames.forEach(item => {
+		const target = pathKey(item.new);
+		byTarget.set(target, (byTarget.get(target) || []).concat(item));
+	});
+	// All files in the run, also the ones that keep their name
+	const inRun = new Set(plan.map(item => pathKey(item.old)));
+	const inRunExact = new Set(plan.map(item => path.resolve(item.old)));
+	const ontoRun = new Set(byTarget.keys()).intersection(inRun);
+
+	// Each path on its own line, so long paths can be read
+	const clash = (title, items) =>
+		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
+
+	const clashes = slashed.map(item =>
+		clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
+	);
+	byTarget.forEach((items, target) => {
+		const [item] = items;
+		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)
+		const other = isOtherFile(item.old, item.new);
+		const self = pathKey(item.old) === target;
+		if (1 < items.length) {
+			clashes.push(clash('Renames to the same path are not allowed.', items));
+		} else if (
+			ontoRun.has(target) &&
+			(!self || (other && inRunExact.has(path.resolve(item.new))))
+		) {
+			// Not even --rename-force writes over a file in the run. A file can still change the case of its own name.
+			clashes.push(clash('Renames clashing with other files in this run are not allowed.', items));
+		} else if (other && !config.renameForce) {
+			clashes.push(
+				clash(
+					'Renames clashing with files that are there already are not allowed without --rename-force.',
+					items
+				)
+			);
+		}
+	});
+
+	if (clashes.length) {
+		clashes.forEach(clash => error(clash));
+		panic('Planned renames clash, so no change is applied to any file');
+	}
+}
+
+// On a file system that is case-insensitive, `A.md` is the same file as `a.md`, so a rename of only the case is not a clash
+function isOtherFile(file, target) {
+	const stats = fs.statSync(target, {throwIfNoEntry: false});
+	if (!stats) {
+		return false;
+	}
+	const own = fs.statSync(file);
+	return own.dev !== stats.dev || own.ino !== stats.ino;
+}
+
+function renameFile(item, config) {
+	const target = path.resolve(item.new);
+	try {
+		const folder = path.dirname(target);
+		if (!fs.existsSync(folder)) {
+			chat('Make folder: ' + path.dirname(item.new));
+			fs.mkdirSync(folder, {recursive: true});
+		}
+		// Checked again, as the files can have changed since the clashes were found
+		if (isOtherFile(item.old, target)) {
+			if (!config.renameForce) {
+				return error(item.new + ' is there already, so ' + item.old + ' is not renamed');
+			}
+			chat('Write over: ' + item.new);
+		}
+		// With --keep-backup the old file is kept, so the file is copied
+		if (config.keepBackup) {
+			chat('Copy: ' + item.old + ' to ' + item.new);
+			fs.copyFileSync(item.old, target);
+		} else {
+			chat('Rename: ' + item.old + ' to ' + item.new);
+			fs.renameSync(item.old, target);
+		}
+	} catch (e) {
+		return error(e);
+	}
+	config.statusInfo.files.updated.push(item.old);
+	config.statusInfo.renames.push(item);
+	info(item.new);
 }
 
 // How the piped data was used

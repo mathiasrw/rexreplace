@@ -237,7 +237,7 @@ const yargs = require('yargs')
 	.alias('B', 'void-backup')
 
 	.boolean('b')
-	.describe('b', 'Keep a backup file of the original content.')
+	.describe('b', 'Keep a backup file of the original content. With --rename the old file is kept.')
 	.alias('b', 'keep-backup')
 
 	.boolean('S')
@@ -246,6 +246,26 @@ const yargs = require('yargs')
 		'Do everything but write the files. The names of the files that would be changed are printed as usual, and no backup is made.'
 	)
 	.alias('S', 'simulate')
+
+	.boolean('r')
+	.describe(
+		'r',
+		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file.'
+	)
+	.alias('r', 'rename')
+
+	.boolean('rename-path')
+	.describe(
+		'rename-path',
+		'Like --rename, but on the whole path of each file, so a / in the replacement moves the file. Folders that are not there are made.'
+	)
+	.conflicts('r', 'rename-path')
+
+	.boolean('rename-force')
+	.describe(
+		'rename-force',
+		'With --rename or --rename-path, write over a file that is there already.'
+	)
 
 	.boolean('m')
 	.describe(
@@ -372,10 +392,6 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
     */
 
 	/* // Ideas
-
-    .boolean('n')
-        .describe('n', "Do replacement on file path/names instead of file content (rename/move the files)")
-        .alias('n', 'name')
 
     // https://github.com/eugeneware/replacestream
     .integer('M')
