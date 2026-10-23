@@ -819,6 +819,30 @@ function numbersCode(numbers) {
 		.join('');
 }
 
+// A place in a stack, like `at fn (/path/file.js:2:15)`, also with `file://` in front
+const stackPlaces = /\(?(?:file:\/\/)?((?:\/|[A-Za-z]:\\)[^()]+?)(:\d+:\d+)\)?\s*$/gm;
+
+// The folder of RexReplace itself, from the first place in a stack made here
+const ownFolder = (() => {
+	const [place] = String(new Error().stack).matchAll(stackPlaces);
+	return place ? path.dirname(place[1]) + path.sep : null;
+})();
+
+// The first place in the stack of an error that is in a file of the user, like `helper.js:2:15`.
+// Only the places above the code of RexReplace are from the code of the user, so the search stops there.
+function stackPlace(thrown) {
+	const stack = 'object' === typeof thrown && null !== thrown ? thrown.stack : '';
+	for (const [, file, place] of String(stack ?? '').matchAll(stackPlaces)) {
+		if (ownFolder && file.startsWith(ownFolder)) {
+			return '';
+		}
+		if (!file.includes('node:')) {
+			return path.relative(process.cwd(), file) + place;
+		}
+	}
+	return '';
+}
+
 // The text of what code threw. Code can throw anything, also a value that can not be made into text.
 function thrownText(thrown) {
 	let text = '';
@@ -963,7 +987,12 @@ function dynamicReplacement(
 			return dynamicContent(...args);
 		} catch (e) {
 			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
-			return panic('The code of --js failed for ' + where + ':', thrownText(e));
+			// With --verbose it also tells where the code failed, when that is in a file of the user, like a module loaded with r()
+			const at = _config_rr.verbose ? stackPlace(e) : '';
+			return panic(
+				'The code of --js failed for ' + where + ':',
+				thrownText(e) + (at ? '\n    at ' + at : '')
+			);
 		}
 	};
 
