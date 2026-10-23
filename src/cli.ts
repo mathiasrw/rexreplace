@@ -250,7 +250,7 @@ const yargs = require('yargs')
 	.boolean('r')
 	.describe(
 		'r',
-		'Search and replace in the path of each file, and rename the file to the result. The content is not touched. A / in the replacement moves the file, and folders that are not there are made. If a rename would lose a file, no file is renamed.'
+		'Search and replace in the path of each file, and rename the file to the result. The content is not touched. A / in the replacement moves the file, and folders that are not there are made. If planned renames clash, no file is renamed.'
 	)
 	.alias('r', 'rename')
 

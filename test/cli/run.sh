@@ -246,7 +246,7 @@ reset
 assert		 		"rexreplace '^my' 'our' my.file -r --simulate 2>/dev/null"    'our.file'
 assert		 		"rexreplace '^my' 'our' my.file -r --simulate 2>&1 >/dev/null"    'my.file'
 
-# A rename that would lose a file stops the run before any file is renamed
+# If two planned renames clash, the run stops before any file is renamed
 reset
 assert_raises		"rexreplace '^(my|your)' 'our' my.file your.file -r"    3
 assert		 		"cat my.file"    'foobar'

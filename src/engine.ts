@@ -333,7 +333,7 @@ function nameRename(item, config) {
 	info(item.new, process.stdout);
 }
 
-// A rename must not lose a file, so any clash stops the run before a file is renamed.
+// If planned renames clash, the run stops before any file is renamed.
 // The paths are compared as absolute paths, as two relative paths can lead to the same file.
 function findClashes(renames, config) {
 	const byTarget = new Map();
@@ -365,7 +365,7 @@ function findClashes(renames, config) {
 
 	if (clashes.length) {
 		clashes.forEach(clash => error(clash));
-		panic('No file is renamed, as a rename would lose a file');
+		panic('No file is renamed, as the planned renames clash');
 	}
 }
 
