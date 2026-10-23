@@ -127,12 +127,15 @@ const printError = function (text, stop) {
 	}
 };
 
+// The detail, like the file, goes on a line of its own under the message
+const errorText = (msg, data) => msg + (data ? '\n    ' + data : '');
+
 // The run can not go on, so it stops here
 export const panic = function (msg = '', data = '', displayHelp = false) {
 	if (displayHelp && !config.quietTotal) {
 		config.showHelp();
 	}
-	const text = msg + (data ? ' ' + data : '');
+	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
 	printError(text, true);
 	throw new Panic(text);
@@ -147,7 +150,7 @@ export const checkFailed = function (text) {
 
 // Something failed, and the run goes on. With --halt it is a panic.
 export const error = function (msg, data = '') {
-	const text = msg + (data ? ' ' + data : '');
+	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
 	printError(text, config.halt);
 	if (config.halt) {

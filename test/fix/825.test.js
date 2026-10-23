@@ -16,7 +16,7 @@ describe('#825 named groups in --js', () => {
 		expect(await rr('(?<a>\\d)(?<a_>\\w)', 'rr_a', {pipedData: '1x', replacementJs: true})).toEqual(
 			{
 				out: '',
-				err: ' ❌ A named group can not end with _: a_\n    No further processing.\n\n',
+				err: ' ❌ A named group can not end with _\n    a_\n    No further processing.\n\n',
 				exit: 3,
 			}
 		);

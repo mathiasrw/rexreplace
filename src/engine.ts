@@ -45,7 +45,7 @@ const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
 function validateEncoding(encoding = 'utf8') {
 	if (!Buffer.isEncoding(encoding)) {
-		panic('Unknown encoding:', encoding);
+		panic('Unknown encoding', encoding);
 	}
 }
 
@@ -153,7 +153,7 @@ async function run(config) {
 			? namedGroups(config.regex).find(name => name.endsWith('_'))
 			: null;
 	if (endsWith_) {
-		panic('A named group can not end with _:', endsWith_);
+		panic('A named group can not end with _', endsWith_);
 	}
 
 	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
@@ -229,7 +229,7 @@ async function run(config) {
 		(config.replacementJs && re.runNumbers.test(config.replacementOri));
 
 	const files = config.files.filter(filepath =>
-		fs.existsSync(filepath) ? true : error('File not found:', filepath)
+		fs.existsSync(filepath) ? true : error('File not found', filepath)
 	);
 
 	if (config.rename || config.renamePath) {
@@ -669,7 +669,7 @@ function getFinalReplacement(replacement, conf: any) {
 		try {
 			return readReplacementFile(replacement, conf);
 		} catch (e) {
-			return panic('The replacement file can not be read:', unreadable(replacement, e));
+			return panic('The replacement file can not be read', unreadable(replacement, e));
 		}
 	}
 
@@ -711,7 +711,7 @@ function codeReplacement(file, config, text, numbers) {
 				return readReplacementFile(filepath, config);
 			} catch (e) {
 				config.unreadableFiles.add(filepath);
-				error('The replacement file can not be read:', unreadable(filepath, e));
+				error('The replacement file can not be read', unreadable(filepath, e));
 			}
 		}
 		return args[0];
@@ -1035,7 +1035,7 @@ function dynamicReplacement(
 			// With --verbose it also tells where the code failed, when that is in a file of the user, like a module loaded with r()
 			const at = _config_rr.verbose ? stackPlace(e) : '';
 			return panic(
-				'The code of --js failed for ' + where + ':',
+				'The code of --js failed for ' + where,
 				thrownText(e) + (at ? '\n    at ' + at : '')
 			);
 		}
@@ -1290,7 +1290,7 @@ function sortName(value) {
 		return 'natural';
 	}
 	if (!sorts.includes(name)) {
-		panic('--sort must be one of ' + sorts.join(', ') + ', not:', String(value));
+		panic('--sort must be one of ' + sorts.join(', '), String(value));
 	}
 	return name;
 }
@@ -1360,7 +1360,7 @@ function glob(patterns, globOptions) {
 	try {
 		return globs.sync(patterns, globOptions);
 	} catch (e) {
-		return panic('The files can not be found:', e.message);
+		return panic('The files can not be found', e.message);
 	}
 }
 

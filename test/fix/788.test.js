@@ -23,7 +23,7 @@ describe('#788 a path that can not be looked at', () => {
 	])('gives a panic when the glob can not be used, %s', async (name, config) => {
 		fs.writeFileSync('a.md', 'foo');
 		const result = await rr('foo', 'bar', config);
-		expect(result.err).toStartWith(' ❌ The files can not be found: ENOTDIR');
+		expect(result.err).toStartWith(' ❌ The files can not be found\n    ENOTDIR');
 		expect(result.err).toEndWith('\n    No further processing.\n\n');
 		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('a.md', 'utf8')).toBe('foo');

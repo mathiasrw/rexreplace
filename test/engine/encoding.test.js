@@ -50,7 +50,7 @@ describe('--encoding', () => {
 	// The error message, and not the stack trace from deep inside node, when an encoding is unknown (#690)
 	const unknownEncoding = {
 		out: '',
-		err: ' ❌ Unknown encoding: nope\n    No further processing.\n\n',
+		err: ' ❌ Unknown encoding\n    nope\n    No further processing.\n\n',
 		exit: 3,
 	};
 

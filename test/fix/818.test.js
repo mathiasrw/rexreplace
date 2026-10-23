@@ -22,7 +22,7 @@ describe('#818 a replacement file that can not be read', () => {
 		fs.mkdirSync('adir');
 		fs.writeFileSync('a.txt', 'X');
 		const result = await rr('X', filepath, {includeGlob: ['a.txt'], replacementFile: true});
-		expect(result.err).toStartWith(' ❌ The replacement file can not be read: ' + text);
+		expect(result.err).toStartWith(' ❌ The replacement file can not be read\n    ' + text);
 	});
 
 	test('with --js is told once in the run, not once for each file', async () => {
@@ -31,7 +31,7 @@ describe('#818 a replacement file that can not be read', () => {
 		const config = {includeGlob: ['*.txt'], replacementJs: true, replacementFile: true};
 		const status = await rrStatus('X', '"nope.txt"', config);
 		expect(status.errors).toEqual([
-			'The replacement file can not be read: nope.txt (ENOENT: no such file or directory)',
+			'The replacement file can not be read\n    nope.txt (ENOENT: no such file or directory)',
 		]);
 	});
 });

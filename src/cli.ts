@@ -620,7 +620,7 @@ const unescape = (key, name) => {
 	} catch (e) {
 		// The engine is not running yet, so the panic is caught here
 		try {
-			panic('Invalid escape sequence in ' + name + ':', typed[key]);
+			panic('Invalid escape sequence in ' + name, typed[key]);
 		} catch (e) {
 			exitOnPanic(config, e);
 		}

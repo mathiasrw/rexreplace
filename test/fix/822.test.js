@@ -4,7 +4,7 @@ import {describe, test, expect} from 'bun:test';
 import {rr} from '../helper.js';
 
 const failed = text =>
-	` ❌ The code of --js failed for the piped data: ${text}\n    No further processing.\n\n`;
+	` ❌ The code of --js failed for the piped data\n    ${text}\n    No further processing.\n\n`;
 
 describe('#822 code that throws something that is not an error', () => {
 	test.each([
@@ -30,6 +30,6 @@ describe('#822 code that throws something that is not an error', () => {
 			replacementJs: true,
 		});
 		expect(result.err).toContain('an object was thrown: {"text":"' + 'y'.repeat(291) + '…');
-		expect(result.err.length).toBeLessThan(400);
+		expect(result.err.length).toBeLessThan(450);
 	});
 });

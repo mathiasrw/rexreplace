@@ -24,7 +24,7 @@ describe('#819 a file that can not be looked at in the sort', () => {
 			try {
 				expect(await rr('foo', 'bar', {includeGlob: ['*.md'], sort})).toEqual({
 					out: 'a.md\nz.md\n',
-					err: ' ❌ File not found: gone.md\n\n',
+					err: ' ❌ File not found\n    gone.md\n\n',
 					exit: 2,
 				});
 			} finally {
