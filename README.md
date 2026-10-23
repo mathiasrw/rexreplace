@@ -265,7 +265,7 @@ Files identified for potential processing are identified by:
 
 - Group A: Input values specifying existing files
 - Group B: Input values that are not specifying an existing file are globbed as a pool (meaning you can use the `!` notation to take files away from group B, but not from group A)
-- Group C: All `-X` values are globs only, never files, also when a value is the name of an existing file. They are globbed as a pool (meaning you can use the `!` notation)
+- Group C: All `-X` values are globbed as a pool (meaning you can use the `!` notation)
 - Subtract group C from group A and B (the files are compared by their full path)
 - Remove any file paths that matches any `-x` provided regex. Use `--absolute-path` to look for the full path.
 
