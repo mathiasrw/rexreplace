@@ -377,7 +377,7 @@ function renameFiles(files, config) {
 			config.replacementJs && !config.outputMatch
 				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
 				: config.replacement;
-		const result = text.replace(config.regex, replacement);
+		const result = withoutControlChars(text.replace(config.regex, replacement), file);
 		countFile(config, text, result);
 		if (result === text) {
 			return {old: file, new: file};
@@ -416,6 +416,15 @@ function renameFiles(files, config) {
 		}
 		renameFile(item, config);
 	});
+}
+
+// No name should have the chars below space in ASCII (like a line break, a tab or a null byte), or DEL
+function withoutControlChars(name, file) {
+	const clean = name.replace(/[\x00-\x1f\x7f]/g, '');
+	if (clean !== name) {
+		chat('Removed control characters from the new name of: ' + file);
+	}
+	return clean;
 }
 
 // With --simulate and --output the old name goes to stderr and the new one to stdout, so they come in pairs in a terminal
