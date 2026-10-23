@@ -50,7 +50,7 @@ describe('#711 --glob-pipe', () => {
 		expect((await rr('o', 'x', config)).out).toBe('a.file\nmy file.txt\n');
 	});
 
-	test('with --null-in the lines are separated by NUL bytes', async () => {
+	test('with --null-in the lines are separated by null bytes', async () => {
 		makeFiles('a.file', 'line\nbreak.file');
 		const config = {pipedData: 'a.file\0line\nbreak.file\0', globPipe: true, nullIn: true};
 		expect((await rr('o', 'x', config)).out).toBe('a.file\nline\nbreak.file\n');

@@ -468,17 +468,17 @@ assert_raises		"printf 'my.file' | rexreplace 'b' 'x' --null-in"    1
 assert		 		"cat my.file"    'foobar'
 
 
-# Data with NUL bytes is binary safe: the NUL bytes come out where they went in
+# Data with null bytes is binary safe: the null bytes come out where they went in
 reset
 assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' | tr '\0' '|'"    'fxx|bxx|'
 assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' --output | tr '\0' '|'"    'fxx|bxx|'
 assert		 		"printf 'foo\0boo\0' | rexreplace 'o' '_' --output-match --null-out | tr '\0' '|'"    'o|o|o|o|'
-printf 'foo\0boo\0' > nul.file
-assert		 		"rexreplace 'o' 'x' nul.file"    'nul.file'
-assert		 		"tr '\0' '|' < nul.file"    'fxx|bxx|'
-printf 'foo\0boo\0' > nul.file
-assert		 		"rexreplace 'o' 'x' nul.file --output 2>/dev/null | tr '\0' '|'"    'fxx|bxx|'
-assert		 		"rexreplace 'o' '_' nul.file --output-match --null-out 2>/dev/null | tr '\0' '|'"    'o|o|o|o|'
+printf 'foo\0boo\0' > null.file
+assert		 		"rexreplace 'o' 'x' null.file"    'null.file'
+assert		 		"tr '\0' '|' < null.file"    'fxx|bxx|'
+printf 'foo\0boo\0' > null.file
+assert		 		"rexreplace 'o' 'x' null.file --output 2>/dev/null | tr '\0' '|'"    'fxx|bxx|'
+assert		 		"rexreplace 'o' '_' null.file --output-match --null-out 2>/dev/null | tr '\0' '|'"    'o|o|o|o|'
 
 
 # Globs are case-insensitive like the search, unless --void-ignore-case (#716)

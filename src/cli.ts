@@ -288,7 +288,7 @@ const yargs = require('yargs')
 	.boolean('null-in')
 	.describe(
 		'null-in',
-		'The piped paths and globs of --glob-pipe are separated by NUL bytes, like from `find -print0` or --null-out.'
+		'The piped paths and globs of --glob-pipe are separated by null bytes, like from `find -print0` or --null-out.'
 	)
 	.implies('null-in', 'glob-pipe')
 

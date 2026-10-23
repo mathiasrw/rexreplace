@@ -62,7 +62,7 @@ describe('#703 the names of affected files', () => {
 	});
 
 	describe('--null-out', () => {
-		test('ends each name with a NUL byte', async () => {
+		test('ends each name with a null byte', async () => {
 			expect(await run({nullOut: true})).toEqual({out: 'a.file\0c.file\0', err: '', exit: null});
 		});
 
@@ -312,7 +312,7 @@ describe('#703 the names of affected files', () => {
 			});
 		});
 
-		test('--null-out is the same as --delimiter with a NUL byte', async () => {
+		test('--null-out is the same as --delimiter with a null byte', async () => {
 			expect(await run({output: true, nullOut: true})).toEqual({
 				out: 'fxx\0bar\0fxx\0',
 				err: 'a.file\0c.file\0',
