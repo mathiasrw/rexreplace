@@ -380,11 +380,13 @@ function renameFiles(files, config) {
 		config.statusInfo.files.searched.push(file);
 		const text = config.renamePath ? file : path.basename(file);
 		chat('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
-		const replacement =
+		const replacement = cleanReplacement(
 			config.replacementJs && !config.outputMatch
 				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
-				: config.replacement;
-		const result = withoutControlChars(text.replace(config.regex, replacement), file);
+				: config.replacement,
+			file
+		);
+		const result = text.replace(config.regex, replacement);
 		countFile(config, text, result);
 		if (result === text) {
 			return {old: file, new: file};
@@ -398,6 +400,10 @@ function renameFiles(files, config) {
 		}
 		return item;
 	});
+	// A name can not be empty, . or .., like when all that was left of it were control characters
+	const empty = plan.filter(
+		item => item.new !== item.old && ['', '.', '..'].includes(path.basename(item.new))
+	);
 	const renames = plan.filter(item => item.new !== item.old);
 
 	// With --output-match the matches are printed by the replacement, and the names go to stderr.
@@ -408,7 +414,7 @@ function renameFiles(files, config) {
 		);
 	}
 
-	findClashes(plan, renames, slashed, config);
+	findClashes(plan, renames, slashed, empty, config);
 
 	plan.forEach(item => {
 		if (item.new === item.old) {
@@ -425,9 +431,18 @@ function renameFiles(files, config) {
 	});
 }
 
-// No name should have the chars below space in ASCII (like a line break, a tab or a null byte), or DEL
+// No name should have control characters: the chars below space in ASCII (like a line break, a tab or a null byte),
+// DEL and the C1 range after it, and the line and paragraph separators.
+// Only what the replacement puts in is cleaned, so a name the pattern does not change is left as it is.
+function cleanReplacement(replacement, file) {
+	if ('function' === typeof replacement) {
+		return (...args) => withoutControlChars(String(replacement(...args)), file);
+	}
+	return withoutControlChars(replacement, file);
+}
+
 function withoutControlChars(name, file) {
-	const clean = name.replace(/[\x00-\x1f\x7f]/g, '');
+	const clean = name.replace(/[\x00-\x1f\x7f-\x9f\u2028\u2029]/g, '');
 	if (clean !== name) {
 		chat('Removed control characters from the new name of: ' + file);
 	}
@@ -447,7 +462,7 @@ function nameRename(item, config) {
 // and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
 const pathKey = file => path.resolve(file).toLowerCase();
 
-function findClashes(plan, renames, slashed, config) {
+function findClashes(plan, renames, slashed, empty, config) {
 	const byTarget = new Map();
 	renames.forEach(item => {
 		const target = pathKey(item.new);
@@ -462,9 +477,12 @@ function findClashes(plan, renames, slashed, config) {
 	const clash = (title, items) =>
 		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
 
-	const clashes = slashed.map(item =>
-		clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
-	);
+	const clashes = [
+		...empty.map(item => clash('A name can not be empty, "." or "..".', [item])),
+		...slashed.map(item =>
+			clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
+		),
+	];
 	byTarget.forEach((items, target) => {
 		const [item] = items;
 		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)

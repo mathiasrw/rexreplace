@@ -21,4 +21,31 @@ describe('#826 control characters in a new name', () => {
 		expect((await rr('^a', 'b\t\0\x7f\x01c', config)).out).toBe('bc.md\n');
 		expect(fs.readdirSync('.')).toEqual(['bc.md']);
 	});
+
+	test('are only removed from what the replacement puts in', async () => {
+		fs.writeFileSync('a\tb.md', 'foo');
+		fs.writeFileSync('c.md', 'foo');
+		expect((await rr('zzz', 'yyy', {includeGlob: ['*.md'], rename: true})).out).toBe('');
+		expect(fs.readdirSync('.').sort()).toEqual(['a\tb.md', 'c.md']);
+		fs.mkdirSync('d\t');
+		fs.writeFileSync('d\t/a.md', 'foo');
+		expect((await rr('a\\.md', 'b.md', {includeGlob: ['d\t/a.md'], renamePath: true})).out).toBe(
+			'd\t/b.md\n'
+		);
+	});
+
+	test('are removed in the C1 range and the line separators too', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		expect((await rr('^a', 'b\x85\u2028c', {includeGlob: ['a.md'], rename: true})).out).toBe(
+			'bc.md\n'
+		);
+	});
+
+	test('can not leave an empty name', async () => {
+		fs.writeFileSync('x.md', 'foo');
+		const result = await rr('^x\\.md$', '\t', {includeGlob: ['x.md'], rename: true});
+		expect(result.err).toStartWith(' ❌ A name can not be empty, "." or "..".');
+		expect(result.exit).toBe(3);
+		expect(fs.readdirSync('.')).toEqual(['x.md']);
+	});
 });
