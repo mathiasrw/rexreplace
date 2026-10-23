@@ -1,3 +1,4 @@
+// Test of stacked PRs (devops/stack/c, commit 2). Not to be merged.
 // What rexreplace does when no flags are given
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
