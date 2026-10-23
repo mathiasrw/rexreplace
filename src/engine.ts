@@ -1,3 +1,4 @@
+// Test of stacked PRs (devops/stack3/b, commit 2). Not to be merged into main.
 const fs = require('fs');
 
 const os = require('os');
