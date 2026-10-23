@@ -17,12 +17,8 @@ describe('--void-section', () => {
 			}
 
 			const section = pattern.replace(/\\/g, '§');
-			expect((await rr(pattern, '_', {pipedData: text})).out, note).toBe(
-				text.replace(regex, '_')
-			);
-			expect((await rr(section, '_', {pipedData: text})).out, note).toBe(
-				text.replace(regex, '_')
-			);
+			expect((await rr(pattern, '_', {pipedData: text})).out, note).toBe(text.replace(regex, '_'));
+			expect((await rr(section, '_', {pipedData: text})).out, note).toBe(text.replace(regex, '_'));
 			expect((await rr(pattern, '_', {pipedData: text, voidSection: true})).out, note).toBe(
 				text.replace(regex, '_')
 			);

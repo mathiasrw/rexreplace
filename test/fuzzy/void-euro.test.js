@@ -9,17 +9,16 @@ describe('--void-euro', () => {
 			const replacement = rnd.text(['$1', '$2', '$&', '$$', '-', 'x'], 0, 4);
 			const text = rnd.text('ab \n', 0, 20);
 			const expected = text.replace(new RegExp(pattern, 'gim'), replacement);
-			const euro = (str) => str.replace(/\$/g, '€');
+			const euro = str => str.replace(/\$/g, '€');
 			const note = JSON.stringify({pattern, replacement, text});
 
 			expect((await rr(pattern, replacement, {pipedData: text})).out, note).toBe(expected);
 			expect((await rr(euro(pattern), euro(replacement), {pipedData: text})).out, note).toBe(
 				expected
 			);
-			expect(
-				(await rr(pattern, replacement, {pipedData: text, voidEuro: true})).out,
-				note
-			).toBe(expected);
+			expect((await rr(pattern, replacement, {pipedData: text, voidEuro: true})).out, note).toBe(
+				expected
+			);
 		}
 	});
 

@@ -58,12 +58,9 @@ describe('--void-section', () => {
 		});
 
 		test('with --literal', async () => {
-			expect((await rr('a§b', 'x', {pipedData: 'a§b a\\b', literal: true})).out).toBe(
-				'a§b x'
-			);
+			expect((await rr('a§b', 'x', {pipedData: 'a§b a\\b', literal: true})).out).toBe('a§b x');
 			expect(
-				(await rr('a§b', 'x', {pipedData: 'a§b a\\b', literal: true, voidSection: true}))
-					.out
+				(await rr('a§b', 'x', {pipedData: 'a§b a\\b', literal: true, voidSection: true})).out
 			).toBe('x a\\b');
 		});
 

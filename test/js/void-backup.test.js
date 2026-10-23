@@ -20,9 +20,9 @@ describe('--void-backup', () => {
 	});
 
 	test('handles several files', async () => {
-		['a', 'b', 'c'].forEach((name) => fs.writeFileSync(name + '.file', 'foo' + name));
+		['a', 'b', 'c'].forEach(name => fs.writeFileSync(name + '.file', 'foo' + name));
 		await rr('foo', 'x', {includeGlob: ['*.file'], voidBackup: true});
-		expect(['a', 'b', 'c'].map((name) => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
+		expect(['a', 'b', 'c'].map(name => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
 			'xa',
 			'xb',
 			'xc',
@@ -30,7 +30,7 @@ describe('--void-backup', () => {
 	});
 
 	describe('combined', () => {
-		test.each([true, false])('with --void-async set to %p', async (voidAsync) => {
+		test.each([true, false])('with --void-async set to %p', async voidAsync => {
 			fs.writeFileSync('my.file', 'foobar');
 			await rr('o', 'x', {includeGlob: ['my.file'], voidBackup: true, voidAsync});
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('fxxbar');

@@ -42,7 +42,7 @@ describe('--quiet', () => {
 			expect(result.err).toContain('Open sync: my.file');
 		});
 
-		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async (flag) => {
+		test.each(['output', 'outputMatch'])('with --%s stdout is not affected', async flag => {
 			fs.writeFileSync('my.file', 'foobar');
 			const result = await rr('o', 'x', {
 				includeGlob: ['my.file'],

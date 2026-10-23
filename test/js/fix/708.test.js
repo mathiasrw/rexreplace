@@ -10,7 +10,7 @@ const workers = Math.max(16, os.availableParallelism() * 2);
 // Make `count` files with the content `foo` and give their names
 async function makeFiles(count) {
 	const names = Array.from({length: count}, (_, i) => `file-${i}.txt`);
-	await Promise.all(names.map((name) => Bun.write(name, 'foo')));
+	await Promise.all(names.map(name => Bun.write(name, 'foo')));
 	return names;
 }
 

@@ -16,14 +16,14 @@ function run(...args) {
 describe('#692 single argument', () => {
 	const version = run('--version').out;
 
-	test.each(['-v', '-version', '--version'])('%s prints only the version', (arg) => {
+	test.each(['-v', '-version', '--version'])('%s prints only the version', arg => {
 		const result = run(arg);
 		expect(result.out).toBe(version);
 		expect(result.out.trim()).toMatch(/^\S+$/);
 		expect(result.exit).toBe(0);
 	});
 
-	test.each(['-h', '-help', '--help'])('%s prints the help with exit code 0', (arg) => {
+	test.each(['-h', '-help', '--help'])('%s prints the help with exit code 0', arg => {
 		const result = run(arg);
 		expect(result.out).toContain('Options:');
 		expect(result.err).toBe('');
@@ -33,7 +33,7 @@ describe('#692 single argument', () => {
 	// -V is verbose and -H is halt: other flags, not a request for version or help
 	test.each(['my-vile', '-V', 'o-ho', '-H', 'a-v', 'a-h', 'xversion', 'xhelp'])(
 		'%s is a usage error: help on stderr, nothing on stdout, exit code 1',
-		(arg) => {
+		arg => {
 			const result = run(arg);
 			expect(result.out).toBe('');
 			expect(result.err).toContain('Options:');

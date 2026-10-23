@@ -124,9 +124,7 @@ describe('#742 the engine part of the status', () => {
 		expect(await rrStatus('o', 'x', {pipedData: 'foo', verbose: true})).not.toHaveProperty(
 			'engine'
 		);
-		expect(await rrStatus('o', 'x', {pipedData: 'foo', status: true})).not.toHaveProperty(
-			'engine'
-		);
+		expect(await rrStatus('o', 'x', {pipedData: 'foo', status: true})).not.toHaveProperty('engine');
 		const status = await rrStatus('o', 'x', {
 			pipedData: 'foo',
 			statusCompact: true,
@@ -214,7 +212,7 @@ describe('#742 the CLI', () => {
 
 	test.each(['--status-compact', '-S'])(
 		'%s prints the status report on one line, with no line break in front',
-		(flag) => {
+		flag => {
 			fs.writeFileSync('a.file', 'foo');
 			const result = runCli('o', 'x', 'a.file', flag, '--quiet-total');
 			expect(result.out).toBe(

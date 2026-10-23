@@ -4,12 +4,12 @@ import {rr} from './helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
 const changed = async (names, config) => {
-	names.forEach((name) => {
+	names.forEach(name => {
 		fs.mkdirSync(name.replace(/[^/]*$/, '') || '.', {recursive: true});
 		fs.writeFileSync(name, 'foo');
 	});
 	await rr('foo', 'x', config);
-	return names.filter((name) => 'x' === fs.readFileSync(name, 'utf8'));
+	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
 };
 
 describe('--exclude-re', () => {
@@ -25,9 +25,9 @@ describe('--exclude-re', () => {
 
 	test('is a regex', async () => {
 		const names = ['a1.file', 'a2.file', 'ab.file'];
-		expect(
-			await changed(names, {includeGlob: ['*.file'], excludeRe: ['a\\d\\.file$']})
-		).toEqual(['ab.file']);
+		expect(await changed(names, {includeGlob: ['*.file'], excludeRe: ['a\\d\\.file$']})).toEqual([
+			'ab.file',
+		]);
 	});
 
 	test('can be given several times', async () => {
@@ -39,9 +39,10 @@ describe('--exclude-re', () => {
 
 	test('sees the path of files in sub directories', async () => {
 		const names = ['a.file', 'sub/a.file', 'sub/deep/a.file'];
-		expect(
-			await changed(names, {includeGlob: ['**/*.file'], excludeRe: ['^sub/[^/]+$']})
-		).toEqual(['a.file', 'sub/deep/a.file']);
+		expect(await changed(names, {includeGlob: ['**/*.file'], excludeRe: ['^sub/[^/]+$']})).toEqual([
+			'a.file',
+			'sub/deep/a.file',
+		]);
 	});
 
 	test('reports when all files are left out', async () => {

@@ -7,9 +7,9 @@ import {rr} from '../helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
 const changed = async (names, config) => {
-	names.forEach((name) => fs.writeFileSync(name, 'foo'));
+	names.forEach(name => fs.writeFileSync(name, 'foo'));
 	await rr('foo', 'x', config);
-	return names.filter((name) => 'x' === fs.readFileSync(name, 'utf8'));
+	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
 };
 
 const voided = {voidEuro: true, voidSection: true};
@@ -37,9 +37,10 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 
 		test('--void-euro and --void-section make no difference', async () => {
 			const names = ['cost€.file', 'cost$.file', 'par§.file'];
-			expect(
-				await changed(names, {includeGlob: ['cost€.file', 'par§.file'], ...voided})
-			).toEqual(['cost€.file', 'par§.file']);
+			expect(await changed(names, {includeGlob: ['cost€.file', 'par§.file'], ...voided})).toEqual([
+				'cost€.file',
+				'par§.file',
+			]);
 		});
 	});
 
@@ -47,28 +48,30 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 		const names = ['a[1].file', 'cost$.file', 'cost€.file', 'par§.file'];
 
 		test('€ and § are plain chars', async () => {
-			expect(
-				await changed(names, {includeGlob: ['*.file'], excludeGlob: ['cost€.file']})
-			).toEqual(['a[1].file', 'cost$.file', 'par§.file']);
-			expect(
-				await changed(names, {includeGlob: ['*.file'], excludeGlob: ['par§.file']})
-			).toEqual(['a[1].file', 'cost$.file', 'cost€.file']);
+			expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['cost€.file']})).toEqual([
+				'a[1].file',
+				'cost$.file',
+				'par§.file',
+			]);
+			expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['par§.file']})).toEqual([
+				'a[1].file',
+				'cost$.file',
+				'cost€.file',
+			]);
 		});
 
 		test('§ does not escape like a backslash does', async () => {
 			expect(
 				await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a\\[1\\].file']})
 			).toEqual(['cost$.file', 'cost€.file', 'par§.file']);
-			expect(
-				await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a§[1§].file']})
-			).toEqual(names);
+			expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a§[1§].file']})).toEqual(
+				names
+			);
 		});
 
 		test('--void-euro and --void-section make no difference', async () => {
 			const config = {includeGlob: ['*.file'], excludeGlob: ['cost€.file', 'par§.file']};
-			expect(await changed(names, {...config, ...voided})).toEqual(
-				await changed(names, config)
-			);
+			expect(await changed(names, {...config, ...voided})).toEqual(await changed(names, config));
 		});
 	});
 
@@ -99,9 +102,7 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 
 		test('the replacement', async () => {
 			expect((await rr('(b)', '[€1§]', {pipedData: 'foobar'})).out).toBe('foo[b\\]ar');
-			expect((await rr('(b)', '[€1§]', {pipedData: 'foobar', ...voided})).out).toBe(
-				'foo[€1§]ar'
-			);
+			expect((await rr('(b)', '[€1§]', {pipedData: 'foobar', ...voided})).out).toBe('foo[€1§]ar');
 		});
 
 		test('the replacement with --replacement-js', async () => {
@@ -111,9 +112,9 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 
 		test('--exclude-re', async () => {
 			const names = ['a1.file', 'ab.file', 'ab.files'];
-			expect(await changed(names, {includeGlob: ['a*'], excludeRe: ['§d', 'file€']})).toEqual(
-				['ab.files']
-			);
+			expect(await changed(names, {includeGlob: ['a*'], excludeRe: ['§d', 'file€']})).toEqual([
+				'ab.files',
+			]);
 			expect(
 				await changed(names, {includeGlob: ['a*'], excludeRe: ['§d', 'file€'], ...voided})
 			).toEqual(names);

@@ -13,10 +13,10 @@ describe('regex flags', () => {
 		flags.filter((flag, n) => bits & (1 << n))
 	);
 
-	test.each(combinations.map((on) => [on.join(' + ') || 'none', on]))(
+	test.each(combinations.map(on => [on.join(' + ') || 'none', on]))(
 		'%s gives the same as String.replace',
 		async (name, on) => {
-			const config = Object.fromEntries(on.map((flag) => [flag, true]));
+			const config = Object.fromEntries(on.map(flag => [flag, true]));
 			const jsFlags =
 				(config.voidGlobal ? '' : 'g') +
 				(config.voidIgnoreCase ? '' : 'i') +
@@ -56,7 +56,7 @@ describe('every pair of flags', () => {
 		'replacementJs',
 	];
 
-	const pairs = flags.flatMap((first, n) => flags.slice(n).map((second) => [first, second]));
+	const pairs = flags.flatMap((first, n) => flags.slice(n).map(second => [first, second]));
 
 	// Replace "o" with "1" in a file containing "foo". The 1 works as plain text, as javascript and when piped in.
 	test.each(pairs)('%s + %s', async (first, second) => {
@@ -99,9 +99,9 @@ describe('same result no matter how it is delivered', () => {
 
 	test('--output', async () => {
 		fs.writeFileSync('my.file', text);
-		expect(
-			(await rr('a.b', '[$&]', {includeGlob: ['my.file'], output: true, ...search})).out
-		).toBe(expected);
+		expect((await rr('a.b', '[$&]', {includeGlob: ['my.file'], output: true, ...search})).out).toBe(
+			expected
+		);
 	});
 
 	test.each([
@@ -121,9 +121,9 @@ describe('same result no matter how it is delivered', () => {
 	test('--replacement-pipe and --replacement-js', async () => {
 		fs.writeFileSync('my.file', text);
 		const config = {includeGlob: ['my.file'], output: true, ...search};
-		expect(
-			(await rr('a.b', '_', {...config, replacementPipe: true, pipedData: '[$&]'})).out
-		).toBe(expected);
+		expect((await rr('a.b', '_', {...config, replacementPipe: true, pipedData: '[$&]'})).out).toBe(
+			expected
+		);
 		expect((await rr('a.b', '"[" + $0 + "]"', {...config, replacementJs: true})).out).toBe(
 			expected
 		);
@@ -167,10 +167,8 @@ describe('many flags at once', () => {
 		expect(fs.readFileSync('src/a.test.js', 'utf8')).toBe('VERSION');
 		expect(fs.readFileSync('src/deep/c.md', 'utf8')).toBe('VERSION');
 		expect(fs.readFileSync('dist/a.js', 'utf8')).toBe('VERSION');
-		expect(fs.readdirSync('src').filter((name) => name.endsWith('.backup'))).toHaveLength(1);
-		expect(fs.readdirSync('src/deep').filter((name) => name.endsWith('.backup'))).toHaveLength(
-			1
-		);
+		expect(fs.readdirSync('src').filter(name => name.endsWith('.backup'))).toHaveLength(1);
+		expect(fs.readdirSync('src/deep').filter(name => name.endsWith('.backup'))).toHaveLength(1);
 	});
 
 	test('list the first match of each line across files', async () => {

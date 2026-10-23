@@ -85,7 +85,7 @@ describe('--output', () => {
 
 		test.each([{voidAsync: true}, {voidBackup: true}, {voidAsync: true, voidBackup: true}])(
 			'with %o the file is still left alone',
-			async (config) => {
+			async config => {
 				fs.writeFileSync('my.file', 'foobar');
 				const result = await rr('o', 'x', {
 					includeGlob: ['my.file'],

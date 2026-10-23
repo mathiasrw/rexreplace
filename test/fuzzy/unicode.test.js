@@ -7,17 +7,7 @@ describe('--unicode', () => {
 	test('gives the same as String.replace with and without the u flag', async () => {
 		const rnd = random(1);
 		for (let i = 0; i < 500; i++) {
-			const pattern = rnd.pick([
-				'.',
-				'..',
-				'[^a]',
-				'\\S+',
-				'a.',
-				'.b',
-				'[🦖🦕]',
-				'🦖+',
-				'\\W',
-			]);
+			const pattern = rnd.pick(['.', '..', '[^a]', '\\S+', 'a.', '.b', '[🦖🦕]', '🦖+', '\\W']);
 			const text = rnd.text(alphabet, 0, 15);
 			const note = JSON.stringify({pattern, text});
 

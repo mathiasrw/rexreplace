@@ -18,9 +18,7 @@ describe('--void-multiline', () => {
 	});
 
 	test('makes no difference for a single line', async () => {
-		expect((await rr('^f|r$', 'x', {pipedData: 'foobar', voidMultiline: true})).out).toBe(
-			'xoobax'
-		);
+		expect((await rr('^f|r$', 'x', {pipedData: 'foobar', voidMultiline: true})).out).toBe('xoobax');
 	});
 
 	test('does not see a final newline as the end of the content', async () => {

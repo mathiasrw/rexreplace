@@ -5,11 +5,11 @@ import fs from 'fs';
 import path from 'path';
 import {rr} from '../helper.js';
 
-const content = (name) => fs.readFileSync(name, 'utf8');
+const content = name => fs.readFileSync(name, 'utf8');
 
 // Make each file with the content `foo`
 function makeFiles(...names) {
-	names.forEach((name) => {
+	names.forEach(name => {
 		fs.mkdirSync(path.dirname(name), {recursive: true});
 		fs.writeFileSync(name, 'foo');
 	});
@@ -18,7 +18,7 @@ function makeFiles(...names) {
 describe('#718 a path that is a file is used as it is', () => {
 	test.each(['my (1).file', '(draft).file', '{a,b}.file', '!important.file', 'a+(b).file'])(
 		'%s is found',
-		async (name) => {
+		async name => {
 			makeFiles(name);
 			expect(await rr('o', 'x', {includeGlob: [name]})).toEqual({
 				out: name + '\n',
@@ -47,9 +47,7 @@ describe('#718 a path that is a file is used as it is', () => {
 
 	test('in a folder', async () => {
 		makeFiles('pages/[id].file', 'pages/i.file');
-		expect((await rr('o', 'x', {includeGlob: ['pages/[id].file']})).out).toBe(
-			'pages/[id].file\n'
-		);
+		expect((await rr('o', 'x', {includeGlob: ['pages/[id].file']})).out).toBe('pages/[id].file\n');
 		expect(content('pages/i.file')).toBe('foo');
 	});
 });
@@ -152,9 +150,7 @@ describe('#718 with --exclude-re', () => {
 
 	test('it sees the full path with --absolute-path', async () => {
 		makeFiles('a.file');
-		expect((await rr('o', 'x', {includeGlob: ['a.file'], excludeRe: ['^/']})).out).toBe(
-			'a.file\n'
-		);
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], excludeRe: ['^/']})).out).toBe('a.file\n');
 		fs.writeFileSync('a.file', 'foo');
 		const config = {includeGlob: ['a.file'], excludeRe: ['^/'], absolutePath: true};
 		expect((await rr('o', 'x', config)).exit).toBe(1);
