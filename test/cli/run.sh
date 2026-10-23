@@ -275,6 +275,12 @@ assert_raises		"rexreplace 'oo' 'x' nope.file --expect-files"    1
 reset
 assert		 		"rexreplace 'b' 'x' my.file your.file --sort-reverse --name-delimiter ','"    'your.file,my.file,'
 
+# The natural order is the same on Node and Bun, and in every locale. In Danish aa sorts after z.
+reset
+echo 'foo' > aab.file
+echo 'foo' > b.file
+assert		 		"LC_ALL=da_DK.UTF-8 rexreplace 'foo' 'x' b.file aab.file --sort natural --simulate --name-delimiter ','"    'aab.file,b.file,'
+
 
 # --full-path prints the full path of each name
 reset
