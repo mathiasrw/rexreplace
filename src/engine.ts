@@ -378,9 +378,7 @@ function findClashes(plan, renames, slashed, config) {
 		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
 
 	const clashes = slashed.map(item =>
-		clash('Renames with a / in the new name are not allowed. Use --rename-path to move files.', [
-			item,
-		])
+		clash("Names can't contain /. Use --rename-path to move files.", [item])
 	);
 	byTarget.forEach((items, target) => {
 		const [item] = items;
