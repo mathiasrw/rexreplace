@@ -814,11 +814,8 @@ function fileNumbers(config, number, total) {
 	return {n: number, t: total, i: config.numbers.matched + 1, c: config.numbers.changed + 1};
 }
 
-// When a file is done, it counts for $i if the pattern found something, and for $c if it was changed
+// When a file is done, it counts for $c if it was changed. It counts for $i when the code of --js runs for a match in it.
 function countFile(config, text, result) {
-	if (-1 !== text.search(config.regex)) {
-		config.numbers.matched++;
-	}
 	if (result !== text) {
 		config.numbers.changed++;
 	}
@@ -833,20 +830,22 @@ function usesNamedGroups(config) {
 	);
 }
 
-// Code that makes the numbers and their cousins, put in front of the code of --js.
-// $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
-function numbersCode(numbers) {
-	return Object.entries(numbers)
-		.map(([name, value]) => {
-			const cousins = [`$${name} = ${value}`, `$${name}_ = '${value} '`];
-			for (let width = 2; width <= 10; width++) {
-				const zeros = '0'.repeat(width - 1);
-				const padded = String(value).padStart(width, '0');
-				cousins.push(`$${name}${zeros} = '${padded}'`, `$${name}${zeros}_ = '${padded} '`);
-			}
-			return 'var ' + cousins.join(', ') + '; ';
-		})
-		.join('');
+// The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
+// and the ones with _ at the end have a space at the end. They are all given to the code as values, so they cost no time to compile.
+const widths = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+const numberNames = ['n', 't', 'i', 'c', 'm', 'M'].flatMap(name =>
+	[name, ...widths.map(width => name + '0'.repeat(width - 1))].flatMap(cousin => [
+		'$' + cousin,
+		'$' + cousin + '_',
+	])
+);
+
+// The values in the order of numberNames, from {n, t, i, c, m, M}
+function numberValues(numbers) {
+	return Object.values(numbers).flatMap(value => {
+		const padded = widths.map(width => String(value).padStart(width, '0'));
+		return [value, ...padded].flatMap(cousin => [cousin, cousin + ' ']);
+	});
 }
 
 // The stack trace of an error lists the calls that led to it, one line each, like `at fn (/path/file.js:2:15)` or `at /path/file.js:2:15`.
@@ -936,7 +935,7 @@ function dynamicReplacement(
 	const _pipe = _config_rr.pipedData,
 		_text = _data_rr,
 		_find = _config_rr.pattern,
-		code_rr = numbersCode(_numbers_rr) + _config_rr.replacementOri,
+		code_rr = _config_rr.replacementOri,
 		_cwd = process.cwd(),
 		_now = _time,
 		_ = ' ',
@@ -1010,6 +1009,7 @@ function dynamicReplacement(
 			'size_',
 			'nl',
 			'_',
+			...numberNames,
 			'__code_rr',
 			'var path = require("path");' +
 			'var __require_ = require;' +
@@ -1079,6 +1079,15 @@ function dynamicReplacement(
 		_size = readableSize(_bytes);
 	}
 
+	// The file counts for $i once the code runs for a match in it
+	let found = false;
+	const foundMatch = () => {
+		if (!found) {
+			found = true;
+			_config_rr.numbers.matched++;
+		}
+	};
+
 	// Run only once if no captured groups (replacement cant change).
 	// The result is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded.
 	// $m, $M and the named groups are about the match, so they also need the code to run once per match
@@ -1134,9 +1143,14 @@ function dynamicReplacement(
 			_size + _,
 			_nl,
 			_,
+			// The code runs once for the file, so it is the first match
+			...numberValues({..._numbers_rr, m: 1, M: _config_rr.numbers.matches + 1}),
 			code_rr
 		);
-		return () => result;
+		return () => {
+			foundMatch();
+			return result;
+		};
 	}
 	// Capture groups used, so need to run once per match
 	let _match_rr = 0;
@@ -1166,9 +1180,10 @@ function dynamicReplacement(
 			__ = _,
 			__code_rr = code_rr;
 
+		foundMatch();
 		_match_rr++;
 		_config_rr.numbers.matches++;
-		var capturedGroups = numbersCode({m: _match_rr, M: _config_rr.numbers.matches});
+		var capturedGroups = '';
 		// The match and the groups are followed by the offset and the full text, and by the named groups if the pattern has any
 		const named = arguments[arguments.length - 1];
 		const hasNamed = 'object' === typeof named && null !== named;
@@ -1235,6 +1250,7 @@ function dynamicReplacement(
 			__size + __,
 			__nl,
 			__,
+			...numberValues({..._numbers_rr, m: _match_rr, M: _config_rr.numbers.matches}),
 			capturedGroups + __code_rr
 		);
 	};
