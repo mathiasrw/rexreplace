@@ -110,11 +110,18 @@ describe('--rename', () => {
 		});
 	});
 
-	test('with --output-match the matches go to stdout and the names to stderr', async () => {
+	test('with --output-match the matches go to stdout and the names to stderr, and nothing would be renamed', async () => {
 		fs.writeFileSync('a.md', 'foo');
-		const config = {includeGlob: ['a.md'], rename: true, outputMatch: true};
-		expect(await rr('md', '_', config)).toEqual({out: 'md\n', err: 'a.md\n', exit: null});
-		expect(files()).toEqual(['a.md']);
+		fs.writeFileSync('b.md', 'foo');
+		// The replacement is not used, so `_` gives no clash
+		const config = {includeGlob: ['*.md'], rename: true, outputMatch: true};
+		expect(await rr('^[ab]', '_', config)).toEqual({
+			out: 'a\nb\n',
+			err: 'a.md\nb.md\n',
+			exit: null,
+		});
+		expect((await rrStatus('^[ab]', '_', config)).renames).toEqual([]);
+		expect(files()).toEqual(['a.md', 'b.md']);
 	});
 });
 
