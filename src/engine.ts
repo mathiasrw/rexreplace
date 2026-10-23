@@ -244,7 +244,12 @@ async function run(config) {
 		}
 	};
 
-	await Promise.all(Array.from({length: workers}, worker));
+	// Wait for every file in work before the first error is thrown, so no file is cut off halfway and left only as a backup
+	const results = await Promise.allSettled(Array.from({length: workers}, worker));
+	const failed = results.find(result => 'rejected' === result.status);
+	if (failed) {
+		throw failed.reason;
+	}
 }
 
 function openFile(file, config, number, total) {
