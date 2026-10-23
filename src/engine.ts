@@ -835,15 +835,18 @@ function countFile(config, text, result) {
 // The code uses a named group of the pattern, like rr_year for (?<year>…)
 function usesNamedGroups(config) {
 	return namedGroups(config.regex).some(name =>
-		new RegExp('(^|[^\\w$])rr_' + name.replace(/\$/g, '\\$') + '(?![\\w$])').test(
-			config.replacementOri
-		)
+		new RegExp(
+			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '(?![\\p{ID_Continue}$])',
+			'u'
+		).test(config.replacementOri)
 	);
 }
 
-// The names of the named groups of a regex, like year for (?<year>…)
+// The names of the named groups of a regex, like year for (?<year>…). A name can have any letter, like año.
 function namedGroups(regex) {
-	return [...regex.source.matchAll(/\(\?<([A-Za-z_$][\w$]*)>/g)].map(([, name]) => name);
+	return [
+		...regex.source.matchAll(/\(\?<([\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*)>/gu),
+	].map(([, name]) => name);
 }
 
 // The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
