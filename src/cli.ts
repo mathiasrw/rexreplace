@@ -1,3 +1,4 @@
+// Test of stacked PRs (devops/stack3/c, commit 2). Not to be merged into main.
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
