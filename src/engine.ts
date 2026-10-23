@@ -179,10 +179,10 @@ function openFile(file, config) {
 function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	chat('Work on content from: ' + _file_rr);
 
-	// Main regexp of the whole thing
+	// Main regexp of the whole thing. With --output-match the replacement prints the matches, so the code of --replacement-js is not run.
 	const result = _data_rr.replace(
 		_config_rr.regex,
-		_config_rr.replacementJs
+		_config_rr.replacementJs && !_config_rr.outputMatch
 			? dynamicReplacement(_file_rr, _config_rr, _data_rr)
 			: _config_rr.replacement
 	);
@@ -568,9 +568,10 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 		_size = readableSize(_bytes);
 	}
 
-	// Run only once if no captured groups (replacement cant change)
+	// Run only once if no captured groups (replacement cant change).
+	// The result is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded.
 	if (!/\$\d/.test(_config_rr.replacement)) {
-		return dynamicContent(
+		const result = dynamicContent(
 			require,
 			fs,
 			globs,
@@ -619,6 +620,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			_,
 			code_rr
 		);
+		return () => result;
 	}
 	// Capture groups used, so need to run once per match
 	return function () {
