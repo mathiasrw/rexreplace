@@ -53,6 +53,8 @@ function validateEncoding(encoding = 'utf8') {
 // When the run can not go on, a panic is thrown with the status so far.
 export async function engine(config: any = {engine: 'default'}) {
 	config.statusInfo = newStatus(config);
+	// A new run has had no panic yet, also when the same config is used again
+	config.stopped = false;
 	outputConfig(config);
 	try {
 		await run(config);
@@ -230,14 +232,26 @@ async function run(config) {
 			? files.length
 			: Math.max(16, os.availableParallelism() * 2);
 	let next = 0;
+	// After a panic no worker starts a new file. A file that is already in work is finished.
+	let stopped = false;
 	const worker = async () => {
-		while (next < files.length) {
+		while (next < files.length && !stopped) {
 			const index = next++;
-			await openFile(files[index], config, index + 1, files.length);
+			try {
+				await openFile(files[index], config, index + 1, files.length);
+			} catch (e) {
+				stopped = true;
+				throw e;
+			}
 		}
 	};
 
-	await Promise.all(Array.from({length: workers}, worker));
+	// Wait for every file in work before the first error is thrown, so no file is cut off halfway and left only as a backup
+	const results = await Promise.allSettled(Array.from({length: workers}, worker));
+	const failed = results.find(result => 'rejected' === result.status);
+	if (failed) {
+		throw failed.reason;
+	}
 }
 
 function openFile(file, config, number, total) {
