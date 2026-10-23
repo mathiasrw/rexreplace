@@ -778,6 +778,15 @@ function countFile(config, text, result) {
 	}
 }
 
+// The code uses a named group of the pattern, like _year for (?<year>…)
+function usesNamedGroups(config) {
+	return [...config.regex.source.matchAll(/\(\?<([A-Za-z_$][\w$]*)>/g)].some(([, name]) =>
+		new RegExp('(^|[^\\w$])_' + name.replace(/\$/g, '\\$') + '(?![\\w$])').test(
+			config.replacementOri
+		)
+	);
+}
+
 // Code that makes the numbers and their cousins, put in front of the code of --js.
 // $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
 function numbersCode(numbers) {
@@ -932,8 +941,12 @@ function dynamicReplacement(
 
 	// Run only once if no captured groups (replacement cant change).
 	// The result is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded.
-	// $m and $M are the number of the match, so they also need the code to run once per match
-	if (!/\$\d/.test(_config_rr.replacement) && !re.matchNumbers.test(_config_rr.replacement)) {
+	// $m, $M and the named groups are about the match, so they also need the code to run once per match
+	if (
+		!/\$\d/.test(_config_rr.replacement) &&
+		!re.matchNumbers.test(_config_rr.replacement) &&
+		!usesNamedGroups(_config_rr)
+	) {
 		const result = dynamicContent(
 			require,
 			fs,
@@ -1016,8 +1029,17 @@ function dynamicReplacement(
 		_match_rr++;
 		_config_rr.numbers.matches++;
 		var capturedGroups = numbersCode({m: _match_rr, M: _config_rr.numbers.matches});
-		for (var i = 0; i < arguments.length - 2; i++) {
+		// The match and the groups are followed by the offset and the full text, and by the named groups if the pattern has any
+		const named = arguments[arguments.length - 1];
+		const hasNamed = 'object' === typeof named && null !== named;
+		for (var i = 0; i < arguments.length - (hasNamed ? 3 : 2); i++) {
 			capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
+		}
+		// A named group is a variable with _ in front, like _year for (?<year>…), and _year_ has a space at the end
+		if (hasNamed) {
+			for (const [name, value] of Object.entries(named)) {
+				capturedGroups += `var _${name} = ${JSON.stringify(value)}, _${name}_ = _${name} + ' '; `;
+			}
 		}
 
 		return dynamicContent(
