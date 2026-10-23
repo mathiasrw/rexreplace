@@ -89,9 +89,14 @@ describe('--output-match', () => {
 			).toBe('a.\n');
 		});
 
-		test('with --js the code is not run', async () => {
+		test('with --js the code is not run, and a warning tells so', async () => {
 			const config = {pipedData: 'foobar', outputMatch: true, replacementJs: true};
-			expect((await rr('[fb].', 'throw new Error("should not run")', config)).out).toBe('fo\nba\n');
+			expect(await rr('[fb].', 'throw new Error("should not run")', config)).toEqual({
+				out: 'fo\nba\n',
+				err: ' 🟡 The code is not run with --output-match, as only the matches are printed.\n\n',
+				exit: null,
+			});
+			expect((await rr('[fb].', '_', {...config, quiet: true})).err).toBe('');
 		});
 
 		test('with --replacement-pipe the piped replacement is not used', async () => {

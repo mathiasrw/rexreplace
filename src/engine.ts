@@ -100,6 +100,10 @@ function newStatus(config) {
 async function run(config) {
 	validateEncoding(config.encoding);
 
+	if (config.replacementJs && config.outputMatch) {
+		warn('The code is not run with --output-match, as only the matches are printed.');
+	}
+
 	if (config.expectZeroDiff && (config.expectDiff || config.expectDiffAll)) {
 		panic('--expect-zero-diff can not be used with --expect-diff or --expect-diff-all');
 	}

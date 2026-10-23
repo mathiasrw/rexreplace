@@ -288,7 +288,7 @@ const yargs = require('yargs')
 	.describe(
 		'm',
 		`Output each match on a new line. ` +
-			`Will not replace any content but you still need to provide a dummy value (like \`_\`) as replacement parameter. ` +
+			`Will not replace any content but you still need to provide a dummy value (like \`_\`) as replacement parameter. The replacement is not used, so --js code is not run. ` +
 			`If search pattern does not contain matching groups the full match will be outputted. ` +
 			`If search pattern does contain matching groups only matching groups will be outputted (same line with no delimiter). ` +
 			``
