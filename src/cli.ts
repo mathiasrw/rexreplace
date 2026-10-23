@@ -1,7 +1,8 @@
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
-import {outputConfig, panic, writeTo} from './output.ts';
+import {writeTo} from './output.ts';
+import {statusConfig, panic} from './status.ts';
 import {alias} from './alias.ts';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
@@ -592,11 +593,9 @@ if (config.debug) {
 	config.status = config.verbose = config.quietTotal = true;
 }
 
-outputConfig(config);
+statusConfig(config);
 
 config.pipedData = null;
-
-config.showHelp = yargs.showHelp;
 
 config.pattern = pattern;
 

@@ -1,8 +1,3 @@
-let font: any = {};
-font.red = font.green = font.gray = str => str;
-// check for node version supporting chalk - if so overwrite `font`
-//const font = import('chalk');
-
 let config: any = null;
 
 // The char code of the last character of the last item printed to each stream (10 is a line break). Names and content never share a stream.
@@ -16,12 +11,6 @@ export const outputConfig = function (_config) {
 	lastItemChar.clear();
 	lastPrintedChar.clear();
 };
-
-// Thrown when the run can not go on. The engine adds the status so far, and the CLI ends the process.
-export class Panic extends Error {
-	panic = true;
-	status = null;
-}
 
 // A pipe the reader has closed, like `| head`, can not take more. That is fine: nobody reads the rest.
 // Bun throws when it is written to, and Node gives an error event, so both are caught.
@@ -85,7 +74,7 @@ export const printDone = function () {
 };
 
 // The name of a changed file goes to stdout so the names can be piped
-export const info = function (name, stream = null) {
+export const printName = function (name, stream = null) {
 	if (config.quiet || config.quietTotal) {
 		return;
 	}
@@ -94,75 +83,24 @@ export const info = function (name, stream = null) {
 	print(name, config.nameDelimiter, config.nameDelimiterTail, stream);
 };
 
-const note = function (msg) {
-	if (config.quiet || config.quietTotal) {
-		return;
+export const printWarning = function (msg) {
+	if (!config.quiet && !config.quietTotal) {
+		// The second line break gives an empty line under the warning
+		write(' 🟡 ' + msg + '\n\n', process.stderr);
 	}
-	write(font.gray(msg) + '\n', process.stderr);
-};
-
-export const warn = function (msg) {
-	config.statusInfo?.warnings.push(msg);
-	// The line break gives an empty line under the warning
-	note(' 🟡 ' + msg + '\n');
 };
 
 // --verbose was asked for, so --quiet does not hide it. --quiet-total wins and hides it too.
-// The status report keeps the same lines in `engine.steps`, so they are there even when they are not printed.
-export const chat = function (msg) {
-	config.statusInfo?.engine?.steps.push(msg);
+export const printVerbose = function (msg) {
 	if (config.verbose && !config.quietTotal) {
-		write(font.gray(msg) + '\n', process.stderr);
+		write(msg + '\n', process.stderr);
 	}
 };
 
-// An error is told about, and goes into `errors` in the status report. A panic also says the run stops here.
-const printError = function (text, stop) {
+// A panic also says the run stops here
+export const printError = function (text, stop) {
 	if (!config.quietTotal) {
 		// The line break gives an empty line under the error
-		write(
-			font.red(' ❌ ' + text + (stop ? '\n    No further processing.' : '')) + '\n\n',
-			process.stderr
-		);
+		write(' ❌ ' + text + (stop ? '\n    No further processing.' : '') + '\n\n', process.stderr);
 	}
-};
-
-// The detail, like the file, goes on a line of its own under the message
-const errorText = (msg, data) => msg + (data ? '\n    ' + data : '');
-
-// The run can not go on, so it stops here.
-// The files in work are finished, and they can fail too. Only the first panic is told, the rest are only in the status.
-export const panic = function (msg = '', data = '', displayHelp = false) {
-	const text = errorText(msg, data);
-	config.statusInfo?.errors.push(text);
-	if (!config.stopped) {
-		config.stopped = true;
-		if (displayHelp && !config.quietTotal) {
-			config.showHelp();
-		}
-		printError(text, true);
-	}
-	throw new Panic(text);
-};
-
-// A check from --expect-* that is not met. It is an error, and is also in `checks`, so the exit code can tell it from the other errors.
-export const checkFailed = function (text) {
-	config.statusInfo?.errors.push(text);
-	config.statusInfo?.checks.push(text);
-	printError(text, false);
-};
-
-// Something failed, and the run goes on. With --halt it is a panic.
-export const error = function (msg, data = '') {
-	const text = errorText(msg, data);
-	config.statusInfo?.errors.push(text);
-	// After a panic only the status is told about the files that are finished
-	if (!config.stopped) {
-		printError(text, config.halt);
-	}
-	if (config.halt) {
-		config.stopped = true;
-		throw new Panic(text);
-	}
-	return false;
 };

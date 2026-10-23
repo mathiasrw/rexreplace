@@ -15,18 +15,18 @@ How we like the code in RexReplace to be.
 
 ## Telling what is going on
 
-All output goes through `src/output.ts`. Pick the function by who the message is for:
+All output goes through `src/output.ts`, which only prints. What a run records in its status, and the panic, are in `src/status.ts`, which prints through `output.ts`. Pick the function by who the message is for:
 
 | Function | Shown when | For | Example |
 | --- | --- | --- | --- |
 | `print(item, delimiter, tail, stream)` | Always | The result. Puts the delimiter after each item, or only between them without a tail. Without a delimiter it is a line break, unless the item already ends with one. | A name, the content of a file, a match |
 | `printDone()` | At the end of a run, also when it is stopped | Ends stdout and stderr with a line break when `--nl` is set | |
-| `info(name)` | Unless `--quiet` | The name of an affected file. stdout, or stderr when stdout has content. | `a.md` |
+| `printName(name)` | Unless `--quiet` | The name of an affected file. stdout, or stderr when stdout has content. | `a.md` |
 | `warn(msg)` | Unless `--quiet` | Something is likely a mistake, or there is nothing to do, but the run goes on. Starts with 🟡. Also added to `status.warnings`. | `0 files found` |
 | `error(msg, data)` | Unless `--quiet-total` | Something went wrong. Starts with ❌, and the data, like the file, is on its own line under the message. The run goes on, unless `--halt` is set: then a panic is thrown. Also added to `status.errors`, so the CLI gives the exit code 2. | `File not found`, and `a.md` on the next line |
-| `checkFailed(text)` | Unless `--quiet-total` | A check from `--expect-*` that is not met. An error, also in `status.checks`, so the CLI gives the exit code 1 when the failed checks are the only errors. | `Expected a diff, but nothing was changed` |
-| `panic(msg, data, help)` | Unless `--quiet-total` | Something went wrong and the run can not go on. Starts with ❌, ends with `No further processing.`, and throws a panic, so the CLI exits with 3. Also added to `status.errors`. | `No data piped into replacement` |
-| `chat(msg)` | `--verbose`, also with `--quiet`, but not with `--quiet-total` | The user: what happens to each file. Only ever to stderr. Also kept in `engine.steps` of the status report. | `Open sync: a.md`, `Nothing changed in: a.md` |
+| `checkFailed(text)` (inside `checkExpectations()`) | Unless `--quiet-total` | A check from `--expect-*` that is not met. An error, also in `status.checks`, so the CLI gives the exit code 1 when the failed checks are the only errors. | `Expected a diff, but nothing was changed` |
+| `panic(msg, data)` | Unless `--quiet-total` | Something went wrong and the run can not go on. Starts with ❌, ends with `No further processing.`, and throws a panic, so the CLI exits with 3. Also added to `status.errors`. | `No data piped into replacement` |
+| `verbose(msg)` | `--verbose`, also with `--quiet`, but not with `--quiet-total` | The user: what happens to each file. Only ever to stderr. Also kept in `engine.steps` of the status report. | `Open sync: a.md`, `Nothing changed in: a.md` |
 
 - What the run did is in the status report: the engine resolves with it, and `--status` prints it. So there is no extra debug output to print along the way.
 - `--debug` prints the status report, with what went into the engine and what it did, and hides the rest, except the content of `--output` and the matches of `--output-match`.
