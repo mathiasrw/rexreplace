@@ -859,11 +859,21 @@ function thrownText(thrown) {
 		return text;
 	}
 	if ('object' === typeof thrown && null !== thrown) {
+		// Like an Error whose message can not be read: its name is still known
+		let name = '';
+		try {
+			name = thrown.constructor?.name;
+		} catch (e) {}
+		if (name && 'Object' !== name) {
+			return 'a ' + name + ' was thrown';
+		}
 		let json = '';
 		try {
 			json = JSON.stringify(thrown);
 		} catch (e) {}
-		return 'an object was thrown' + (json && '{}' !== json ? ': ' + json : '');
+		// The object can hold a whole file, so only the start of it is told
+		const start = json.length > 300 ? json.slice(0, 300) + '…' : json;
+		return 'an object was thrown' + (json && '{}' !== json ? ': ' + start : '');
 	}
 	return 'an empty ' + typeof thrown + ' was thrown';
 }
