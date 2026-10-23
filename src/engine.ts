@@ -1135,7 +1135,7 @@ function getFilePaths(conf) {
 
 	// --exclude-glob is always globs, also for the name of a file. They are used together, and the files they find are taken away.
 	if (excludeGlob.length) {
-		const excluded = new Set(globs.sync(excludeGlob, globOptions).map(file => path.resolve(file)));
+		const excluded = new Set(glob(excludeGlob, globOptions).map(file => path.resolve(file)));
 		files = files.filter(file => !excluded.has(path.resolve(file)));
 	}
 
@@ -1200,13 +1200,31 @@ function sortFiles(files, sort, conf) {
 	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
 }
 
+// A path that can not be looked at (like a name that is too long) is not a file, so it is globbed
+function isFile(file) {
+	try {
+		return Boolean(fs.statSync(file, {throwIfNoEntry: false})?.isFile());
+	} catch (e) {
+		return false;
+	}
+}
+
+// When the file system gives an error, the files can not be known, so the run can not go on
+function glob(patterns, globOptions) {
+	try {
+		return globs.sync(patterns, globOptions);
+	} catch (e) {
+		return panic('The files can not be found:', e.message);
+	}
+}
+
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
 // The other paths are globbed together, so a pattern that starts with `!` can take files away from the other patterns.
 function findFiles(paths, globOptions, sort) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
-		if (fs.statSync(file, {throwIfNoEntry: false})?.isFile()) {
+		if (isFile(file)) {
 			files.push(file);
 		} else {
 			patterns.push(file);
@@ -1216,7 +1234,7 @@ function findFiles(paths, globOptions, sort) {
 	// A file given by its name and also found by a glob is only handled once
 	const seen = new Set();
 	// A glob has no order of its own, so with --sort none its files come after the paths, sorted with natural
-	const found = patterns.length ? globs.sync(patterns, globOptions) : [];
+	const found = patterns.length ? glob(patterns, globOptions) : [];
 	return files.concat('none' === sort ? found.sort(natural) : found).filter(file => {
 		const fullPath = path.resolve(file);
 		if (seen.has(fullPath)) {
