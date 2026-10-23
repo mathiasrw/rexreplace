@@ -3,7 +3,7 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {$} from 'bun';
-import {cli, sh} from '../helper.js';
+import {cli, sh, rr, rrStatus} from '../helper.js';
 
 describe('#813 a run that stops', () => {
 	test('finishes the files in work, so none is left only as a backup', async () => {
@@ -14,5 +14,16 @@ describe('#813 a run that stops', () => {
 		expect(result.exit).toBe(3);
 		expect(fs.readdirSync('.').sort()).toEqual(names);
 		expect(fs.readFileSync('b050.txt', 'utf8')).toBe('foo');
+	});
+
+	test('tells only the first panic, and keeps the files that fail after it in the status', async () => {
+		const names = Array.from({length: 100}, (_, i) => `f${String(i).padStart(3, '0')}.txt`);
+		names.forEach(name => fs.writeFileSync(name, 'foo'));
+		const config = {includeGlob: ['*.txt'], replacementJs: true, voidAsync: false};
+		const result = await rr('foo', 'nope()', config);
+		expect(result.err.match(/❌/g)).toHaveLength(1);
+		expect(result.exit).toBe(3);
+		names.forEach(name => fs.writeFileSync(name, 'foo'));
+		expect((await rrStatus('foo', 'nope()', config)).errors.length).toBeGreaterThan(1);
 	});
 });
