@@ -935,7 +935,9 @@ function dynamicReplacement(
 	const _pipe = _config_rr.pipedData,
 		_text = _data_rr,
 		_find = _config_rr.pattern,
-		code_rr = _config_rr.replacementOri,
+		// The code of the user is in a block of its own, so it can declare the same names with let and const.
+		// The value of the block is the value of its last statement, like before. The line break ends a comment at the end.
+		code_rr = '{' + _config_rr.replacementOri + '\n}',
 		_cwd = process.cwd(),
 		_now = _time,
 		_ = ' ',
