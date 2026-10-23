@@ -33,6 +33,14 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 - `warn()`, `error()`, `checkFailed()` and `panic()` add to the status report as they go, also when the quiet flags hide what they print.
 - The exit code is 0 when the run is done, 1 when a check from `--expect-*` is not met, 2 when a file gave an error, and 3 for a panic or wrong flags. See Exit codes in the README.
 
+## Layers
+
+Each part of a run is a stack of layers: the pattern, the replacement and the files on the way in, and what is printed on the way out. They are told in "Hairy details" in the README. Use them as a guiding principle:
+
+- To understand what happens in a run.
+- To write tests: one for each layer, and for the ways they combine.
+- To challenge a new flag: it should be a layer, or change one layer, and not need its own rules for how it works with the other flags.
+
 ## Tests
 
 - **Tests are strict, lean and focused too.** One thing per test, and the name of the test says what it is.
