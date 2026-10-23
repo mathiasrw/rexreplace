@@ -1,17 +1,17 @@
 // https://github.com/mathiasrw/rexreplace/issues/826
 // https://github.com/mathiasrw/rexreplace/issues/848
 // https://github.com/mathiasrw/rexreplace/issues/843
-// --rename could make a name with a line break, like from the end of a replacement file. A path with a char below space
+// --rename could make a name with a line break, like from the end of a replacement file. A path with a control character
 // is now a clash, and so is a new name of only dots and spaces, or one that ends with a space or a dot.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../helper.js';
 
-const controls = ' ❌ Names can not have characters below space, like a line break or a tab.';
+const controls = ' ❌ Names can not have control characters, like a line break or a tab.';
 const dots =
 	' ❌ A name must have more than dots and spaces, and can not end with a space or a dot.';
 
-describe('#826 a new name with a char below space', () => {
+describe('#826 a new name with a control character', () => {
 	test('is a clash, also from the line break at the end of a replacement file', async () => {
 		fs.writeFileSync('a.md', 'foo');
 		fs.writeFileSync('name.txt', 'b\n');
@@ -41,9 +41,16 @@ describe('#826 a new name with a char below space', () => {
 		expect((await rr('^a', '"x\\t"', config)).err).toStartWith(controls);
 		expect(fs.readdirSync('.').sort()).toEqual(['a.md', 'b.md']);
 	});
+
+	test('is a clash for DEL too', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		const config = {includeGlob: ['a.md'], rename: true, replacementJs: true};
+		expect((await rr('^a', '"x\\x7f"', config)).err).toStartWith(controls);
+		expect(fs.readdirSync('.')).toEqual(['a.md']);
+	});
 });
 
-describe('#848 a path with a char below space in the run', () => {
+describe('#848 a path with a control character in the run', () => {
 	test('is a clash, also when the pattern would not change it', async () => {
 		fs.writeFileSync('a\tb.md', 'foo');
 		fs.writeFileSync('c.md', 'foo');

@@ -405,11 +405,11 @@ function renameFiles(files, config) {
 	});
 	// Names that can not be made. Each one is a clash of its own, and is left out of the other checks.
 	const invalid = [];
-	// A path with a char below space is not welcome, also when the pattern would not change it
+	// A path with a control character is not welcome, also when the pattern would not change it
 	plan.forEach(item => {
-		if (/[\x00-\x1f]/.test(item.old + item.new)) {
+		if (/[\x00-\x1f\x7f]/.test(item.old + item.new)) {
 			invalid.push([
-				'Names can not have characters below space, like a line break or a tab.' +
+				'Names can not have control characters, like a line break or a tab.' +
 					(config.replacementFile
 						? ' Use --trim-file for the line break at the end of a file.'
 						: ''),
