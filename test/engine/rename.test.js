@@ -103,9 +103,9 @@ describe('--rename with --keep-backup', () => {
 	});
 });
 
-describe('--rename stops the run before any file is renamed, when a rename would lose a file', () => {
+describe('--rename stops the run before any file is renamed, when planned renames clash', () => {
 	const stopped =
-		' ❌ No file is renamed, as a rename would lose a file\n    No further processing.\n\n';
+		' ❌ No file is renamed, as the planned renames clash\n    No further processing.\n\n';
 
 	test('when two files would get the same new path, also given in two ways', async () => {
 		fs.writeFileSync('a.md', 'foo');
