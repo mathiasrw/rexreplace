@@ -43,7 +43,7 @@ describe('#788 a path that can not be looked at', () => {
 			fs.writeFileSync('a.md', 'foo');
 			fs.writeFileSync('b.md', 'foo');
 			const result = await rr('foo', 'bar', config);
-			expect(result.err).toStartWith(' ❌ Not all files can be found: ENOTDIR');
+			expect(result.err).toStartWith(' ❌ Not all paths could be accessed: ENOTDIR');
 			expect(result.exit).toBe(2);
 			expect(fs.readFileSync('b.md', 'utf8')).toBe('bar');
 		}
@@ -56,7 +56,7 @@ describe('#788 a path that can not be looked at', () => {
 		fs.chmodSync('locked', 0);
 		try {
 			const result = await rr('foo', 'bar', {includeGlob: ['**/*.md']});
-			expect(result.err).toStartWith(' ❌ Not all files can be found: EACCES');
+			expect(result.err).toStartWith(' ❌ Not all paths could be accessed: EACCES');
 			expect(result.out).toBe('a.md\n');
 			expect(result.exit).toBe(2);
 			expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');

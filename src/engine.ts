@@ -1226,7 +1226,7 @@ function glob(patterns, globOptions, exclude = false) {
 		if (exclude) {
 			return panic('The files to exclude can not be found:', e.message);
 		}
-		error('Not all files can be found:', e.message);
+		error('Not all paths could be accessed:', e.message);
 		return globs.sync(patterns, {...globOptions, suppressErrors: true});
 	}
 }
