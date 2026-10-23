@@ -252,6 +252,15 @@ assert_raises		"rexreplace '^(my|your)' 'our' my.file your.file -r"    3
 assert		 		"cat my.file"    'foobar'
 
 
+# --expect-* checks the result, so a CI step can stop. When a check is not met, the exit code is 1.
+reset
+assert_raises		"rexreplace 'oo' 'x' my.file --expect-zero-diff --simulate"    1
+assert		 		"cat my.file"    'foobar'
+assert_raises		"rexreplace 'nope' 'x' my.file --expect-diff"    1
+assert_raises		"rexreplace 'oo' 'x' my.file -z"    0
+assert_raises		"rexreplace 'oo' 'x' nope.file --expect-files"    1
+
+
 # --full-path prints the full path of each name
 reset
 assert		 		"rexreplace 'b' 'x' my.file --full-path"    "$(pwd -P)/my.file"
