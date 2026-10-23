@@ -197,9 +197,14 @@ async function run(config) {
 
 	chat(config.files.length + ' files found');
 
-	// One file needs no async flow, and with -o or -m one file at a time gives the output in order
+	// One file needs no async flow, and with -o, -m or --sort one file at a time gives the output in order
 	config.voidAsync =
-		config.voidAsync || 1 === config.files.length || config.output || config.outputMatch;
+		config.voidAsync ||
+		1 === config.files.length ||
+		config.output ||
+		config.outputMatch ||
+		null != config.sort ||
+		config.sortReverse;
 
 	const files = config.files.filter(filepath =>
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
@@ -1025,7 +1030,9 @@ function getFilePaths(conf) {
 	// All globs follow the search: case-insensitive, unless --void-ignore-case
 	const globOptions = {caseSensitiveMatch: Boolean(conf.voidIgnoreCase)};
 
-	let files = findFiles(includeGlob, globOptions);
+	const sort = sortName(conf.sort);
+
+	let files = findFiles(includeGlob, globOptions, sort);
 
 	// With --full-path each file is known by its full path from here on. That is what --exclude-re sees, and the name that is printed.
 	if (conf.fullPath) {
@@ -1044,12 +1051,64 @@ function getFilePaths(conf) {
 			files = files.filter(file => !file.match(re));
 		});
 
-	return files.sort();
+	files = sortFiles(files, sort, conf);
+	return conf.sortReverse ? files.reverse() : files;
+}
+
+const sorts = ['natural', 'ascii', 'modified', 'created', 'size', 'none'];
+
+// The value of --sort in any case, where `true` and `yes` are `natural`. Without --sort it is `natural`.
+function sortName(value) {
+	if (undefined === value || null === value) {
+		return 'natural';
+	}
+	const name = String(value).toLowerCase();
+	if ('true' === name || 'yes' === name) {
+		return 'natural';
+	}
+	if (!sorts.includes(name)) {
+		panic('--sort must be one of ' + sorts.join(', ') + ', not:', String(value));
+	}
+	return name;
+}
+
+const natural = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'}).compare;
+const ascii = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+function sortFiles(files, sort, conf) {
+	// One file has no order, so it is not sorted, and needs no stat
+	if (files.length < 2 || 'none' === sort) {
+		return files;
+	}
+	if ('natural' === sort) {
+		return files.sort(natural);
+	}
+	if ('ascii' === sort) {
+		return files.sort(ascii);
+	}
+
+	// By a number from each file, and when two are the same, by ascii
+	const stats = new Map(files.map(file => [file, fs.statSync(file)]));
+	let key = {
+		modified: stat => stat.mtimeMs,
+		created: stat => stat.birthtimeMs,
+		size: stat => stat.size,
+	}[sort];
+
+	// Not all file systems keep the time a file was made. Then Node gives 0.
+	if ('created' === sort && [...stats.values()].some(stat => !stat.birthtimeMs)) {
+		warn(
+			'The file system does not keep the time a file was made, so --sort created uses the modified time.'
+		);
+		key = stat => stat.mtimeMs;
+	}
+
+	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
 }
 
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
 // The other paths are globbed together, so a pattern that starts with `!` can take files away from the other patterns.
-function findFiles(paths, globOptions) {
+function findFiles(paths, globOptions, sort) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
@@ -1062,7 +1121,9 @@ function findFiles(paths, globOptions) {
 
 	// A file given by its name and also found by a glob is only handled once
 	const seen = new Set();
-	return files.concat(patterns.length ? globs.sync(patterns, globOptions) : []).filter(file => {
+	// A glob has no order of its own, so with --sort none its files come after the paths, sorted with natural
+	const found = patterns.length ? globs.sync(patterns, globOptions) : [];
+	return files.concat('none' === sort ? found.sort(natural) : found).filter(file => {
 		const fullPath = path.resolve(file);
 		if (seen.has(fullPath)) {
 			return false;

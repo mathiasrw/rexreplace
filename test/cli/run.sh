@@ -148,7 +148,7 @@ assert		 		"cat my.file"    "foo\nar"
 # Globs
 reset
 echo barfoo > my_file
-assert		 		"rexreplace o x 'my*le' -o"    "fxxbar\nbarfxx"
+assert		 		"rexreplace o x 'my*le' -o"    "barfxx\nfxxbar"
 rm my_file
 
 # A path to a file is used as it is, also with glob characters in its name
@@ -265,6 +265,11 @@ assert		 		"cat my.file"    'foobar'
 assert_raises		"rexreplace 'nope' 'x' my.file --expect-diff"    1
 assert_raises		"rexreplace 'oo' 'x' my.file -z"    0
 assert_raises		"rexreplace 'oo' 'x' nope.file --expect-files"    1
+
+
+# --sort decides the order of the files, and --sort-reverse turns it around
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file --sort-reverse --name-delimiter ','"    'your.file,my.file,'
 
 
 # --full-path prints the full path of each name
