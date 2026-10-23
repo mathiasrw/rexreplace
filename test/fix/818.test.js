@@ -6,9 +6,18 @@ import {rr, rrStatus} from '../helper.js';
 
 describe('#818 a replacement file that can not be read', () => {
 	test.each([
-		['is not there', 'nope.txt', '"nope.txt" (ENOENT)'],
-		['is a folder', 'adir', '"adir" (EISDIR)'],
-		['has a line break at the end, like from echo', 'a.txt\n', '"a.txt\\n" (ENOENT)'],
+		['is not there', 'nope.txt', 'nope.txt (ENOENT: no such file or directory)'],
+		['is a folder', 'adir', 'adir (EISDIR: illegal operation on a directory, read)'],
+		[
+			'has a line break at the end, like from echo',
+			'a.txt\n',
+			'"a.txt\\n" (ENOENT: no such file or directory)',
+		],
+		[
+			'has a backslash, like a Windows path',
+			'my\\dir/nope.txt',
+			'my\\dir/nope.txt (ENOENT: no such file or directory)',
+		],
 	])('tells the reason when the path %s', async (name, filepath, text) => {
 		fs.mkdirSync('adir');
 		fs.writeFileSync('a.txt', 'X');
@@ -21,6 +30,8 @@ describe('#818 a replacement file that can not be read', () => {
 		fs.writeFileSync('b.txt', 'X');
 		const config = {includeGlob: ['*.txt'], replacementJs: true, replacementFile: true};
 		const status = await rrStatus('X', '"nope.txt"', config);
-		expect(status.errors).toEqual(['The replacement file can not be read: "nope.txt" (ENOENT)']);
+		expect(status.errors).toEqual([
+			'The replacement file can not be read: nope.txt (ENOENT: no such file or directory)',
+		]);
 	});
 });
