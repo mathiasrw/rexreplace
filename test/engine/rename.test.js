@@ -53,7 +53,7 @@ describe('--rename', () => {
 		expect(await rr('^', 'sub/', {includeGlob: ['a.md'], rename: true})).toEqual({
 			out: '',
 			err:
-				" ❌ Names can't contain /. Use --rename-path to move files.\n    From: a.md\n    To:   sub/a.md\n\n" +
+				' ❌ "/" is not allowed in names. Use --rename-path to move files.\n    From: a.md\n    To:   sub/a.md\n\n' +
 				' ❌ Planned renames clash, so no change is applied to any file\n    No further processing.\n\n',
 			exit: 3,
 		});
