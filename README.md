@@ -452,6 +452,108 @@ sed 's/a/x/g' > /dev/null  0,00s user 0,00s system 43% cpu 0,029 total
 rr x y myfile -o > /dev/null  0,21s user 0,04s system 86% cpu 0,294 total
 ```
 
+## Hairy details
+
+Each part of a run is a stack of layers. Each layer is optional, and works on what the layer before gives it. So the flags work together by their order, not by special rules.
+
+### On the way in
+
+#### The pattern
+
+1. The pattern as typed. `€` is `$` and `§` is `\`.
+2. `--literal` (`-L`) makes it plain text, so `.` is a dot.
+3. `--void-ignore-case` (`-I`), `--void-multiline` (`-M`), `--dot-all` (`-s`), `--unicode` (`-u`) and `--void-global` (`-G`) decide how the regex works.
+
+```bash
+> echo -n 'a.b' | rexreplace '.' '_'
+___
+> echo -n 'a.b' | rexreplace '.' '_' --literal
+a_b
+```
+
+#### The replacement
+
+1. The replacement as typed, with `€` and `§` as above. Or the piped data with `--replacement-pipe` (`-R`), used as it is.
+2. `--js` (`-j`) runs it as code, and the value of the code goes on. `--js-pipe` also gives the code the piped data as `pipe`.
+3. `--replacement-file`: what came so far is a path, and the content of that file goes on.
+4. `--trim-file` trims it.
+5. It goes into the text. `$1` is group 1, `$&` the whole match, and `$$` one `$`, unless the value came from `--js` code, or `--literal-replacement` (`-l`) is given.
+
+```bash
+> echo -n foo | rexreplace '(f)(oo)' '$2$1'
+oof
+> echo -n foo | rexreplace 'o' '$0.toUpperCase()' --js
+fOO
+> echo -n PRICE | rexreplace '(PRICE)' 'only $1.99'
+only PRICE.99
+> echo -n PRICE | rexreplace '(PRICE)' 'only $1.99' --literal-replacement
+only $1.99
+> echo -n 'a {{footer}} b' | rexreplace '\{\{footer\}\}' partials/footer.html --replacement-file --trim-file
+a <footer> b
+```
+
+As the layers are in order, they can be put together. Here the piped data is code that gives the path of the file to use:
+
+```bash
+> echo '"partials/footer.html"' | rexreplace '\{\{footer\}\}' _ page.html -R --js --replacement-file --trim-file
+```
+
+Code that lives in a file is loaded with `r()` in `--js`, like `'r("fix")($0)'`.
+
+#### The files
+
+1. The paths and globs given as arguments, and the lines piped in with `--glob-pipe` (`-g`). `--null-in` splits the piped lines on null bytes.
+2. A path that is a file is used as it is. The rest are globs.
+3. The globs ignore case, unless `--void-ignore-case` (`-I`).
+4. `--exclude-glob` (`-X`) takes away the files its globs find.
+5. `--full-path` (`-f`) makes each path full.
+6. `--exclude-re` (`-x`) takes away the files with a path that matches.
+7. `--sort` decides the order, and `--sort-reverse` turns it around.
+
+```bash
+> rexreplace foo bar 'docs/**/*.md' --exclude-glob 'docs/old/**' --exclude-re draft --sort size
+```
+
+### On the way out
+
+1. What is printed, and where:
+
+| Flags | stdout | stderr |
+| --- | --- | --- |
+| (none) | the names of the changed files | |
+| `--output` (`-o`) | the content | the names |
+| `--output-match` (`-m`) | the matches | the names |
+| `--rename --simulate` | the new names | the old names |
+
+```bash
+> rexreplace o x a.file b.file -o 2>/dev/null
+fxx
+fxx
+> rexreplace o x a.file b.file -o 2>&1 >/dev/null
+a.file
+b.file
+```
+
+2. Between the items: `--name-delimiter` goes after each name, and `--content-delimiter` after each content or match. `--delimiter` sets both, and `--null-out` is `--delimiter` with a null byte. The most specific one wins. Without a delimiter it is a line break, unless the item already ends with one.
+3. The tails: the delimiter also goes after the last item, unless `--no-name-delimiter-tail`, `--no-content-delimiter-tail` or `--no-tail`. Piped data that is printed is left as it came in, with nothing after it.
+
+```bash
+> rexreplace o x a.file b.file --name-delimiter ', ' --no-name-delimiter-tail
+a.file, b.file
+> rexreplace o x a.file b.file --null-out | xargs -0 ls -l
+```
+
+4. `--nl` ends stdout and stderr with a line break, if they do not end with one.
+5. How much: `--quiet` (`-q`) shows only the errors (❌), and no names or warnings (🟡). `--quiet-total` (`-Q`) shows nothing, and `--verbose` (`-V`) tells each step to stderr. An error that stops the run ends with `No further processing.`
+6. The status report: `--status` and `--status-compact` (`-c`) print it as the last thing, also with `--quiet-total`. `--debug` (`-d`) prints only the status report, with what went into the engine and what it did.
+7. The exit code, see [Exit codes](#exit-codes).
+
+### Other details
+
+- `--rename` (`-r`) works on the name of each file, and `--rename-path` on the whole path, so a `/` moves the file. If planned renames clash the process is halted and no change is applied to any file.
+- `--output-match` only prints what the pattern finds. The replacement is not used, so `--js` code is not run, a replacement file is not read, and `--rename` renames nothing.
+- The files are handled at the same time, so names can come in another order than the sort. They are handled one at a time, in order, with `--output`, `--output-match`, `--void-async` (`-A`), `--sort`, or when `--js` code uses `$i`, `$c`, `$m` or `$M`.
+
 ## Test
 
 ### Regression
