@@ -836,17 +836,19 @@ function countFile(config, text, result) {
 function usesNamedGroups(config) {
 	return namedGroups(config.regex).some(name =>
 		new RegExp(
-			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '(?![\\p{ID_Continue}$])',
+			// rr_year_ is the group with a space at the end, so the code uses the group then too
+			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
 			'u'
 		).test(config.replacementOri)
 	);
 }
 
 // The names of the named groups of a regex, like year for (?<year>…). A name can have any letter, like año.
+// They come from the regex itself, so text that only looks like a group, like \(?<a> or [(?<a>], is not one.
+// With | at the end the regex matches an empty text, and the match has all the groups.
 function namedGroups(regex) {
-	return [
-		...regex.source.matchAll(/\(\?<([\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*)>/gu),
-	].map(([, name]) => name);
+	const match = new RegExp(regex.source + '|', regex.flags.replace(/[gy]/g, '')).exec('');
+	return Object.keys(match?.groups ?? {});
 }
 
 // The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
