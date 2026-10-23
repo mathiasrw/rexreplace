@@ -350,21 +350,28 @@ function findClashes(plan, renames, config) {
 	const ontoRun = targets.intersection(inRun);
 	const ontoOthers = targets.difference(inRun);
 
+	// Each path on its own line, so long paths can be read
+	const clash = (title, items) =>
+		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
+
 	const clashes = [];
 	byTarget.forEach((items, target) => {
-		const [item] = items;
 		if (1 < items.length) {
-			clashes.push(
-				items.map(each => each.old).join(' and ') +
-					(2 === items.length ? ' would both' : ' would all') +
-					' be renamed to ' +
-					item.new
-			);
-		} else if (ontoRun.has(target) && pathKey(item.old) !== target) {
+			clashes.push(clash('Renames to the same path are not allowed.', items));
+		} else if (ontoRun.has(target) && pathKey(items[0].old) !== target) {
 			// Not even --rename-force writes over a file in the run. A file can still change the case of its own name.
-			clashes.push(item.old + ' would be renamed to ' + item.new + ', which is a file in this run');
-		} else if (ontoOthers.has(target) && !config.renameForce && isOtherFile(item.old, item.new)) {
-			clashes.push(item.old + ' would be renamed to ' + item.new + ', which is there already');
+			clashes.push(clash('Renames clashing with other files in this run are not allowed.', items));
+		} else if (
+			ontoOthers.has(target) &&
+			!config.renameForce &&
+			isOtherFile(items[0].old, items[0].new)
+		) {
+			clashes.push(
+				clash(
+					'Renames clashing with files that are there already are not allowed without --rename-force.',
+					items
+				)
+			);
 		}
 	});
 
