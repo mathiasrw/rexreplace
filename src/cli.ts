@@ -412,7 +412,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 \`mtime_obj\`: date object representing \`mtime\`, 
 \`ctime_obj\`: date object representing \`ctime\`.
 
-The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, only the numbers the code names are made, and the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`. This is found with a simple text search, so it can be fooled, like by \`eval('$' + 'n')\`.
+The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
 
 Access a named group via the name prepended with \`rr_\`. \`(?<year>...)\` gives you \`rr_year\`. A named group name can not end with \`_\`. 
 
@@ -618,7 +618,7 @@ const unescape = (key, name) => {
 	} catch (e) {
 		// The engine is not running yet, so the panic is caught here
 		try {
-			panic('Invalid escape sequence in ' + name + ':', typed[key]);
+			panic('Invalid escape sequence in ' + name, typed[key]);
 		} catch (e) {
 			exitOnPanic(config, e);
 		}

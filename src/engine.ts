@@ -104,7 +104,7 @@ function newStatus(config) {
 // Flags that can not go together
 function checkFlags(config) {
 	if (!Buffer.isEncoding(config.encoding ?? 'utf8')) {
-		panic('Unknown encoding:', config.encoding);
+		panic('Unknown encoding', config.encoding);
 	}
 	if (config.expectZeroDiff && (config.expectDiff || config.expectDiffAll)) {
 		panic('--expect-zero-diff can not be used with --expect-diff or --expect-diff-all');
@@ -165,7 +165,7 @@ function unpackConfig(config) {
 		? null
 		: config.codeUses?.groups.find(name => name.endsWith('_'));
 	if (endsWith_) {
-		panic('A named group can not end with _:', endsWith_);
+		panic('A named group can not end with _', endsWith_);
 	}
 
 	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
@@ -237,7 +237,7 @@ async function run(config) {
 		config.codeUses?.countsBefore;
 
 	const files = config.files.filter(filepath =>
-		fs.existsSync(filepath) ? true : error('File not found:', filepath)
+		fs.existsSync(filepath) ? true : error('File not found', filepath)
 	);
 
 	if (config.rename || config.renamePath) {
@@ -621,7 +621,7 @@ function readReplacement(config) {
 		try {
 			return readReplacementFile(replacement, config);
 		} catch (e) {
-			return panic('The replacement file can not be read:', pathAndReason(replacement, e));
+			return panic('The replacement file can not be read', pathAndReason(replacement, e));
 		}
 	}
 
@@ -682,7 +682,7 @@ function codeReplacement(file, config, text, numbers) {
 				return readReplacementFile(filepath, config);
 			} catch (e) {
 				config.unreadableFiles.add(filepath);
-				error('The replacement file can not be read:', pathAndReason(filepath, e));
+				error('The replacement file can not be read', pathAndReason(filepath, e));
 			}
 		}
 		return args[0];
@@ -728,27 +728,16 @@ function fileNumbers(config, number, total) {
 	return {n: number, t: total, i: config.numbers.matched + 1, c: config.numbers.changed + 1};
 }
 
-// When a file is done, it counts for $i if the pattern found something, and for $c if it was changed.
-// It takes one more search of the file, so it is only done when the code uses $i or $c.
+// When a file is done, it counts for $c if it was changed. It counts for $i when the code of --js runs for a match in it.
 function countFile(config, text, result) {
-	if (!config.codeUses?.countFiles) {
-		return;
-	}
-	if (-1 !== text.search(config.regex)) {
-		config.numbers.matched++;
-	}
 	if (result !== text) {
 		config.numbers.changed++;
 	}
 }
 
-// What the code of --js names. It is found once, with a plain text search, so it can be fooled, like by `eval('$' + 'n')`.
+// What the code of --js names, found once with a plain text search
 function codeUses(code, regex) {
-	const numbers = new Set(
-		['n', 't', 'i', 'c', 'm', 'M'].filter(name =>
-			new RegExp('\\$' + name + '(?![A-Za-z])').test(code)
-		)
-	);
+	const named = name => new RegExp('\\$' + name + '(?![A-Za-z])').test(code);
 	const groups = namedGroups(regex);
 	// A named group is used as rr_year, or as rr_year_ with a space at the end
 	const usesGroup = name =>
@@ -756,14 +745,11 @@ function codeUses(code, regex) {
 			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
 			'u'
 		).test(code);
-	const matchNumbers = numbers.has('m') || numbers.has('M');
+	const matchNumbers = named('m') || named('M');
 	return {
-		numbers,
 		groups,
-		// $i and $c need one more search of each file, so the files are only counted when the code uses them
-		countFiles: numbers.has('i') || numbers.has('c'),
-		// $i, $c, $m and $M count what came before
-		countsBefore: matchNumbers || numbers.has('i') || numbers.has('c'),
+		// $i, $c, $m and $M count what came before, so the files are done in order
+		countsBefore: matchNumbers || named('i') || named('c'),
 		// The groups, the named groups, $m and $M are about the match, so the code runs once per match
 		perMatch: matchNumbers || re.capturedGroupRef.test(code) || groups.some(usesGroup),
 		stat: re.mctime.test(code),
@@ -779,22 +765,22 @@ function namedGroups(regex) {
 	return Object.keys(match?.groups ?? {});
 }
 
-// Code that makes the numbers and their cousins, put in front of the code of --js.
-// $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
-// Only the numbers the code uses are made, as each one costs time when the code runs once per match.
-function numbersCode(numbers, used) {
-	return Object.entries(numbers)
-		.filter(([name]) => used.has(name))
-		.map(([name, value]) => {
-			const cousins = [`$${name} = ${value}`, `$${name}_ = '${value} '`];
-			for (let width = 2; width <= 10; width++) {
-				const zeros = '0'.repeat(width - 1);
-				const padded = String(value).padStart(width, '0');
-				cousins.push(`$${name}${zeros} = '${padded}'`, `$${name}${zeros}_ = '${padded} '`);
-			}
-			return 'var ' + cousins.join(', ') + '; ';
-		})
-		.join('');
+// The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
+// and the ones with _ at the end have a space at the end. They are all given to the code as values, so they cost no time to compile.
+const widths = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+const numberNames = ['n', 't', 'i', 'c', 'm', 'M'].flatMap(name =>
+	[name, ...widths.map(width => name + '0'.repeat(width - 1))].flatMap(cousin => [
+		'$' + cousin,
+		'$' + cousin + '_',
+	])
+);
+
+// The values in the order of numberNames, from {n, t, i, c, m, M}
+function numberValues(numbers) {
+	return Object.values(numbers).flatMap(value => {
+		const padded = widths.map(width => String(value).padStart(width, '0'));
+		return [value, ...padded].flatMap(cousin => [cousin, cousin + ' ']);
+	});
 }
 
 // The stack trace of an error lists the calls that led to it, one line each, like `at fn (/path/file.js:2:15)` or `at /path/file.js:2:15`.
@@ -958,42 +944,62 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		params[name] = value;
 		params[name + '_'] = (value ?? '❌') + ' ';
 	}
-	codeFunction ??= new Function(...Object.keys(params), '__code_rr', 'return eval(__code_rr);');
+	codeFunction ??= new Function(
+		...Object.keys(params),
+		...numberNames,
+		'__code_rr',
+		'return eval(__code_rr);'
+	);
 	const args = Object.values(params);
 
 	// The code of the user is in a block of its own, so it can declare the same names with let and const.
 	// The value of the block is the value of its last statement, like before. The line break ends a comment at the end.
-	const code = numbersCode(numbers, config.codeUses.numbers) + '{' + config.replacementOri + '\n}';
+	const code = '{' + config.replacementOri + '\n}';
 
 	// When the code fails, only the message is told, and not the stack trace with all the code put in front of the code of the user
-	const runCode = variables => {
+	const runCode = (matchNumbers, variables) => {
 		try {
-			return codeFunction(...args, variables + code);
+			return codeFunction(
+				...args,
+				...numberValues({...numbers, ...matchNumbers}),
+				variables + code
+			);
 		} catch (e) {
 			const where = config.dataIsPiped ? 'the piped data' : file;
 			// With --verbose it also tells where the code failed, when that is in a file of the user, like a module loaded with r()
 			const at = config.verbose ? userCodeLocation(e) : '';
 			return panic(
-				'The code of --js failed for ' +
-					where +
-					'\n    ' +
-					thrownText(e) +
-					(at ? '\n    at ' + at : '')
+				'The code of --js failed for ' + where,
+				thrownText(e) + (at ? '\n    at ' + at : '')
 			);
+		}
+	};
+
+	// The file counts for $i once the code runs for a match in it
+	let found = false;
+	const foundMatch = () => {
+		if (!found) {
+			found = true;
+			config.numbers.matched++;
 		}
 	};
 
 	// The value is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded
 	if (!config.codeUses.perMatch) {
-		const result = runCode('');
-		return () => result;
+		// The code runs once for the file, so it is the first match
+		const result = runCode({m: 1, M: config.numbers.matches + 1}, '');
+		return () => {
+			foundMatch();
+			return result;
+		};
 	}
 	let match = 0;
 	return (...matchArgs) => {
+		foundMatch();
 		match++;
 		config.numbers.matches++;
 		const {groups, named} = splitMatch(matchArgs);
-		let variables = numbersCode({m: match, M: config.numbers.matches}, config.codeUses.numbers);
+		let variables = '';
 		groups.forEach((value, i) => {
 			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
 		});
@@ -1001,7 +1007,7 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		for (const [name, value] of Object.entries(named)) {
 			variables += `var rr_${name} = ${JSON.stringify(value)}, rr_${name}_ = rr_${name} + ' '; `;
 		}
-		return runCode(variables);
+		return runCode({m: match, M: config.numbers.matches}, variables);
 	};
 }
 
@@ -1056,7 +1062,7 @@ function sortName(value) {
 		return 'natural';
 	}
 	if (!sorts.includes(name)) {
-		panic('--sort must be one of ' + sorts.join(', ') + ', not:', String(value));
+		panic('--sort must be one of ' + sorts.join(', '), String(value));
 	}
 	return name;
 }
@@ -1136,9 +1142,9 @@ function glob(patterns, globOptions, exclude = false) {
 		return globs.sync(patterns, globOptions);
 	} catch (e) {
 		if (exclude) {
-			return panic('The files to exclude can not be found:', e.message);
+			return panic('The files to exclude can not be found', e.message);
 		}
-		error('Not all paths could be accessed:', e.message);
+		error('Not all paths could be accessed', e.message);
 		return globs.sync(patterns, {...globOptions, suppressErrors: true});
 	}
 }

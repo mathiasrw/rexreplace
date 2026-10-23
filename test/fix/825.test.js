@@ -48,7 +48,7 @@ describe('#825 a named group that ends with _', () => {
 			});
 			expect(result).toEqual({
 				out: '',
-				err: ` ❌ A named group can not end with _: ${name}\n    No further processing.\n\n`,
+				err: ` ❌ A named group can not end with _\n    ${name}\n    No further processing.\n\n`,
 				exit: 3,
 			});
 			expect(fs.readFileSync('a.md', 'utf8')).toBe('in 1999');

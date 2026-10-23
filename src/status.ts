@@ -25,10 +25,13 @@ export const verbose = function (msg) {
 	printVerbose(msg);
 };
 
+// The detail, like the file, goes on a line of its own under the message
+const errorText = (msg, data) => msg + (data ? '\n    ' + data : '');
+
 // The run can not go on, so it stops here.
 // The files in work are finished, and they can fail too. Only the first panic is told, the rest are only in the status.
 export const panic = function (msg = '', data = '') {
-	const text = msg + (data ? ' ' + data : '');
+	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
 	if (!config.plzStop) {
 		config.plzStop = true;
@@ -46,7 +49,7 @@ const checkFailed = function (text) {
 
 // Something failed, and the run goes on. With --halt it is a panic.
 export const error = function (msg, data = '') {
-	const text = msg + (data ? ' ' + data : '');
+	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
 	// After a panic only the status is told about the files that are finished
 	if (!config.plzStop) {

@@ -42,7 +42,7 @@ describe('#819 a file deleted before --sort looks at it', () => {
 		async sort => {
 			const result = await sortWithGone(['gone.md'], {sort});
 			expect(result.out).toBe('z.md\na.md\n');
-			expect(result.err).toEndWith(' ❌ File not found: gone.md\n\n');
+			expect(result.err).toEndWith(' ❌ File not found\n    gone.md\n\n');
 			expect(result.exit).toBe(2);
 		}
 	);
@@ -50,7 +50,7 @@ describe('#819 a file deleted before --sort looks at it', () => {
 	test('is told about for each file, when more than one is deleted', async () => {
 		expect(await sortWithGone(['gone.md', 'gone2.md'], {sort: 'size'})).toEqual({
 			out: 'z.md\na.md\n',
-			err: ' ❌ File not found: gone.md\n\n ❌ File not found: gone2.md\n\n',
+			err: ' ❌ File not found\n    gone.md\n\n ❌ File not found\n    gone2.md\n\n',
 			exit: 2,
 		});
 	});
@@ -58,7 +58,7 @@ describe('#819 a file deleted before --sort looks at it', () => {
 	test('does not change the order of the others with --sort-reverse', async () => {
 		expect(await sortWithGone(['gone.md'], {sort: 'size', sortReverse: true})).toEqual({
 			out: 'a.md\nz.md\n',
-			err: ' ❌ File not found: gone.md\n\n',
+			err: ' ❌ File not found\n    gone.md\n\n',
 			exit: 2,
 		});
 	});
@@ -66,7 +66,7 @@ describe('#819 a file deleted before --sort looks at it', () => {
 	test('stops the run with --halt, before any file is changed', async () => {
 		expect(await sortWithGone(['gone.md'], {sort: 'size', halt: true})).toEqual({
 			out: '',
-			err: ' ❌ File not found: gone.md\n    No further processing.\n\n',
+			err: ' ❌ File not found\n    gone.md\n    No further processing.\n\n',
 			exit: 3,
 		});
 		expect(fs.readFileSync('a.md', 'utf8')).toBe('foo foo');
