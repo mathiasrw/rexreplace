@@ -16,4 +16,15 @@ describe('#816 named groups with letters that are not ASCII', () => {
 		expect(result.err).toStartWith(' ❌ A named group can not end with _: año_');
 		expect(result.exit).toBe(3);
 	});
+
+	test('are read from the regex, so text that only looks like a group is not one', async () => {
+		const config = {replacementJs: true};
+		expect((await rr('\\(?<a_>b', '"z"', {...config, pipedData: 'x(?<a_>b'})).out).toBe('x(?z');
+		expect((await rr('[(?<a_>]', '"z"', {...config, pipedData: 'ab'})).out).toBe('zb');
+	});
+
+	test('can be used with a space at the end on its own, like rr_year_', async () => {
+		const config = {pipedData: '2024', replacementJs: true};
+		expect((await rr('(?<year>\\d+)', 'rr_year_ + "|"', config)).out).toBe('2024 |');
+	});
 });
