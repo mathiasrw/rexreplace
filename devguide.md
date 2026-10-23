@@ -29,7 +29,7 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 | `chat(msg)` | `--verbose`, also with `--quiet`, but not with `--quiet-total` | The user: what happens to each file. Only ever to stderr. Also kept in `engine.steps` of the status report. | `Open sync: a.md`, `Nothing changed in: a.md` |
 
 - What the run did is in the status report: the engine resolves with it, and `--status` prints it. So there is no extra debug output to print along the way.
-- `--debug` prints only the status report, with what went into the engine and what it did.
+- `--debug` prints the status report, with what went into the engine and what it did, and hides the rest, except the content of `--output` and the matches of `--output-match`.
 - `warn()`, `error()`, `checkFailed()` and `panic()` add to the status report as they go, also when the quiet flags hide what they print.
 - The exit code is 0 when the run is done, 1 when a check from `--expect-*` is not met, 2 when a file gave an error, and 3 for a panic or wrong flags. See Exit codes in the README.
 
