@@ -10,17 +10,12 @@ const flows = [
 	['--void-async', {voidAsync: true}],
 ];
 
-// Make a.file and b.file with the content `foo`, where b.file can not be read
-function oneUnreadable() {
-	fs.writeFileSync('a.file', 'foo');
-	fs.writeFileSync('b.file', 'foo');
-	fs.chmodSync('b.file', 0);
-	return {includeGlob: ['a.file', 'b.file']};
-}
-
 describe('#728 the exit code is 1 when a file gives an error', () => {
 	test.each(flows)('and the other files are still changed with %s', async (name, flags) => {
-		const result = await rr('o', 'x', {...oneUnreadable(), ...flags});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
+		fs.chmodSync('b.file', 0);
+		const result = await rr('o', 'x', {includeGlob: ['a.file', 'b.file'], ...flags});
 		expect(result.out).toBe('a.file\n');
 		expect(result.err).toContain('EACCES');
 		expect(result.exit).toBe(1);
@@ -45,6 +40,9 @@ describe('#728 the exit code is 1 when a file gives an error', () => {
 	});
 
 	test.each(['quiet', 'quietTotal'])('also with --%s', async flag => {
-		expect((await rr('o', 'x', {...oneUnreadable(), [flag]: true})).exit).toBe(1);
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
+		fs.chmodSync('b.file', 0);
+		expect((await rr('o', 'x', {includeGlob: ['a.file', 'b.file'], [flag]: true})).exit).toBe(1);
 	});
 });

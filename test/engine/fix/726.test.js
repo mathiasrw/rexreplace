@@ -11,19 +11,14 @@ const flows = [
 	['--void-async', {voidAsync: true}],
 ];
 
-// Make `name` with the content `foobar` in a directory that is not the working directory and give the absolute path of it
-function outside(name) {
-	fs.mkdirSync('work');
-	fs.mkdirSync('other');
-	const file = path.resolve('other', name);
-	fs.writeFileSync(file, 'foobar');
-	process.chdir('work');
-	return file;
-}
-
+// The file is in a folder that is not the working folder, so it can only be given with its absolute path
 describe('#726 a file given with an absolute path is changed', () => {
 	test.each(flows)('as a path with %s', async (name, flags) => {
-		const file = outside('my.file');
+		fs.mkdirSync('work');
+		fs.mkdirSync('other');
+		const file = path.resolve('other', 'my.file');
+		fs.writeFileSync(file, 'foobar');
+		process.chdir('work');
 		const result = await rr('o', 'x', {includeGlob: [file], ...flags});
 		expect(result).toEqual({out: file + '\n', err: '', exit: null});
 		expect(fs.readFileSync(file, 'utf8')).toBe('fxxbar');
@@ -31,7 +26,11 @@ describe('#726 a file given with an absolute path is changed', () => {
 	});
 
 	test.each(flows)('as a glob with %s', async (name, flags) => {
-		const file = outside('my.file');
+		fs.mkdirSync('work');
+		fs.mkdirSync('other');
+		const file = path.resolve('other', 'my.file');
+		fs.writeFileSync(file, 'foobar');
+		process.chdir('work');
 		const glob = path.join(path.dirname(file), '*.file');
 		const result = await rr('o', 'x', {includeGlob: [glob], ...flags});
 		expect(result).toEqual({out: file + '\n', err: '', exit: null});
@@ -51,7 +50,11 @@ describe('#726 a file given with an absolute path is changed', () => {
 	test.each(flows)(
 		'--keep-backup puts the backup next to the file with %s',
 		async (name, flags) => {
-			const file = outside('my.file');
+			fs.mkdirSync('work');
+			fs.mkdirSync('other');
+			const file = path.resolve('other', 'my.file');
+			fs.writeFileSync(file, 'foobar');
+			process.chdir('work');
 			await rr('o', 'x', {includeGlob: [file], keepBackup: true, ...flags});
 			const [backup, ...rest] = fs
 				.readdirSync(path.dirname(file))
@@ -65,7 +68,11 @@ describe('#726 a file given with an absolute path is changed', () => {
 	);
 
 	test('--replacement-js gets the path of the file as it is', async () => {
-		const file = outside('my.file');
+		fs.mkdirSync('work');
+		fs.mkdirSync('other');
+		const file = path.resolve('other', 'my.file');
+		fs.writeFileSync(file, 'foobar');
+		process.chdir('work');
 		const result = await rr(
 			'foobar',
 			'[file, dirpath, file_rel, dirpath_rel, typeof mtime].join("|")',
