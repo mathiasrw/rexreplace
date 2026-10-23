@@ -23,9 +23,32 @@ export class Panic extends Error {
 	status = null;
 }
 
+// A pipe the reader has closed, like `| head`, can not take more. That is fine: nobody reads the rest.
+// Bun throws when it is written to, and Node gives an error event, so both are caught.
+const closed = new Set();
+const whenClosed = stream => e => {
+	if ('EPIPE' !== e?.code) {
+		throw e;
+	}
+	closed.add(stream);
+};
+process.stdout.on?.('error', whenClosed(process.stdout));
+process.stderr.on?.('error', whenClosed(process.stderr));
+
+export const writeTo = function (stream, text) {
+	if (closed.has(stream)) {
+		return;
+	}
+	try {
+		stream.write(text);
+	} catch (e) {
+		whenClosed(stream)(e);
+	}
+};
+
 // Everything is printed from here, so the last character of each stream is known
 const write = function (text, stream) {
-	stream.write(text);
+	writeTo(stream, text);
 	if (text) {
 		lastPrintedChar.set(stream, text.charCodeAt(text.length - 1));
 	}

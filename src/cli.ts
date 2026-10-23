@@ -1,7 +1,7 @@
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
-import {outputConfig, panic} from './output.ts';
+import {outputConfig, panic, writeTo} from './output.ts';
 import {alias} from './alias.ts';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
@@ -526,9 +526,9 @@ Z	z
 // The CLI is the only part that acts on the process.
 function printStatus(config, status) {
 	if (config.status) {
-		process.stdout.write('\n' + JSON.stringify(status, null, 2) + '\n');
+		writeTo(process.stdout, '\n' + JSON.stringify(status, null, 2) + '\n');
 	} else if (config.statusCompact) {
-		process.stdout.write(JSON.stringify(status) + '\n');
+		writeTo(process.stdout, JSON.stringify(status) + '\n');
 	}
 }
 
