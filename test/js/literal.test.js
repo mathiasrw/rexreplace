@@ -83,19 +83,50 @@ describe('--literal', () => {
 			expect(fs.readFileSync('axfile', 'utf8')).toBe('fxxbar');
 		});
 
-		test.todo(
-			'BUG #686: with --unicode a pattern containing - , # or whitespace is rejected as invalid',
-			async () => {
-				for (const char of '-,# ') {
-					const result = await rr(`a${char}b`, 'x', {
-						pipedData: `a${char}b`,
-						literal: true,
-						unicode: true,
-					});
-					expect(result.exit, char).toBe(null);
-					expect(result.out, char).toBe('x');
-				}
+		test.each([...'-,# []{}()*+?./\\^$|'])(
+			'with --unicode finds a pattern with %j in it (#686)',
+			async (char) => {
+				const pattern = `a${char}b`;
+				const config = {pipedData: pattern, literal: true, unicode: true};
+				expect(await rr(pattern, 'x', config)).toEqual({out: 'x', err: '', exit: null});
 			}
 		);
+
+		describe('with --unicode', () => {
+			const unicode = {literal: true, unicode: true};
+
+			test('finds emoji and other chars outside the BMP as plain text', async () => {
+				const config = {...unicode, pipedData: 'x🦖.🦕y 🦖x🦕'};
+				expect(await rr('🦖.🦕', '_', config)).toEqual({
+					out: 'x_y 🦖x🦕',
+					err: '',
+					exit: null,
+				});
+			});
+
+			test('finds a char with a combining accent only in that form', async () => {
+				const config = {...unicode, pipedData: 'café café'};
+				expect(await rr('café', 'x', config)).toEqual({out: 'café x', err: '', exit: null});
+			});
+
+			test('is case insensitive also outside ASCII', async () => {
+				const config = {...unicode, pipedData: 'æøå ÆØÅ'};
+				expect(await rr('ÆØÅ', 'x', config)).toEqual({out: 'x x', err: '', exit: null});
+			});
+
+			test('finds a joined emoji as a whole, and not the emoji it is made of', async () => {
+				const config = {...unicode, pipedData: '👨 👨‍👩‍👧'};
+				expect(await rr('👨‍👩‍👧', 'x', config)).toEqual({out: '👨 x', err: '', exit: null});
+			});
+
+			test('takes a code point escape as plain text', async () => {
+				const config = {...unicode, pipedData: '\\u{1F996} 🦖'};
+				expect(await rr('\\u{1F996}', 'x', config)).toEqual({
+					out: 'x 🦖',
+					err: '',
+					exit: null,
+				});
+			});
+		});
 	});
 });
