@@ -270,6 +270,14 @@ The files to work on are given as file paths or globs:
 
 ## Good to know
 
+Files identified for potential processing are identified by:
+
+- Group A: Input values specifying existing files
+- Group B: Input values that are not specifying an existing file are globbed as a pool (meaning you can use the `!` notation to take files away from group B, but not from group A)
+- Group C: All `-X` values are globbed as a pool (meaning you can use the `!` notation)
+- Subtract group C from group A and B (the files are compared by their full path)
+- Remove any file paths that matches any `-x` provided regex. Use `--absolute-path` to look for the full path.
+
 ### Features
 
 - Patterns are described as javascript notation regex
