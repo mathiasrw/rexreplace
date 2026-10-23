@@ -48,7 +48,11 @@ describe('--encoding', () => {
 	});
 
 	// The error message, and not the stack trace from deep inside node, when an encoding is unknown (#690)
-	const unknownEncoding = {out: '', err: ' ❌ Unknown encoding: nope\n\n', exit: 1};
+	const unknownEncoding = {
+		out: '',
+		err: ' ❌ Unknown encoding: nope\n    No further processing.\n\n',
+		exit: 1,
+	};
 
 	test('stops the run with an error if it is unknown (#690)', async () => {
 		fs.writeFileSync('my.file', 'foobar');

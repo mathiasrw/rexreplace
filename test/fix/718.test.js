@@ -3,7 +3,7 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import path from 'path';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 const content = name => fs.readFileSync(name, 'utf8');
 
@@ -57,7 +57,7 @@ describe('#718 together with globs', () => {
 	test('a path to a folder is not a file, so it is still a glob', async () => {
 		fs.mkdirSync('docs', {recursive: true});
 		fs.writeFileSync('docs/a.file', 'foo');
-		expect((await rr('o', 'x', {includeGlob: ['docs']})).exit).toBe(1);
+		expect((await rr('o', 'x', {includeGlob: ['docs']})).err).toBe(' 🟡 0 files found\n\n');
 		expect((await rr('o', 'x', {includeGlob: ['docs/*.file']})).out).toBe('docs/a.file\n');
 	});
 
@@ -134,7 +134,7 @@ describe('#718 with --exclude-glob', () => {
 	test('a glob leaves out a file given by its name', async () => {
 		fs.writeFileSync('a[1].file', 'foo');
 		const config = {includeGlob: ['a[1].file'], excludeGlob: ['*.file']};
-		expect(await rr('o', 'x', config)).toEqual({out: '', err: '0 files found\n', exit: 1});
+		expect(await rr('o', 'x', config)).toEqual({out: '', err: ' 🟡 0 files found\n\n', exit: null});
 		expect(content('a[1].file')).toBe('foo');
 	});
 
@@ -162,7 +162,7 @@ describe('#718 with --exclude-re', () => {
 		expect((await rr('o', 'x', {includeGlob: ['a.file'], excludeRe: ['^/']})).out).toBe('a.file\n');
 		fs.writeFileSync('a.file', 'foo');
 		const config = {includeGlob: ['a.file'], excludeRe: ['^/'], fullPath: true};
-		expect((await rr('o', 'x', config)).exit).toBe(1);
+		expect((await rr('o', 'x', config)).err).toBe(' 🟡 0 files found\n\n');
 		expect(content('a.file')).toBe('foo');
 	});
 });

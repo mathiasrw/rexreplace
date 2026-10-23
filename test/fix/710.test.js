@@ -2,7 +2,7 @@
 // There was no way to see which files a command would change without changing them.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, rrStatus} from '../../helper.js';
+import {rr, rrStatus} from '../helper.js';
 
 // Note that rr() from the helper sets voidAsync per default, so the async flow is `voidAsync: false`
 const flows = [

@@ -3,7 +3,7 @@
 // The replacement is unescaped by the CLI (not the engine), so these tests run the CLI itself.
 import {describe, test, expect} from 'bun:test';
 import {$} from 'bun';
-import {cli, sh} from '../../helper.js';
+import {cli, sh} from '../helper.js';
 
 // Give `input` to the CLI as piped data and return what it gives back
 const run = (input, ...args) => sh($`bun ${cli} ${args} < ${new Response(input)}`);
@@ -39,7 +39,7 @@ describe('#700 § is a full substitute for \\ in the replacement', () => {
 	test('an invalid escape sequence gives the same error as with a backslash', async () => {
 		expect(await replaceB('§x4')).toEqual({
 			out: '',
-			err: ' ❌ Invalid escape sequence in replacement: §x4\n\n',
+			err: ' ❌ Invalid escape sequence in replacement: §x4\n    No further processing.\n\n',
 			exit: 1,
 		});
 	});

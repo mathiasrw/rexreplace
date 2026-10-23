@@ -1,7 +1,7 @@
 // CLI interface for rexreplace
 
 import * as rexreplace from './engine.ts';
-import {outputConfig, die} from './output.ts';
+import {outputConfig, panic} from './output.ts';
 import {alias} from './alias.ts';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
@@ -541,9 +541,9 @@ const unescape = (key, name) => {
 	} catch (e) {
 		// The engine is not running yet, so the panic is caught here
 		try {
-			die('Invalid escape sequence in ' + name + ':', typed[key]);
-		} catch (panic) {
-			exitOnPanic(config, panic);
+			panic('Invalid escape sequence in ' + name + ':', typed[key]);
+		} catch (e) {
+			exitOnPanic(config, e);
 		}
 	}
 };

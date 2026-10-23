@@ -8,7 +8,7 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, chat, info, print, printDone, warn, error, die} from './output.ts';
+import {outputConfig, chat, info, print, printDone, warn, error, panic} from './output.ts';
 
 const re = {
 	mctime: /[mc]time/,
@@ -30,7 +30,7 @@ const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
 function validateEncoding(encoding = 'utf8') {
 	if (!Buffer.isEncoding(encoding)) {
-		die('Unknown encoding:', encoding);
+		panic('Unknown encoding:', encoding);
 	}
 }
 
@@ -80,7 +80,7 @@ async function run(config) {
 	// With --glob-pipe each line of the piped data is a path or a glob, used together with the ones given as arguments
 	if (config.globPipe) {
 		if (config.replacementPipe || config.pipe) {
-			die(
+			panic(
 				'--glob-pipe can not be used with --replacement-pipe or --pipe, as the piped data can only be one thing'
 			);
 		}
@@ -136,8 +136,9 @@ async function run(config) {
 
 	config.files = getFilePaths(config);
 
+	// Nothing to do is not an error, so a glob or a pipe that gives no files does not stop a script
 	if (!config.files.length) {
-		return error(config.files.length + ' files found');
+		return warn('0 files found');
 	}
 
 	chat(config.files.length + ' files found');
@@ -336,14 +337,14 @@ function getFinalReplacement(replacement, conf: any) {
 	if (conf.replacementPipe) {
 		conf.pipedDataUsed = true;
 		if (null === conf.pipedData) {
-			return die('No data piped into replacement');
+			return panic('No data piped into replacement');
 		}
 		replacement = conf.pipedData;
 	}
 
 	if (conf.outputMatch) {
 		if (parseInt(process.versions.node) < 6) {
-			return die('outputMatch is only supported in node 6+');
+			return panic('outputMatch is only supported in node 6+');
 		}
 
 		return function (match, ...rest) {
@@ -366,7 +367,7 @@ function getFinalReplacement(replacement, conf: any) {
 		re.capturedGroupRef.test(conf.replacement) &&
 		parseInt(process.versions.node) < 6
 	) {
-		return die('Captured groups for javascript replacement is only supported in node 6+');
+		return panic('Captured groups for javascript replacement is only supported in node 6+');
 	}
 
 	return replacement;
@@ -394,12 +395,12 @@ function getFinalRegex(pattern, config) {
 			try {
 				regex = new RegExp(pattern, flags);
 			} catch (e) {
-				die(e.message);
+				panic(e.message);
 			}
 			break;
 		case 'V8':
 		case 'JSC':
-			die(
+			panic(
 				`When running via the ${runtime} runtime you can only use default or ${runtimeEngine} as engine`
 			);
 			break;
@@ -409,11 +410,11 @@ function getFinalRegex(pattern, config) {
 				//regex = new RE2(pattern, flags);
 				regex = new RegExp(pattern, flags);
 			} catch (e) {
-				die(e.message);
+				panic(e.message);
 			}
 			break;
 		default:
-			die(`Engine ${config.engine} not supported`);
+			panic(`Engine ${config.engine} not supported`);
 	}
 
 	return regex;

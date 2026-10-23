@@ -23,13 +23,13 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 | `printDone()` | At the end of a run, also when it is stopped | Ends stdout and stderr with a line break when `--nl` is set | |
 | `info(name)` | Unless `--quiet` | The name of an affected file. stdout, or stderr when stdout has content. | `a.md` |
 | `warn(msg)` | Unless `--quiet` | Something is likely a mistake, but the run goes on. Also added to `status.warnings`. | `Data is piped in, but no flag tells what to do with it` |
-| `error(msg, data)` | Unless `--quiet-total` | Something went wrong. The run goes on, unless `--halt` is set: then a panic is thrown. Also added to `status.errors`, so the CLI gives the exit code 1. | `File not found: a.md` |
-| `die(msg, data, help)` | Unless `--quiet-total` | Something went wrong and the run can not go on. Throws a panic, and the CLI exits with 1. Also added to `status.errors`. | `No data piped into replacement` |
+| `error(msg, data)` | Unless `--quiet-total` | Something went wrong. Starts with ❌. The run goes on, unless `--halt` is set: then a panic is thrown. Also added to `status.errors`, so the CLI gives the exit code 1. | `File not found: a.md` |
+| `panic(msg, data, help)` | Unless `--quiet-total` | Something went wrong and the run can not go on. Starts with ❌ and ends with `No further processing.` Throws a panic, and the CLI exits with 1. Also added to `status.errors`. | `No data piped into replacement` |
 | `chat(msg)` | `--verbose`, also with `--quiet`, but not with `--quiet-total` | The user: what happens to each file. Only ever to stderr. Also kept in `engine.steps` of the status report. | `Open sync: a.md`, `Nothing changed in: a.md` |
 
 - What the run did is in the status report: the engine resolves with it, and `--status` prints it. So there is no extra debug output to print along the way.
 - `--debug` prints only the status report, with what went into the engine and what it did.
-- `warn()`, `error()` and `die()` add to the status report as they go, also when the quiet flags hide what they print.
+- `warn()`, `error()` and `panic()` add to the status report as they go, also when the quiet flags hide what they print.
 
 ## Tests
 
@@ -37,9 +37,9 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 - Expect the full result where it matters (`{out, err, exit}` from `rr()`), so nothing extra slips through. Use `rrStatus()` for the status of the same run.
 - A known bug is a `test.todo('BUG #<issue>: ...')` until it is fixed. Then it becomes a real test.
 - The folder tells what is tested, so a file is named after the feature: `test/engine/<feature>.test.js` tests the engine with `rr()`, and `test/cli/<feature>.test.js` tests the CLI by running it with Bun's `$` shell, like ``sh($`bun ${cli} o x my.file`)``.
-- A test for an issue goes in `test/engine/fix/<issue>.test.js` or `test/cli/fix/<issue>.test.js`.
+- A test for an issue goes in `test/fix/<issue>.test.js`. It tests the issue with whatever it takes: the engine with `rr()`, the CLI with `sh()`, or both.
 - `test/cli/run.sh` is a demo of how RexReplace is used: a few clear examples for each feature. Checks of many combinations go in `test/cli/<feature>.test.js`.
-- Use Bun native file IO (`Bun.write`, `Bun.file`) in new tests (#734).
+- Handle files in tests with the sync functions of `fs`, like `fs.writeFileSync` and `fs.readFileSync`, so there is no `await` for files. Each test writes the files it uses itself, so you can see them next to the command.
 - Names in tests say what they hold, like `expectedOutput`, not `named`.
 - Async work can finish in any order. Do not expect an order the code does not promise.
 

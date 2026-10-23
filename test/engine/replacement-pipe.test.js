@@ -64,7 +64,7 @@ describe('--replacement-pipe', () => {
 
 	test('does not treat the piped data as content to search in', async () => {
 		const result = await rr('o', '_', {replacementPipe: true, pipedData: 'foo'});
-		expect(result).toEqual({out: '', err: '0 files found\n', exit: 1});
+		expect(result).toEqual({out: '', err: ' 🟡 0 files found\n\n', exit: null});
 	});
 
 	describe('combined', () => {

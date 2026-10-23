@@ -2,7 +2,7 @@
 // The search was case-insensitive by default, but the globs were case-sensitive.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 // The names differ in more than case, so they can both be there on a file system that is case-insensitive
 describe('#716 the globs are case-insensitive like the search', () => {

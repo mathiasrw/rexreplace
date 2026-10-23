@@ -2,7 +2,7 @@
 // A list of files from another command could only be used with `xargs` or `$(…)`.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, rrStatus} from '../../helper.js';
+import {rr, rrStatus} from '../helper.js';
 
 const content = name => fs.readFileSync(name, 'utf8');
 
@@ -65,8 +65,8 @@ describe('#711 --glob-pipe', () => {
 	test('with nothing piped in and no arguments there are no files', async () => {
 		expect(await rr('o', 'x', {pipedData: '', globPipe: true})).toEqual({
 			out: '',
-			err: '0 files found\n',
-			exit: 1,
+			err: ' 🟡 0 files found\n\n',
+			exit: null,
 		});
 	});
 
