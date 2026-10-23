@@ -59,7 +59,9 @@ describe('--replacement-file', () => {
 	test('that can not be read stops the run before any file is changed', async () => {
 		fs.writeFileSync('my.file', 'foo');
 		const result = await rr('foo', 'nope.txt', {includeGlob: ['my.file'], replacementFile: true});
-		expect(result.err).toStartWith(' ❌ The replacement file can not be read: nope.txt');
+		expect(result.err).toStartWith(
+			' ❌ The replacement file can not be read: nope.txt (ENOENT: no such file or directory)'
+		);
 		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo');
 	});
@@ -68,7 +70,7 @@ describe('--replacement-file', () => {
 		const config = {pipedData: 'foo', replacementJs: true, replacementFile: true};
 		expect(await rr('o', '"nope.txt"', config)).toEqual({
 			out: 'foo',
-			err: ' ❌ The replacement file can not be read: nope.txt\n\n',
+			err: ' ❌ The replacement file can not be read: nope.txt (ENOENT: no such file or directory)\n\n',
 			exit: 2,
 		});
 	});
