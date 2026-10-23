@@ -3,7 +3,7 @@
 // The flags that ask for the piped data are tested in test/cli/pipe.test.js.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {cli} from '../../helper.js';
+import {cli} from '../helper.js';
 
 // Bun.spawn and not sh() from the helper: the test needs a pipe that stays open, and a pipe in a shell command ends
 

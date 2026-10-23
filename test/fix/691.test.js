@@ -4,7 +4,7 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {$} from 'bun';
-import {cli, sh} from '../../helper.js';
+import {cli, sh} from '../helper.js';
 
 // With --output the name of the file goes to stderr
 const expectedOutput = 'my.file\n';
