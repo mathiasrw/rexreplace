@@ -1,3 +1,4 @@
+// Test of stacked PRs (devops/stack3/a, commit 1). Not to be merged into main.
 // The `€` and `§` aliases are for the shell, where `$` and `\` are hard to type, so the CLI uses them and not the engine.
 // Globs, file names and piped data never use them, as `€` and `§` can be part of the text.
 export function alias(config) {
