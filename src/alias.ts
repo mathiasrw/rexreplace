@@ -15,7 +15,10 @@ export function alias(config) {
 	};
 
 	config.pattern = swap(config.pattern);
-	config.replacement = swap(config.replacement);
+	// With --replacement-file the replacement is the name of a file, unless --js code gives the name
+	if (!config.replacementFile || config.replacementJs) {
+		config.replacement = swap(config.replacement);
+	}
 	config.excludeRe = config.excludeRe.map(swap);
 	config.delimiter = swap(config.delimiter);
 	config.nameDelimiter = swap(config.nameDelimiter);

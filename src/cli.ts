@@ -624,7 +624,8 @@ const unescape = (key, name) => {
 	}
 };
 
-if (!config.replacementJs) {
+// The path of --replacement-file is the name of a file, so it has no escapes
+if (!config.replacementJs && !config.replacementFile) {
 	unescape('replacement', 'replacement');
 }
 
