@@ -410,7 +410,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 
 The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
 
-A named group is a variable with \`_\` in front: \`_year\` for \`(?<year>...)\`, and \`_year_\` has a space at the end. 
+Access a named group via the name prepended with \`rr_\`. \`(?<year>...)\` gives you \`rr_year\`. A named group name can not end with \`_\`. 
 
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `

@@ -144,6 +144,17 @@ async function run(config) {
 
 	config.regex = getFinalRegex(config.pattern, config) || '';
 
+	// In --js a named group is a variable like rr_year, and rr_year_ has a space at the end.
+	// A group that ends with _ would have the same name as another group with a space, so it can not be used.
+	// With --output-match the code is not run, so there are no variables.
+	const endsWith_ =
+		config.replacementJs && !config.outputMatch && config.regex
+			? namedGroups(config.regex).find(name => name.endsWith('_'))
+			: null;
+	if (endsWith_) {
+		panic('A named group can not end with _:', endsWith_);
+	}
+
 	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
 	if (config.statusInfo.engine) {
 		config.statusInfo.engine.execution = {
@@ -821,13 +832,18 @@ function countFile(config, text, result) {
 	}
 }
 
-// The code uses a named group of the pattern, like _year for (?<year>…)
+// The code uses a named group of the pattern, like rr_year for (?<year>…)
 function usesNamedGroups(config) {
-	return [...config.regex.source.matchAll(/\(\?<([A-Za-z_$][\w$]*)>/g)].some(([, name]) =>
-		new RegExp('(^|[^\\w$])_' + name.replace(/\$/g, '\\$') + '(?![\\w$])').test(
+	return namedGroups(config.regex).some(name =>
+		new RegExp('(^|[^\\w$])rr_' + name.replace(/\$/g, '\\$') + '(?![\\w$])').test(
 			config.replacementOri
 		)
 	);
+}
+
+// The names of the named groups of a regex, like year for (?<year>…)
+function namedGroups(regex) {
+	return [...regex.source.matchAll(/\(\?<([A-Za-z_$][\w$]*)>/g)].map(([, name]) => name);
 }
 
 // The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
@@ -1192,10 +1208,10 @@ function dynamicReplacement(
 		for (var i = 0; i < arguments.length - (hasNamed ? 3 : 2); i++) {
 			capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
 		}
-		// A named group is a variable with _ in front, like _year for (?<year>…), and _year_ has a space at the end
+		// A named group is a variable with rr_ in front, like rr_year for (?<year>…), and rr_year_ has a space at the end
 		if (hasNamed) {
 			for (const [name, value] of Object.entries(named)) {
-				capturedGroups += `var _${name} = ${JSON.stringify(value)}, _${name}_ = _${name} + ' '; `;
+				capturedGroups += `var rr_${name} = ${JSON.stringify(value)}, rr_${name}_ = rr_${name} + ' '; `;
 			}
 		}
 
