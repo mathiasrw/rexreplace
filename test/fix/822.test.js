@@ -4,7 +4,7 @@ import {describe, test, expect} from 'bun:test';
 import {rr} from '../helper.js';
 
 const failed = text =>
-	` ❌ The code of --js failed for the piped data: ${text}\n    No further processing.\n\n`;
+	` ❌ The code of --js failed for the piped data\n    ${text}\n    No further processing.\n\n`;
 
 describe('#822 code that throws something that is not an error', () => {
 	test.each([
@@ -24,12 +24,21 @@ describe('#822 code that throws something that is not an error', () => {
 		});
 	});
 
-	test('only tells the start of a big object', async () => {
-		const result = await rr('o', 'throw {text: "y".repeat(1000)}', {
-			pipedData: 'foo',
-			replacementJs: true,
-		});
-		expect(result.err).toContain('an object was thrown: {"text":"' + 'y'.repeat(291) + '…');
-		expect(result.err.length).toBeLessThan(400);
+	test('only tells the start of a big object, cut by characters so an emoji is not split', async () => {
+		const config = {pipedData: 'foo', replacementJs: true};
+		const result = await rr('o', 'throw {t: "🦖".repeat(400)}', config);
+		const text = result.err.split('\n')[1].replace('    ', '');
+		expect(Array.from(text)).toHaveLength(301);
+		expect(text).toEndWith('🦖…');
+		expect(text).not.toContain('\uFFFD');
+	});
+
+	test.each([
+		['class Foo { constructor() { this.a = 1; } }; throw new Foo()', 'a Foo was thrown: {"a":1}'],
+		['throw new (class Item {})()', 'an Item was thrown'],
+	])('tells the class and what it holds: %s', async (code, text) => {
+		expect((await rr('o', code, {pipedData: 'foo', replacementJs: true})).err).toStartWith(
+			' ❌ The code of --js failed for the piped data\n    ' + text + '\n'
+		);
 	});
 });

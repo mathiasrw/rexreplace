@@ -7,7 +7,13 @@ import {rr, rrStatus} from '../helper.js';
 describe('#818 a replacement file that can not be read', () => {
 	test.each([
 		['is not there', 'nope.txt', 'nope.txt (ENOENT: no such file or directory)'],
-		['is a folder', 'adir', 'adir (EISDIR: illegal operation on a directory, read)'],
+		['is a folder', 'adir', 'adir (EISDIR: illegal operation on a directory)'],
+		[
+			'has a zero-width space',
+			'no\u200bpe.txt',
+			'"no\\u200bpe.txt" (ENOENT: no such file or directory)',
+		],
+		['has a C1 char', 'no\u0085pe.txt', '"no\\u0085pe.txt" (ENOENT: no such file or directory)'],
 		[
 			'has a line break at the end, like from echo',
 			'a.txt\n',

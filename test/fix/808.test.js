@@ -5,7 +5,7 @@ import fs from 'fs';
 import {rr, rrStatus} from '../helper.js';
 
 const failed = (where, message) =>
-	` ❌ The code of --js failed for ${where}: ${message}\n    No further processing.\n\n`;
+	` ❌ The code of --js failed for ${where}\n    ${message}\n    No further processing.\n\n`;
 
 describe('#808 code of --js that fails', () => {
 	test('stops the run with only the message', async () => {
@@ -18,7 +18,9 @@ describe('#808 code of --js that fails', () => {
 
 	test('tells a syntax error the same way', async () => {
 		const result = await rr('o', '1 +', {pipedData: 'foo', replacementJs: true});
-		expect(result.err).toStartWith(' ❌ The code of --js failed for the piped data: SyntaxError');
+		expect(result.err).toStartWith(
+			' ❌ The code of --js failed for the piped data\n    SyntaxError'
+		);
 		expect(result.exit).toBe(3);
 	});
 
@@ -46,7 +48,7 @@ describe('#808 code of --js that fails', () => {
 	test('is in the errors of the status report', async () => {
 		const status = await rrStatus('o', 'nope()', {pipedData: 'foo', replacementJs: true});
 		expect(status.errors).toEqual([
-			'The code of --js failed for the piped data: ReferenceError: nope is not defined',
+			'The code of --js failed for the piped data\n    ReferenceError: nope is not defined',
 		]);
 	});
 });
