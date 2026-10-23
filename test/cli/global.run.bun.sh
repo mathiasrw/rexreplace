@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Run this after a release. It installs the newly published rexreplace-bun globally with Bun, and that installs the published rexreplace it depends on.
-# It removes the global rexreplace. Run global.run.node.sh to get that back.
+# It removes the global rexreplace. Run `npm install -g rexreplace` to get that back.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 

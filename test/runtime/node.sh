@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Runs the CLI tests with the `rexreplace` command, which uses Node
+
 set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
@@ -16,7 +18,11 @@ npm install --location=global --prefix ./tmp/runtime/rexreplace .
 
 export PATH="$PWD/tmp/runtime/rexreplace/bin:$PATH"
 
-echo "CLI tests of rr from rexreplace"
-rr --version
-RR="rr" bash test/cli/run.sh
-RR="rr" bash test/cli/run.ai.sh
+# The package has three commands: rr and rexreplace use Node, and rexreplace-bun uses Bun
+rr --version | grep -qv '+bun$'
+rexreplace --version | grep -qv '+bun$'
+rexreplace-bun --version | grep -q '+bun$'
+
+echo "CLI tests of rexreplace (Node)"
+RR="rexreplace" bash test/cli/run.sh
+RR="rexreplace" bash test/cli/run.ai.sh

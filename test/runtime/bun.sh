@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Runs the CLI tests with `bun run` on rexreplace and on rexreplace-bun
+# Runs the CLI tests with the rexreplace-bun package, where all commands use Bun
 
 set -e
 
@@ -19,34 +19,15 @@ mkdir -p ./npm/rexreplace-bun/node_modules
 ln -sfn ../../.. ./npm/rexreplace-bun/node_modules/rexreplace
 
 # Install in ./tmp/runtime, so the global install on the machine is not changed
-npm install --location=global --prefix ./tmp/runtime/rexreplace .
 npm install --location=global --prefix ./tmp/runtime/rexreplace-bun ./npm/rexreplace-bun
 
-# The commands of rexreplace
-export PATH="$PWD/tmp/runtime/rexreplace/bin:$PATH"
-
-echo "CLI tests of rr from rexreplace (it asks for Node, so Bun starts it with Node)"
-bun run rr --version
-RR="bun run rr" bash test/cli/run.sh
-RR="bun run rr" bash test/cli/run.ai.sh
-
-echo "CLI tests of rexreplace-bun from rexreplace"
-bun run rexreplace-bun --version
-RR="bun run rexreplace-bun" bash test/cli/run.sh
-RR="bun run rexreplace-bun" bash test/cli/run.ai.sh
-
-# The commands of rexreplace-bun
 export PATH="$PWD/tmp/runtime/rexreplace-bun/bin:$PATH"
 
-echo "CLI tests of rr from rexreplace-bun"
-bun run rr --version
-RR="bun run rr" bash test/cli/run.sh
-RR="bun run rr" bash test/cli/run.ai.sh
+# All three commands of rexreplace-bun use Bun, so the version ends with +bun
+rr --version | grep -q '+bun$'
+rexreplace --version | grep -q '+bun$'
+rexreplace-bun --version | grep -q '+bun$'
 
-echo "CLI tests of rexreplace-bun from rexreplace-bun"
-bun run rexreplace-bun --version
-RR="bun run rexreplace-bun" bash test/cli/run.sh
-RR="bun run rexreplace-bun" bash test/cli/run.ai.sh
-
-# rexreplace-bun must use Bun. The version then ends with +bun.
-bun run rr --version | grep -q '+bun$'
+echo "CLI tests of rexreplace-bun (Bun)"
+RR="rexreplace-bun" bash test/cli/run.sh
+RR="rexreplace-bun" bash test/cli/run.ai.sh

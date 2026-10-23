@@ -2,10 +2,11 @@
 // `§` is an alias for `\` but in the replacement it was converted after the escape sequences were interpreted, so `§n` gave a backslash and an `n` instead of a line break.
 // The replacement is unescaped by the CLI (not the engine), so these tests run the CLI itself.
 import {describe, test, expect} from 'bun:test';
-import {cli} from '../../helper.js';
+import {$} from 'bun';
+import {cli, sh} from '../../helper.js';
 
 // Give `input` to the CLI as piped data and return what it gives back
-const run = (input, ...args) => cli(args, input);
+const run = (input, ...args) => sh($`bun ${cli} ${args} < ${new Response(input)}`);
 
 // Replace the `b` in `foobar` with the replacement
 const replaceB = (replacement, ...flags) => run('foobar', 'b', replacement, ...flags);

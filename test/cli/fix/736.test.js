@@ -1,11 +1,10 @@
 // https://github.com/mathiasrw/rexreplace/issues/736
 // stdin was read every time it was not a terminal, so a pipe that was open but never written to made the run wait forever.
-// The flags that ask for the piped data are tested in test/cli/run.sh.
+// The flags that ask for the piped data are tested in test/cli/pipe.test.js.
 import {describe, test, expect} from 'bun:test';
-import path from 'path';
+import {cli} from '../../helper.js';
 
-// Not cli() from the helper: the test needs a pipe that stays open, and cli() pipes in data that ends
-const cli = path.resolve(import.meta.dir, '../../../src/cli.ts');
+// Bun.spawn and not sh() from the helper: the test needs a pipe that stays open, and a pipe in a shell command ends
 
 describe('#736 stdin is only read when the data is asked for', () => {
 	test('files are changed without waiting for a pipe that is never closed', async () => {

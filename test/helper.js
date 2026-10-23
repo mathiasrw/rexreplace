@@ -1,6 +1,5 @@
 // Preloaded by bunfig.toml before every test file.
 import {spyOn, beforeEach, afterEach} from 'bun:test';
-import {$} from 'bun';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -88,14 +87,13 @@ async function run(pattern, replacement, config) {
 	return {result, status};
 }
 
-const cliPath = path.join(import.meta.dir, '../src/cli.ts');
+// The CLI, to run with Bun in a shell command: $`bun ${cli} o x my.file`
+export const cli = path.join(import.meta.dir, '../src/cli.ts');
 
-// Run the CLI with Bun in a shell, like a user would. `input` is piped in, so stdin is never a terminal.
-// Gives what was sent to stdout (`out`) and stderr (`err`), and the exit code (`exit`).
-export async function cli(args, input = '') {
-	const result = await $`${process.execPath} ${cliPath} ${args} < ${new Response(input)}`
-		.nothrow()
-		.quiet();
+// Run a shell command made with Bun's $, and give what was sent to stdout (`out`) and stderr (`err`), and the exit code (`exit`).
+// Bun's shell turns non-ASCII text in the command into \u escapes, so give a value with `§`, `€` or emoji as ${'…'}.
+export async function sh(command) {
+	const result = await command.nothrow().quiet();
 	return {out: result.stdout.toString(), err: result.stderr.toString(), exit: result.exitCode};
 }
 

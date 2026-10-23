@@ -36,10 +36,10 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 - **Tests are strict, lean and focused too.** One thing per test, and the name of the test says what it is.
 - Expect the full result where it matters (`{out, err, exit}` from `rr()`), so nothing extra slips through. Use `rrStatus()` for the status of the same run.
 - A known bug is a `test.todo('BUG #<issue>: ...')` until it is fixed. Then it becomes a real test.
-- The folder tells what is tested, so a file is named after the feature: `test/engine/<feature>.test.js` tests the engine with `rr()`, and `test/cli/<feature>.test.js` tests the CLI with `cli()`, which runs it with Bun's `$` shell.
+- The folder tells what is tested, so a file is named after the feature: `test/engine/<feature>.test.js` tests the engine with `rr()`, and `test/cli/<feature>.test.js` tests the CLI by running it with Bun's `$` shell, like ``sh($`bun ${cli} o x my.file`)``.
 - A test for an issue goes in `test/engine/fix/<issue>.test.js` or `test/cli/fix/<issue>.test.js`.
 - `test/cli/run.sh` is a demo of how RexReplace is used: a few clear examples for each feature. Checks of many combinations go in `test/cli/<feature>.test.js`.
-- Use Bun native file IO (`Bun.write`, `Bun.file`) in new tests (#734), and `cli()` to run the CLI.
+- Use Bun native file IO (`Bun.write`, `Bun.file`) in new tests (#734).
 - Names in tests say what they hold, like `expectedOutput`, not `named`.
 - Async work can finish in any order. Do not expect an order the code does not promise.
 
