@@ -155,10 +155,11 @@ const yargs = require('yargs')
 		'Sets --name-delimiter and --content-delimiter to the same value. Supports escape sequences like `\\t`, `\\n` and the `€` and `§` aliases.'
 	)
 
-	.boolean('null')
+	.boolean('null-out')
+	.alias('null-out', 'null')
 	.describe(
-		'null',
-		"Shorthand for --delimiter '\\0'. Useful for piping content with spaces or line breaks (like for `xargs -0`). The specific delimiter values win over --delimiter, and --delimiter wins over --null."
+		'null-out',
+		"Shorthand for --delimiter '\\0'. Useful for piping content with spaces or line breaks (like for `xargs -0`). The specific delimiter values win over --delimiter, and --delimiter wins over --null-out."
 	)
 
 	.boolean('name-delimiter-tail')
@@ -275,6 +276,22 @@ const yargs = require('yargs')
 	.boolean('js-pipe')
 	.describe('js-pipe', `Shorthand for --replacement-js --pipe (-jp).`)
 
+	.boolean('g')
+	.alias('g', 'glob-pipe')
+	.describe(
+		'g',
+		'Each line of the piped data is a path or a glob of the files to work on. They are used together with the ones given as arguments.'
+	)
+	// The piped data can only be one thing
+	.conflicts('g', ['R', 'p', 'js-pipe'])
+
+	.boolean('null-in')
+	.describe(
+		'null-in',
+		'The piped paths and globs of --glob-pipe are separated by null bytes, like from `find -print0` or --null-out.'
+	)
+	.implies('null-in', 'glob-pipe')
+
 	.boolean('j')
 	.alias('j', 'js')
 	.alias('j', 'replacement-js')
@@ -365,11 +382,6 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
     .boolean('G')
         .describe('G', "filename/globas are filename(s) for files containing one filename/globs on each line to be search/replaced")
         .alias('G', 'globs-file')
-
-    .boolean('g')
-        .describe('g', "filename/globs will be piped in. If any filename/globs are given in command the piped data will be prepened")
-        .alias('g', 'glob-pipe')
-
 
     .boolean('j')
         .describe('j', "Pattern is javascript source that will return a string giving the pattern to use")
@@ -563,7 +575,8 @@ const run = () =>
 	);
 
 // Like grep, stdin is only read when piped data is expected. An open pipe that nobody writes to would make the run wait forever.
-const pipeDataExpected = !config.includeGlob.length || config.replacementPipe || config.pipe;
+const pipeDataExpected =
+	!config.includeGlob.length || config.replacementPipe || config.pipe || config.globPipe;
 
 if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
 	run();

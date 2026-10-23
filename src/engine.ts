@@ -77,6 +77,18 @@ function newStatus(config) {
 async function run(config) {
 	validateEncoding(config.encoding);
 
+	// With --glob-pipe each line of the piped data is a path or a glob, used together with the ones given as arguments
+	if (config.globPipe) {
+		if (config.replacementPipe || config.pipe) {
+			die(
+				'--glob-pipe can not be used with --replacement-pipe or --pipe, as the piped data can only be one thing'
+			);
+		}
+		config.pipedDataUsed = true;
+		const lines = (config.pipedData ?? '').split(config.nullIn ? '\0' : /\r?\n/);
+		config.includeGlob = config.includeGlob.concat(lines.filter(line => '' !== line));
+	}
+
 	config.pattern = getFinalPattern(config.pattern, config) || '';
 
 	config.replacement = getFinalReplacement(config.replacement, config) || '';
@@ -84,7 +96,7 @@ async function run(config) {
 	config.replacementOri = config.replacement;
 
 	// The most specific delimiter wins. Without one there is a line break after each item, unless it already ends with one.
-	const delimiter = config.delimiter ?? (config.null ? '\0' : null);
+	const delimiter = config.delimiter ?? (config.nullOut ? '\0' : null);
 	config.nameDelimiter = config.nameDelimiter ?? delimiter;
 	config.contentDelimiter = config.contentDelimiter ?? delimiter;
 
@@ -262,6 +274,9 @@ function updated(file, config) {
 
 // How the piped data was used
 function pipeType(config, piped) {
+	if (config.globPipe) {
+		return 'GLOBS';
+	}
 	if (piped) {
 		return 'CONTENT';
 	}
