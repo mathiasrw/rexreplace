@@ -696,11 +696,16 @@ function getFinalReplacement(replacement, conf: any) {
 		try {
 			return readReplacementFile(replacement, conf);
 		} catch (e) {
-			return panic('The replacement file can not be read:', replacement);
+			return panic('The replacement file can not be read:', unreadable(replacement, e));
 		}
 	}
 
 	return replacement;
+}
+
+// The path as JSON, so a line break or a space at the end can be seen, and the reason, like ENOENT
+function unreadable(filepath, e) {
+	return JSON.stringify(filepath) + ' (' + (e.code || e.message) + ')';
 }
 
 // Each replacement file is read once, also when the code of --js gives the same path for many matches
@@ -720,16 +725,16 @@ function codeReplacement(file, config, text, numbers) {
 	if (!config.replacementFile) {
 		return code;
 	}
-	// A path that can not be read is an error once, and its matches are left as they are
-	const failed = new Set();
+	// A path that can not be read is an error once in the run, and its matches are left as they are
+	config.unreadableFiles ??= new Set();
 	return (...args) => {
 		const filepath = String(code(...args));
-		if (!failed.has(filepath)) {
+		if (!config.unreadableFiles.has(filepath)) {
 			try {
 				return readReplacementFile(filepath, config);
 			} catch (e) {
-				failed.add(filepath);
-				error('The replacement file can not be read:', filepath);
+				config.unreadableFiles.add(filepath);
+				error('The replacement file can not be read:', unreadable(filepath, e));
 			}
 		}
 		return args[0];
