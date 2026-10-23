@@ -849,6 +849,42 @@ function numbersCode(numbers) {
 		.join('');
 }
 
+// The text of what code threw. Code can throw anything, also a value that can not be made into text.
+function thrownText(thrown) {
+	let text = '';
+	try {
+		text = String(thrown);
+	} catch (e) {}
+	if (text && '[object Object]' !== text) {
+		return text;
+	}
+	if ('object' !== typeof thrown || null === thrown) {
+		return 'an empty ' + typeof thrown + ' was thrown';
+	}
+	// The name of the class, like an Error whose message can not be read, or a class of the user
+	let name = '';
+	try {
+		name = String(thrown.constructor?.name ?? '');
+	} catch (e) {}
+	let json = '';
+	try {
+		json = JSON.stringify(thrown) ?? '';
+	} catch (e) {}
+	const what = name && 'Object' !== name ? name : 'object';
+	return cut(
+		(/^[aeiou]/i.test(what) ? 'an ' : 'a ') +
+			what +
+			' was thrown' +
+			(json && '{}' !== json ? ': ' + json : '')
+	);
+}
+
+// The thrown value can hold a whole file, so only the start is told. It is cut by characters, so an emoji is not split.
+function cut(text, length = 300) {
+	const chars = Array.from(text);
+	return chars.length > length ? chars.slice(0, length).join('') + '…' : text;
+}
+
 function dynamicReplacement(
 	_file_rr,
 	_config_rr,
@@ -957,7 +993,7 @@ function dynamicReplacement(
 			return dynamicContent(...args);
 		} catch (e) {
 			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
-			return panic('The code of --js failed for ' + where + ':', String(e));
+			return panic('The code of --js failed for ' + where + ':', thrownText(e));
 		}
 	};
 
