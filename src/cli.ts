@@ -409,7 +409,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 \`mtime_obj\`: date object representing \`mtime\`, 
 \`ctime_obj\`: date object representing \`ctime\`.
 
-The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`).
+The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). A number is only made when the code names it, so a name built when the code runs, like \`eval('$' + 'n')\`, is not there.
 
 A named group is a variable with \`_\` in front: \`_year\` for \`(?<year>...)\`, and \`_year_\` has a space at the end. 
 
