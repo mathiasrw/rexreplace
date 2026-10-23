@@ -1,9 +1,10 @@
 // https://github.com/mathiasrw/rexreplace/issues/813
 // When a file failed in the middle of a run, the CLI ended while other files were halfway written, and they were left only as .backup.
-import {describe, test, expect} from 'bun:test';
+import {describe, test, expect, spyOn} from 'bun:test';
 import fs from 'fs';
 import {$} from 'bun';
 import {cli, sh, rr, rrStatus} from '../helper.js';
+import {engine} from '../../src/engine.ts';
 
 describe('#813 a run that stops', () => {
 	test('finishes the files in work, so none is left only as a backup', async () => {
@@ -25,5 +26,28 @@ describe('#813 a run that stops', () => {
 		expect(result.exit).toBe(3);
 		names.forEach(name => fs.writeFileSync(name, 'foo'));
 		expect((await rrStatus('foo', 'nope()', config)).errors.length).toBeGreaterThan(1);
+	});
+
+	test('tells the panic of a second run with the same config again (#844)', async () => {
+		const config = {
+			engine: 'default',
+			encoding: 'utf8',
+			pipedData: 'foo',
+			includeGlob: [],
+			excludeGlob: [],
+			excludeRe: [],
+			pattern: 'o',
+			replacement: 'nope()',
+			replacementJs: true,
+		};
+		const spy = spyOn(process.stderr, 'write').mockImplementation(() => true);
+		try {
+			await expect(engine(config)).rejects.toMatchObject({panic: true});
+			spy.mockClear();
+			await expect(engine(config)).rejects.toMatchObject({panic: true});
+			expect(spy.mock.calls.join('')).toContain('❌');
+		} finally {
+			spy.mockRestore();
+		}
 	});
 });

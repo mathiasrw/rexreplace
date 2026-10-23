@@ -53,6 +53,8 @@ function validateEncoding(encoding = 'utf8') {
 // When the run can not go on, a panic is thrown with the status so far.
 export async function engine(config: any = {engine: 'default'}) {
 	config.statusInfo = newStatus(config);
+	// A new run has had no panic yet, also when the same config is used again
+	config.stopped = false;
 	outputConfig(config);
 	try {
 		await run(config);
