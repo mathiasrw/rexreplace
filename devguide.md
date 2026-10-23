@@ -44,3 +44,5 @@ All output goes through `src/output.ts`. Pick the function by who the message is
 ## Issues and pull requests
 
 Write in plain, simple English, with sections like `## Today`, `## Change`, `## To decide`, `## Good to know` and `## Reference`.
+
+<!-- Test of stacked PRs (devops/stack/b, commit 2). Not to be merged. -->
