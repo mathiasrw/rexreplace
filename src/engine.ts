@@ -1371,8 +1371,21 @@ function sortFiles(files, sort, conf) {
 		return files.sort(ascii);
 	}
 
-	// By a number from each file, and when two are the same, by ascii
-	const stats = new Map(files.map(file => [file, fs.statSync(file)]));
+	// By a number from each file, and when two are the same, by ascii.
+	// A file deleted since it was found is sorted last, and is told about as not found when it is opened.
+	// A file that can not be looked at for another reason is an error with that reason, and is left out.
+	const stats = new Map();
+	files = files.filter(file => {
+		try {
+			stats.set(file, fs.statSync(file));
+		} catch (e) {
+			if ('ENOENT' !== e.code) {
+				return error(e.message);
+			}
+			stats.set(file, null);
+		}
+		return true;
+	});
 	let key = {
 		modified: stat => stat.mtimeMs,
 		created: stat => stat.birthtimeMs,
@@ -1380,14 +1393,15 @@ function sortFiles(files, sort, conf) {
 	}[sort];
 
 	// Not all file systems keep the time a file was made. Then Node gives 0.
-	if ('created' === sort && [...stats.values()].some(stat => !stat.birthtimeMs)) {
+	if ('created' === sort && [...stats.values()].some(stat => stat && !stat.birthtimeMs)) {
 		warn(
-			'The file system does not keep the time a file was made, so --sort created uses the modified time.'
+			'This file system does not know when files were created. Sorting via modified time instead.'
 		);
 		key = stat => stat.mtimeMs;
 	}
 
-	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
+	const value = file => (stats.get(file) ? key(stats.get(file)) : Infinity);
+	return files.sort((a, b) => value(a) - value(b) || ascii(a, b));
 }
 
 // Is the path a file (true), something to glob (false), or a path that can not be looked at (null, with an error)?
