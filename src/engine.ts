@@ -858,24 +858,31 @@ function thrownText(thrown) {
 	if (text && '[object Object]' !== text) {
 		return text;
 	}
-	if ('object' === typeof thrown && null !== thrown) {
-		// Like an Error whose message can not be read: its name is still known
-		let name = '';
-		try {
-			name = thrown.constructor?.name;
-		} catch (e) {}
-		if (name && 'Object' !== name) {
-			return 'a ' + name + ' was thrown';
-		}
-		let json = '';
-		try {
-			json = JSON.stringify(thrown);
-		} catch (e) {}
-		// The object can hold a whole file, so only the start of it is told
-		const start = json.length > 300 ? json.slice(0, 300) + '…' : json;
-		return 'an object was thrown' + (json && '{}' !== json ? ': ' + start : '');
+	if ('object' !== typeof thrown || null === thrown) {
+		return 'an empty ' + typeof thrown + ' was thrown';
 	}
-	return 'an empty ' + typeof thrown + ' was thrown';
+	// The name of the class, like an Error whose message can not be read, or a class of the user
+	let name = '';
+	try {
+		name = String(thrown.constructor?.name ?? '');
+	} catch (e) {}
+	let json = '';
+	try {
+		json = JSON.stringify(thrown) ?? '';
+	} catch (e) {}
+	const what = name && 'Object' !== name ? name : 'object';
+	return cut(
+		(/^[aeiou]/i.test(what) ? 'an ' : 'a ') +
+			what +
+			' was thrown' +
+			(json && '{}' !== json ? ': ' + json : '')
+	);
+}
+
+// The thrown value can hold a whole file, so only the start is told. It is cut by characters, so an emoji is not split.
+function cut(text, length = 300) {
+	const chars = Array.from(text);
+	return chars.length > length ? chars.slice(0, length).join('') + '…' : text;
 }
 
 function dynamicReplacement(
