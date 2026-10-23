@@ -18,7 +18,7 @@ describe('#816 named groups with letters that are not ASCII', () => {
 
 	test('can not end with _ either', async () => {
 		const result = await rr('(?<año_>x)', 'rr_año', {pipedData: 'x', replacementJs: true});
-		expect(result.err).toStartWith(' ❌ A named group can not end with _: año_');
+		expect(result.err).toStartWith(' ❌ A named group can not end with _\n    año_');
 		expect(result.exit).toBe(3);
 	});
 

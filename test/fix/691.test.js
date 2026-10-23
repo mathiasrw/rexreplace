@@ -77,7 +77,7 @@ describe('#691 replacement that used to crash the CLI', () => {
 		const result = await sh($`bun ${cli} o ${'\\x4'} my.file --output --no-content-delimiter-tail`);
 		expect(result.out).toBe('');
 		expect(result.err).toBe(
-			' ❌ Invalid escape sequence in replacement: \\x4\n    No further processing.\n\n'
+			' ❌ Invalid escape sequence in replacement\n    \\x4\n    No further processing.\n\n'
 		);
 		expect(result.exit).toBe(3);
 		expect(

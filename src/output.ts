@@ -23,9 +23,32 @@ export class Panic extends Error {
 	status = null;
 }
 
+// A pipe the reader has closed, like `| head`, can not take more. That is fine: nobody reads the rest.
+// Bun throws when it is written to, and Node gives an error event, so both are caught.
+const closed = new Set();
+const whenClosed = stream => e => {
+	if ('EPIPE' !== e?.code) {
+		throw e;
+	}
+	closed.add(stream);
+};
+process.stdout.on?.('error', whenClosed(process.stdout));
+process.stderr.on?.('error', whenClosed(process.stderr));
+
+export const writeTo = function (stream, text) {
+	if (closed.has(stream)) {
+		return;
+	}
+	try {
+		stream.write(text);
+	} catch (e) {
+		whenClosed(stream)(e);
+	}
+};
+
 // Everything is printed from here, so the last character of each stream is known
 const write = function (text, stream) {
-	stream.write(text);
+	writeTo(stream, text);
 	if (text) {
 		lastPrintedChar.set(stream, text.charCodeAt(text.length - 1));
 	}
@@ -104,10 +127,13 @@ const printError = function (text, stop) {
 	}
 };
 
+// The detail, like the file, goes on a line of its own under the message
+const errorText = (msg, data) => msg + (data ? '\n    ' + data : '');
+
 // The run can not go on, so it stops here.
 // The files in work are finished, and they can fail too. Only the first panic is told, the rest are only in the status.
 export const panic = function (msg = '', data = '', displayHelp = false) {
-	const text = msg + (data ? ' ' + data : '');
+	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
 	if (!config.stopped) {
 		config.stopped = true;
@@ -128,7 +154,7 @@ export const checkFailed = function (text) {
 
 // Something failed, and the run goes on. With --halt it is a panic.
 export const error = function (msg, data = '') {
-	const text = msg + (data ? ' ' + data : '');
+	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
 	// After a panic only the status is told about the files that are finished
 	if (!config.stopped) {

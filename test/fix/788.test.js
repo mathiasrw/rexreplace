@@ -43,7 +43,7 @@ describe('#788 a path that can not be looked at', () => {
 			fs.writeFileSync('a.md', 'foo');
 			fs.writeFileSync('b.md', 'foo');
 			const result = await rr('foo', 'bar', config);
-			expect(result.err).toStartWith(' ❌ Not all paths could be accessed: ENOTDIR');
+			expect(result.err).toStartWith(' ❌ Not all paths could be accessed\n    ENOTDIR');
 			expect(result.exit).toBe(2);
 			expect(fs.readFileSync('b.md', 'utf8')).toBe('bar');
 		}
@@ -56,7 +56,7 @@ describe('#788 a path that can not be looked at', () => {
 		fs.chmodSync('locked', 0);
 		try {
 			const result = await rr('foo', 'bar', {includeGlob: ['**/*.md']});
-			expect(result.err).toStartWith(' ❌ Not all paths could be accessed: EACCES');
+			expect(result.err).toStartWith(' ❌ Not all paths could be accessed\n    EACCES');
 			expect(result.out).toBe('a.md\n');
 			expect(result.exit).toBe(2);
 			expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');
@@ -75,7 +75,7 @@ describe('#788 a path that can not be looked at', () => {
 	test('is a panic in --exclude-glob, as the files to keep can not be known', async () => {
 		fs.writeFileSync('a.md', 'foo');
 		const result = await rr('foo', 'bar', {includeGlob: ['a.md'], excludeGlob: ['a.md/x']});
-		expect(result.err).toStartWith(' ❌ The files to exclude can not be found: ENOTDIR');
+		expect(result.err).toStartWith(' ❌ The files to exclude can not be found\n    ENOTDIR');
 		expect(result.err).toEndWith('\n    No further processing.\n\n');
 		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('a.md', 'utf8')).toBe('foo');
