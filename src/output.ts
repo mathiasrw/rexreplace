@@ -62,12 +62,12 @@ export const printDone = function () {
 };
 
 // The name of a changed file goes to stdout so the names can be piped
-export const info = function (name) {
+export const info = function (name, stream = null) {
 	if (config.quiet || config.quietTotal) {
 		return;
 	}
 	// stdout is taken when the result is printed, so then the names go to stderr
-	const stream = config.output || config.outputMatch ? process.stderr : process.stdout;
+	stream ??= config.output || config.outputMatch ? process.stderr : process.stdout;
 	print(name, config.nameDelimiter, config.nameDelimiterTail, stream);
 };
 
