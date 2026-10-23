@@ -376,6 +376,8 @@ function updated(file, config) {
 function renameFiles(files, config) {
 	// With --rename a / in the new name would move the file
 	const slashed = [];
+	// The new name of each file, before it is joined with its folder
+	const newNames = new Map();
 	const plan = files.map((file, index) => {
 		config.statusInfo.files.searched.push(file);
 		const text = config.renamePath ? file : path.basename(file);
@@ -390,13 +392,36 @@ function renameFiles(files, config) {
 			return {old: file, new: file};
 		}
 		if (config.renamePath) {
-			return {old: file, new: result};
+			const item = {old: file, new: result};
+			newNames.set(item, path.basename(result));
+			return item;
 		}
 		const item = {old: file, new: path.join(path.dirname(file), result)};
+		newNames.set(item, result);
 		if (/[\\/]/.test(result)) {
 			slashed.push(item);
 		}
 		return item;
+	});
+	// Names that can not be made. Each one is a clash of its own, and is left out of the other checks.
+	const invalid = [];
+	// A path with a control character is not welcome, also when the pattern would not change it
+	plan.forEach(item => {
+		if (/[\x00-\x1f\x7f]/.test(item.old + item.new)) {
+			invalid.push([
+				'Names can not have control characters, like a line break or a tab.' +
+					(config.replacementFile
+						? ' Use --trim-file for the line break at the end of a file.'
+						: ''),
+				item,
+			]);
+		} else if (item.new !== item.old && /^[. ]*$|[. ]$/.test(newNames.get(item))) {
+			// Like an empty name, . or .., which are folders. Windows does not allow a space or a dot at the end.
+			invalid.push([
+				'A name must have more than dots and spaces, and can not end with a space or a dot.',
+				item,
+			]);
+		}
 	});
 	const renames = plan.filter(item => item.new !== item.old);
 
@@ -408,7 +433,7 @@ function renameFiles(files, config) {
 		);
 	}
 
-	findClashes(plan, renames, slashed, config);
+	findClashes(plan, renames, slashed, invalid, config);
 
 	plan.forEach(item => {
 		if (item.new === item.old) {
@@ -438,9 +463,13 @@ function nameRename(item, config) {
 // and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
 const pathKey = file => path.resolve(file).toLowerCase();
 
-function findClashes(plan, renames, slashed, config) {
+function findClashes(plan, renames, slashed, invalid, config) {
 	const byTarget = new Map();
+	const left = new Set(invalid.map(([, item]) => item));
 	renames.forEach(item => {
+		if (left.has(item)) {
+			return;
+		}
 		const target = pathKey(item.new);
 		byTarget.set(target, (byTarget.get(target) || []).concat(item));
 	});
@@ -453,9 +482,12 @@ function findClashes(plan, renames, slashed, config) {
 	const clash = (title, items) =>
 		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
 
-	const clashes = slashed.map(item =>
-		clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
-	);
+	const clashes = [
+		...invalid.map(([title, item]) => clash(title, [item])),
+		...slashed.map(item =>
+			clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
+		),
+	];
 	byTarget.forEach((items, target) => {
 		const [item] = items;
 		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)
