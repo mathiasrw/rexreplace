@@ -15,10 +15,16 @@ describe('--rename', () => {
 		expect(fs.readFileSync('a.txt', 'utf8')).toBe('xoo');
 	});
 
-	test('--rename-force needs --rename', async () => {
+	test('--rename-force needs --rename or --rename-path', async () => {
 		fs.writeFileSync('a.md', 'foo');
 		const result = await sh($`bun ${cli} md txt a.md --rename-force`);
 		expect(result.exit).toBe(3);
+		expect(fs.readdirSync('.')).toEqual(['a.md']);
+	});
+
+	test('can not be used with --rename-path', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		expect((await sh($`bun ${cli} md txt a.md -r --rename-path`)).exit).toBe(3);
 		expect(fs.readdirSync('.')).toEqual(['a.md']);
 	});
 });

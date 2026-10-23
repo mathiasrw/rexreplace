@@ -69,7 +69,7 @@ function newStatus(config) {
 	const status: any = {files: {searched: [], updated: []}, pipe: null, warnings: [], errors: []};
 
 	// The old and the new path of each file that is renamed, or would be
-	if (config.rename) {
+	if (config.rename || config.renamePath) {
 		status.renames = [];
 	}
 
@@ -157,8 +157,16 @@ async function run(config) {
 	config.contentDelimiterTail =
 		config.contentDelimiterTail ?? config.tail ?? !(piped && config.output);
 
-	if (config.rename && piped) {
-		panic('--rename needs files, as piped data has no name to change');
+	if (config.rename && config.renamePath) {
+		panic('--rename can not be used with --rename-path');
+	}
+
+	if (config.renameForce && !config.rename && !config.renamePath) {
+		panic('--rename-force needs --rename or --rename-path');
+	}
+
+	if ((config.rename || config.renamePath) && piped) {
+		panic('--rename and --rename-path need files, as piped data has no name to change');
 	}
 
 	if (piped) {
@@ -182,7 +190,7 @@ async function run(config) {
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
 	);
 
-	if (config.rename) {
+	if (config.rename || config.renamePath) {
 		return renameFiles(files, config);
 	}
 
@@ -308,16 +316,31 @@ function updated(file, config) {
 	info(file);
 }
 
-// --rename: the path of each file is the content that is searched and replaced, and the file is renamed to the result
+// --rename: the name of each file is the text that is searched and replaced, and the file is renamed to the result.
+// --rename-path: the same with the whole path, so the file can be moved.
 function renameFiles(files, config) {
+	// With --rename a / in the new name would move the file
+	const slashed = [];
 	const plan = files.map(file => {
 		config.statusInfo.files.searched.push(file);
-		chat('Work on the path of: ' + file);
+		const text = config.renamePath ? file : path.basename(file);
+		chat('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
 		const replacement =
 			config.replacementJs && !config.outputMatch
-				? dynamicReplacement(file, config, file)
+				? dynamicReplacement(file, config, text)
 				: config.replacement;
-		return {old: file, new: file.replace(config.regex, replacement)};
+		const result = text.replace(config.regex, replacement);
+		if (result === text) {
+			return {old: file, new: file};
+		}
+		if (config.renamePath) {
+			return {old: file, new: result};
+		}
+		const item = {old: file, new: path.join(path.dirname(file), result)};
+		if (/[\\/]/.test(result)) {
+			slashed.push(item);
+		}
+		return item;
 	});
 	const renames = plan.filter(item => item.new !== item.old);
 
@@ -329,7 +352,7 @@ function renameFiles(files, config) {
 		);
 	}
 
-	findClashes(plan, renames, config);
+	findClashes(plan, renames, slashed, config);
 
 	plan.forEach(item => {
 		if (item.new === item.old) {
@@ -359,7 +382,7 @@ function nameRename(item, config) {
 // and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
 const pathKey = file => path.resolve(file).toLowerCase();
 
-function findClashes(plan, renames, config) {
+function findClashes(plan, renames, slashed, config) {
 	const byTarget = new Map();
 	renames.forEach(item => {
 		const target = pathKey(item.new);
@@ -374,7 +397,11 @@ function findClashes(plan, renames, config) {
 	const clash = (title, items) =>
 		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
 
-	const clashes = [];
+	const clashes = slashed.map(item =>
+		clash('Renames with a / in the new name are not allowed. Use --rename-path to move files.', [
+			item,
+		])
+	);
 	byTarget.forEach((items, target) => {
 		const [item] = items;
 		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)
