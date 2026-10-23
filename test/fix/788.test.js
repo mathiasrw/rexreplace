@@ -17,6 +17,24 @@ describe('#788 a path that can not be looked at', () => {
 	});
 
 	test.each([
+		[
+			'a symlink loop',
+			() => fs.symlinkSync('l2', 'l1') || fs.symlinkSync('l1', 'l2') || 'l1',
+			'ELOOP',
+		],
+		['a name that is too long', () => 'x'.repeat(300) + '.md', 'ENAMETOOLONG'],
+	])(
+		'is an error when it is %s, and the other files are still changed',
+		async (name, make, code) => {
+			fs.writeFileSync('a.md', 'foo');
+			const result = await rr('foo', 'bar', {includeGlob: [make(), 'a.md']});
+			expect(result.err).toStartWith(' ❌ ' + code);
+			expect(result.exit).toBe(2);
+			expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');
+		}
+	);
+
+	test.each([
 		['as an argument', {includeGlob: ['a.md/x']}],
 		['from --glob-pipe', {pipedData: 'a.md/x', globPipe: true}],
 		['in --exclude-glob', {includeGlob: ['a.md'], excludeGlob: ['a.md/x']}],

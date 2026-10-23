@@ -1200,12 +1200,19 @@ function sortFiles(files, sort, conf) {
 	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
 }
 
-// A path that can not be looked at (like a name that is too long) is not a file, so it is globbed
+// Is the path a file (true), something to glob (false), or a path that can not be looked at (null, with an error)?
+// A path that is not there, or has a file where a folder should be, is globbed like before. So is a glob,
+// like a long brace glob that is too long as a name. A plain path that can not be looked at, like a name
+// that is too long or a symlink loop, is an error, so it is not hidden as 0 files found.
 function isFile(file) {
 	try {
 		return Boolean(fs.statSync(file, {throwIfNoEntry: false})?.isFile());
 	} catch (e) {
-		return false;
+		if ('ENOENT' === e.code || 'ENOTDIR' === e.code || globs.isDynamicPattern(file)) {
+			return false;
+		}
+		error(e.message);
+		return null;
 	}
 }
 
@@ -1224,9 +1231,10 @@ function findFiles(paths, globOptions, sort) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
-		if (isFile(file)) {
+		const kind = isFile(file);
+		if (kind) {
 			files.push(file);
-		} else {
+		} else if (false === kind) {
 			patterns.push(file);
 		}
 	});
