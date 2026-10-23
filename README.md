@@ -180,6 +180,12 @@ Pipe the names into the next run with `--glob-pipe`, so it only works on the fil
 > rexreplace 'foo' 'bar' '**/*.md' --null-out | rexreplace 'baz' 'qux' --glob-pipe --null-in
 ```
 
+Null bytes are just chars in the search, so null-separated data can be made readable by turning them into line breaks:
+
+```bash
+> find . -name '*.md' -print0 | rexreplace '\x00' '\n'
+```
+
 
 **Matching pairs**
 
@@ -310,6 +316,7 @@ Files identified for potential processing are identified by:
 ### Limitations
 
 - RexReplace reads each file fully into memory, so working on your 8Gb log files will probably not be ideal.
+- Null bytes are kept as they are. Files are read as utf8 by default, so in binary data the bytes that are not valid UTF-8 become `�` when the file is changed. Use `--encoding latin1` to keep every byte.
 - For versions of Node prior to 6, please use version 2.2.x. For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
 
 ### Priorities
