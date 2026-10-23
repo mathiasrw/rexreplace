@@ -451,6 +451,13 @@ assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 
 assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
 assert		 		"cat my.file"    'foobar'
 
+# Globs are case-insensitive like the search, unless --void-ignore-case (#716)
+reset
+assert		 		"rexreplace 'oo' 'x' '*.FILE' -X 'YOUR*'"    'my.file'
+assert		 		"cat my.file"    'fxbar'
+reset
+assert_raises		"rexreplace 'oo' 'x' '*.FILE' --void-ignore-case"    1
+
 # --simulate: the files that would be changed are named, but nothing is written (#710)
 reset
 assert		 		"rexreplace 'oo' 'x' my.file your.file --simulate"    'my.file'

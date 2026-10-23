@@ -727,7 +727,10 @@ function localTimeString(dateObj = new Date()) {
 function getFilePaths(conf) {
 	const {includeGlob, excludeGlob, excludeRe} = conf;
 
-	let files = findFiles(includeGlob);
+	// All globs follow the search: case-insensitive, unless --void-ignore-case
+	const globOptions = {caseSensitiveMatch: Boolean(conf.voidIgnoreCase)};
+
+	let files = findFiles(includeGlob, globOptions);
 
 	// With --full-path each file is known by its full path from here on. That is what --exclude-re sees, and the name that is printed.
 	if (conf.fullPath) {
@@ -736,7 +739,7 @@ function getFilePaths(conf) {
 
 	// --exclude-glob is always globs, also for the name of a file. They are used together, and the files they find are taken away.
 	if (excludeGlob.length) {
-		const excluded = new Set(globs.sync(excludeGlob).map(file => path.resolve(file)));
+		const excluded = new Set(globs.sync(excludeGlob, globOptions).map(file => path.resolve(file)));
 		files = files.filter(file => !excluded.has(path.resolve(file)));
 	}
 
@@ -751,7 +754,7 @@ function getFilePaths(conf) {
 
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
 // The other paths are globbed together, so a pattern that starts with `!` can take files away from the other patterns.
-function findFiles(paths) {
+function findFiles(paths, globOptions) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
@@ -764,7 +767,7 @@ function findFiles(paths) {
 
 	// A file given by its name and also found by a glob is only handled once
 	const seen = new Set();
-	return files.concat(patterns.length ? globs.sync(patterns) : []).filter(file => {
+	return files.concat(patterns.length ? globs.sync(patterns, globOptions) : []).filter(file => {
 		const fullPath = path.resolve(file);
 		if (seen.has(fullPath)) {
 			return false;
