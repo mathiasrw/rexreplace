@@ -300,7 +300,7 @@ const yargs = require('yargs')
 	.boolean('r')
 	.describe(
 		'r',
-		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file.'
+		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file. Control characters, like a line break, are removed from the new name.'
 	)
 	.alias('r', 'rename')
 
