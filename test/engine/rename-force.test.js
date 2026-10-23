@@ -22,6 +22,22 @@ describe('--rename-force', () => {
 		expect(fs.readFileSync('a.md', 'utf8')).toBe('foo');
 	});
 
+	test('does not write over a file in the run that keeps its name', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.writeFileSync('b.txt', 'bar');
+		const config = {includeGlob: ['a.md', 'b.txt'], rename: true, renameForce: true};
+		expect((await rr('^a\\.md$', 'b.txt', config)).exit).toBe(3);
+		expect(fs.readFileSync('b.txt', 'utf8')).toBe('bar');
+	});
+
+	test('does not let two new paths differ only in case', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.writeFileSync('b.md', 'bar');
+		const config = {includeGlob: ['*.md'], rename: true, renameForce: true, replacementJs: true};
+		expect((await rr('^[ab]', '$0 == "a" ? "X" : "x"', config)).exit).toBe(3);
+		expect(fs.readdirSync('.').sort()).toEqual(['a.md', 'b.md']);
+	});
+
 	test('does not let two files get the same new path', async () => {
 		fs.writeFileSync('a.md', 'foo');
 		fs.writeFileSync('b.md', 'bar');
