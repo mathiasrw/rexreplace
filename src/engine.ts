@@ -1295,7 +1295,10 @@ function sortName(value) {
 	return name;
 }
 
-const natural = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'}).compare;
+// The same order everywhere: a fixed locale, as Node follows the locale of the user and Bun does not,
+// and ascii for the names natural sees as the same, like file1 and file01, so the order of the glob does not decide
+const collator = new Intl.Collator('en', {numeric: true, sensitivity: 'base'}).compare;
+const natural = (a, b) => collator(a, b) || ascii(a, b);
 const ascii = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 function sortFiles(files, sort, conf) {
