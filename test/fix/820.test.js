@@ -10,8 +10,8 @@ describe('#820 the natural order', () => {
 		for (const name of ['file1.md', 'file01.md', 'file001.md', 'cafe.md', 'café.md']) {
 			fs.writeFileSync(name, 'foo');
 		}
-		expect((await rr('foo', 'bar', {includeGlob: ['*.md'], simulate: true})).out).toBe(
-			'cafe.md\ncafé.md\nfile001.md\nfile01.md\nfile1.md\n'
-		);
+		expect(
+			(await rr('foo', 'bar', {includeGlob: ['*.md'], simulate: true, sort: 'natural'})).out
+		).toBe('cafe.md\ncafé.md\nfile001.md\nfile01.md\nfile1.md\n');
 	});
 });
