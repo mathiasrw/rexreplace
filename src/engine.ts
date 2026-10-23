@@ -1395,7 +1395,7 @@ function sortFiles(files, sort, conf) {
 	// Not all file systems keep the time a file was made. Then Node gives 0.
 	if ('created' === sort && [...stats.values()].some(stat => stat && !stat.birthtimeMs)) {
 		warn(
-			'The file system does not keep the time a file was made, so --sort created uses the modified time.'
+			'This file system does not know when files were created. Sorting via modified time instead.'
 		);
 		key = stat => stat.mtimeMs;
 	}
