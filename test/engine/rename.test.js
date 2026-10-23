@@ -105,7 +105,7 @@ describe('--rename with --keep-backup', () => {
 
 describe('--rename stops the run before any file is renamed, when planned renames clash', () => {
 	const stopped =
-		' ❌ No file is renamed, as the planned renames clash\n    No further processing.\n\n';
+		' ❌ Planned renames clash, so no change is applied to any file\n    No further processing.\n\n';
 
 	test('when two files would get the same new path', async () => {
 		fs.writeFileSync('a.md', 'foo');
