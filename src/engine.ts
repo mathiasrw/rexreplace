@@ -329,7 +329,7 @@ function renameFiles(files, config) {
 		);
 	}
 
-	findClashes(renames, config);
+	findClashes(plan, renames, config);
 
 	plan.forEach(item => {
 		if (item.new === item.old) {
@@ -354,17 +354,21 @@ function nameRename(item, config) {
 }
 
 // If planned renames clash the process is halted and no change is applied to any file.
-// The paths are compared as absolute paths, as two relative paths can lead to the same file.
-function findClashes(renames, config) {
+// The paths are compared as absolute paths, as two relative paths can lead to the same file,
+// and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
+const pathKey = file => path.resolve(file).toLowerCase();
+
+function findClashes(plan, renames, config) {
 	const byTarget = new Map();
 	renames.forEach(item => {
-		const target = path.resolve(item.new);
+		const target = pathKey(item.new);
 		byTarget.set(target, (byTarget.get(target) || []).concat(item));
 	});
-	const sources = new Set(renames.map(item => path.resolve(item.old)));
+	// All files in the run, also the ones that keep their name
+	const inRun = new Set(plan.map(item => pathKey(item.old)));
 	const targets = new Set(byTarget.keys());
-	const ontoRenamed = targets.intersection(sources);
-	const ontoOthers = targets.difference(sources);
+	const ontoRun = targets.intersection(inRun);
+	const ontoOthers = targets.difference(inRun);
 
 	const clashes = [];
 	byTarget.forEach((items, target) => {
@@ -376,9 +380,10 @@ function findClashes(renames, config) {
 					' be renamed to ' +
 					item.new
 			);
-		} else if (ontoRenamed.has(target)) {
-			clashes.push(item.old + ' would be renamed to ' + item.new + ', which is also renamed');
-		} else if (ontoOthers.has(target) && !config.renameForce && isOtherFile(item.old, target)) {
+		} else if (ontoRun.has(target) && pathKey(item.old) !== target) {
+			// Not even --rename-force writes over a file in the run. A file can still change the case of its own name.
+			clashes.push(item.old + ' would be renamed to ' + item.new + ', which is a file in this run');
+		} else if (ontoOthers.has(target) && !config.renameForce && isOtherFile(item.old, item.new)) {
 			clashes.push(item.old + ' would be renamed to ' + item.new + ', which is there already');
 		}
 	});
