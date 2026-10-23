@@ -103,27 +103,28 @@ describe('#735 UTF-8 in file names', () => {
 });
 
 describe('#735 UTF-8 in the delimiters', () => {
-	async function makeFiles() {
+	test('--name-delimiter, also with no tail', async () => {
 		await Bun.write('a.file', 'foo');
 		await Bun.write('b.file', 'foo');
-		return {includeGlob: ['*.file']};
-	}
-
-	test('--name-delimiter, also with no tail', async () => {
-		const config = {...(await makeFiles()), nameDelimiter: '🦖'};
+		const config = {includeGlob: ['*.file'], nameDelimiter: '🦖'};
 		expect(asUtf8((await rr('o', 'x', config)).out)).toBe('a.file🦖b.file🦖');
-		await makeFiles();
+		await Bun.write('a.file', 'foo');
+		await Bun.write('b.file', 'foo');
 		const noTail = {...config, nameDelimiterTail: false};
 		expect(asUtf8((await rr('o', 'x', noTail)).out)).toBe('a.file🦖b.file');
 	});
 
 	test('--content-delimiter with a combined emoji', async () => {
-		const config = {...(await makeFiles()), output: true, contentDelimiter: '👩‍💻'};
+		await Bun.write('a.file', 'foo');
+		await Bun.write('b.file', 'foo');
+		const config = {includeGlob: ['*.file'], output: true, contentDelimiter: '👩‍💻'};
 		expect(asUtf8((await rr('o', 'x', config)).out)).toBe('fxx👩‍💻fxx👩‍💻');
 	});
 
 	test('--delimiter sets both', async () => {
-		const config = {...(await makeFiles()), output: true, delimiter: '🦕'};
+		await Bun.write('a.file', 'foo');
+		await Bun.write('b.file', 'foo');
+		const config = {includeGlob: ['*.file'], output: true, delimiter: '🦕'};
 		const result = await rr('o', 'x', config);
 		expect(asUtf8(result.out)).toBe('fxx🦕fxx🦕');
 		expect(asUtf8(result.err)).toBe('a.file🦕b.file🦕');

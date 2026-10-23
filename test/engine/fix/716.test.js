@@ -5,14 +5,10 @@ import fs from 'fs';
 import {rr} from '../../helper.js';
 
 // The names differ in more than case, so they can both be there on a file system that is case-insensitive
-function makeFiles() {
-	fs.writeFileSync('a.file', 'foo');
-	fs.writeFileSync('B.FILE', 'foo');
-}
-
 describe('#716 the globs are case-insensitive like the search', () => {
 	test('a glob finds a file whatever the case of its name', async () => {
-		makeFiles();
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('B.FILE', 'foo');
 		expect(await rr('o', 'x', {includeGlob: ['*.file']})).toEqual({
 			out: 'B.FILE\na.file\n',
 			err: '',
@@ -21,7 +17,8 @@ describe('#716 the globs are case-insensitive like the search', () => {
 	});
 
 	test('--exclude-glob leaves out a file whatever the case of its name', async () => {
-		makeFiles();
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('B.FILE', 'foo');
 		// `*.*` finds both files also when globs are case-sensitive, so only --exclude-glob is tested
 		const config = {includeGlob: ['*.*'], excludeGlob: ['b.*']};
 		expect((await rr('o', 'x', config)).out).toBe('a.file\n');
@@ -29,7 +26,8 @@ describe('#716 the globs are case-insensitive like the search', () => {
 	});
 
 	test('--void-ignore-case makes all globs case-sensitive', async () => {
-		makeFiles();
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('B.FILE', 'foo');
 		const config = {includeGlob: ['*.file'], voidIgnoreCase: true};
 		expect((await rr('o', 'x', config)).out).toBe('a.file\n');
 		fs.writeFileSync('a.file', 'foo');

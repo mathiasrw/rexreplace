@@ -5,17 +5,12 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr, rrStatus} from '../../helper.js';
 
-// Make a.file and c.file with `foo`, and b.file with `bar` (nothing to replace)
-function makeFiles() {
-	fs.writeFileSync('a.file', 'foo');
-	fs.writeFileSync('b.file', 'bar');
-	fs.writeFileSync('c.file', 'foo');
-	return {includeGlob: ['*.file']};
-}
-
 describe('#742 the engine resolves with a status', () => {
 	test('with the files searched and updated', async () => {
-		expect(await rrStatus('o', 'x', makeFiles())).toEqual({
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		expect(await rrStatus('o', 'x', {includeGlob: ['*.file']})).toEqual({
 			files: {searched: ['a.file', 'b.file', 'c.file'], updated: ['a.file', 'c.file']},
 			pipe: null,
 			warnings: [],
@@ -24,13 +19,19 @@ describe('#742 the engine resolves with a status', () => {
 	});
 
 	test('with the files that would be updated with --output', async () => {
-		const status = await rrStatus('o', 'x', {...makeFiles(), output: true});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		const status = await rrStatus('o', 'x', {includeGlob: ['*.file'], output: true});
 		expect(status.files.updated).toEqual(['a.file', 'c.file']);
 		expect(fs.readFileSync('a.file', 'utf8')).toBe('foo');
 	});
 
 	test('with --name-all only updates the files that are changed', async () => {
-		const status = await rrStatus('o', 'x', {...makeFiles(), nameAll: true});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		const status = await rrStatus('o', 'x', {includeGlob: ['*.file'], nameAll: true});
 		expect(status.files.updated).toEqual(['a.file', 'c.file']);
 	});
 
