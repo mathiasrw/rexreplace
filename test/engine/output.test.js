@@ -69,7 +69,7 @@ describe('--output', () => {
 			expect(result.err).toContain('Output result from: my.file');
 		});
 
-		test('with --replacement-js and several files', async () => {
+		test('with --js and several files', async () => {
 			fs.writeFileSync('a.file', 'foo');
 			fs.writeFileSync('b.file', 'foo');
 			const config = {includeGlob: ['*.file'], output: true, replacementJs: true};

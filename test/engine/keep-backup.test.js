@@ -63,7 +63,7 @@ describe('--keep-backup', () => {
 			expect(fs.readdirSync('.')).toEqual(['my.file']);
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			await rr('foo', 'name', {
 				includeGlob: ['my.file'],

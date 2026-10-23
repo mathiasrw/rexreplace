@@ -51,7 +51,7 @@ describe('--void-backup', () => {
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {includeGlob: ['my.file'], voidBackup: true, replacementJs: true};
 			await rr('foo', 'filename', config);

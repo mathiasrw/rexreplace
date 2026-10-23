@@ -51,7 +51,7 @@ describe('--void-global', () => {
 			expect((await rr('a+', 'x', config)).out).toBe('A+ x a+');
 		});
 
-		test('with --replacement-js the code only runs for the first match', async () => {
+		test('with --js the code only runs for the first match', async () => {
 			const config = {pipedData: 'a a a', voidGlobal: true, replacementJs: true};
 			expect((await rr('a', '$0.toUpperCase()', config)).out).toBe('A a a');
 		});

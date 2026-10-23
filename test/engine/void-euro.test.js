@@ -50,7 +50,7 @@ describe('--void-euro', () => {
 			);
 		});
 
-		test('with --replacement-js the € is how to get to the groups', async () => {
+		test('with --js the € is how to get to the groups', async () => {
 			expect(
 				(await rr('(o)', '€1.toUpperCase()', {pipedData: 'fo', replacementJs: true})).out
 			).toBe('fO');

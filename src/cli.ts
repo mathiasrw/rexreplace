@@ -314,10 +314,10 @@ const yargs = require('yargs')
 
 	.boolean('p')
 	.alias('p', 'pipe')
-	.describe('p', `Read the piped data and make it available to --replacement-js as \`pipe\`.`)
+	.describe('p', `Read the piped data and make it available to --js as \`pipe\`.`)
 
 	.boolean('js-pipe')
-	.describe('js-pipe', `Shorthand for --replacement-js --pipe (-jp).`)
+	.describe('js-pipe', `Shorthand for --js --pipe (-jp).`)
 
 	.boolean('g')
 	.alias('g', 'glob-pipe')

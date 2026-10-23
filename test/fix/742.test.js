@@ -135,7 +135,7 @@ describe('#742 the engine part of the status', () => {
 
 	test.each([
 		['a replacement', {}, 'x', null],
-		['--replacement-js', {replacementJs: true}, null, '"x"'],
+		['--js', {replacementJs: true}, null, '"x"'],
 		['--output-match', {outputMatch: true}, null, null],
 	])(
 		'tells what the regex engine was asked to do with %s',

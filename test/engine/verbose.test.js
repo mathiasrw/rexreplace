@@ -72,7 +72,7 @@ describe('--verbose', () => {
 			);
 		});
 
-		test('with --replacement-js piped data counts as used', async () => {
+		test('with --js piped data counts as used', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {
 				includeGlob: ['my.file'],

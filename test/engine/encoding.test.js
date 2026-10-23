@@ -116,7 +116,7 @@ describe('--encoding', () => {
 			expect(fs.readFileSync('my.file', 'utf16le')).toBe('🦕 🦖');
 		});
 
-		test('with --replacement-js the text is decoded', async () => {
+		test('with --js the text is decoded', async () => {
 			fs.writeFileSync('my.file', latin1());
 			const config = {
 				includeGlob: ['my.file'],
@@ -127,7 +127,7 @@ describe('--encoding', () => {
 			expect((await rr('æ', 'text.length + text', config)).out).toBe('f3fæoo\n');
 		});
 
-		test('with --replacement-js `bytes` and `size` are the size of the file in its encoding (#688)', async () => {
+		test('with --js `bytes` and `size` are the size of the file in its encoding (#688)', async () => {
 			// 1500 times `æ`: one byte each in latin1, but two in utf8 (that would give 3000 and 2.9 KB)
 			fs.writeFileSync('my.file', Buffer.alloc(1500, 0xe6));
 			const config = {

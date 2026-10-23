@@ -41,7 +41,7 @@ describe('#735 UTF-8 in the replacement', () => {
 		expect(asUtf8((await rr('§d', '🦖', {pipedData: 'a1b'})).out)).toBe('a🦖b');
 	});
 
-	test('can come from --replacement-js, where an emoji has the length 2', async () => {
+	test('can come from --js, where an emoji has the length 2', async () => {
 		const config = {pipedData: 'a🦖', replacementJs: true};
 		expect(asUtf8((await rr('🦖', '$0 + $0.length', config)).out)).toBe('a🦖2');
 	});

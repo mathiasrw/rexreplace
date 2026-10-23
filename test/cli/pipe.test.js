@@ -8,18 +8,18 @@ const warning = ' 🟡 Data is piped in, but no flag tells what to do with it. I
 describe('--pipe and --js-pipe', () => {
 	test('without --pipe the code does not get the piped data', async () => {
 		fs.writeFileSync('my.file', 'foobar\n');
-		expect(await sh($`echo -n x | bun ${cli} foo pipe my.file -o --replacement-js`)).toEqual({
+		expect(await sh($`echo -n x | bun ${cli} foo pipe my.file -o --js`)).toEqual({
 			out: 'nullbar\n',
 			err: 'my.file\n',
 			exit: 0,
 		});
 	});
 
-	test('the code gets the piped data with --replacement-js --pipe', async () => {
+	test('the code gets the piped data with --js --pipe', async () => {
 		fs.writeFileSync('my.file', 'foobar\n');
-		expect(
-			(await sh($`echo -n x | bun ${cli} foo pipe my.file -o --replacement-js --pipe`)).out
-		).toBe('xbar\n');
+		expect((await sh($`echo -n x | bun ${cli} foo pipe my.file -o --js --pipe`)).out).toBe(
+			'xbar\n'
+		);
 	});
 
 	test('the code gets the piped data with -jp and --js-pipe', async () => {

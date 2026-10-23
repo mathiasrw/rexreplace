@@ -51,8 +51,8 @@ describe('#700 § is a full substitute for \\ in the replacement', () => {
 		expect((await replaceB('§\\n', '-§')).out).toBe('foo§\nar');
 	});
 
-	test('--replacement-js still gets § as a backslash in the source', async () => {
-		expect((await replaceB('"a§nb"', '--replacement-js')).out).toBe('fooa\nbar');
-		expect((await replaceB('"a§nb"', '--replacement-js', '--void-section')).out).toBe('fooa§nbar');
+	test('--js still gets § as a backslash in the source', async () => {
+		expect((await replaceB('"a§nb"', '--js')).out).toBe('fooa\nbar');
+		expect((await replaceB('"a§nb"', '--js', '--void-section')).out).toBe('fooa§nbar');
 	});
 });

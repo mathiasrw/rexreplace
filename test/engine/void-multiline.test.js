@@ -53,7 +53,7 @@ describe('--void-multiline', () => {
 			expect((await rr('^.|.$', '_', config)).out).toBe('a\nf\n');
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			const config = {pipedData: 'ab\ncd', voidMultiline: true, replacementJs: true};
 			expect((await rr('^(.)', '$1.toUpperCase()', config)).out).toBe('Ab\ncd');
 		});
