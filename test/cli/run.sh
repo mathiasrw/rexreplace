@@ -183,6 +183,10 @@ reset
 echo 'baz' > rep.file
 assert		 		"rexreplace 'foo' rep.file my.file -o --replacement-file --trim-file"    'bazbar'
 
+# --js has the number of the file, $n, with cousins like €n00 for 3 digits
+reset
+assert		 		"rexreplace 'foo' '€n00' my.file -o --js"    '001bar'
+
 # --literal-replacement (-l) uses the replacement as it is, so `$1` is just text
 reset
 assert		 		"rexreplace '(foo)' '€1' my.file -o --literal-replacement"    '$1bar'
