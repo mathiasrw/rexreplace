@@ -1,3 +1,4 @@
+// Test of stacked PRs (devops/stack2/a, commit 2). Not to be merged.
 // Preloaded by bunfig.toml before every test file.
 import {spyOn, beforeEach, afterEach} from 'bun:test';
 import fs from 'fs';
