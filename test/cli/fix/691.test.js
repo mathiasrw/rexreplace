@@ -76,7 +76,9 @@ describe('#691 replacement that used to crash the CLI', () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await sh($`bun ${cli} o ${'\\x4'} my.file --output --no-content-delimiter-tail`);
 		expect(result.out).toBe('');
-		expect(result.err).toBe(' ❌ Invalid escape sequence in replacement: \\x4\n\n');
+		expect(result.err).toBe(
+			' ❌ Invalid escape sequence in replacement: \\x4\n    No further processing.\n\n'
+		);
 		expect(result.exit).toBe(1);
 		expect(
 			await sh($`bun ${cli} o ${'\\x4'} my.file --output --no-content-delimiter-tail --quiet-total`)

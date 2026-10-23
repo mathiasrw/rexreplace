@@ -25,6 +25,25 @@ describe('#720 every error starts with ❌', () => {
 	});
 });
 
+describe('#720 an error that stops the run says so', () => {
+	test('a panic', async () => {
+		expect((await rr('(', 'x', {pipedData: 'foo'})).err).toEndWith(
+			'\n    No further processing.\n\n'
+		);
+	});
+
+	test('an error from a file with --halt, but not without', async () => {
+		fs.writeFileSync('a.file', 'foo');
+		fs.chmodSync('a.file', 0);
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], halt: true})).err).toContain(
+			'No further processing.'
+		);
+		expect((await rr('o', 'x', {includeGlob: ['a.file']})).err).not.toContain(
+			'No further processing.'
+		);
+	});
+});
+
 describe('#720 finding no files is a warning', () => {
 	test('with the exit code 0', async () => {
 		expect(await rr('o', 'x', {includeGlob: ['nope.file']})).toEqual({

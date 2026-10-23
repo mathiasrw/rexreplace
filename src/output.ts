@@ -93,26 +93,33 @@ export const chat = function (msg) {
 	}
 };
 
-export const die = function (msg = '', data = '', displayHelp = false) {
+// An error is told about, and goes into `errors` in the status report. A panic also says the run stops here.
+const printError = function (text, stop) {
+	if (!config.quietTotal) {
+		// The line break gives an empty line under the error
+		write(
+			font.red(' ❌ ' + text + (stop ? '\n    No further processing.' : '')) + '\n\n',
+			process.stderr
+		);
+	}
+};
+
+// The run can not go on, so it stops here
+export const panic = function (msg = '', data = '', displayHelp = false) {
 	if (displayHelp && !config.quietTotal) {
 		config.showHelp();
 	}
 	const text = msg + (data ? ' ' + data : '');
 	config.statusInfo?.errors.push(text);
-	if (!config.quietTotal) {
-		// The line break gives an empty line under the error
-		write(font.red(' ❌ ' + text) + '\n\n', process.stderr);
-	}
+	printError(text, true);
 	throw new Panic(text);
 };
 
+// Something failed, and the run goes on. With --halt it is a panic.
 export const error = function (msg, data = '') {
 	const text = msg + (data ? ' ' + data : '');
 	config.statusInfo?.errors.push(text);
-	if (!config.quietTotal) {
-		// The line break gives an empty line under the error
-		write(font.red(' ❌ ' + text) + '\n\n', process.stderr);
-	}
+	printError(text, config.halt);
 	if (config.halt) {
 		throw new Panic(text);
 	}
