@@ -468,7 +468,7 @@ assert_raises		"printf 'my.file' | rexreplace 'b' 'x' --null-in"    1
 assert		 		"cat my.file"    'foobar'
 
 
-# Data with null bytes is binary safe: the null bytes come out where they went in
+# Null bytes are kept: they come out where they went in. (Bytes that are not valid UTF-8 are only kept with -e latin1.)
 reset
 assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' | tr '\0' '|'"    'fxx|bxx|'
 assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' --output | tr '\0' '|'"    'fxx|bxx|'
