@@ -112,7 +112,9 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		fs.writeFileSync('b.md', 'foo');
 		expect(await rr('^[ab]', 'c', {includeGlob: ['*.md'], rename: true})).toEqual({
 			out: '',
-			err: ' ❌ a.md and b.md would both be renamed to c.md\n\n' + stopped,
+			err:
+				' ❌ Renames to the same path are not allowed.\n    From: a.md\n    From: b.md\n    To:   c.md\n\n' +
+				stopped,
 			exit: 3,
 		});
 		expect(files()).toEqual(['a.md', 'b.md']);
@@ -123,7 +125,8 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		fs.writeFileSync('b.md', 'foo');
 		const config = {includeGlob: ['a.md', './b.md'], rename: true};
 		expect((await rr('[ab]\\.md$', 'c.md', config)).err).toBe(
-			' ❌ ./b.md and a.md would both be renamed to ./c.md\n\n' + stopped
+			' ❌ Renames to the same path are not allowed.\n    From: ./b.md\n    From: a.md\n    To:   ./c.md\n\n' +
+				stopped
 		);
 		expect(files()).toEqual(['a.md', 'b.md']);
 	});
@@ -135,8 +138,8 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		expect(await rr('^[ab]', '$0 == "a" ? "b" : "a"', config)).toEqual({
 			out: '',
 			err:
-				' ❌ a.md would be renamed to b.md, which is a file in this run\n\n' +
-				' ❌ b.md would be renamed to a.md, which is a file in this run\n\n' +
+				' ❌ Renames clashing with other files in this run are not allowed.\n    From: a.md\n    To:   b.md\n\n' +
+				' ❌ Renames clashing with other files in this run are not allowed.\n    From: b.md\n    To:   a.md\n\n' +
 				stopped,
 			exit: 3,
 		});
@@ -148,7 +151,9 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		fs.writeFileSync('b.txt', 'bar');
 		expect(await rr('^a\\.md$', 'b.txt', {includeGlob: ['a.md', 'b.txt'], rename: true})).toEqual({
 			out: '',
-			err: ' ❌ a.md would be renamed to b.txt, which is a file in this run\n\n' + stopped,
+			err:
+				' ❌ Renames clashing with other files in this run are not allowed.\n    From: a.md\n    To:   b.txt\n\n' +
+				stopped,
 			exit: 3,
 		});
 		expect(fs.readFileSync('b.txt', 'utf8')).toBe('bar');
@@ -160,7 +165,9 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		const config = {includeGlob: ['*.md'], rename: true, replacementJs: true};
 		expect(await rr('^[ab]', '$0 == "a" ? "X" : "x"', config)).toEqual({
 			out: '',
-			err: ' ❌ a.md and b.md would both be renamed to X.md\n\n' + stopped,
+			err:
+				' ❌ Renames to the same path are not allowed.\n    From: a.md\n    From: b.md\n    To:   X.md\n\n' +
+				stopped,
 			exit: 3,
 		});
 		expect(files()).toEqual(['a.md', 'b.md']);
@@ -172,7 +179,9 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		fs.writeFileSync('b.md', 'foo');
 		expect(await rr('md', 'txt', {includeGlob: ['*.md'], rename: true})).toEqual({
 			out: '',
-			err: ' ❌ a.md would be renamed to a.txt, which is there already\n\n' + stopped,
+			err:
+				' ❌ Renames clashing with files that are there already are not allowed without --rename-force.\n    From: a.md\n    To:   a.txt\n\n' +
+				stopped,
 			exit: 3,
 		});
 		expect(files()).toEqual(['a.md', 'a.txt', 'b.md']);
