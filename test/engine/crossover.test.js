@@ -118,7 +118,7 @@ describe('same result no matter how it is delivered', () => {
 		expect(fs.readdirSync('.')).toHaveLength(files);
 	});
 
-	test('--replacement-pipe and --replacement-js', async () => {
+	test('--replacement-pipe and --js', async () => {
 		fs.writeFileSync('my.file', text);
 		const config = {includeGlob: ['my.file'], output: true, ...search};
 		expect((await rr('a.b', '_', {...config, replacementPipe: true, pipedData: '[$&]'})).out).toBe(

@@ -68,7 +68,7 @@ describe('--literal', () => {
 			).toBe('o.\no.\n');
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			const config = {pipedData: '1+1 = 2', literal: true, replacementJs: true};
 			expect((await rr('1+1', '$0.length', config)).out).toBe('3 = 2');
 		});

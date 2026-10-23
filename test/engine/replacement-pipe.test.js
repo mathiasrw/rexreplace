@@ -68,7 +68,7 @@ describe('--replacement-pipe', () => {
 	});
 
 	describe('combined', () => {
-		test('with --replacement-js the piped data is the code to run', async () => {
+		test('with --js the piped data is the code to run', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {
 				includeGlob: ['my.file'],

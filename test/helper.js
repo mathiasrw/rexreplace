@@ -69,9 +69,12 @@ async function run(pattern, replacement, config) {
 		};
 		alias(options);
 		status = await engine(options);
-		// Like the CLI, an error gives the exit code 2 when the run is done
-		if (status.errors.length) {
+		// Like the CLI, an error gives the exit code 2 and a check that is not met 1, when the run is done
+		const checks = status.checks?.length ?? 0;
+		if (status.errors.length > checks) {
 			result.exit = 2;
+		} else if (checks) {
+			result.exit = 1;
 		}
 	} catch (e) {
 		// Like the CLI, a panic stops the run with the exit code 3

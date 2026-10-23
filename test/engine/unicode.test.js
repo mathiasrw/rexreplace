@@ -65,7 +65,7 @@ describe('--unicode', () => {
 			expect((await rr('\\w(.)', '_', config)).out).toBe('🦖\n🦕\n');
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			const config = {pipedData: 'a🦖b', unicode: true, replacementJs: true};
 			expect((await rr('a(.)b', '$1.codePointAt(0).toString(16)', config)).out).toBe('1f996');
 		});

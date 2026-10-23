@@ -67,7 +67,7 @@ describe('#726 a file given with an absolute path is changed', () => {
 		}
 	);
 
-	test('--replacement-js gets the path of the file as it is', async () => {
+	test('--js gets the path of the file as it is', async () => {
 		fs.mkdirSync('work');
 		fs.mkdirSync('other');
 		const file = path.resolve('other', 'my.file');

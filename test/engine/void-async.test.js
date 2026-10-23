@@ -85,7 +85,7 @@ describe('--void-async', () => {
 			}
 		);
 
-		test('with --replacement-js and several files', async () => {
+		test('with --js and several files', async () => {
 			['a', 'b', 'c'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 			await rr('foo', 'name + name', {
 				includeGlob: ['*.file'],

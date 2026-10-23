@@ -8,7 +8,17 @@ const globs = require('fast-glob');
 
 const now = new Date();
 
-import {outputConfig, chat, info, print, printDone, warn, error, panic} from './output.ts';
+import {
+	outputConfig,
+	chat,
+	info,
+	print,
+	printDone,
+	warn,
+	error,
+	panic,
+	checkFailed,
+} from './output.ts';
 
 import './shim.ts';
 
@@ -43,6 +53,7 @@ export async function engine(config: any = {engine: 'default'}) {
 	outputConfig(config);
 	try {
 		await run(config);
+		checkExpectations(config);
 	} catch (e) {
 		if (e?.panic) {
 			e.status = config.statusInfo;
@@ -60,6 +71,11 @@ function newStatus(config) {
 	// The old and the new path of each file that is renamed, or would be
 	if (config.rename || config.renamePath) {
 		status.renames = [];
+	}
+
+	// The checks from --expect-* that are not met
+	if (config.expectFiles || config.expectDiff || config.expectZeroDiff || config.expectDiffAll) {
+		status.checks = [];
 	}
 
 	// The status report with --verbose also tells what went into the engine and what it did.
@@ -83,6 +99,10 @@ function newStatus(config) {
 
 async function run(config) {
 	validateEncoding(config.encoding);
+
+	if (config.expectZeroDiff && (config.expectDiff || config.expectDiffAll)) {
+		panic('--expect-zero-diff can not be used with --expect-diff or --expect-diff-all');
+	}
 
 	// With --glob-pipe each line of the piped data is a path or a glob, used together with the ones given as arguments
 	if (config.globPipe) {
@@ -448,6 +468,39 @@ function renameFile(item, config) {
 	config.statusInfo.files.updated.push(item.old);
 	config.statusInfo.renames.push(item);
 	info(item.new);
+}
+
+// The checks from --expect-* are done when the run is done. Piped data counts as one file.
+function checkExpectations(config) {
+	const status = config.statusInfo;
+	if (!status.checks) {
+		return;
+	}
+	const piped = Boolean(config.dataIsPiped);
+	const found = piped ? 1 : status.files.searched.length;
+	const changed = piped ? Number(status.pipe.updated) : status.files.updated.length;
+	// Nothing is written with --simulate, --output and --output-match
+	const would = !piped && (config.simulate || config.output || config.outputMatch);
+	const files = count => (piped ? 'the piped data' : count + (1 === count ? ' file' : ' files'));
+	const change = count =>
+		would ? 'would change' : 1 === count || piped ? 'was changed' : 'were changed';
+
+	if (config.expectFiles && !found) {
+		checkFailed('Expected files, but 0 files found');
+	}
+	if ((config.expectDiff || config.expectDiffAll) && !changed) {
+		checkFailed('Expected a diff, but nothing ' + (would ? 'would change' : 'was changed'));
+	} else if (config.expectDiffAll && changed < found) {
+		const unchanged = found - changed;
+		checkFailed(
+			'Expected all files to change, but ' +
+				files(unchanged) +
+				(would ? ' would not change' : 1 === unchanged ? ' was not changed' : ' were not changed')
+		);
+	}
+	if (config.expectZeroDiff && changed) {
+		checkFailed('Expected no diff, but ' + files(changed) + ' ' + change(changed));
+	}
 }
 
 // How the piped data was used

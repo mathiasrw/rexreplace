@@ -89,7 +89,7 @@ describe('--output-match', () => {
 			).toBe('a.\n');
 		});
 
-		test('with --replacement-js the code is not run', async () => {
+		test('with --js the code is not run', async () => {
 			const config = {pipedData: 'foobar', outputMatch: true, replacementJs: true};
 			expect((await rr('[fb].', 'throw new Error("should not run")', config)).out).toBe('fo\nba\n');
 		});

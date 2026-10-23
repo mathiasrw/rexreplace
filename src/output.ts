@@ -115,6 +115,13 @@ export const panic = function (msg = '', data = '', displayHelp = false) {
 	throw new Panic(text);
 };
 
+// A check from --expect-* that is not met. It is an error, and is also in `checks`, so the exit code can tell it from the other errors.
+export const checkFailed = function (text) {
+	config.statusInfo?.errors.push(text);
+	config.statusInfo?.checks.push(text);
+	printError(text, false);
+};
+
 // Something failed, and the run goes on. With --halt it is a panic.
 export const error = function (msg, data = '') {
 	const text = msg + (data ? ' ' + data : '');

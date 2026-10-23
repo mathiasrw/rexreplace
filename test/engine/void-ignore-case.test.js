@@ -40,7 +40,7 @@ describe('--void-ignore-case', () => {
 			expect((await rr('F.o', '_', config)).out).toBe('Foo\n');
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			const config = {pipedData: 'foo Foo', replacementJs: true, voidIgnoreCase: true};
 			expect((await rr('F(oo)', '$1.toUpperCase()', config)).out).toBe('foo OO');
 		});

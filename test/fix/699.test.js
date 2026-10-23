@@ -129,7 +129,7 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 			expect((await rr('(b)', '[€1§]', {pipedData: 'foobar', ...voided})).out).toBe('foo[€1§]ar');
 		});
 
-		test('the replacement with --replacement-js', async () => {
+		test('the replacement with --js', async () => {
 			const config = {pipedData: 'foobar', replacementJs: true};
 			expect((await rr('(b)', '€1 + "§n"', config)).out).toBe('foob\nar');
 		});

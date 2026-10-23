@@ -60,7 +60,7 @@ describe('--rename', () => {
 		expect(files()).toEqual(['a.md']);
 	});
 
-	test('runs the code of --replacement-js with the name as the text', async () => {
+	test('runs the code of --js with the name as the text', async () => {
 		fs.mkdirSync('docs');
 		fs.writeFileSync('docs/Intro.md', 'foo');
 		const config = {includeGlob: ['docs/*'], rename: true, replacementJs: true};

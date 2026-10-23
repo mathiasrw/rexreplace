@@ -64,7 +64,7 @@ describe('--void-section', () => {
 			).toBe('x a\\b');
 		});
 
-		test('with --replacement-js', async () => {
+		test('with --js', async () => {
 			const config = {pipedData: 'a1', replacementJs: true};
 			expect((await rr('§d', '"§n".length', config)).out).toBe('a1');
 			expect((await rr('§d', '"§n".length', {...config, voidSection: true})).out).toBe('a1');
