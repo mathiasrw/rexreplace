@@ -220,6 +220,57 @@ Use --js-pipe to access the pipe data in your javascript code.
 
 ---
 
+#### Renaming files
+
+With `--rename` the search and replace is done on the path of each file, and the file is renamed to the result. The content is not touched.
+
+```bash
+> rexreplace '\.markdown$' '.md' '**/*.markdown' --rename
+docs/intro.md
+docs/setup.md
+```
+
+The path is the text, so a `/` in the replacement moves the file. Folders that are not there are made.
+
+```bash
+> rexreplace '^' 'archive/' '*.log' --rename
+archive/a.log
+archive/b.log
+```
+
+See what would happen first with `--simulate`. Each old name is printed (to stderr) just before its new name (to stdout), and nothing is renamed.
+
+```bash
+> rexreplace '\.markdown$' '.md' '**/*.markdown' --rename --simulate
+docs/intro.markdown
+docs/intro.md
+docs/setup.markdown
+docs/setup.md
+```
+
+If planned renames clash, the process is halted and no change is applied to any file.
+
+```bash
+> rexreplace '^[ab]' 'c' a.md b.md --rename
+ ❌ Renames to the same path are not allowed.
+    From: a.md
+    From: b.md
+    To:   c.md
+
+ ❌ Planned renames clash, so no change is applied to any file
+    No further processing.
+```
+
+`--output-match` shows what the pattern finds in the paths. The replacement is not used, so nothing would be renamed.
+
+```bash
+> rexreplace '\.\w+$' _ 'docs/*' --rename --output-match 2>/dev/null
+.md
+.md
+```
+
+---
+
 ## Usage
 
 ```bash
