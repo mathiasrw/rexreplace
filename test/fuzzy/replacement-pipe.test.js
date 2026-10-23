@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random, ended} from '../js/helper.js';
+import {rr, random, ended} from '../helper.js';
 
 describe('--replacement-pipe', () => {
 	test('inserts any piped text without a $ exactly as it is', async () => {

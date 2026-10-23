@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random, ended} from '../js/helper.js';
+import {rr, random, ended} from '../helper.js';
 
 const read = names => Promise.all(names.map(name => Bun.file(name).text()));
 

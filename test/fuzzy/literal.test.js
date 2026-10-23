@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random} from '../js/helper.js';
+import {rr, random} from '../helper.js';
 
 describe('--literal', () => {
 	const alphabet = 'abAB01 \t\n-[]{}()*+?.,/\\^$|#\'"`%&;<>!~=:@€§æ中';

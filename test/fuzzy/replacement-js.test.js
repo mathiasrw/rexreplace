@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random} from '../js/helper.js';
+import {rr, random} from '../helper.js';
 
 const js = async (pattern, code, pipedData, config) =>
 	(await rr(pattern, code, {pipedData, replacementJs: true, ...config})).out;

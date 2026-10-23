@@ -30,7 +30,7 @@
 		"bundle-bun": "bun build src/cli.bun.ts --target=bun --format=cjs --packages=external",
 		"prebuild": "rm -fr bin && yarn format",
 		"sync-version": "bun npm/sync-version.js",
-		"test-js": "AGENT=1 bun test ./test/js",
+		"test-js": "AGENT=1 bun test ./test/engine ./test/cli",
 		"test-fuzzy": "AGENT=1 bun test ./test/fuzzy",
 		"test-minify": "AGENT=1 yarn build-minify && yarn test-cli && yarn test-js",
 		"test-cli": "yarn test-cli-global && yarn test-cli-node && yarn test-cli-bun",

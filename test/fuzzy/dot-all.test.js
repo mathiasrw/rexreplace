@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random} from '../js/helper.js';
+import {rr, random} from '../helper.js';
 
 describe('--dot-all', () => {
 	test('gives the same as String.replace with and without the s flag', async () => {
