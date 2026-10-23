@@ -44,7 +44,7 @@ describe('--void-section', () => {
 
 	test('a lone § at the end of the pattern is an unfinished escape', async () => {
 		const result = await rr('a§', 'x', {pipedData: 'a§'});
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(result.err).toContain('Invalid regular expression');
 		expect((await rr('a§', 'x', {pipedData: 'a§', voidSection: true})).out).toBe('x');
 	});

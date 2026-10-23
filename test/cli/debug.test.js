@@ -38,12 +38,12 @@ describe('--debug', () => {
 		expect(JSON.parse(result.out.slice('fxxbar\n'.length)).files.updated).toEqual(['my.file']);
 	});
 
-	test('gives the errors in the status report, and the exit code 1', async () => {
+	test('gives the errors in the status report, and the exit code 2', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.chmodSync('a.file', 0);
 		const result = await sh($`bun ${cli} o x a.file --debug`);
 		expect(result.err).toBe('');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 		expect(JSON.parse(result.out).errors[0]).toContain('EACCES');
 	});
 
@@ -51,7 +51,7 @@ describe('--debug', () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await sh($`bun ${cli} '(' x my.file --debug`);
 		expect(result.err).toBe('');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(JSON.parse(result.out).errors[0]).toContain('Invalid regular expression');
 	});
 });

@@ -10,14 +10,14 @@ describe('--encoding', () => {
 	test('an unknown encoding stops the run with an error, and the file is not changed', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await sh($`bun ${cli} o x my.file --encoding nope`);
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(lastLine(result.err)).toBe('Unknown encoding: nope');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
 	test('an unknown encoding also stops the run for piped data', async () => {
 		const result = await sh($`echo -n foo | bun ${cli} o x --encoding nope`);
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(lastLine(result.err)).toBe('Unknown encoding: nope');
 	});
 

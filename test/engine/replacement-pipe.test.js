@@ -57,7 +57,7 @@ describe('--replacement-pipe', () => {
 	test('stops with an error if nothing is piped in', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', '_', {includeGlob: ['my.file'], replacementPipe: true});
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(result.err).toContain('No data piped into replacement');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});

@@ -9,7 +9,7 @@ describe('#682 --quiet still displays errors', () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('(', 'x', {includeGlob: ['my.file'], quiet: true});
 		expect(result.err).toContain('Invalid regular expression');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
@@ -35,7 +35,7 @@ describe('#682 --quiet still displays errors', () => {
 		expect(await rr('(', 'x', {includeGlob: ['my.file'], quietTotal: true})).toEqual({
 			out: '',
 			err: '',
-			exit: 1,
+			exit: 3,
 		});
 		expect((await rr('o', 'x', {includeGlob: ['nope.file'], quietTotal: true})).err).toBe('');
 	});

@@ -17,7 +17,7 @@ describe('--quiet', () => {
 
 	test('still stops on an invalid pattern', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		expect((await rr('(', 'x', {includeGlob: ['my.file'], quiet: true})).exit).toBe(1);
+		expect((await rr('(', 'x', {includeGlob: ['my.file'], quiet: true})).exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 

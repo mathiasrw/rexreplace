@@ -311,9 +311,19 @@ Files identified for potential processing are identified by:
 
 - Piped data that is printed is left as it came in, so no delimiter is added after the end of it. Matches from `--output-match` are different: they are new output, so they get the delimiter whether they come from a file or from piped data. 
 
-- Finding no files is a warning (🟡) and not an error, so the exit code is 0. Nothing went wrong, there was just nothing to do. Errors start with ❌ and give the exit code 1.
+- Finding no files is a warning (🟡) and not an error, so the exit code is 0. Nothing went wrong, there was just nothing to do.
 
 
+
+### Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| 0 | Done. Warnings (🟡) are ok. |
+| 2 | One or more files gave an error (❌), and the run went on. |
+| 3 | The run stopped (❌ … `No further processing.`): a bad pattern, an unknown encoding, wrong flags, or any error with `--halt`. |
+
+Code 1 is kept for a check that says no, like `grep` does when nothing is found.
 
 ### Limitations
 

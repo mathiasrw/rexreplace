@@ -33,18 +33,18 @@ describe('#742 the CLI', () => {
 		}
 	);
 
-	test('sets the exit code to 1 when a file gives an error, and prints the status report', async () => {
+	test('sets the exit code to 2 when a file gives an error, and prints the status report', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.chmodSync('a.file', 0);
 		const result = await sh($`bun ${cli} o x a.file --status-compact --quiet-total`);
 		expect(JSON.parse(result.out).errors[0]).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 	});
 
 	test('ends the process on a panic, and still prints the status report', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		const result = await sh($`bun ${cli} '(' x a.file --status-compact --quiet-total`);
 		expect(JSON.parse(result.out).errors).toHaveLength(1);
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 	});
 });

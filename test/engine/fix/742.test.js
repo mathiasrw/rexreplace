@@ -95,7 +95,7 @@ describe('#742 a panic', () => {
 		fs.writeFileSync('c.file', 'foo');
 		fs.chmodSync('b.file', 0);
 		const config = {includeGlob: ['*.file'], halt: true};
-		expect((await rr('o', 'x', config)).exit).toBe(1);
+		expect((await rr('o', 'x', config)).exit).toBe(3);
 		fs.writeFileSync('a.file', 'foo');
 		const status = await rrStatus('o', 'x', config);
 		expect(status.files).toEqual({searched: ['a.file', 'b.file'], updated: ['a.file']});
@@ -103,7 +103,7 @@ describe('#742 a panic', () => {
 	});
 
 	test('is thrown when the run can not go on, with the error in the status', async () => {
-		expect(await rr('(', 'x', {pipedData: 'foo'})).toMatchObject({out: '', exit: 1});
+		expect(await rr('(', 'x', {pipedData: 'foo'})).toMatchObject({out: '', exit: 3});
 		expect((await rrStatus('(', 'x', {pipedData: 'foo'})).errors).toHaveLength(1);
 	});
 });

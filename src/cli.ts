@@ -29,6 +29,12 @@ const yargs = require('yargs')
 	// A file can be named with only digits, like `2024`, so each glob is kept as the string that was given
 	.parserConfiguration({'parse-positional-numbers': false})
 	.strict()
+	// Wrong flags are a panic, so the exit code is 3. The help and the message go to stderr, as yargs does it.
+	.fail((msg, err, yargs) => {
+		yargs.showHelp();
+		console.error(msg || err.message);
+		process.exit(3);
+	})
 
 	.usage(
 		'RexReplace ' +
@@ -466,7 +472,7 @@ function exitOnPanic(config, e) {
 	if (e.status) {
 		printStatus(config, e.status);
 	}
-	process.exit(1);
+	process.exit(3);
 }
 
 function backOut(exitcode = 1) {
@@ -492,8 +498,9 @@ function unescapeString(str = '') {
 	return new Function(`return '${source}'`)();
 }
 
+// Help that was asked for is not an error. Too few arguments are wrong flags, so a panic.
 if (0 < needHelp) {
-	backOut(needHelp - 1);
+	backOut(1 === needHelp ? 0 : 3);
 }
 
 // All options into one big config object for the rexreplace core
@@ -562,13 +569,14 @@ if (config.contentDelimiter) {
 	unescape('contentDelimiter', '--content-delimiter');
 }
 
-// The exit code is only set, so the process ends by itself when all output is written
+// The exit code is only set, so the process ends by itself when all output is written.
+// 0: done, 2: an error in a file and the run went on, 3: a panic (the run stopped)
 const run = () =>
 	rexreplace.engine(config).then(
 		status => {
 			printStatus(config, status);
 			if (status.errors.length) {
-				process.exitCode = 1;
+				process.exitCode = 2;
 			}
 		},
 		e => exitOnPanic(config, e)
