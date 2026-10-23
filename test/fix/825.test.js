@@ -6,8 +6,10 @@ import {rr} from '../helper.js';
 
 describe('#825 named groups in --js', () => {
 	test('have rr_ in front, so they can not clash with what RexReplace uses', async () => {
+		// With _ in front, the group _require with a space was __require_, which r() uses itself.
+		// $1 makes the code run once per match, where the variables of the groups are made.
 		const config = {pipedData: 'ab', replacementJs: true};
-		expect((await rr('(?<require>a)', 'rr_require + typeof r', config)).out).toBe('afunctionb');
+		expect((await rr('(?<_require>a)', '$1 + r("path").sep', config)).out).toBe('a/b');
 	});
 
 	test('can not end with _, as that is the name of another group with a space', async () => {
@@ -18,6 +20,11 @@ describe('#825 named groups in --js', () => {
 				exit: 3,
 			}
 		);
+	});
+
+	test('can end with _ with --output-match, as the code is not run', async () => {
+		const config = {pipedData: 'ab', replacementJs: true, outputMatch: true};
+		expect((await rr('(?<a_>a)', 'x', config)).exit).toBe(null);
 	});
 
 	test('can end with _ without --js, as there are no variables then', async () => {

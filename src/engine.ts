@@ -147,8 +147,9 @@ async function run(config) {
 
 	// In --js a named group is a variable like rr_year, and rr_year_ has a space at the end.
 	// A group that ends with _ would have the same name as another group with a space, so it can not be used.
+	// With --output-match the code is not run, so there are no variables.
 	const endsWith_ =
-		config.replacementJs && config.regex
+		config.replacementJs && !config.outputMatch && config.regex
 			? namedGroups(config.regex).find(name => name.endsWith('_'))
 			: null;
 	if (endsWith_) {
