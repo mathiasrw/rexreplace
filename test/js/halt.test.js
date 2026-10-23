@@ -58,7 +58,7 @@ describe('--halt', () => {
 			expect(result.out).toMatch(/-H,\s*--halt,\s*--bail/);
 		});
 
-		test.each(['--bail', '--halt', '-H'])('%s stops on the first error like --halt', (flag) => {
+		test.each(['--bail', '--halt', '-H'])('%s stops on the first error like --halt', flag => {
 			const result = runCli('o', 'x', 'nope.file', flag);
 			expect(result.err).toContain('0 files found');
 			expect(result.exit).toBe(1);
@@ -73,7 +73,7 @@ describe('--halt', () => {
 	});
 
 	describe('combined', () => {
-		test.each(['quiet', 'quietTotal'])('with --%s it still stops', async (flag) => {
+		test.each(['quiet', 'quietTotal'])('with --%s it still stops', async flag => {
 			const result = await rr('o', 'x', {
 				includeGlob: ['nope.file'],
 				halt: true,

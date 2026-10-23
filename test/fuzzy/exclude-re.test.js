@@ -4,12 +4,12 @@ import {rr, random} from '../js/helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
 const changed = async (names, config) => {
-	names.forEach((name) => {
+	names.forEach(name => {
 		fs.mkdirSync(name.replace(/[^/]*$/, '') || '.', {recursive: true});
 		fs.writeFileSync(name, 'foo');
 	});
 	await rr('foo', 'x', config);
-	return names.filter((name) => 'x' === fs.readFileSync(name, 'utf8'));
+	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
 };
 
 describe('--exclude-re', () => {
@@ -28,7 +28,7 @@ describe('--exclude-re', () => {
 			const exclude = rnd.pick(['a', 'b$', '/c', 'a.*b', '^run\\d+/a', 'bb|cc', '\\.file$']);
 			const voidIgnoreCase = !rnd.int(1);
 			const regex = new RegExp(exclude, voidIgnoreCase ? '' : 'i');
-			const expected = names.filter((name) => !regex.test(name)).sort();
+			const expected = names.filter(name => !regex.test(name)).sort();
 			const config = {
 				includeGlob: [`run${i}/*`],
 				excludeRe: [exclude],

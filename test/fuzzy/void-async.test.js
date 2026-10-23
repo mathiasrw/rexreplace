@@ -9,11 +9,11 @@ describe('--void-async', () => {
 			const names = ['a', 'b', 'c', 'd', 'e'].slice(0, 1 + rnd.int(4));
 			const texts = names.map(() => rnd.text('ab \næ🦖', 0, 20));
 			const pattern = rnd.pick(['a', 'b+', '\\s', 'ab']);
-			const expected = texts.map((text) => text.replace(new RegExp(pattern, 'gim'), '_'));
-			const result = (dir) => names.map((name) => fs.readFileSync(dir + name, 'utf8'));
+			const expected = texts.map(text => text.replace(new RegExp(pattern, 'gim'), '_'));
+			const result = dir => names.map(name => fs.readFileSync(dir + name, 'utf8'));
 
 			const [sync, async] = [`sync${i}/`, `async${i}/`];
-			[sync, async].forEach((dir) => {
+			[sync, async].forEach(dir => {
 				fs.mkdirSync(dir, {recursive: true});
 				names.forEach((name, n) => fs.writeFileSync(dir + name, texts[n]));
 			});

@@ -1,5 +1,5 @@
 let font: any = {};
-font.red = font.green = font.gray = (str) => str;
+font.red = font.green = font.gray = str => str;
 // check for node version supporting chalk - if so overwrite `font`
 //const font = import('chalk');
 

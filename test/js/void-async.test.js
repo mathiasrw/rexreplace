@@ -6,7 +6,7 @@ import {rr} from './helper.js';
 
 describe('--void-async', () => {
 	test('is done with a file before the next one is opened', async () => {
-		['a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+		['a', 'b'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 		const config = {includeGlob: ['*.file'], voidAsync: true, verbose: true};
 		const result = await rr('o', 'x', config);
 		expect(result.err.trim().split('\n')).toEqual([
@@ -22,7 +22,7 @@ describe('--void-async', () => {
 	});
 
 	test('is not the default: all files are opened before the first one is done', async () => {
-		['a', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+		['a', 'b'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 		const config = {includeGlob: ['*.file'], voidAsync: false, verbose: true};
 		const result = await rr('o', 'x', config);
 		const lines = result.err.split('\n');
@@ -34,14 +34,11 @@ describe('--void-async', () => {
 		// Either file can be read first
 		expect(lines[3]).toMatch(/^Work on content from: [ab]\.file$/);
 		expect(result.out.split('\n').sort()).toEqual(['', 'a.file', 'b.file']);
-		expect(['a', 'b'].map((name) => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
-			'fxx',
-			'fxx',
-		]);
+		expect(['a', 'b'].map(name => fs.readFileSync(name + '.file', 'utf8'))).toEqual(['fxx', 'fxx']);
 	});
 
 	test('handles the files one by one in alphabetical order', async () => {
-		['c', 'a', 'd', 'b'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+		['c', 'a', 'd', 'b'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 		const result = await rr('o', 'x', {includeGlob: ['*.file'], voidAsync: true});
 		expect(result.out).toBe('a.file\nb.file\nc.file\nd.file\n');
 	});
@@ -81,21 +78,21 @@ describe('--void-async', () => {
 
 		test.each(['output', 'outputMatch'])(
 			'is forced by --%s on several files to keep the order',
-			async (flag) => {
-				['b', 'c', 'a'].forEach((name) => fs.writeFileSync(name + '.file', name + '\n'));
+			async flag => {
+				['b', 'c', 'a'].forEach(name => fs.writeFileSync(name + '.file', name + '\n'));
 				const config = {includeGlob: ['*.file'], voidAsync: false, [flag]: true};
 				expect((await rr('[abc]', '$&', config)).out).toBe('a\nb\nc\n');
 			}
 		);
 
 		test('with --replacement-js and several files', async () => {
-			['a', 'b', 'c'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+			['a', 'b', 'c'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 			await rr('foo', 'name + name', {
 				includeGlob: ['*.file'],
 				voidAsync: true,
 				replacementJs: true,
 			});
-			expect(['a', 'b', 'c'].map((name) => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
+			expect(['a', 'b', 'c'].map(name => fs.readFileSync(name + '.file', 'utf8'))).toEqual([
 				'aa',
 				'bb',
 				'cc',

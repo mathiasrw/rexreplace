@@ -4,12 +4,12 @@ import {rr} from './helper.js';
 
 // Make `names` as files containing "foo" and return the ones changed by replacing "foo"
 const changed = async (names, config) => {
-	names.forEach((name) => {
+	names.forEach(name => {
 		fs.mkdirSync(name.replace(/[^/]*$/, '') || '.', {recursive: true});
 		fs.writeFileSync(name, 'foo');
 	});
 	await rr('foo', 'x', config);
-	return names.filter((name) => 'x' === fs.readFileSync(name, 'utf8'));
+	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
 };
 
 describe('--exclude-glob', () => {
@@ -25,22 +25,26 @@ describe('--exclude-glob', () => {
 
 	test('can be given several times', async () => {
 		const names = ['a.file', 'b.file', 'c.file'];
-		expect(
-			await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a.*', 'b.*']})
-		).toEqual(['c.file']);
+		expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a.*', 'b.*']})).toEqual([
+			'c.file',
+		]);
 	});
 
 	test('understands braces and **', async () => {
 		const names = ['a.file', 'b.file', 'c.file', 'sub/a.file', 'sub/deep/d.file'];
-		expect(
-			await changed(names, {includeGlob: ['**/*.file'], excludeGlob: ['{a,b}.file']})
-		).toEqual(['c.file', 'sub/a.file', 'sub/deep/d.file']);
-		expect(await changed(names, {includeGlob: ['**/*.file'], excludeGlob: ['sub/**']})).toEqual(
-			['a.file', 'b.file', 'c.file']
+		expect(await changed(names, {includeGlob: ['**/*.file'], excludeGlob: ['{a,b}.file']})).toEqual(
+			['c.file', 'sub/a.file', 'sub/deep/d.file']
 		);
-		expect(
-			await changed(names, {includeGlob: ['**/*.file'], excludeGlob: ['**/a.file']})
-		).toEqual(['b.file', 'c.file', 'sub/deep/d.file']);
+		expect(await changed(names, {includeGlob: ['**/*.file'], excludeGlob: ['sub/**']})).toEqual([
+			'a.file',
+			'b.file',
+			'c.file',
+		]);
+		expect(await changed(names, {includeGlob: ['**/*.file'], excludeGlob: ['**/a.file']})).toEqual([
+			'b.file',
+			'c.file',
+			'sub/deep/d.file',
+		]);
 	});
 
 	test('reports when all files are left out', async () => {
@@ -68,18 +72,15 @@ describe('--exclude-glob', () => {
 			expect(await changed(names, config)).toEqual(['c.file']);
 		});
 
-		test.each(['output', 'outputMatch'])(
-			'with --%s only the files left are sent',
-			async (flag) => {
-				fs.writeFileSync('a.file', 'foo');
-				fs.writeFileSync('b.file', 'boo');
-				const config = {includeGlob: ['*.file'], excludeGlob: ['a.*'], [flag]: true};
-				expect((await rr('.oo', '$&', config)).out.trim()).toBe('boo');
-			}
-		);
+		test.each(['output', 'outputMatch'])('with --%s only the files left are sent', async flag => {
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'boo');
+			const config = {includeGlob: ['*.file'], excludeGlob: ['a.*'], [flag]: true};
+			expect((await rr('.oo', '$&', config)).out.trim()).toBe('boo');
+		});
 
 		test('with --verbose the count is the files left', async () => {
-			['a', 'b', 'c'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+			['a', 'b', 'c'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 			const config = {includeGlob: ['*.file'], excludeGlob: ['a.*'], verbose: true};
 			expect((await rr('o', 'x', config)).err).toContain('2 files found');
 		});

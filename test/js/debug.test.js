@@ -15,7 +15,7 @@ function runCli(...args) {
 describe('--debug', () => {
 	test.each(['--debug', '-d'])(
 		'%s prints only the status report, with what went into the engine and what it did',
-		(flag) => {
+		flag => {
 			fs.writeFileSync('my.file', 'foobar');
 			const result = runCli('o', 'x', 'my.file', flag);
 			expect(result.err).toBe('');

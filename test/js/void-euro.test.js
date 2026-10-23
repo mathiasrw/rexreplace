@@ -15,9 +15,7 @@ describe('--void-euro', () => {
 
 	test('makes € a plain char in the pattern', async () => {
 		expect((await rr('.€', 'x', {pipedData: 'foobar', voidEuro: true})).out).toBe('foobar');
-		expect((await rr('.€', 'x', {pipedData: 'price: 5€', voidEuro: true})).out).toBe(
-			'price: x'
-		);
+		expect((await rr('.€', 'x', {pipedData: 'price: 5€', voidEuro: true})).out).toBe('price: x');
 	});
 
 	test('makes € a plain char in the replacement', async () => {
@@ -26,9 +24,7 @@ describe('--void-euro', () => {
 	});
 
 	test('leaves $ working as usual', async () => {
-		expect((await rr('(.)$', '$1!', {pipedData: 'foobar', voidEuro: true})).out).toBe(
-			'foobar!'
-		);
+		expect((await rr('(.)$', '$1!', {pipedData: 'foobar', voidEuro: true})).out).toBe('foobar!');
 	});
 
 	test('never touches a € in the content', async () => {
@@ -49,9 +45,9 @@ describe('--void-euro', () => {
 
 		test('with --literal', async () => {
 			expect((await rr('5€', 'x', {pipedData: '5€ 5$', literal: true})).out).toBe('5€ x');
-			expect(
-				(await rr('5€', 'x', {pipedData: '5€ 5$', literal: true, voidEuro: true})).out
-			).toBe('x 5$');
+			expect((await rr('5€', 'x', {pipedData: '5€ 5$', literal: true, voidEuro: true})).out).toBe(
+				'x 5$'
+			);
 		});
 
 		test('with --replacement-js the € is how to get to the groups', async () => {

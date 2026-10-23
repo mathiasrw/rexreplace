@@ -9,9 +9,7 @@ describe('--literal', () => {
 		for (let i = 0; i < 500; i++) {
 			const pattern = rnd.text(alphabet, 1, 6);
 			const replacement = rnd.text('xy\'"\\\n ', 0, 3);
-			const text = Array.from({length: rnd.int(5)}, () => rnd.text(alphabet, 0, 8)).join(
-				pattern
-			);
+			const text = Array.from({length: rnd.int(5)}, () => rnd.text(alphabet, 0, 8)).join(pattern);
 			const config = {
 				pipedData: text,
 				literal: true,
@@ -32,9 +30,7 @@ describe('--literal', () => {
 		for (let i = 0; i < 300; i++) {
 			const pattern = rnd.text('.*+?()[]{}|^$\\', 1, 5);
 			const text = rnd.text('abc \n', 0, 30);
-			expect((await rr(pattern, 'x', {pipedData: text, literal: true})).out, pattern).toBe(
-				text
-			);
+			expect((await rr(pattern, 'x', {pipedData: text, literal: true})).out, pattern).toBe(text);
 		}
 	});
 });

@@ -12,9 +12,7 @@ describe('--replacement-js', () => {
 		for (let i = 0; i < 500; i++) {
 			const text = rnd.text(alphabet, 1, 20);
 			expect(await js('[^]+', '$0', text), JSON.stringify(text)).toBe(text);
-			expect(await js('([^]+)', '$1.length', text), JSON.stringify(text)).toBe(
-				String(text.length)
-			);
+			expect(await js('([^]+)', '$1.length', text), JSON.stringify(text)).toBe(String(text.length));
 		}
 	});
 
@@ -35,7 +33,7 @@ describe('--replacement-js', () => {
 			const operator = rnd.pick(['+', '-', '*', '%', '/']);
 			const operand = 1 + rnd.int(9);
 			expect(await js('(\\d+)', `$1 ${operator} ${operand}`, numbers.join(' '))).toBe(
-				numbers.map((n) => eval(`"${n}" ${operator} ${operand}`)).join(' ')
+				numbers.map(n => eval(`"${n}" ${operator} ${operand}`)).join(' ')
 			);
 		}
 	});

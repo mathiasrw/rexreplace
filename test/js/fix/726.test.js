@@ -55,7 +55,7 @@ describe('#726 a file given with an absolute path is changed', () => {
 			await rr('o', 'x', {includeGlob: [file], keepBackup: true, ...flags});
 			const [backup, ...rest] = fs
 				.readdirSync(path.dirname(file))
-				.filter((name) => name !== 'my.file');
+				.filter(name => name !== 'my.file');
 			expect(rest).toEqual([]);
 			expect(backup).toMatch(/^my\.file\..+\.backup$/);
 			expect(await Bun.file(path.join(path.dirname(file), backup)).text()).toBe('foobar');

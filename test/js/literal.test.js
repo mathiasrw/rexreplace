@@ -12,7 +12,7 @@ describe('--literal', () => {
 		expect((await rr('.', 'x', {pipedData: 'a.b'})).out).toBe('xxx');
 	});
 
-	test.each(Array.from('-[]{}()*+?.,/\\^$|#'))('takes %s literally', async (char) => {
+	test.each(Array.from('-[]{}()*+?.,/\\^$|#'))('takes %s literally', async char => {
 		const text = `a${char}b${char}${char}c`;
 		expect((await rr(char, '_', {pipedData: text, literal: true})).out).toBe('a_b__c');
 	});
@@ -38,9 +38,7 @@ describe('--literal', () => {
 
 	describe('combined', () => {
 		test('is still case insensitive and global', async () => {
-			expect((await rr('a.', 'x', {pipedData: 'a. A. ab', literal: true})).out).toBe(
-				'x x ab'
-			);
+			expect((await rr('a.', 'x', {pipedData: 'a. A. ab', literal: true})).out).toBe('x x ab');
 		});
 
 		test('with --void-ignore-case and --void-global', async () => {
@@ -56,12 +54,12 @@ describe('--literal', () => {
 		test('€ and § are still aliases for $ and \\ unless voided', async () => {
 			expect((await rr('€', 'x', {pipedData: '€ $', literal: true})).out).toBe('€ x');
 			expect((await rr('§', 'x', {pipedData: '§ \\', literal: true})).out).toBe('§ x');
-			expect(
-				(await rr('€', 'x', {pipedData: '€ $', literal: true, voidEuro: true})).out
-			).toBe('x $');
-			expect(
-				(await rr('§', 'x', {pipedData: '§ \\', literal: true, voidSection: true})).out
-			).toBe('x \\');
+			expect((await rr('€', 'x', {pipedData: '€ $', literal: true, voidEuro: true})).out).toBe(
+				'x $'
+			);
+			expect((await rr('§', 'x', {pipedData: '§ \\', literal: true, voidSection: true})).out).toBe(
+				'x \\'
+			);
 		});
 
 		test('with --output-match', async () => {
@@ -85,7 +83,7 @@ describe('--literal', () => {
 
 		test.each([...'-,# []{}()*+?./\\^$|'])(
 			'with --unicode finds a pattern with %j in it (#686)',
-			async (char) => {
+			async char => {
 				const pattern = `a${char}b`;
 				const config = {pipedData: pattern, literal: true, unicode: true};
 				expect(await rr(pattern, 'x', config)).toEqual({out: 'x', err: '', exit: null});

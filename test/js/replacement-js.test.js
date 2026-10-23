@@ -84,9 +84,9 @@ describe('--replacement-js', () => {
 		});
 
 		test('can be more than nine groups', async () => {
-			expect(
-				await js('(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)', '$11 + $10 + $1', 'abcdefghijk')
-			).toBe('kja');
+			expect(await js('(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)', '$11 + $10 + $1', 'abcdefghijk')).toBe(
+				'kja'
+			);
 		});
 
 		test('make the code run once per match', async () => {
@@ -105,9 +105,9 @@ describe('--replacement-js', () => {
 
 	describe('variables', () => {
 		test('fs, path and globs are available', async () => {
-			expect(
-				await inFile('typeof fs.readFileSync + typeof path.join + typeof globs.sync')
-			).toBe('functionfunctionfunction');
+			expect(await inFile('typeof fs.readFileSync + typeof path.join + typeof globs.sync')).toBe(
+				'functionfunctionfunction'
+			);
 			expect(await inFile('fs.readFileSync(file, "utf8").toUpperCase()')).toBe('FOOBAR');
 			expect(await inFile('globs.sync("*").join()')).toBe('my.file');
 		});
@@ -202,9 +202,7 @@ describe('--replacement-js', () => {
 			expect(await inFile('time')).toMatch(timestamp);
 			expect(await inFile('now === time')).toBe('true');
 			expect(await inFile('time_obj instanceof Date')).toBe('true');
-			expect(Math.abs(Date.now() - Number(await inFile('time_obj.getTime()')))).toBeLessThan(
-				60000
-			);
+			expect(Math.abs(Date.now() - Number(await inFile('time_obj.getTime()')))).toBeLessThan(60000);
 		});
 
 		test('mtime and ctime tell about the last change of the file', async () => {
@@ -250,15 +248,15 @@ describe('--replacement-js', () => {
 				'bytes',
 				'size',
 			];
-			const code = `[${names.map((name) => `${name}_ === ${name} + " "`).join()}].join()`;
+			const code = `[${names.map(name => `${name}_ === ${name} + " "`).join()}].join()`;
 			expect(await inFile(code)).toBe(names.map(() => 'true').join());
 			expect(await js('foobar', code, 'foobar')).toBe(names.map(() => 'true').join());
 		});
 
 		test('are the same when the code runs once per match', async () => {
-			expect(
-				await inFile('$0; [filename, name, ext, bytes, text, find, _, nl].join("|")')
-			).toBe('my.file|my|.file|6|foobar|^[^]*$| |\n');
+			expect(await inFile('$0; [filename, name, ext, bytes, text, find, _, nl].join("|")')).toBe(
+				'my.file|my|.file|6|foobar|^[^]*$| |\n'
+			);
 		});
 
 		test('follow the file when several files are handled', async () => {

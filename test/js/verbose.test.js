@@ -29,7 +29,7 @@ describe('--verbose', () => {
 	});
 
 	test('tells how many files were found', async () => {
-		['a', 'b', 'c'].forEach((name) => fs.writeFileSync(name + '.file', 'foo'));
+		['a', 'b', 'c'].forEach(name => fs.writeFileSync(name + '.file', 'foo'));
 		expect((await rr('o', 'x', {includeGlob: ['*.file'], verbose: true})).err).toContain(
 			'3 files found'
 		);

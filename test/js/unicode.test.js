@@ -18,12 +18,11 @@ describe('--unicode', () => {
 
 	test('understands unicode property escapes', async () => {
 		expect(
-			(await rr('\\p{Lu}', '_', {pipedData: 'aÆbÅc', unicode: true, voidIgnoreCase: true}))
-				.out
+			(await rr('\\p{Lu}', '_', {pipedData: 'aÆbÅc', unicode: true, voidIgnoreCase: true})).out
 		).toBe('a_b_c');
-		expect(
-			(await rr('\\p{Script=Greek}+', '_', {pipedData: 'abc αβγ', unicode: true})).out
-		).toBe('abc _');
+		expect((await rr('\\p{Script=Greek}+', '_', {pipedData: 'abc αβγ', unicode: true})).out).toBe(
+			'abc _'
+		);
 	});
 
 	test('counts an emoji as one char in quantifiers and classes', async () => {

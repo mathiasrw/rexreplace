@@ -4,18 +4,14 @@ import {rr} from './helper.js';
 
 describe('--output-match', () => {
 	test('prints each match on its own line', async () => {
-		expect((await rr('[fb].', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe(
-			'fo\nba\n'
-		);
+		expect((await rr('[fb].', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe('fo\nba\n');
 	});
 
 	test('prints only the groups (with nothing in between) if the pattern has groups', async () => {
 		expect((await rr('([fb](.))', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe(
 			'foo\nbaa\n'
 		);
-		expect((await rr('(f)o(o)', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe(
-			'fo\n'
-		);
+		expect((await rr('(f)o(o)', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe('fo\n');
 	});
 
 	test('prints nothing if there is no match', async () => {
@@ -43,9 +39,9 @@ describe('--output-match', () => {
 	test('prints matches from several files in alphabetical order', async () => {
 		fs.writeFileSync('b.file', 'boo');
 		fs.writeFileSync('a.file', 'foo');
-		expect(
-			(await rr('.o', '_', {includeGlob: ['b.file', 'a.file'], outputMatch: true})).out
-		).toBe('fo\nbo\n');
+		expect((await rr('.o', '_', {includeGlob: ['b.file', 'a.file'], outputMatch: true})).out).toBe(
+			'fo\nbo\n'
+		);
 	});
 
 	test('prints a match that spans lines as it is', async () => {
@@ -57,9 +53,7 @@ describe('--output-match', () => {
 	});
 
 	test('prints nothing for a group that did not take part in the match (#684)', async () => {
-		expect((await rr('(f)|(b)', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe(
-			'f\nb\n'
-		);
+		expect((await rr('(f)|(b)', '_', {pipedData: 'foobar', outputMatch: true})).out).toBe('f\nb\n');
 	});
 
 	test('prints named groups like any other group (#685)', async () => {
@@ -97,9 +91,7 @@ describe('--output-match', () => {
 
 		test('with --replacement-js the code is not run', async () => {
 			const config = {pipedData: 'foobar', outputMatch: true, replacementJs: true};
-			expect((await rr('[fb].', 'throw new Error("should not run")', config)).out).toBe(
-				'fo\nba\n'
-			);
+			expect((await rr('[fb].', 'throw new Error("should not run")', config)).out).toBe('fo\nba\n');
 		});
 
 		test('with --replacement-pipe the piped replacement is not used', async () => {

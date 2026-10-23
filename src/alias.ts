@@ -1,7 +1,7 @@
 // The `€` and `§` aliases are for the shell, where `$` and `\` are hard to type, so the CLI uses them and not the engine.
 // Globs, file names and piped data never use them, as `€` and `§` can be part of the text.
 export function alias(config) {
-	const swap = (str) => {
+	const swap = str => {
 		if (!str) {
 			return str;
 		}

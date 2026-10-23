@@ -5,7 +5,7 @@ import fs from 'fs';
 import {engine} from '../../../src/engine.ts';
 import {rr} from '../helper.js';
 
-const content = (names) => names.map((name) => fs.readFileSync(name, 'utf8'));
+const content = names => names.map(name => fs.readFileSync(name, 'utf8'));
 
 // The name of the backup is longer than a file system allows, so the file can not be renamed
 const tooLong = 'b'.repeat(240) + '.file';
@@ -32,7 +32,7 @@ describe('#705 the engine returns a promise that resolves when all files are don
 
 	test('waits for every file', async () => {
 		const names = Array.from({length: 20}, (_, n) => `my${n}.file`);
-		names.forEach((name) => fs.writeFileSync(name, 'foo'));
+		names.forEach(name => fs.writeFileSync(name, 'foo'));
 
 		const result = await rr('o', 'x', {includeGlob: ['*.file'], voidAsync: false});
 
@@ -76,7 +76,7 @@ describe('#705 the engine returns a promise that resolves when all files are don
 
 	describe('a file with an error', () => {
 		test.each(flows)('does not stop the other files with %s', async (name, flags) => {
-			['a.file', tooLong, 'c.file'].forEach((name) => fs.writeFileSync(name, 'foo'));
+			['a.file', tooLong, 'c.file'].forEach(name => fs.writeFileSync(name, 'foo'));
 
 			const result = await rr('o', 'x', {includeGlob: ['*.file'], ...flags});
 
