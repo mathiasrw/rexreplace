@@ -321,9 +321,9 @@ function renameFiles(files, config) {
 	});
 	const renames = plan.filter(item => item.new !== item.old);
 
-	// With --output-match the matches are printed by the replacement, and the names go to stderr
+	// With --output-match the matches are printed by the replacement, and the names go to stderr.
+	// The replacement is not used, so nothing would be renamed: no clash check and no renames in the status.
 	if (config.outputMatch) {
-		config.statusInfo.renames.push(...renames);
 		return plan.forEach(item =>
 			item.new !== item.old ? updated(item.old, config) : config.nameAll && info(item.old)
 		);
