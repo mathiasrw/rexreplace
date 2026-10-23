@@ -30,6 +30,9 @@ const re = {
 	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
 	byteOrSize: /bytes|size/,
 	folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
+	// The numbers of #791 that count what came before: $i, $c, $m and $M with their cousins, like $i00 or $M_
+	runNumbers: /\$[icmM](?![A-Za-z])/,
+	matchNumbers: /\$[mM](?![A-Za-z])/,
 };
 
 // Only the version ends up in the bundle
@@ -99,6 +102,9 @@ function newStatus(config) {
 
 async function run(config) {
 	validateEncoding(config.encoding);
+
+	// For the numbers of --js: the files with a match, the files changed and the matches so far
+	config.numbers = {matched: 0, changed: 0, matches: 0};
 
 	if (config.replacementJs && config.outputMatch) {
 		warn('The code is not run with --output-match, as only the matches are printed.');
@@ -185,7 +191,7 @@ async function run(config) {
 	}
 
 	if (piped) {
-		return doReplacement('Piped data', config, config.pipedData);
+		return doReplacement('Piped data', config, config.pipedData, 1, 1);
 	}
 
 	config.files = getFilePaths(config);
@@ -204,7 +210,9 @@ async function run(config) {
 		config.output ||
 		config.outputMatch ||
 		null != config.sort ||
-		config.sortReverse;
+		config.sortReverse ||
+		// The numbers that count what came before are only the same on every run when the files come in order
+		(config.replacementJs && re.runNumbers.test(config.replacementOri));
 
 	const files = config.files.filter(filepath =>
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
@@ -224,14 +232,15 @@ async function run(config) {
 	let next = 0;
 	const worker = async () => {
 		while (next < files.length) {
-			await openFile(files[next++], config);
+			const index = next++;
+			await openFile(files[index], config, index + 1, files.length);
 		}
 	};
 
 	await Promise.all(Array.from({length: workers}, worker));
 }
 
-function openFile(file, config) {
+function openFile(file, config, number, total) {
 	config.statusInfo.files.searched.push(file);
 	if (config.voidAsync) {
 		chat('Open sync: ' + file);
@@ -241,26 +250,38 @@ function openFile(file, config) {
 		} catch (e) {
 			return error(e);
 		}
-		return doReplacement(file, config, data);
+		return doReplacement(file, config, data, number, total);
 	} else {
 		chat('Open async: ' + file);
 		return fs.promises
 			.readFile(file, config.encoding)
-			.then(data => doReplacement(file, config, data), error);
+			.then(data => doReplacement(file, config, data, number, total), error);
 	}
 }
 
 // postfix argument names to limit the probabillity of user inputted javascript accidently using same values
-function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
+function doReplacement(
+	_file_rr: string,
+	_config_rr: any,
+	_data_rr: string,
+	_number_rr: number,
+	_total_rr: number
+) {
 	chat('Work on content from: ' + _file_rr);
 
 	// Main regexp of the whole thing. With --output-match the replacement prints the matches, so the code of --replacement-js is not run.
 	const result = _data_rr.replace(
 		_config_rr.regex,
 		_config_rr.replacementJs && !_config_rr.outputMatch
-			? codeReplacement(_file_rr, _config_rr, _data_rr)
+			? codeReplacement(
+					_file_rr,
+					_config_rr,
+					_data_rr,
+					fileNumbers(_config_rr, _number_rr, _total_rr)
+				)
 			: _config_rr.replacement
 	);
+	countFile(_config_rr, _data_rr, result);
 
 	if (_config_rr.output || _config_rr.outputMatch) {
 		// With --output-match the matches are printed by the replacement
@@ -341,15 +362,16 @@ function updated(file, config) {
 function renameFiles(files, config) {
 	// With --rename a / in the new name would move the file
 	const slashed = [];
-	const plan = files.map(file => {
+	const plan = files.map((file, index) => {
 		config.statusInfo.files.searched.push(file);
 		const text = config.renamePath ? file : path.basename(file);
 		chat('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
 		const replacement =
 			config.replacementJs && !config.outputMatch
-				? codeReplacement(file, config, text)
+				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
 				: config.replacement;
 		const result = text.replace(config.regex, replacement);
+		countFile(config, text, result);
 		if (result === text) {
 			return {old: file, new: file};
 		}
@@ -636,8 +658,8 @@ function readReplacementFile(filepath, conf) {
 }
 
 // The code of --js. With --replacement-file its value is the path to the file with the replacement.
-function codeReplacement(file, config, text) {
-	const code = dynamicReplacement(file, config, text);
+function codeReplacement(file, config, text, numbers) {
+	const code = dynamicReplacement(file, config, text, numbers);
 	if (!config.replacementFile) {
 		return code;
 	}
@@ -741,13 +763,49 @@ function readableSize(size) {
 	);
 }
 
-function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
+// The numbers of this file for --js: $n of $t files, and $i and $c, the files with a match and the files changed so far
+function fileNumbers(config, number, total) {
+	return {n: number, t: total, i: config.numbers.matched + 1, c: config.numbers.changed + 1};
+}
+
+// When a file is done, it counts for $i if the pattern found something, and for $c if it was changed
+function countFile(config, text, result) {
+	if (-1 !== text.search(config.regex)) {
+		config.numbers.matched++;
+	}
+	if (result !== text) {
+		config.numbers.changed++;
+	}
+}
+
+// Code that makes the numbers and their cousins, put in front of the code of --js.
+// $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
+function numbersCode(numbers) {
+	return Object.entries(numbers)
+		.map(([name, value]) => {
+			const cousins = [`$${name} = ${value}`, `$${name}_ = '${value} '`];
+			for (let width = 2; width <= 10; width++) {
+				const zeros = '0'.repeat(width - 1);
+				const padded = String(value).padStart(width, '0');
+				cousins.push(`$${name}${zeros} = '${padded}'`, `$${name}${zeros}_ = '${padded} '`);
+			}
+			return 'var ' + cousins.join(', ') + '; ';
+		})
+		.join('');
+}
+
+function dynamicReplacement(
+	_file_rr,
+	_config_rr,
+	_data_rr,
+	_numbers_rr = {n: 1, t: 1, i: 1, c: 1}
+) {
 	const _time_obj = now;
 	const _time = localTimeString(_time_obj);
 	const _pipe = _config_rr.pipedData,
 		_text = _data_rr,
 		_find = _config_rr.pattern,
-		code_rr = _config_rr.replacementOri,
+		code_rr = numbersCode(_numbers_rr) + _config_rr.replacementOri,
 		_cwd = process.cwd(),
 		_now = _time,
 		_ = ' ',
@@ -874,7 +932,8 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 
 	// Run only once if no captured groups (replacement cant change).
 	// The result is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded.
-	if (!/\$\d/.test(_config_rr.replacement)) {
+	// $m and $M are the number of the match, so they also need the code to run once per match
+	if (!/\$\d/.test(_config_rr.replacement) && !re.matchNumbers.test(_config_rr.replacement)) {
 		const result = dynamicContent(
 			require,
 			fs,
@@ -927,6 +986,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 		return () => result;
 	}
 	// Capture groups used, so need to run once per match
+	let _match_rr = 0;
 	return function () {
 		const __pipe = _pipe,
 			__text = _text,
@@ -953,7 +1013,9 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 			__ = _,
 			__code_rr = code_rr;
 
-		var capturedGroups = '';
+		_match_rr++;
+		_config_rr.numbers.matches++;
+		var capturedGroups = numbersCode({m: _match_rr, M: _config_rr.numbers.matches});
 		for (var i = 0; i < arguments.length - 2; i++) {
 			capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
 		}
