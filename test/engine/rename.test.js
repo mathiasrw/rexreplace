@@ -107,15 +107,24 @@ describe('--rename stops the run before any file is renamed, when planned rename
 	const stopped =
 		' ❌ No file is renamed, as the planned renames clash\n    No further processing.\n\n';
 
-	test('when two files would get the same new path, also given in two ways', async () => {
+	test('when two files would get the same new path', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.writeFileSync('b.md', 'foo');
+		expect(await rr('^[ab]', 'c', {includeGlob: ['*.md'], rename: true})).toEqual({
+			out: '',
+			err: ' ❌ a.md and b.md would both be renamed to c.md\n\n' + stopped,
+			exit: 3,
+		});
+		expect(files()).toEqual(['a.md', 'b.md']);
+	});
+
+	test('when the same new path is written in two ways', async () => {
 		fs.writeFileSync('a.md', 'foo');
 		fs.writeFileSync('b.md', 'foo');
 		const config = {includeGlob: ['a.md', './b.md'], rename: true};
-		expect(await rr('^(\\./)?[ab]', 'c', config)).toEqual({
-			out: '',
-			err: ' ❌ ./b.md and a.md would both be renamed to c.md\n\n' + stopped,
-			exit: 3,
-		});
+		expect((await rr('[ab]\\.md$', 'c.md', config)).err).toBe(
+			' ❌ ./b.md and a.md would both be renamed to ./c.md\n\n' + stopped
+		);
 		expect(files()).toEqual(['a.md', 'b.md']);
 	});
 
