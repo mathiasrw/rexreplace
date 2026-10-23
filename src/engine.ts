@@ -132,6 +132,9 @@ async function run(config) {
 
 	config.replacementOri = config.replacement;
 
+	// $i and $c need one more search of each file, so the files are only counted when the code uses them
+	config.countFiles = config.replacementJs && /\$[ic](?![A-Za-z])/.test(config.replacementOri);
+
 	// The most specific delimiter wins. Without one there is a line break after each item, unless it already ends with one.
 	const delimiter = config.delimiter ?? (config.nullOut ? '\0' : null);
 	config.nameDelimiter = config.nameDelimiter ?? delimiter;
@@ -784,8 +787,12 @@ function fileNumbers(config, number, total) {
 	return {n: number, t: total, i: config.numbers.matched + 1, c: config.numbers.changed + 1};
 }
 
-// When a file is done, it counts for $i if the pattern found something, and for $c if it was changed
+// When a file is done, it counts for $i if the pattern found something, and for $c if it was changed.
+// It takes one more search of the file, so it is only done when the code uses $i or $c.
 function countFile(config, text, result) {
+	if (!config.countFiles) {
+		return;
+	}
 	if (-1 !== text.search(config.regex)) {
 		config.numbers.matched++;
 	}
@@ -805,8 +812,10 @@ function usesNamedGroups(config) {
 
 // Code that makes the numbers and their cousins, put in front of the code of --js.
 // $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
-function numbersCode(numbers) {
+// Only the numbers the code uses are made, as each one costs time when the code runs once per match.
+function numbersCode(numbers, code) {
 	return Object.entries(numbers)
+		.filter(([name]) => new RegExp('\\$' + name + '(?![A-Za-z])').test(code))
 		.map(([name, value]) => {
 			const cousins = [`$${name} = ${value}`, `$${name}_ = '${value} '`];
 			for (let width = 2; width <= 10; width++) {
@@ -893,7 +902,7 @@ function dynamicReplacement(
 	const _pipe = _config_rr.pipedData,
 		_text = _data_rr,
 		_find = _config_rr.pattern,
-		code_rr = numbersCode(_numbers_rr) + _config_rr.replacementOri,
+		code_rr = numbersCode(_numbers_rr, _config_rr.replacementOri) + _config_rr.replacementOri,
 		_cwd = process.cwd(),
 		_now = _time,
 		_ = ' ',
@@ -1122,7 +1131,10 @@ function dynamicReplacement(
 
 		_match_rr++;
 		_config_rr.numbers.matches++;
-		var capturedGroups = numbersCode({m: _match_rr, M: _config_rr.numbers.matches});
+		var capturedGroups = numbersCode(
+			{m: _match_rr, M: _config_rr.numbers.matches},
+			_config_rr.replacementOri
+		);
 		// The match and the groups are followed by the offset and the full text, and by the named groups if the pattern has any
 		const named = arguments[arguments.length - 1];
 		const hasNamed = 'object' === typeof named && null !== named;
