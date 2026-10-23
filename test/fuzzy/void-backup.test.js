@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random} from '../js/helper.js';
+import {rr, random} from '../helper.js';
 
 describe('--void-backup', () => {
 	test('ends up with the same file as with a backup', async () => {

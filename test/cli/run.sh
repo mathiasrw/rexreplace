@@ -1,28 +1,16 @@
 #!/usr/bin/env bash
 
+# A demo of how RexReplace is used, with a few examples of each feature.
+# The checks of many combinations are in test/cli/*.test.js.
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $DIR/aserta.sh
 
-# The tests call `rexreplace`. Set RR to test another command (like `rr` or `bun run rexreplace-bun`).
+# The tests call `rexreplace`. Set RR to test another command (like `rexreplace-bun`).
 if [ -n "$RR" ]; then
 	rexreplace() { command $RR "$@"; }
 fi
-
-# # Command exit codes
-# assert_success    "true"
-# assert_failure    "false"
-# assert_raises     "unknown_cmd" 127
-# 
-# Expected output
-# assert            "echo test"    "test"
-# assert            "seq 3"        "1\n2\n3"
-# assert_contains   "echo foobar"  "oba"
-# assert_startswith "echo foobar"  "foo"
-# assert_endswith   "echo foobar"  "bar"
-# assert_matches    "echo foobar"  "^f.*r$"
-# 
-# assert_end "example"
 
 reset() {
 		echo
@@ -34,601 +22,238 @@ reset() {
 
 
 
-# Plain usage
+# Plain usage: the file is changed, and its name is printed
 reset
-rexreplace x x my.file
-assert		 		"cat my.file"    "foobar"
-
-reset
-rexreplace o x my.file
+assert		 		"rexreplace o x my.file"    "my.file"
 assert		 		"cat my.file"    "fxxbar"
 
 reset
 rexreplace "b" "\n" my.file
 assert		 		"cat my.file"    "foo\nar"
 
-
-# Replacement with a real line break, an escaped single quote or a lone backslash at the end (#691)
-reset
-rexreplace "b" $'\n' my.file
-assert		 		"cat my.file"    "foo\nar"
-
-reset
-rexreplace "b" "\\'" my.file
-assert		 		"cat my.file"    "foo'ar"
-
-reset
-rexreplace "r" '\' my.file
-assert		 		"cat my.file"    'fooba\\'
-
-
-# rr can handle a pattern and replcaement starting with '-'
+# The pattern and the replacement can start with '-'
 reset
 rexreplace '^(.+)$' '- $1' my.file
 rexreplace '- f' '_' my.file
 assert		 		"cat my.file"    "_oobar"
 
 
-# Piped data
+# Piped data is the text to search, and the result is printed
 reset
 assert		 		"cat my.file | rexreplace foo xxx"    "xxxbar"
 
 
-
-# -v
+# --version and --help, also as -v and -h
 reset
-assert_success		"rexreplace -version"
+assert_matches		"rexreplace --version"    "(dev|[0-9])"
 assert		 		"rexreplace -v"    "$(rexreplace --version)"
-assert		 		"rexreplace --version"    "$(rexreplace -version)"
-
-# a single argument only containing -v is not a request for the version (-V is verbose)
-assert_failure		"rexreplace my-vile"
-assert_failure		"rexreplace -V"
-
-
-# -h
-reset
-assert_success		"rexreplace -help"
-assert_success		"rexreplace -h"
 assert_success		"rexreplace --help"
-
-# a single argument only containing -h is not a request for help (-H is halt)
+assert_success		"rexreplace -h"
+# A single argument that only has -v or -h in it is not a request for the version or help
+assert_failure		"rexreplace my-vile"
 assert_failure		"rexreplace o-ho"
-assert_failure		"rexreplace -H"
 
-# -H, --halt, --bail
+
+# --halt (or --bail) stops at the first error
 reset
-assert_success		"rexreplace --help | grep -F -- '--bail' >/dev/null"
-assert_raises		"rexreplace o x nope.file --bail" 1
-assert_raises		"rexreplace o x nope.file --halt" 1
-assert_raises		"rexreplace o x nope.file -H" 1
-# --bail is accepted (not an unknown argument) and leaves files untouched when nothing fails
-assert_success		"rexreplace o x my.file --bail"
-assert				"cat my.file" "fxxbar"
+assert_raises		"rexreplace o x nope.file --halt"    1
+assert_raises		"rexreplace o x nope.file --bail"    1
 
 
-# -o
-reset
-assert		 		"rexreplace x x my.file --output"    "foobar"
-
+# --output prints the result and leaves the file as it is
 reset
 assert		 		"rexreplace o x my.file --output"    "fxxbar"
+assert		 		"cat my.file"    "foobar"
 
 
-# -E 
-# `default` is the engine of the runtime: V8 with Node and JSC with Bun. The engine of the other runtime can not be picked.
+# --engine: `default` is the engine of the runtime: V8 with Node and JSC with Bun
 reset
-# assert		 		"rexreplace o x my.file --output --engine RE2"    "fxxbar"		# RE2	 depricated
 assert		 		"rexreplace o x my.file --output --engine default"    "fxxbar"
-
 if [[ "$(rexreplace --version)" == *+bun ]]; then
-	assert		 		"rexreplace o x my.file --output --engine JSC"    "fxxbar"
 	assert_failure		"rexreplace o x my.file --output --engine V8"
 else
-	assert		 		"rexreplace o x my.file --output --engine V8"    "fxxbar"
 	assert_failure		"rexreplace o x my.file --output --engine JSC"
 fi
 
 
-# -e
-# An unknown encoding stops the run with an error, both for files and for piped data (#690)
+# --encoding
 reset
-assert_failure		"rexreplace o x my.file -e nope"
-assert		 		"cat my.file"    'foobar'
-assert_failure		"printf foo | rexreplace o x -e nope"
-assert		 		"printf foo | rexreplace o x -e nope 2>&1 | grep -v 'exited with code' | tail -1"    'Unknown encoding: nope'
-assert		 		"printf foo | rexreplace o x -e LATIN1"    'fxx'
+assert		 		"printf foo | rexreplace o x --encoding latin1"    'fxx'
+assert_failure		"rexreplace o x my.file --encoding nope"
 
 
-# -b
+# --keep-backup
 reset
 rexreplace o x my.file --keep-backup
 assert		 		"cat my.file"    "fxxbar"
 assert		 		"cat my.file.*"  "foobar"
 rm my.file.*
 
-# -I
+
+# The search is case-insensitive, unless --void-ignore-case
 reset
 assert		 		"rexreplace Foo xxx my.file -o"    "xxxbar"
-
-reset
 assert		 		"rexreplace Foo xxx my.file -o --void-ignore-case"    "foobar"
 
 
-# -G
+# --void-global replaces only the first match
 reset
 assert		 		"rexreplace o x my.file -o --void-global"    "fxobar"
 
 
-# -O
+# --output-match prints the matches, or the groups if the pattern has any
 reset
-assert		 		"rexreplace [fb]. _ my.file --output-match"    "fo\\nba"
-
-reset
-assert		 		"rexreplace '([fb](.))' _ my.file --output-match"    "foo\\nbaa"
-
-# -GO
-reset
-assert		 		"rexreplace [fb]. _ my.file --output-match --voidGlobal"    "fo"
+assert		 		"rexreplace '[fb].' _ my.file --output-match"    "fo\nba"
+assert		 		"rexreplace '([fb](.))' _ my.file --output-match"    "foo\nbaa"
 
 
-
-# -s
+# --dot-all lets . match a line break
 reset
 echo foobar >> my.file
-assert		 		"rexreplace ar.foo _ my.file -o --dot-all "    "foob_bar"
+assert		 		"rexreplace ar.foo _ my.file -o --dot-all"    "foob_bar"
 
 
-
-
-# -M
+# ^ is the start of each line, unless --void-multiline
 reset
 echo foobar >> my.file
 assert		 		"rexreplace '^.' 'x' my.file -o"    "xoobar\nxoobar"
-
-reset
-echo foobar >> my.file
 assert		 		"rexreplace '^.' 'x' my.file -o --void-multiline"    "xoobar\nfoobar"
 
 
-# back reference
+# Groups in the replacement, with $ or the alias €
 reset
 assert		 		"rexreplace '(f?(o))o(.*)' '\$3\$1\$2' my.file -o"    "barfoo"
-
-reset
 assert		 		"rexreplace '(f?(o))o(.*)' '€3€1€2' my.file -o"    "barfoo"
+assert		 		"rexreplace '.€' '€' my.file -o --void-euro"    'foobar'
 
 
-# globs
+# § is an alias for \, also in the replacement, unless --void-section
+reset
+echo foo[bar] > my.file
+assert		 		"rexreplace '[§]]' '[' my.file -o"    'foo[bar['
+assert		 		"rexreplace '[§]]' '[' my.file -o --void-section"    'foo[bar]'
+reset
+rexreplace 'b' '§n' my.file
+assert		 		"cat my.file"    "foo\nar"
+
+
+# Globs
 reset
 echo barfoo > my_file
-assert		 		"rexreplace o x my*le -o"    "fxxbar\nbarfxx"
+assert		 		"rexreplace o x 'my*le' -o"    "fxxbar\nbarfxx"
 rm my_file
 
-
-# A path that is a file is used as it is, also with glob characters in its name (#718)
+# A path to a file is used as it is, also with glob characters in its name
 reset
 echo foo > 'a[1].file'
 echo foo > a1.file
 assert		 		"rexreplace o x 'a[1].file'"    'a[1].file'
 assert		 		"cat a1.file"    'foo'
-assert		 		"rexreplace o y '*.file' -X 'a\\[1\\].file' -X 'my.file' -X 'your.file'"    'a1.file'
-assert		 		"cat 'a[1].file'"    'fxx'
 
-
-# -€
-reset
-assert		 		"rexreplace '.$' '$' my.file -o"    'fooba$'
-
-reset
-assert		 		"rexreplace '.€' '€' my.file -o"    'fooba$'
-
-reset
-assert		 		"rexreplace '.€' '€' my.file -o --void-euro"    'foobar'
-
-
-# -§
-reset
-echo foo[bar] > my.file
-assert		 		"rexreplace '[\]]' '[' my.file -o"    'foo[bar['
-
-
-reset
-echo foo[bar] > my.file
-assert		 		"rexreplace '[§]]' '[' my.file -o"    'foo[bar['
-
-reset
-echo foo[bar] > my.file
-assert		 		"rexreplace '[§]]' '[' my.file -o --void-section"    'foo[bar]'
-
-# § works like \ in the replacement too (#700)
-reset
-rexreplace 'b' '§n' my.file
-assert		 		"cat my.file"    "foo\nar"
-
-reset
-rexreplace 'r' '§§' my.file
-assert		 		"cat my.file"    'fooba\\'
-
-reset
-rexreplace 'b' '§n' my.file --void-section
-assert		 		"cat my.file"    'foo§nar'
-
-
-# -j
-reset
-assert		 		"rexreplace 'foo' '2+2' my.file -o --replacement-js"    '4bar'
-
-reset
-assert		 		"rexreplace 'foo' '2+2' my.file -o -j"    '4bar'
-
-reset
-assert		 		"rexreplace 'foo' '2+2' my.file -o --js"    '4bar'
-
-reset
-assert		 		"rexreplace 'foo' 'var i = 2; i + 2' my.file -o --replacement-js"    '4bar'
-
-reset
-#assert		 		"rexreplace '[fb](.)' '€1.toUpperCase();' my.file -o --replacement-js"    'OoAr'
-
-
-# Access to js variables
-reset
-assert		 		"rexreplace 'fo(o)bar' '[!!fs,!!globs,find,text.trim()].join(\":\")' my.file -o --replacement-js"    'true:true:fo(o)bar:foobar'
-
-
-reset
-assert		 		"printf foobar | rexreplace 'foobar' \"['file:'+file,'dirpath:'+dirpath,'filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" -o --replacement-js"    'file:❌:dirpath:❌:filename:❌:name:❌:ext:❌:text:foobar'
-
-
-reset
-assert		 		"rexreplace 'foobar' \"['filename:'+filename,'name:'+name,'ext:'+ext,'text:'+text].join(':')\" my.file -o --replacement-js"    'filename:my.file:name:my:ext:.file:text:foobar'
-
-reset
-assert		 		"rexreplace 'foo((b)ar)' '€1+€2' my.file -o --replacement-js"    'barb'
-
-## Test replacement-js on multiple files
-reset
-assert		 		"rexreplace 'foo((b)ar)' '€1+€2' *.file -o --replacement-js"    'barb\nabc123'
-
-reset
-assert		 		"rexreplace 'a(.+)' '\"_replace_\"+€1' *.file -o --replacement-js"    'foob_replace_r\n_replace_bc123'
-
-# Content manually testes
-# todo: automate test of content
-reset
-assert		 		"rexreplace 'foobar' '[require, fs, globs, path, pipe, pipe_, find, find_, text, text_, file, file_, file_rel, file_rel_, dirpath, dirpath_, dirpath_rel, dirpath_rel_, dirname, dirname_, filename, filename_, name, name_, ext, ext_, cwd, cwd_, now, now_, time_obj, time, time_, mtime_obj, mtime, mtime_, ctime_obj, ctime, ctime_, bytes, bytes_, size, size_, _].length' my.file -o --replacement-js"    '44'
-
-
-# -R
-reset
-assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
-
-
-# --pipe
-reset
-assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --replacement-js"    'nullbar'
-assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --replacement-js --pipe"    'xbar'
-assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o -jp"    'xbar'
-assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --js-pipe"    'xbar'
-assert		 		"printf ' x ' | rexreplace 'foo' 'pipe' my.file -o --js-pipe -T"    'xbar'
-
-
-# Warning when piped data is not used
-reset
-assert		 		"printf x | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"    ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used.'
-assert		 		"cat my.file"    'fxxbar'
-assert_failure		"printf x | rexreplace 'o' 'x' my.file 2>&1 | grep 'Data is piped in'"
-assert_failure		"printf x | rexreplace 'o' 'x' my.file --pipe -q 2>&1 | grep 'Data is piped in'"
-assert_failure		"printf x | rexreplace 'b' _ my.file -R 2>&1 | grep 'Data is piped in'"
-assert_failure		"printf x | rexreplace 'b' 'pipe' my.file --js-pipe 2>&1 | grep 'Data is piped in'"
-assert_failure		"printf '' | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"
-assert_failure		"printf '\n' | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"
-assert_failure		"printf '\r\n' | rexreplace 'o' 'x' my.file --pipe 2>&1 | grep 'Data is piped in'"
-
-
-# Names of affected files go to stdout (#703)
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A"    'my.file\nyour.file'
-assert		 		"cat my.file"    'fooxar'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file 2>&1 >/dev/null"    ''
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file -V 2>/dev/null"    'my.file'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file -V 2>&1 >/dev/null | grep -cx 'my.file'"    '0'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file -q"    ''
-assert		 		"cat my.file"    'fooxar'
-
-# With --output and --output-match stdout has the result, so the names go to stderr
-reset
-assert		 		"rexreplace 'b' 'x' my.file -o 2>/dev/null"    'fooxar'
-assert		 		"rexreplace 'b' 'x' my.file -o 2>&1 >/dev/null"    'my.file'
-assert		 		"rexreplace 'b' 'x' my.file -o -q 2>&1 >/dev/null"    ''
-assert		 		"rexreplace 'z' 'x' my.file -o 2>&1 >/dev/null"    ''
-assert		 		"rexreplace 'b' _ my.file -m 2>/dev/null"    'b'
-assert		 		"rexreplace 'b' _ my.file -m 2>&1 >/dev/null"    'my.file'
-assert		 		"rexreplace 'b' _ my.file -m -q 2>&1 >/dev/null"    ''
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --name-delimiter ', ' 2>&1 >/dev/null"    'my.file, your.file, '
-assert		 		"cat my.file"    'foobar'
-
-reset
-assert		 		"rexreplace 'b' 'x' '*.file' -A | xargs cat"    'fooxar\naxc123'
-
-# --null
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --null | tr '\0' '|'"    'my.file|your.file|'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --null | xargs -0 cat"    'fooxar\naxc123'
-
-# --name-delimiter
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', '"    'my.file, your.file, '
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter '\t§t€'"    'my.file\t\t$your.file\t\t$'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ',' --null"    'my.file,your.file,'
-
-# --no-name-delimiter-tail
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', ' --no-name-delimiter-tail"    'my.file, your.file'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', ' --name-delimiter-tail=false"    'my.file, your.file'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file --name-delimiter ', ' --no-name-delimiter-tail"    'my.file'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter '§t€' --no-name-delimiter-tail -§ -€"    'my.file§t€your.file'
-
-# --name-all
-reset
-assert		 		"rexreplace 'z' 'x' my.file your.file -A --name-all"    'my.file\nyour.file'
-assert		 		"cat my.file"    'foobar'
-
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --name-all 2>&1 >/dev/null"    'my.file\nyour.file'
-
-# By default there is a line break after the content of each file, unless it already ends with one (tr shows the line breaks)
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -o 2>/dev/null | tr '\n' '+'"    'fooxar+axc123+'
-printf foo > a.file
-printf bar > b.file
-assert		 		"rexreplace 'o' 'x' a.file b.file -o 2>/dev/null | tr '\n' '+'"    'fxx+bar+'
-assert		 		"rexreplace '[ab]' _ a.file b.file -m 2>/dev/null | tr '\n' '+'"    'b+a+'
-assert		 		"printf foo | rexreplace 'o' 'x' | tr '\n' '+'"    'fxx'
-
-# A given --content-delimiter is used as it is
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '' 2>/dev/null"    'fooxar\naxc123'
-assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' 2>/dev/null"    'b,b,c,'
-assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --no-tail 2>/dev/null"    'b,b,c'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --content-delimiter '§t-\n' 2>/dev/null"    'fooxar\n\t-\naxc123\n\t-'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --content-delimiter '|' --no-content-delimiter-tail 2>/dev/null"    'fooxar\n|axc123'
-assert		 		"printf foo | rexreplace 'o' 'x' --content-delimiter '|'"    'fxx'
-assert		 		"printf foo | rexreplace 'o' 'x' --content-delimiter '|' --content-delimiter-tail"    'fxx|'
-assert		 		"cat my.file"    'foobar'
-
-# --delimiter sets both, and the most specific flag wins
-reset
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' 2>/dev/null"    'fooxar\n|axc123\n|'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' 2>&1 >/dev/null"    'my.file|your.file|'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --null 2>/dev/null | tr '\0' '|'"    'fooxar\n|axc123\n|'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --null --delimiter ', ' 2>&1 >/dev/null"    'my.file, your.file, '
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter ', ' --content-delimiter '|' 2>/dev/null"    'fooxar\n|axc123\n|'
-
-# --tail sets both tails, and the specific tail flag wins
-reset
-assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --tail 2>/dev/null"    'b,b,c,'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' --no-tail 2>&1 >/dev/null"    'my.file|your.file'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' --tail 2>/dev/null"    'fooxar\n|axc123\n|'
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --delimiter '|' --no-tail --name-delimiter-tail 2>&1 >/dev/null"    'my.file|your.file|'
-
-# --nl ends stdout and stderr with a line break, unless they already do (tr shows the line breaks)
-reset
-assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --no-tail --nl 2>/dev/null | tr '\n' '+'"    'b,b,c+'
-assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --no-tail -l 2>/dev/null | tr '\n' '+'"    'b,b,c+'
-assert		 		"rexreplace '[bc]' _ my.file your.file -m --delimiter ',' --tail --nl 2>/dev/null | tr '\n' '+'"    'b,b,c,+'
-assert		 		"rexreplace 'b' 'x' my.file -o --nl 2>/dev/null | tr '\n' '+'"    'fooxar+'
-assert		 		"printf foo | rexreplace 'o' 'x' --nl | tr '\n' '+'"    'fxx+'
-assert		 		"printf foo | rexreplace 'nope' 'x' -m --nl | tr '\n' '+'"    ''
-assert		 		"rexreplace 'b' 'x' my.file your.file -o --name-delimiter ',' --no-name-delimiter-tail --nl 2>&1 >/dev/null | tr '\n' '+'"    'my.file,your.file+'
-assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ',' --no-name-delimiter-tail --nl | tr '\n' '+'"    'my.file,your.file+'
-
-reset
-assert_failure		"rexreplace 'b' 'x' my.file --name-delimiter '\x4'"
-assert		 		"rexreplace 'b' 'x' my.file --name-delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --name-delimiter'"    '1'
-assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --content-delimiter'"    '1'
-assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
-assert		 		"cat my.file"    'foobar'
-
-# UTF-8 goes in and out as it is (#735)
-reset
-assert		 		"printf 'a🦖b' | rexreplace '🦖' '👩‍💻'"    'a👩‍💻b'
-# Without --unicode . is half an emoji, so 'x.y' does not match an emoji between x and y
-assert		 		"printf 'x🦖y' | rexreplace 'x.y' '_'"    'x🦖y'
-assert		 		"printf 'x🦖y' | rexreplace 'x.y' '_' --unicode"    '_'
-echo foo > '🦖 中.file'
-assert		 		"rexreplace 'o' 'x' '🦖 中.file'"    '🦖 中.file'
-assert		 		"cat '🦖 中.file'"    'fxx'
-
-
-# --glob-pipe: each line of the piped data is a path or a glob to work on (#711)
-reset
-assert		 		"printf 'my.file\nyour.file\n' | rexreplace 'b' 'x' --glob-pipe -A"    'my.file\nyour.file'
-reset
-assert		 		"printf '*.file' | rexreplace 'b' 'x' -g -A"    'my.file\nyour.file'
-# The names of the changed files go on to the next command, also when a name has a line break in it
-reset
-assert		 		"rexreplace 'oo' 'x' '*.file' --null-out | rexreplace 'x' 'y' --glob-pipe --null-in"    'my.file'
-assert		 		"cat my.file"    'fybar'
-# The piped data can only be one thing
-reset
-assert_raises		"printf 'my.file' | rexreplace 'b' 'x' -g -R"    1
-assert_raises		"printf 'my.file' | rexreplace 'b' 'x' -g --js-pipe"    1
-assert_raises		"printf 'my.file' | rexreplace 'b' 'x' --null-in"    1
-assert		 		"cat my.file"    'foobar'
-
-
-# Null bytes are kept: they come out where they went in. (Bytes that are not valid UTF-8 are only kept with -e latin1.)
-reset
-assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' | tr '\0' '|'"    'fxx|bxx|'
-assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' --output | tr '\0' '|'"    'fxx|bxx|'
-assert		 		"printf 'foo\0boo\0' | rexreplace 'o' '_' --output-match --null-out | tr '\0' '|'"    'o|o|o|o|'
-printf 'foo\0boo\0' > null.file
-assert		 		"rexreplace 'o' 'x' null.file"    'null.file'
-assert		 		"tr '\0' '|' < null.file"    'fxx|bxx|'
-printf 'foo\0boo\0' > null.file
-assert		 		"rexreplace 'o' 'x' null.file --output 2>/dev/null | tr '\0' '|'"    'fxx|bxx|'
-assert		 		"rexreplace 'o' '_' null.file --output-match --null-out 2>/dev/null | tr '\0' '|'"    'o|o|o|o|'
-
-
-# Globs are case-insensitive like the search, unless --void-ignore-case (#716)
+# Globs are case-insensitive like the search
 reset
 assert		 		"rexreplace 'oo' 'x' '*.FILE' -X 'YOUR*'"    'my.file'
-assert		 		"cat my.file"    'fxbar'
-reset
-assert_raises		"rexreplace 'oo' 'x' '*.FILE' --void-ignore-case"    1
 
-# --simulate: the files that would be changed are named, but nothing is written (#710)
-reset
-assert		 		"rexreplace 'oo' 'x' my.file your.file --simulate"    'my.file'
-assert		 		"cat my.file"    'foobar'
-assert		 		"rexreplace 'b' 'x' my.file -S"    'my.file'
-assert		 		"cat my.file"    'foobar'
 
-# --full-path
+# --exclude-glob and --exclude-re
 reset
-assert		 		"rexreplace 'b' 'x' my.file -f"    "$(pwd -P)/my.file"
-
+rexreplace 'b' 'x' '*.file' --exclude-glob 'y*'
+assert		 		"cat your.file"    'abc123'
 reset
-assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file"    "$(pwd -P)/my.file"
-
-reset
-assert		 		"rexreplace 'b' 'x' $(pwd -P)/my.file --full-path"    "$(pwd -P)/my.file"
+rexreplace 'b' 'x' '*.file' --exclude-re '^y'
 assert		 		"cat my.file"    'fooxar'
+assert		 		"cat your.file"    'abc123'
 
 
-	
-
-# -L
+# --literal searches for the pattern as plain text
 reset
-assert		 		"rexreplace 'b' '*+*' my.file -o"    'foo*+*ar'
 assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
 
 
-
-# -x
+# --replacement-js: the code gives the replacement
 reset
-					rexreplace 'b' '*+*' my.file
-assert		 		"cat my.file"    					'foo*+*ar'
-assert		 		"cat your.file"    					'abc123'
+assert		 		"rexreplace 'foo' '2+2' my.file -o --replacement-js"    '4bar'
+assert		 		"rexreplace 'foo((b)ar)' '€1+€2' my.file -o --js"    'barb'
+assert		 		"rexreplace 'foobar' \"[filename, name, ext].join(':')\" my.file -o -j"    'my.file:my:.file'
+
+
+# --replacement-pipe: the replacement is piped in
 reset
-					rexreplace 'b' '*+*' '*.file'
-assert		 		"cat my.file"    					'foo*+*ar'
-assert		 		"cat your.file"    					'a*+*c123'
+assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
+
+# --js-pipe: the code gets the piped data as `pipe`
 reset
-					rexreplace 'b' '*+*' '*.file' -x y
-assert		 		"cat my.file"    					'foobar'
-assert		 		"cat your.file"    					'abc123'
+assert		 		"printf x | rexreplace 'foo' 'pipe' my.file -o --js-pipe"    'xbar'
+
+# Data that is piped in but not used gives a warning
 reset
-					rexreplace 'b' '*+*' '*.file' -x ^y
-assert		 		"cat my.file"    					'foo*+*ar'
-assert		 		"cat your.file"    					'abc123'
+assert		 		"printf x | rexreplace 'o' 'x' my.file --pipe 2>&1 >/dev/null | grep -c 'Data is piped in'"    '1'
+
+
+# The names of the changed files go to stdout, so they can be piped on
 reset
-					rexreplace 'b' '*+*' '*.file' -x ^Y
-assert		 		"cat my.file"    					'foo*+*ar'
-assert		 		"cat your.file"    					'abc123'
+assert		 		"rexreplace 'b' 'x' my.file your.file -A"    'my.file\nyour.file'
 reset
-					rexreplace 'b' '*+*' '*.file' -x ^Y --void-ignore-case
-assert		 		"cat my.file"    					'foo*+*ar'
-assert		 		"cat your.file"    					'a*+*c123'
-
-
-# -X
+assert		 		"rexreplace 'b' 'x' '*.file' -A | xargs cat"    'fooxar\naxc123'
 reset
-					rexreplace 'b' '*+*' '*.file' -X '*.file'
-assert		 		"cat my.file"    					'foobar'
-assert		 		"cat your.file"    					'abc123'
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --null-out | xargs -0 cat"    'fooxar\naxc123'
+
+# With --output stdout has the result, so the names go to stderr
 reset
-					rexreplace 'b' '*+*' '*.file' -X 'y*'
-assert		 		"cat my.file"    					'foo*+*ar'
-assert		 		"cat your.file"    					'abc123'
+assert		 		"rexreplace 'b' 'x' my.file -o 2>&1 >/dev/null"    'my.file'
+
+# --name-all also names the files where nothing was changed
+reset
+assert		 		"rexreplace 'z' 'x' my.file your.file -A --name-all"    'my.file\nyour.file'
+
+# --name-delimiter, with no tail after the last name
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -A --name-delimiter ', ' --no-name-delimiter-tail"    'my.file, your.file'
+
+# --content-delimiter goes after the content of each file. A value that starts with - is given with =
+reset
+assert		 		"rexreplace 'b' 'x' my.file your.file -o --content-delimiter='---\n'"    'fooxar\n---\naxc123\n---'
+
+# --nl ends what is printed with a line break (tr shows it)
+reset
+assert		 		"printf foo | rexreplace 'o' 'x' --nl | tr '\n' '+'"    'fxx+'
+
+
+# --simulate names the files that would be changed, but writes nothing
+reset
+assert		 		"rexreplace 'oo' 'x' my.file your.file --simulate"    'my.file'
+assert		 		"cat my.file"    'foobar'
+
+
+# --full-path prints the full path of each name
+reset
+assert		 		"rexreplace 'b' 'x' my.file --full-path"    "$(pwd -P)/my.file"
+
+
+# --glob-pipe: the files to work on are piped in
+reset
+assert		 		"printf 'my.file\nyour.file\n' | rexreplace 'b' 'x' --glob-pipe -A"    'my.file\nyour.file'
+# The changed files of one run go on to the next run
+reset
+assert		 		"rexreplace 'oo' 'x' '*.file' --null-out | rexreplace 'x' 'y' --glob-pipe --null-in"    'my.file'
+assert		 		"cat my.file"    'fybar'
+
+
+# Null bytes are kept
+reset
+assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' | tr '\0' '|'"    'fxx|bxx|'
+assert		 		"printf 'foo\0boo\0' | rexreplace 'o' '_' --output-match --null-out | tr '\0' '|'"    'o|o|o|o|'
+
+
+# UTF-8 goes in and out as it is
+reset
+assert		 		"printf 'a🦖b' | rexreplace '🦖' '👩‍💻'"    'a👩‍💻b'
+assert		 		"printf 'x🦖y' | rexreplace 'x.y' '_' --unicode"    '_'
+echo foo > '🦖 中.file'
+assert		 		"rexreplace 'o' 'x' '🦖 中.file'"    '🦖 中.file'
 
 
 
-
-
-
-
-
-
-
-# # -P
-# reset
-# echo '.€' > pattern.txt
-# echo '€' > replacement.txt
-# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' my.file -o --pattern-file --replacement-file"    'fooba$'
-# rm pattern.txt
-# rm replacement.txt
-
-# # Multiply lines in files!
-# reset
-# echo " . \n € " > pattern.txt
-# echo " €\n " > replacement.txt
-# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' my.file -o --pattern-file --replacement-file"    'fooba$'
-# rm pattern.txt
-# rm replacement.txt
-
-
-# # Singe line file (with space)
-# reset
-# echo 'fooba r' > my.file
-# echo ' .€' > pattern.txt
-# echo ' €' > replacement.txt
-# assert		 		"rexreplace 'pattern.txt' 'replacement.txt' my.file -o --pattern-file --replacement-file"    'fooba $'
-# rm pattern.txt
-# rm replacement.txt
-
-
-
-
-# Todo: test -e
-# assert		 		"rexreplace ??? ??? my.file -e"    "foobar"
-# reset
-
-# Todo: test -q
-# assert		 		"rexreplace ??? ??? my.file -q"    "foobar"
-# reset
-
-# Todo: test -Q
-# assert		 		"rexreplace ??? ??? my.file -Q"    "foobar"
-# reset
-
-# Todo: test -d
-# assert		 		"rexreplace ??? ??? my.file -d"    "foobar"
-# reset
-
-rm my.file
-rm your.file
+rm -f *.file
 
 assert_end 			"rexreplace cli"
-
-
-
-
-
-
-
-
-
-

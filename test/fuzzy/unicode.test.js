@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'bun:test';
-import {rr, random} from '../js/helper.js';
+import {rr, random} from '../helper.js';
 
 describe('--unicode', () => {
 	const alphabet = ['a', 'b', ' ', '\n', 'æ', '中', '🦖', '🦕', '👍🏽', 'é'];

@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random} from '../js/helper.js';
+import {rr, random} from '../helper.js';
 
 const backups = (dir = '.') => fs.readdirSync(dir).filter(name => name.endsWith('.backup'));
 

@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, random, ended} from '../js/helper.js';
+import {rr, random, ended} from '../helper.js';
 
 describe('basics', () => {
 	test('gives the same as String.replace with the flags gim', async () => {
