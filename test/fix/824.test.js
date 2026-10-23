@@ -41,7 +41,7 @@ describe('#824 --js code that fails in a module', () => {
 		const config = {pipedData: 'foo', replacementJs: true, verbose: true};
 		const result = await rr('o', 'throw new Proxy({}, {get() { throw 1; }})', config);
 		expect(result.err).toContain(
-			'The code of --js failed for the piped data: an object was thrown'
+			'The code of --js failed for the piped data\n    an object was thrown'
 		);
 		expect(result.exit).toBe(3);
 	});
