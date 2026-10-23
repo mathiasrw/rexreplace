@@ -146,6 +146,17 @@ async function run(config) {
 		};
 	}
 
+	// --literal-replacement: the value of a function is used as it is, so `$1` and `$&` are just text.
+	// The code of --js is a string here too, but its value is already used as it is.
+	if (
+		config.literalReplacement &&
+		!config.replacementJs &&
+		'string' === typeof config.replacement
+	) {
+		const text = config.replacement;
+		config.replacement = () => text;
+	}
+
 	const piped = handlePipedData(config);
 
 	if (null !== config.pipedData) {

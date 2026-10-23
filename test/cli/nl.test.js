@@ -1,18 +1,15 @@
-// --nl (-l) ends stdout and stderr with a line break, unless they already end with one
+// --nl ends stdout and stderr with a line break, unless they already end with one
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {$} from 'bun';
 import {cli, sh} from '../helper.js';
 
 describe('--nl', () => {
-	test('adds a line break after the last match, also as -l', async () => {
+	test('adds a line break after the last match', async () => {
 		fs.writeFileSync('my.file', 'foobar\n');
 		fs.writeFileSync('your.file', 'abc123\n');
 		expect(
 			(await sh($`bun ${cli} '[bc]' _ my.file your.file -m --delimiter ',' --no-tail --nl`)).out
-		).toBe('b,b,c\n');
-		expect(
-			(await sh($`bun ${cli} '[bc]' _ my.file your.file -m --delimiter ',' --no-tail -l`)).out
 		).toBe('b,b,c\n');
 	});
 
