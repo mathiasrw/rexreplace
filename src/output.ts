@@ -115,6 +115,12 @@ export const panic = function (msg = '', data = '', displayHelp = false) {
 	throw new Panic(text);
 };
 
+// A check from --expect-* that is not met. It is told like an error, but goes into `checks` in the status report.
+export const checkFailed = function (text) {
+	config.statusInfo?.checks.push(text);
+	printError(text, false);
+};
+
 // Something failed, and the run goes on. With --halt it is a panic.
 export const error = function (msg, data = '') {
 	const text = msg + (data ? ' ' + data : '');

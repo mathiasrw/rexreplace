@@ -247,6 +247,23 @@ const yargs = require('yargs')
 	)
 	.alias('S', 'simulate')
 
+	// Checks for a CI step. When one is not met, the exit code is 1.
+	.boolean('F')
+	.describe('F', 'Check that at least one file is found. The exit code is 1 if not.')
+	.alias('F', 'expect-files')
+
+	.boolean('z')
+	.describe('z', 'Check that at least one file is changed. The exit code is 1 if not.')
+	.alias('z', 'expect-diff')
+
+	.boolean('Z')
+	.describe('Z', 'Check that no file is changed. The exit code is 1 if one is.')
+	.alias('Z', 'expect-zero-diff')
+
+	.boolean('expect-diff-all')
+	.describe('expect-diff-all', 'Check that all files found are changed. The exit code is 1 if not.')
+	.conflicts('Z', ['z', 'expect-diff-all'])
+
 	.boolean('r')
 	.describe(
 		'r',
@@ -363,10 +380,6 @@ All variables, except from module, date objects, \`nl\` and \`_\`, has a corresp
             `Normally . `+
                ''
         )
-	
-	
-	-E (Expect there to be no match and return exit 1 if found)
-	-e (Expect there to be batch and return exit 1 if not found)
 */
 
 	/*    .boolean('P')
@@ -577,13 +590,15 @@ if (config.contentDelimiter) {
 }
 
 // The exit code is only set, so the process ends by itself when all output is written.
-// 0: done, 2: an error in a file and the run went on, 3: a panic (the run stopped)
+// 0: done, 1: a check that was not met, 2: an error in a file and the run went on, 3: a panic (the run stopped)
 const run = () =>
 	rexreplace.engine(config).then(
 		status => {
 			printStatus(config, status);
 			if (status.errors.length) {
 				process.exitCode = 2;
+			} else if (status.checks?.length) {
+				process.exitCode = 1;
 			}
 		},
 		e => exitOnPanic(config, e)
