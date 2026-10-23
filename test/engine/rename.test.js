@@ -135,12 +135,35 @@ describe('--rename stops the run before any file is renamed, when planned rename
 		expect(await rr('^[ab]', '$0 == "a" ? "b" : "a"', config)).toEqual({
 			out: '',
 			err:
-				' ❌ a.md would be renamed to b.md, which is also renamed\n\n' +
-				' ❌ b.md would be renamed to a.md, which is also renamed\n\n' +
+				' ❌ a.md would be renamed to b.md, which is a file in this run\n\n' +
+				' ❌ b.md would be renamed to a.md, which is a file in this run\n\n' +
 				stopped,
 			exit: 3,
 		});
 		expect(fs.readFileSync('a.md', 'utf8')).toBe('foo');
+	});
+
+	test('when the new path is a file in the run that keeps its name', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.writeFileSync('b.txt', 'bar');
+		expect(await rr('^a\\.md$', 'b.txt', {includeGlob: ['a.md', 'b.txt'], rename: true})).toEqual({
+			out: '',
+			err: ' ❌ a.md would be renamed to b.txt, which is a file in this run\n\n' + stopped,
+			exit: 3,
+		});
+		expect(fs.readFileSync('b.txt', 'utf8')).toBe('bar');
+	});
+
+	test('when two new paths differ only in case, as they are the same file on some file systems', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.writeFileSync('b.md', 'bar');
+		const config = {includeGlob: ['*.md'], rename: true, replacementJs: true};
+		expect(await rr('^[ab]', '$0 == "a" ? "X" : "x"', config)).toEqual({
+			out: '',
+			err: ' ❌ a.md and b.md would both be renamed to X.md\n\n' + stopped,
+			exit: 3,
+		});
+		expect(files()).toEqual(['a.md', 'b.md']);
 	});
 
 	test('when the new path is a file already, and other files are fine', async () => {
