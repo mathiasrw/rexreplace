@@ -665,7 +665,8 @@ if (!pipeDataExpected || Boolean(process.stdin.isTTY)) {
 	// Stays null when nothing comes through the pipe
 	let pipeData = null;
 
-	process.stdin.setEncoding(config.encoding);
+	// With --glob-pipe the piped data is paths, and they are UTF-8 and not in the encoding of the files
+	process.stdin.setEncoding(config.globPipe ? 'utf8' : config.encoding);
 
 	process.stdin.on('data', chunk => {
 		pipeData = (pipeData ?? '') + chunk;
