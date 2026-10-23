@@ -1135,7 +1135,7 @@ function getFilePaths(conf) {
 
 	// --exclude-glob is always globs, also for the name of a file. They are used together, and the files they find are taken away.
 	if (excludeGlob.length) {
-		const excluded = new Set(glob(excludeGlob, globOptions).map(file => path.resolve(file)));
+		const excluded = new Set(glob(excludeGlob, globOptions, true).map(file => path.resolve(file)));
 		files = files.filter(file => !excluded.has(path.resolve(file)));
 	}
 
@@ -1216,12 +1216,18 @@ function isFile(file) {
 	}
 }
 
-// When the file system gives an error, the files can not be known, so the run can not go on
-function glob(patterns, globOptions) {
+// A glob that finds files and meets a folder that can not be read, like one with no access, is an error,
+// and the run goes on with the files that can be found. A glob of --exclude-glob that fails is a panic,
+// as the files it should take away can not be known, and they must not be changed.
+function glob(patterns, globOptions, exclude = false) {
 	try {
 		return globs.sync(patterns, globOptions);
 	} catch (e) {
-		return panic('The files can not be found:', e.message);
+		if (exclude) {
+			return panic('The files to exclude can not be found:', e.message);
+		}
+		error('Not all files can be found:', e.message);
+		return globs.sync(patterns, {...globOptions, suppressErrors: true});
 	}
 }
 
