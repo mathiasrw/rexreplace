@@ -230,10 +230,17 @@ async function run(config) {
 			? files.length
 			: Math.max(16, os.availableParallelism() * 2);
 	let next = 0;
+	// After a panic no worker starts a new file. A file that is already in work is finished.
+	let stopped = false;
 	const worker = async () => {
-		while (next < files.length) {
+		while (next < files.length && !stopped) {
 			const index = next++;
-			await openFile(files[index], config, index + 1, files.length);
+			try {
+				await openFile(files[index], config, index + 1, files.length);
+			} catch (e) {
+				stopped = true;
+				throw e;
+			}
 		}
 	};
 
