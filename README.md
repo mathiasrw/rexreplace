@@ -294,7 +294,7 @@ Files identified for potential processing are identified by:
 - Supports backreference to matching groups in the replacement
 - Data can be piped in, both as the text to search and as the replacement
 - The names of the changed files are printed to stdout, so they can be piped on (to stderr with `--output` and `--output-match`)
-- Pick the delimiter between names and between the content of files
+- Set the delimiter between names and between the content of files
 - See the [release note](https://github.com/mathiasrw/rexreplace/releases) for a log of changes. Descriptions are given in latest patch version.
 
 ### Quirks
