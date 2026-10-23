@@ -2,47 +2,47 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../helper.js';
 
-// Make `names` as files containing "foo" and return the ones changed by replacing "foo"
-const changed = async (names, config) => {
-	names.forEach(name => {
-		fs.mkdirSync(name.replace(/[^/]*$/, '') || '.', {recursive: true});
-		fs.writeFileSync(name, 'foo');
-	});
-	await rr('foo', 'x', config);
-	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
-};
-
 describe('--exclude-re', () => {
 	test('leaves out files with a path matching the regex', async () => {
 		const config = {includeGlob: ['*.file'], excludeRe: ['^y']};
-		expect(await changed(['my.file', 'your.file'], config)).toEqual(['my.file']);
+		fs.writeFileSync('my.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect((await rr('foo', 'x', config)).out).toBe('my.file\n');
 	});
 
 	test('matches anywhere in the path unless anchored', async () => {
-		const names = ['my.file', 'your.file'];
-		expect(await changed(names, {includeGlob: ['*.file'], excludeRe: ['y']})).toEqual([]);
+		fs.writeFileSync('my.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['y']})).out).toBe('');
 	});
 
 	test('is a regex', async () => {
-		const names = ['a1.file', 'a2.file', 'ab.file'];
-		expect(await changed(names, {includeGlob: ['*.file'], excludeRe: ['a\\d\\.file$']})).toEqual([
-			'ab.file',
-		]);
+		fs.writeFileSync('a1.file', 'foo');
+		fs.writeFileSync('a2.file', 'foo');
+		fs.writeFileSync('ab.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['a\\d\\.file$']})).out).toBe(
+			'ab.file\n'
+		);
 	});
 
 	test('can be given several times', async () => {
-		const names = ['a.file', 'b.file', 'c.file'];
-		expect(await changed(names, {includeGlob: ['*.file'], excludeRe: ['^a', '^b']})).toEqual([
-			'c.file',
-		]);
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
+		fs.writeFileSync('c.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^a', '^b']})).out).toBe(
+			'c.file\n'
+		);
 	});
 
 	test('sees the path of files in sub directories', async () => {
-		const names = ['a.file', 'sub/a.file', 'sub/deep/a.file'];
-		expect(await changed(names, {includeGlob: ['**/*.file'], excludeRe: ['^sub/[^/]+$']})).toEqual([
-			'a.file',
-			'sub/deep/a.file',
-		]);
+		fs.writeFileSync('a.file', 'foo');
+		fs.mkdirSync('sub', {recursive: true});
+		fs.writeFileSync('sub/a.file', 'foo');
+		fs.mkdirSync('sub/deep', {recursive: true});
+		fs.writeFileSync('sub/deep/a.file', 'foo');
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['**/*.file'], excludeRe: ['^sub/[^/]+$']})).out
+		).toBe('a.file\nsub/deep/a.file\n');
 	});
 
 	test('reports when all files are left out', async () => {
@@ -53,49 +53,59 @@ describe('--exclude-re', () => {
 	});
 
 	test('makes no difference if it matches nothing', async () => {
-		expect(await changed(['my.file'], {includeGlob: ['*.file'], excludeRe: ['nope']})).toEqual([
-			'my.file',
-		]);
+		fs.writeFileSync('my.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['nope']})).out).toBe(
+			'my.file\n'
+		);
 	});
 
 	test('follows the regex flags of the main search', async () => {
-		const names = ['MY.file', 'your.file'];
-		expect(await changed(names, {includeGlob: ['*.file'], excludeRe: ['^my']})).toEqual([
-			'your.file',
-		]);
+		fs.writeFileSync('MY.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^my']})).out).toBe(
+			'your.file\n'
+		);
 	});
 
 	describe('combined', () => {
 		test('with --exclude-glob both are used', async () => {
-			const names = ['a.file', 'b.file', 'c.file'];
 			const config = {includeGlob: ['*.file'], excludeRe: ['^a'], excludeGlob: ['b.*']};
-			expect(await changed(names, config)).toEqual(['c.file']);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'foo');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('foo', 'x', config)).out).toBe('c.file\n');
 		});
 
 		test('with a negated glob', async () => {
-			const names = ['a.file', 'b.file', 'c.file'];
 			const config = {includeGlob: ['*.file', '!b.file'], excludeRe: ['^a']};
-			expect(await changed(names, config)).toEqual(['c.file']);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'foo');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('foo', 'x', config)).out).toBe('c.file\n');
 		});
 
 		test('with --literal the exclusion is plain text', async () => {
-			const names = ['a.file', 'axfile'];
 			const config = {includeGlob: ['a*'], excludeRe: ['a.file'], literal: true};
-			expect(await changed(names, config)).toEqual(['axfile']);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('axfile', 'foo');
+			expect((await rr('foo', 'x', config)).out).toBe('axfile\n');
 		});
 
 		test('with € and § as aliases unless voided', async () => {
-			const names = ['a1.file', 'ab.files'];
-			expect(await changed(names, {includeGlob: ['a*'], excludeRe: ['§d.file€']})).toEqual([
-				'ab.files',
-			]);
+			fs.writeFileSync('a1.file', 'foo');
+			fs.writeFileSync('ab.files', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['a*'], excludeRe: ['§d.file€']})).out).toBe(
+				'ab.files\n'
+			);
 			const voided = {
 				includeGlob: ['a*'],
 				excludeRe: ['§d.file€'],
 				voidEuro: true,
 				voidSection: true,
 			};
-			expect(await changed(names, voided)).toEqual(names);
+			fs.writeFileSync('a1.file', 'foo');
+			fs.writeFileSync('ab.files', 'foo');
+			expect((await rr('foo', 'x', voided)).out).toBe('a1.file\nab.files\n');
 		});
 
 		test('with --output only the files left are sent', async () => {

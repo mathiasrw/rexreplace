@@ -5,73 +5,97 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../../helper.js';
 
-// Make `names` as files containing "foo" and return the ones changed by replacing "foo"
-const changed = async (names, config) => {
-	names.forEach(name => fs.writeFileSync(name, 'foo'));
-	await rr('foo', 'x', config);
-	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
-};
-
 const voided = {voidEuro: true, voidSection: true};
 
 describe('#699 € and § are only aliases in the pattern, the replacement and --exclude-re', () => {
 	describe('file globs', () => {
 		test('€ is a plain char', async () => {
-			const names = ['cost€.file', 'cost$.file'];
-			expect(await changed(names, {includeGlob: ['cost€.file']})).toEqual(['cost€.file']);
-			expect(await changed(names, {includeGlob: ['cost$.file']})).toEqual(['cost$.file']);
-			expect(await changed(names, {includeGlob: ['*€.file']})).toEqual(['cost€.file']);
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['cost€.file']})).out).toBe('cost€.file\n');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['cost$.file']})).out).toBe('cost$.file\n');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['*€.file']})).out).toBe('cost€.file\n');
 		});
 
 		test('§ is a plain char', async () => {
-			const names = ['par§.file', 'par.file'];
-			expect(await changed(names, {includeGlob: ['par§.file']})).toEqual(['par§.file']);
-			expect(await changed(names, {includeGlob: ['*§.file']})).toEqual(['par§.file']);
+			fs.writeFileSync('par§.file', 'foo');
+			fs.writeFileSync('par.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['par§.file']})).out).toBe('par§.file\n');
+			fs.writeFileSync('par§.file', 'foo');
+			fs.writeFileSync('par.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['*§.file']})).out).toBe('par§.file\n');
 		});
 
 		test('§ does not escape like a backslash does', async () => {
-			const names = ['a[1].file', 'a1.file'];
-			expect(await changed(names, {includeGlob: ['a\\[1\\].file']})).toEqual(['a[1].file']);
-			expect(await changed(names, {includeGlob: ['a§[1§].file']})).toEqual([]);
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('a1.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['a\\[1\\].file']})).out).toBe('a[1].file\n');
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('a1.file', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['a§[1§].file']})).out).toBe('');
 		});
 
 		test('--void-euro and --void-section make no difference', async () => {
-			const names = ['cost€.file', 'cost$.file', 'par§.file'];
-			expect(await changed(names, {includeGlob: ['cost€.file', 'par§.file'], ...voided})).toEqual([
-				'cost€.file',
-				'par§.file',
-			]);
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
+			expect(
+				(await rr('foo', 'x', {includeGlob: ['cost€.file', 'par§.file'], ...voided})).out
+			).toBe('cost€.file\npar§.file\n');
 		});
 	});
 
 	describe('--exclude-glob', () => {
-		const names = ['a[1].file', 'cost$.file', 'cost€.file', 'par§.file'];
-
 		test('€ and § are plain chars', async () => {
-			expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['cost€.file']})).toEqual([
-				'a[1].file',
-				'cost$.file',
-				'par§.file',
-			]);
-			expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['par§.file']})).toEqual([
-				'a[1].file',
-				'cost$.file',
-				'cost€.file',
-			]);
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
+			expect(
+				(await rr('foo', 'x', {includeGlob: ['*.file'], excludeGlob: ['cost€.file']})).out
+			).toBe('a[1].file\ncost$.file\npar§.file\n');
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
+			expect(
+				(await rr('foo', 'x', {includeGlob: ['*.file'], excludeGlob: ['par§.file']})).out
+			).toBe('a[1].file\ncost$.file\ncost€.file\n');
 		});
 
 		test('§ does not escape like a backslash does', async () => {
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
 			expect(
-				await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a\\[1\\].file']})
-			).toEqual(['cost$.file', 'cost€.file', 'par§.file']);
-			expect(await changed(names, {includeGlob: ['*.file'], excludeGlob: ['a§[1§].file']})).toEqual(
-				names
-			);
+				(await rr('foo', 'x', {includeGlob: ['*.file'], excludeGlob: ['a\\[1\\].file']})).out
+			).toBe('cost$.file\ncost€.file\npar§.file\n');
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
+			expect(
+				(await rr('foo', 'x', {includeGlob: ['*.file'], excludeGlob: ['a§[1§].file']})).out
+			).toBe('a[1].file\ncost$.file\ncost€.file\npar§.file\n');
 		});
 
 		test('--void-euro and --void-section make no difference', async () => {
 			const config = {includeGlob: ['*.file'], excludeGlob: ['cost€.file', 'par§.file']};
-			expect(await changed(names, {...config, ...voided})).toEqual(await changed(names, config));
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
+			expect((await rr('foo', 'x', config)).out).toBe('a[1].file\ncost$.file\n');
+			fs.writeFileSync('a[1].file', 'foo');
+			fs.writeFileSync('cost$.file', 'foo');
+			fs.writeFileSync('cost€.file', 'foo');
+			fs.writeFileSync('par§.file', 'foo');
+			expect((await rr('foo', 'x', {...config, ...voided})).out).toBe('a[1].file\ncost$.file\n');
 		});
 	});
 
@@ -111,13 +135,18 @@ describe('#699 € and § are only aliases in the pattern, the replacement and -
 		});
 
 		test('--exclude-re', async () => {
-			const names = ['a1.file', 'ab.file', 'ab.files'];
-			expect(await changed(names, {includeGlob: ['a*'], excludeRe: ['§d', 'file€']})).toEqual([
-				'ab.files',
-			]);
+			fs.writeFileSync('a1.file', 'foo');
+			fs.writeFileSync('ab.file', 'foo');
+			fs.writeFileSync('ab.files', 'foo');
+			expect((await rr('foo', 'x', {includeGlob: ['a*'], excludeRe: ['§d', 'file€']})).out).toBe(
+				'ab.files\n'
+			);
+			fs.writeFileSync('a1.file', 'foo');
+			fs.writeFileSync('ab.file', 'foo');
+			fs.writeFileSync('ab.files', 'foo');
 			expect(
-				await changed(names, {includeGlob: ['a*'], excludeRe: ['§d', 'file€'], ...voided})
-			).toEqual(names);
+				(await rr('foo', 'x', {includeGlob: ['a*'], excludeRe: ['§d', 'file€'], ...voided})).out
+			).toBe('a1.file\nab.file\nab.files\n');
 		});
 	});
 });

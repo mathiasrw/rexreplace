@@ -6,20 +6,13 @@ import {rr} from '../helper.js';
 const js = async (pattern, code, pipedData, config) =>
 	(await rr(pattern, code, {pipedData, replacementJs: true, ...config})).out;
 
-// Run `code` against my.file holding `text` and return what it gives
-const inFile = async (code, text = 'foobar', file = 'my.file') => {
-	fs.mkdirSync(path.dirname(file), {recursive: true});
-	fs.writeFileSync(file, text);
-	return (
-		await rr('^[^]*$', code, {
-			includeGlob: [file],
-			replacementJs: true,
-			output: true,
-			// Without the tail only the value of the code is given
-			contentDelimiterTail: false,
-			voidMultiline: true,
-		})
-	).out;
+// The code runs once on the whole content of my.file. With --output and no tail only the value of the code is printed.
+const wholeFile = {
+	includeGlob: ['my.file'],
+	replacementJs: true,
+	output: true,
+	contentDelimiterTail: false,
+	voidMultiline: true,
 };
 
 const timestamp = /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}$/;
@@ -105,21 +98,31 @@ describe('--replacement-js', () => {
 
 	describe('variables', () => {
 		test('fs, path and globs are available', async () => {
-			expect(await inFile('typeof fs.readFileSync + typeof path.join + typeof globs.sync')).toBe(
-				'functionfunctionfunction'
-			);
-			expect(await inFile('fs.readFileSync(file, "utf8").toUpperCase()')).toBe('FOOBAR');
-			expect(await inFile('globs.sync("*").join()')).toBe('my.file');
+			fs.writeFileSync('my.file', 'foobar');
+			expect(
+				(
+					await rr(
+						'^[^]*$',
+						'typeof fs.readFileSync + typeof path.join + typeof globs.sync',
+						wholeFile
+					)
+				).out
+			).toBe('functionfunctionfunction');
+			expect(
+				(await rr('^[^]*$', 'fs.readFileSync(file, "utf8").toUpperCase()', wholeFile)).out
+			).toBe('FOOBAR');
+			expect((await rr('^[^]*$', 'globs.sync("*").join()', wholeFile)).out).toBe('my.file');
 		});
 
 		test('require and r find files relative to the current dir', async () => {
 			fs.writeFileSync('data.json', '{"version": "1.2.3"}');
-			expect(await inFile('require("./data.json").version')).toBe('1.2.3');
-			expect(await inFile('r("./data.json").version')).toBe('1.2.3');
-			expect(await inFile('r("data.json").version')).toBe('1.2.3');
-			expect(await inFile('r("data").version')).toBe('1.2.3');
-			expect(await inFile('r(cwd + "/data.json").version')).toBe('1.2.3');
-			expect(await inFile('require("path").sep')).toBe(path.sep);
+			fs.writeFileSync('my.file', 'foobar');
+			expect((await rr('^[^]*$', 'require("./data.json").version', wholeFile)).out).toBe('1.2.3');
+			expect((await rr('^[^]*$', 'r("./data.json").version', wholeFile)).out).toBe('1.2.3');
+			expect((await rr('^[^]*$', 'r("data.json").version', wholeFile)).out).toBe('1.2.3');
+			expect((await rr('^[^]*$', 'r("data").version', wholeFile)).out).toBe('1.2.3');
+			expect((await rr('^[^]*$', 'r(cwd + "/data.json").version', wholeFile)).out).toBe('1.2.3');
+			expect((await rr('^[^]*$', 'require("path").sep', wholeFile)).out).toBe(path.sep);
 		});
 
 		test('text is the full content and find is the pattern', async () => {
@@ -148,7 +151,8 @@ describe('--replacement-js', () => {
 				'[file, file_rel, dirpath, dirpath_rel, dirname, filename, name, ext].join("\\n")';
 			const cwd = process.cwd();
 
-			expect((await inFile(code)).split('\n')).toEqual([
+			fs.writeFileSync('my.file', 'foobar');
+			expect((await rr('^[^]*$', code, wholeFile)).out.split('\n')).toEqual([
 				path.join(cwd, 'my.file'),
 				'my.file',
 				cwd,
@@ -159,7 +163,13 @@ describe('--replacement-js', () => {
 				'.file',
 			]);
 
-			expect((await inFile(code, 'foobar', 'sub/dir/my.file.txt')).split('\n')).toEqual([
+			fs.mkdirSync('sub/dir', {recursive: true});
+			fs.writeFileSync('sub/dir/my.file.txt', 'foobar');
+			expect(
+				(await rr('^[^]*$', code, {...wholeFile, includeGlob: ['sub/dir/my.file.txt']})).out.split(
+					'\n'
+				)
+			).toEqual([
 				path.join(cwd, 'sub/dir/my.file.txt'),
 				path.join('sub/dir/my.file.txt'),
 				path.join(cwd, 'sub/dir'),
@@ -178,31 +188,40 @@ describe('--replacement-js', () => {
 		});
 
 		test('cwd is the current working dir', async () => {
-			expect(await inFile('cwd')).toBe(process.cwd());
+			fs.writeFileSync('my.file', 'foobar');
+			expect((await rr('^[^]*$', 'cwd', wholeFile)).out).toBe(process.cwd());
 			expect(await js('foo', 'cwd', 'foo')).toBe(process.cwd());
 		});
 
 		test('bytes and size tell the size of the content', async () => {
-			expect(await inFile('bytes + "|" + size')).toBe('6|6 Bytes');
-			expect(await inFile('bytes + "|" + size', 'x')).toBe('1|1 Byte');
-			expect(await inFile('bytes + "|" + size', 'æ🦖')).toBe('6|6 Bytes');
-			expect(await inFile('bytes + "|" + size', 'x'.repeat(1024))).toBe('1024|1.0 KB');
-			expect(await inFile('bytes + "|" + size', 'x'.repeat(1536))).toBe('1536|1.5 KB');
-			expect(await inFile('bytes + "|" + size', 'x'.repeat(3 * 1024 * 1024))).toBe(
-				'3145728|3.0 MB'
-			);
+			fs.writeFileSync('my.file', 'foobar');
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('6|6 Bytes');
+			fs.writeFileSync('my.file', 'x');
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('1|1 Byte');
+			fs.writeFileSync('my.file', 'æ🦖');
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('6|6 Bytes');
+			fs.writeFileSync('my.file', 'x'.repeat(1024));
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('1024|1.0 KB');
+			fs.writeFileSync('my.file', 'x'.repeat(1536));
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('1536|1.5 KB');
+			fs.writeFileSync('my.file', 'x'.repeat(3 * 1024 * 1024));
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('3145728|3.0 MB');
 			expect(await js('foobar', 'bytes + "|" + size', 'foobar')).toBe('6|6 Bytes');
 		});
 
 		test('size of empty content is "0 Bytes" (#687)', async () => {
-			expect(await inFile('bytes + "|" + size', '')).toBe('0|0 Bytes');
+			fs.writeFileSync('my.file', '');
+			expect((await rr('^[^]*$', 'bytes + "|" + size', wholeFile)).out).toBe('0|0 Bytes');
 		});
 
 		test('time and now tell when rexreplace was started', async () => {
-			expect(await inFile('time')).toMatch(timestamp);
-			expect(await inFile('now === time')).toBe('true');
-			expect(await inFile('time_obj instanceof Date')).toBe('true');
-			expect(Math.abs(Date.now() - Number(await inFile('time_obj.getTime()')))).toBeLessThan(60000);
+			fs.writeFileSync('my.file', 'foobar');
+			expect((await rr('^[^]*$', 'time', wholeFile)).out).toMatch(timestamp);
+			expect((await rr('^[^]*$', 'now === time', wholeFile)).out).toBe('true');
+			expect((await rr('^[^]*$', 'time_obj instanceof Date', wholeFile)).out).toBe('true');
+			expect(
+				Math.abs(Date.now() - Number((await rr('^[^]*$', 'time_obj.getTime()', wholeFile)).out))
+			).toBeLessThan(60000);
 		});
 
 		test('mtime and ctime tell about the last change of the file', async () => {
@@ -249,14 +268,22 @@ describe('--replacement-js', () => {
 				'size',
 			];
 			const code = `[${names.map(name => `${name}_ === ${name} + " "`).join()}].join()`;
-			expect(await inFile(code)).toBe(names.map(() => 'true').join());
+			fs.writeFileSync('my.file', 'foobar');
+			expect((await rr('^[^]*$', code, wholeFile)).out).toBe(names.map(() => 'true').join());
 			expect(await js('foobar', code, 'foobar')).toBe(names.map(() => 'true').join());
 		});
 
 		test('are the same when the code runs once per match', async () => {
-			expect(await inFile('$0; [filename, name, ext, bytes, text, find, _, nl].join("|")')).toBe(
-				'my.file|my|.file|6|foobar|^[^]*$| |\n'
-			);
+			fs.writeFileSync('my.file', 'foobar');
+			expect(
+				(
+					await rr(
+						'^[^]*$',
+						'$0; [filename, name, ext, bytes, text, find, _, nl].join("|")',
+						wholeFile
+					)
+				).out
+			).toBe('my.file|my|.file|6|foobar|^[^]*$| |\n');
 		});
 
 		test('follow the file when several files are handled', async () => {

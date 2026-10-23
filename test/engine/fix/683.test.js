@@ -4,13 +4,6 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../../helper.js';
 
-// Make `names` as files containing "foo" and return the ones changed by replacing "foo"
-const changed = async (names, config) => {
-	names.forEach(name => fs.writeFileSync(name, 'foo'));
-	await rr('foo', 'x', {includeGlob: ['*.file'], ...config});
-	return names.filter(name => 'x' === fs.readFileSync(name, 'utf8'));
-};
-
 describe('#683 --exclude-re follows the regex flags of the main search', () => {
 	test('the example from the issue', async () => {
 		fs.writeFileSync('a.file', 'x\n');
@@ -20,32 +13,70 @@ describe('#683 --exclude-re follows the regex flags of the main search', () => {
 	});
 
 	test('ignores case as default', async () => {
-		expect(await changed(['MY.file', 'your.file'], {excludeRe: ['^my']})).toEqual(['your.file']);
-		expect(await changed(['my.file', 'your.file'], {excludeRe: ['^MY']})).toEqual(['your.file']);
+		fs.writeFileSync('MY.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^my']})).out).toBe(
+			'your.file\n'
+		);
+		fs.writeFileSync('my.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^MY']})).out).toBe(
+			'your.file\n'
+		);
 	});
 
 	test('--void-ignore-case makes the case matter', async () => {
-		const names = ['MY.file', 'your.file'];
-		expect(await changed(names, {excludeRe: ['^my'], voidIgnoreCase: true})).toEqual(names);
-		expect(await changed(names, {excludeRe: ['^MY'], voidIgnoreCase: true})).toEqual(['your.file']);
+		fs.writeFileSync('MY.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^my'], voidIgnoreCase: true}))
+				.out
+		).toBe('MY.file\nyour.file\n');
+		fs.writeFileSync('MY.file', 'foo');
+		fs.writeFileSync('your.file', 'foo');
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^MY'], voidIgnoreCase: true}))
+				.out
+		).toBe('your.file\n');
 	});
 
 	test('--dot-all lets a dot match a line break in the path', async () => {
-		const names = ['a\nb.file', 'ab.file'];
-		expect(await changed(names, {excludeRe: ['a.b']})).toEqual(names);
-		expect(await changed(names, {excludeRe: ['a.b'], dotAll: true})).toEqual(['ab.file']);
+		fs.writeFileSync('a\nb.file', 'foo');
+		fs.writeFileSync('ab.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['a.b']})).out).toBe(
+			'a\nb.file\nab.file\n'
+		);
+		fs.writeFileSync('a\nb.file', 'foo');
+		fs.writeFileSync('ab.file', 'foo');
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['a.b'], dotAll: true})).out
+		).toBe('ab.file\n');
 	});
 
 	test('--void-multiline makes ^ match only at the start of the path', async () => {
-		const names = ['a\nb.file', 'c.file'];
-		expect(await changed(names, {excludeRe: ['^b']})).toEqual(['c.file']);
-		expect(await changed(names, {excludeRe: ['^b'], voidMultiline: true})).toEqual(names);
+		fs.writeFileSync('a\nb.file', 'foo');
+		fs.writeFileSync('c.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^b']})).out).toBe(
+			'c.file\n'
+		);
+		fs.writeFileSync('a\nb.file', 'foo');
+		fs.writeFileSync('c.file', 'foo');
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['^b'], voidMultiline: true})).out
+		).toBe('a\nb.file\nc.file\n');
 	});
 
 	test('--unicode lets \\u{...} match in the path', async () => {
-		const names = ['a.file', 'b.file'];
-		expect(await changed(names, {excludeRe: ['\\u{61}']})).toEqual(names);
-		expect(await changed(names, {excludeRe: ['\\u{61}'], unicode: true})).toEqual(['b.file']);
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
+		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['\\u{61}']})).out).toBe(
+			'a.file\nb.file\n'
+		);
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['\\u{61}'], unicode: true})).out
+		).toBe('b.file\n');
 	});
 
 	test('an invalid regex stops with an error (used to throw a SyntaxError)', async () => {
