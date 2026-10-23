@@ -676,9 +676,13 @@ function getFinalReplacement(replacement, conf: any) {
 	return replacement;
 }
 
-// The path as JSON, so a line break or a space at the end can be seen, and the reason, like ENOENT
+// The path as it is, and the reason, like `nope.txt (ENOENT: no such file or directory)`.
+// A path that starts or ends with a space, or has a control char, like a line break from echo, is shown as JSON, so it can be seen.
 function unreadable(filepath, e) {
-	return JSON.stringify(filepath) + ' (' + (e.code || e.message) + ')';
+	const shown = /^\s|\s$|[\x00-\x1f\x7f]/.test(filepath) ? JSON.stringify(filepath) : filepath;
+	// The message ends with the call and the path, like `, open 'nope.txt'`, which is already told
+	const reason = String(e.message || e.code).replace(/, \w+ '.*'$/s, '');
+	return shown + ' (' + reason + ')';
 }
 
 // Each replacement file is read once, also when the code of --js gives the same path for many matches
