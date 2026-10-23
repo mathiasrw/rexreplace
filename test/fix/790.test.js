@@ -18,4 +18,30 @@ describe('#790 the paths piped in with --glob-pipe', () => {
 		expect(result).toEqual({out: 'æ.file\nb.file\n', err: '', exit: 0});
 		expect(fs.readFileSync('æ.file', 'utf8')).toBe('bar');
 	});
+
+	test('are read as UTF-8 for names in other scripts and with emoji', async () => {
+		const names = ['日本.file', '🦖.file', 'b.file'];
+		names.forEach(name => fs.writeFileSync(name, 'foo'));
+		const result = await sh(
+			$`bun ${cli} foo bar -g -e latin1 -A < ${new Response(names.join('\n'))}`
+		);
+		expect(result.exit).toBe(0);
+		names.forEach(name => expect(fs.readFileSync(name, 'utf8')).toBe('bar'));
+	});
+
+	test('are read as UTF-8 also when the files are UTF-16', async () => {
+		fs.writeFileSync('æ.file', Buffer.from('foo', 'utf16le'));
+		const result = await sh($`bun ${cli} foo bar -g -e utf16le < ${new Response('æ.file\n')}`);
+		expect(result).toEqual({out: 'æ.file\n', err: '', exit: 0});
+		expect(fs.readFileSync('æ.file', 'utf16le')).toBe('bar');
+	});
+});
+
+describe('#790 piped content without --glob-pipe', () => {
+	test('is still read with --encoding', async () => {
+		// The byte 0xE6 is æ in latin1, and not valid UTF-8
+		const latin1 = new Uint8Array([0x66, 0xe6, 0x6f]);
+		const result = await sh($`bun ${cli} ${'æ'} x -e latin1 < ${new Response(latin1)}`);
+		expect(result).toEqual({out: 'fxo', err: '', exit: 0});
+	});
 });
