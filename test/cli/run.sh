@@ -178,6 +178,10 @@ reset
 assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
 
 
+# --literal-replacement (-l) uses the replacement as it is, so `$1` is just text
+reset
+assert		 		"rexreplace '(foo)' '€1' my.file -o --literal-replacement"    '$1bar'
+
 # --replacement-js: the code gives the replacement
 reset
 assert		 		"rexreplace 'foo' '2+2' my.file -o --replacement-js"    '4bar'

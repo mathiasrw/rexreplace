@@ -75,6 +75,13 @@ const yargs = require('yargs')
 	.describe('L', 'Literal string search (no regex used when searching)')
 	.alias('L', 'literal')
 
+	.boolean('l')
+	.describe(
+		'l',
+		'Use the replacement as it is. Without it, `$1`, `$&` and the other `$` signs in the replacement mean the groups and the match, as in javascript.'
+	)
+	.alias('l', 'literal-replacement')
+
 	.boolean('I')
 	.describe('I', 'Void case insensitive search. Applies to the pattern and to all globs.')
 	.alias('I', 'void-ignore-case')
@@ -186,12 +193,11 @@ const yargs = require('yargs')
 		'Shorthand for setting both --name-delimiter-tail and --content-delimiter-tail. Use --no-tail to not print the delimiter after the last name and the last content. The specific tail flags win over --tail.'
 	)
 
-	.boolean('l')
+	.boolean('nl')
 	.describe(
-		'l',
+		'nl',
 		'Let what is printed to stdout and stderr (the names, or the content from -o, -m or piped data) always end with a new line. No extra new line if it already ends with a new line, or if nothing was printed.'
 	)
-	.alias('l', 'nl')
 
 	.boolean('H')
 	.describe('H', 'Halt on first error')
