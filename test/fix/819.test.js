@@ -4,28 +4,49 @@ import {describe, test, expect, spyOn} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../helper.js';
 
-describe('#819 a file that is gone before the sort', () => {
+// The sort looks at each file with statSync and no options. When it looks at the given file, the file is made to fail.
+function failInSort(name, fail) {
+	const statSync = fs.statSync;
+	return spyOn(fs, 'statSync').mockImplementation((file, options) => {
+		if (name === file && !options) {
+			fail();
+		}
+		return statSync(file, options);
+	});
+}
+
+describe('#819 a file that can not be looked at in the sort', () => {
 	test.each([['modified'], ['created'], ['size']])(
-		'is sorted last with --sort %s, and the run goes on',
+		'when deleted, is sorted last with --sort %s, and told about as not found',
 		async sort => {
-			fs.writeFileSync('a.md', 'foo');
-			fs.writeFileSync('gone.md', 'foo');
-			fs.writeFileSync('z.md', 'foo');
-			// The sort looks at gone.md as if it was deleted after the glob found it
-			const statSync = fs.statSync;
-			const spy = spyOn(fs, 'statSync').mockImplementation((file, options) => {
-				if ('gone.md' === file && !options) {
-					throw Object.assign(new Error('ENOENT: no such file or directory'), {code: 'ENOENT'});
-				}
-				return statSync(file, options);
-			});
+			['a.md', 'gone.md', 'z.md'].forEach(name => fs.writeFileSync(name, 'foo'));
+			const spy = failInSort('gone.md', () => fs.unlinkSync('gone.md'));
 			try {
-				const result = await rr('foo', 'bar', {includeGlob: ['*.md'], sort});
-				expect(result.out).toBe('a.md\nz.md\ngone.md\n');
-				expect(result.exit).toBe(null);
+				expect(await rr('foo', 'bar', {includeGlob: ['*.md'], sort})).toEqual({
+					out: 'a.md\nz.md\n',
+					err: ' ❌ File not found: gone.md\n\n',
+					exit: 2,
+				});
 			} finally {
 				spy.mockRestore();
 			}
 		}
 	);
+
+	test('for another reason, is an error with that reason, and is left out', async () => {
+		['a.md', 'b.md'].forEach(name => fs.writeFileSync(name, 'foo'));
+		const spy = failInSort('b.md', () => {
+			throw Object.assign(new Error('EACCES: permission denied'), {code: 'EACCES'});
+		});
+		try {
+			expect(await rr('foo', 'bar', {includeGlob: ['*.md'], sort: 'size'})).toEqual({
+				out: 'a.md\n',
+				err: ' ❌ EACCES: permission denied\n\n',
+				exit: 2,
+			});
+			expect(fs.readFileSync('b.md', 'utf8')).toBe('foo');
+		} finally {
+			spy.mockRestore();
+		}
+	});
 });

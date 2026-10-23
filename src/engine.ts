@@ -1372,16 +1372,20 @@ function sortFiles(files, sort, conf) {
 	}
 
 	// By a number from each file, and when two are the same, by ascii.
-	// A file that can not be looked at, like one deleted since it was found, is sorted last, and is told about when it is opened.
-	const stats = new Map(
-		files.map(file => {
-			try {
-				return [file, fs.statSync(file)];
-			} catch (e) {
-				return [file, null];
+	// A file deleted since it was found is sorted last, and is told about as not found when it is opened.
+	// A file that can not be looked at for another reason is an error with that reason, and is left out.
+	const stats = new Map();
+	files = files.filter(file => {
+		try {
+			stats.set(file, fs.statSync(file));
+		} catch (e) {
+			if ('ENOENT' !== e.code) {
+				return error(e.message);
 			}
-		})
-	);
+			stats.set(file, null);
+		}
+		return true;
+	});
 	let key = {
 		modified: stat => stat.mtimeMs,
 		created: stat => stat.birthtimeMs,
