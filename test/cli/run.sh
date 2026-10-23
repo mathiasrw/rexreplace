@@ -55,11 +55,11 @@ assert_failure		"rexreplace o-ho"
 
 
 # The exit code: 0 when done, 2 when a file gave an error and the run went on, 3 when the run stopped
-# --halt (or --bail) stops at the first error, here that my.file can not be read
+# --halt (or --bail) stops at the first error, here that my.file can not be read. With -A the files come one at a time, so your.file is not started.
 reset
 chmod 000 my.file
-assert_raises		"rexreplace b x my.file your.file --halt"    3
-assert_raises		"rexreplace b x my.file your.file --bail"    3
+assert_raises		"rexreplace b x my.file your.file --halt -A"    3
+assert_raises		"rexreplace b x my.file your.file --bail -A"    3
 assert			"cat your.file"    "abc123"
 assert_raises		"rexreplace b x my.file your.file"    2
 assert			"cat your.file"    "axc123"
