@@ -849,6 +849,46 @@ function numbersCode(numbers) {
 		.join('');
 }
 
+// The stack trace of an error lists the calls that led to it, one line each, like `at fn (/path/file.js:2:15)` or `at /path/file.js:2:15`.
+// These are the locations in it. The location is at the end of the line, so a path with parentheses is read as a whole.
+function stackTraceLocations(stackTrace) {
+	return String(stackTrace)
+		.split('\n')
+		.map(
+			line =>
+				// Without a function name the location comes right after at, like `at /dir/a (copy)/anon.js:1:59`
+				line.match(/^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/) ||
+				// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`
+				line.match(/^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/)
+		)
+		.filter(Boolean)
+		.map(([, file, position]) => ({file, position}));
+}
+
+// The folder of RexReplace itself, from the first location in a stack trace made here
+const ownFolder = (() => {
+	const [own] = stackTraceLocations(new Error().stack);
+	return own ? path.dirname(own.file) + path.sep : null;
+})();
+
+// The first location in the stack trace of an error that is in a file of the user, like `helper.js:2:15`.
+// Only the locations above the code of RexReplace are from the code of the user, so the search stops there.
+// Locations in Node itself, in eval and in node_modules are skipped. Reading the stack trace can throw, so it is tried.
+function userCodeLocation(thrown) {
+	try {
+		for (const {file, position} of stackTraceLocations(thrown?.stack ?? '')) {
+			if (ownFolder && file.startsWith(ownFolder)) {
+				return '';
+			}
+			// A file is an absolute path, so the frames of code run with eval are skipped too
+			if (/^(\/|[A-Za-z]:[\\/])/.test(file) && !file.includes('node_modules')) {
+				return path.relative(process.cwd(), file) + position;
+			}
+		}
+	} catch (e) {}
+	return '';
+}
+
 // The text of what code threw. Code can throw anything, also a value that can not be made into text.
 function thrownText(thrown) {
 	let text = '';
@@ -993,7 +1033,15 @@ function dynamicReplacement(
 			return dynamicContent(...args);
 		} catch (e) {
 			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
-			return panic('The code of --js failed for ' + where + ':', thrownText(e));
+			// With --verbose it also tells where the code failed, when that is in a file of the user, like a module loaded with r()
+			const at = _config_rr.verbose ? userCodeLocation(e) : '';
+			return panic(
+				'The code of --js failed for ' +
+					where +
+					'\n    ' +
+					thrownText(e) +
+					(at ? '\n    at ' + at : '')
+			);
 		}
 	};
 
