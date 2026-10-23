@@ -78,7 +78,7 @@ const yargs = require('yargs')
 	.boolean('l')
 	.describe(
 		'l',
-		'Use the replacement as it is. Without it, `$1`, `$&` and the other `$` signs in the replacement mean the groups and the match, as in javascript.'
+		'No "smart" values in the replacement, so you can have text like `$1` and `$&` without escaping them.'
 	)
 	.alias('l', 'literal-replacement')
 
@@ -146,7 +146,10 @@ const yargs = require('yargs')
 	.default('E', 'default')
 
 	.boolean('q')
-	.describe('q', 'Only display errors (no other info)')
+	.describe(
+		'q',
+		'Hide file names and warnings. Errors are still shown, and output from flags like --output and --output-match is still shown.'
+	)
 	.alias('q', 'quiet')
 
 	.boolean('Q')
@@ -261,14 +264,14 @@ const yargs = require('yargs')
 	.boolean('S')
 	.describe(
 		'S',
-		'Execute everything during a run except changes to the file system. Names of affected files and content are still printed as in a usual run.'
+		'Execute everything during a run except changes RexReplace would normally make to the file system. Code from --js still runs, and can change data even with --simulate.'
 	)
 	.alias('S', 'simulate')
 
 	.string('sort')
 	.describe(
 		'sort',
-		'Process the files one at a time, in a sorted order. The order is chosen from 6 values: `natural` (numbers compared as numbers, and case ignored), `ascii` (alphabetic), `modified`, `created`, `size`, or `none` (the order of the input: the files given first, and then the files found by globs). Files that sort the same (like the same size) are ordered by ascii sort. Without --sort the files are processed asynchronously, so the order of the output can not be guaranteed, but the processing is started in natural order.'
+		'Process files sync in a sorted order chosen from 6 values: `natural` (numbers compared as numbers and case insensitive), `ascii` (by char code, so `B` comes before `a`), `modified`, `created`, `size`, or `none` (the order of the input: files first, then files found by globs). Files sorted the same (like the same size) are ordered by ascii sort. Without --sort files are processed asynchronously, so output order is not guaranteed, but the processing starts in natural order.'
 	)
 	// Any case, and true and yes are natural
 	.coerce('sort', value => {
