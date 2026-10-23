@@ -210,7 +210,7 @@ describe('#742 the CLI', () => {
 		});
 	});
 
-	test.each(['--status-compact', '-S'])(
+	test.each(['--status-compact', '-c'])(
 		'%s prints the status report on one line, with no line break in front',
 		flag => {
 			fs.writeFileSync('a.file', 'foo');

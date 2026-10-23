@@ -212,6 +212,11 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 		return;
 	}
 
+	// --simulate does everything but write, so the file is named as if it was changed
+	if (_config_rr.simulate) {
+		return updated(_file_rr, _config_rr);
+	}
+
 	// Release the memory while storing files
 	_data_rr = '';
 
