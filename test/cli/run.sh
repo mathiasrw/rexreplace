@@ -206,6 +206,16 @@ assert		 		"rexreplace o x my*le -o"    "fxxbar\nbarfxx"
 rm my_file
 
 
+# A path that is a file is used as it is, also with glob characters in its name (#718)
+reset
+echo foo > 'a[1].file'
+echo foo > a1.file
+assert		 		"rexreplace o x 'a[1].file'"    'a[1].file'
+assert		 		"cat a1.file"    'foo'
+assert		 		"rexreplace o y '*.file' -X 'a\\[1\\].file' -X 'my.file' -X 'your.file'"    'a1.file'
+assert		 		"cat 'a[1].file'"    'fxx'
+
+
 # -€
 reset
 assert		 		"rexreplace '.$' '$' my.file -o"    'fooba$'
