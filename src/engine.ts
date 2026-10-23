@@ -1371,8 +1371,17 @@ function sortFiles(files, sort, conf) {
 		return files.sort(ascii);
 	}
 
-	// By a number from each file, and when two are the same, by ascii
-	const stats = new Map(files.map(file => [file, fs.statSync(file)]));
+	// By a number from each file, and when two are the same, by ascii.
+	// A file that can not be looked at, like one deleted since it was found, is sorted last, and is told about when it is opened.
+	const stats = new Map(
+		files.map(file => {
+			try {
+				return [file, fs.statSync(file)];
+			} catch (e) {
+				return [file, null];
+			}
+		})
+	);
 	let key = {
 		modified: stat => stat.mtimeMs,
 		created: stat => stat.birthtimeMs,
@@ -1380,14 +1389,15 @@ function sortFiles(files, sort, conf) {
 	}[sort];
 
 	// Not all file systems keep the time a file was made. Then Node gives 0.
-	if ('created' === sort && [...stats.values()].some(stat => !stat.birthtimeMs)) {
+	if ('created' === sort && [...stats.values()].some(stat => stat && !stat.birthtimeMs)) {
 		warn(
 			'The file system does not keep the time a file was made, so --sort created uses the modified time.'
 		);
 		key = stat => stat.mtimeMs;
 	}
 
-	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
+	const value = file => (stats.get(file) ? key(stats.get(file)) : Infinity);
+	return files.sort((a, b) => value(a) - value(b) || ascii(a, b));
 }
 
 // Is the path a file (true), something to glob (false), or a path that can not be looked at (null, with an error)?
