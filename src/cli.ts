@@ -300,7 +300,7 @@ const yargs = require('yargs')
 	.boolean('r')
 	.describe(
 		'r',
-		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file. Control characters, like a line break, are removed from the new name.'
+		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file. The process will halt before renaming begins if old or new names contain ASCII control characters, end on a space or a dot, or consist only of spaces and dots.'
 	)
 	.alias('r', 'rename')
 
@@ -377,7 +377,6 @@ The statement from the last expression will become the replacement string.
 Purposefully implemented the most insecure way possible to remove _any_ incentive to consider running code from an untrusted part. 
 The full match will be available as a javascript variable named $0 while each captured group will be available as $1, $2, $3, ... and so on. 
 At some point, the $ char _will_ give you a headache when used from the command line, so use €0, €1, €2, €3... instead. 
-If the javascript source code references to the full match or a captured group the code will run once per match. Otherwise, it will run once per file. 
 
 The code has access to the following variables: 
 \`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
@@ -409,7 +408,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 \`mtime_obj\`: date object representing \`mtime\`, 
 \`ctime_obj\`: date object representing \`ctime\`.
 
-The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). A number is only made when the code names it, so a name built when the code runs, like \`eval('$' + 'n')\`, is not there.
+The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
 
 Access a named group via the name prepended with \`rr_\`. \`(?<year>...)\` gives you \`rr_year\`. A named group name can not end with \`_\`. 
 

@@ -41,8 +41,18 @@ describe('#824 --js code that fails in a module', () => {
 		const config = {pipedData: 'foo', replacementJs: true, verbose: true};
 		const result = await rr('o', 'throw new Proxy({}, {get() { throw 1; }})', config);
 		expect(result.err).toContain(
-			'The code of --js failed for the piped data: an object was thrown'
+			'The code of --js failed for the piped data\n    an object was thrown'
 		);
 		expect(result.exit).toBe(3);
+	});
+
+	test('reads a place without a function name, also when the path has parentheses (#846)', async () => {
+		// Bun has no function name for the code at the top of a module
+		fs.mkdirSync('a (copy)');
+		fs.writeFileSync('a (copy)/top.js', 'throw new Error("top");\n');
+		const config = {pipedData: 'foo', replacementJs: true, verbose: true};
+		expect((await rr('o', 'r("a (copy)/top.js")', config)).err).toMatch(
+			/\n {4}at a \(copy\)\/top\.js:1:\d+\n/
+		);
 	});
 });

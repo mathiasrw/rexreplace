@@ -53,6 +53,8 @@ function validateEncoding(encoding = 'utf8') {
 // When the run can not go on, a panic is thrown with the status so far.
 export async function engine(config: any = {engine: 'default'}) {
 	config.statusInfo = newStatus(config);
+	// A new run has had no panic yet, also when the same config is used again
+	config.stopped = false;
 	outputConfig(config);
 	try {
 		await run(config);
@@ -131,9 +133,6 @@ async function run(config) {
 	config.replacement = getFinalReplacement(config.replacement, config) || '';
 
 	config.replacementOri = config.replacement;
-
-	// $i and $c need one more search of each file, so the files are only counted when the code uses them
-	config.countFiles = config.replacementJs && /\$[ic](?![A-Za-z])/.test(config.replacementOri);
 
 	// The most specific delimiter wins. Without one there is a line break after each item, unless it already ends with one.
 	const delimiter = config.delimiter ?? (config.nullOut ? '\0' : null);
@@ -258,7 +257,12 @@ async function run(config) {
 		}
 	};
 
-	await Promise.all(Array.from({length: workers}, worker));
+	// Wait for every file in work before the first error is thrown, so no file is cut off halfway and left only as a backup
+	const results = await Promise.allSettled(Array.from({length: workers}, worker));
+	const failed = results.find(result => 'rejected' === result.status);
+	if (failed) {
+		throw failed.reason;
+	}
 }
 
 function openFile(file, config, number, total) {
@@ -383,6 +387,8 @@ function updated(file, config) {
 function renameFiles(files, config) {
 	// With --rename a / in the new name would move the file
 	const slashed = [];
+	// The new name of each file, before it is joined with its folder
+	const newNames = new Map();
 	const plan = files.map((file, index) => {
 		config.statusInfo.files.searched.push(file);
 		const text = config.renamePath ? file : path.basename(file);
@@ -391,19 +397,42 @@ function renameFiles(files, config) {
 			config.replacementJs && !config.outputMatch
 				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
 				: config.replacement;
-		const result = withoutControlChars(text.replace(config.regex, replacement), file);
+		const result = text.replace(config.regex, replacement);
 		countFile(config, text, result);
 		if (result === text) {
 			return {old: file, new: file};
 		}
 		if (config.renamePath) {
-			return {old: file, new: result};
+			const item = {old: file, new: result};
+			newNames.set(item, path.basename(result));
+			return item;
 		}
 		const item = {old: file, new: path.join(path.dirname(file), result)};
+		newNames.set(item, result);
 		if (/[\\/]/.test(result)) {
 			slashed.push(item);
 		}
 		return item;
+	});
+	// Names that can not be made. Each one is a clash of its own, and is left out of the other checks.
+	const invalid = [];
+	// A path with a control character is not welcome, also when the pattern would not change it
+	plan.forEach(item => {
+		if (/[\x00-\x1f\x7f]/.test(item.old + item.new)) {
+			invalid.push([
+				'Names can not have control characters, like a line break or a tab.' +
+					(config.replacementFile
+						? ' Use --trim-file for the line break at the end of a file.'
+						: ''),
+				item,
+			]);
+		} else if (item.new !== item.old && /^[. ]*$|[. ]$/.test(newNames.get(item))) {
+			// Like an empty name, . or .., which are folders. Windows does not allow a space or a dot at the end.
+			invalid.push([
+				'A name must have more than dots and spaces, and can not end with a space or a dot.',
+				item,
+			]);
+		}
 	});
 	const renames = plan.filter(item => item.new !== item.old);
 
@@ -415,7 +444,7 @@ function renameFiles(files, config) {
 		);
 	}
 
-	findClashes(plan, renames, slashed, config);
+	findClashes(plan, renames, slashed, invalid, config);
 
 	plan.forEach(item => {
 		if (item.new === item.old) {
@@ -432,15 +461,6 @@ function renameFiles(files, config) {
 	});
 }
 
-// No name should have the chars below space in ASCII (like a line break, a tab or a null byte), or DEL
-function withoutControlChars(name, file) {
-	const clean = name.replace(/[\x00-\x1f\x7f]/g, '');
-	if (clean !== name) {
-		chat('Removed control characters from the new name of: ' + file);
-	}
-	return clean;
-}
-
 // With --simulate and --output the old name goes to stderr and the new one to stdout, so they come in pairs in a terminal
 function nameRename(item, config) {
 	if (config.simulate || config.output) {
@@ -454,9 +474,13 @@ function nameRename(item, config) {
 // and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
 const pathKey = file => path.resolve(file).toLowerCase();
 
-function findClashes(plan, renames, slashed, config) {
+function findClashes(plan, renames, slashed, invalid, config) {
 	const byTarget = new Map();
+	const left = new Set(invalid.map(([, item]) => item));
 	renames.forEach(item => {
+		if (left.has(item)) {
+			return;
+		}
 		const target = pathKey(item.new);
 		byTarget.set(target, (byTarget.get(target) || []).concat(item));
 	});
@@ -469,9 +493,12 @@ function findClashes(plan, renames, slashed, config) {
 	const clash = (title, items) =>
 		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
 
-	const clashes = slashed.map(item =>
-		clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
-	);
+	const clashes = [
+		...invalid.map(([title, item]) => clash(title, [item])),
+		...slashed.map(item =>
+			clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
+		),
+	];
 	byTarget.forEach((items, target) => {
 		const [item] = items;
 		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)
@@ -798,15 +825,8 @@ function fileNumbers(config, number, total) {
 	return {n: number, t: total, i: config.numbers.matched + 1, c: config.numbers.changed + 1};
 }
 
-// When a file is done, it counts for $i if the pattern found something, and for $c if it was changed.
-// It takes one more search of the file, so it is only done when the code uses $i or $c.
+// When a file is done, it counts for $c if it was changed. It counts for $i when the code of --js runs for a match in it.
 function countFile(config, text, result) {
-	if (!config.countFiles) {
-		return;
-	}
-	if (-1 !== text.search(config.regex)) {
-		config.numbers.matched++;
-	}
 	if (result !== text) {
 		config.numbers.changed++;
 	}
@@ -826,52 +846,58 @@ function namedGroups(regex) {
 	return [...regex.source.matchAll(/\(\?<([A-Za-z_$][\w$]*)>/g)].map(([, name]) => name);
 }
 
-// Code that makes the numbers and their cousins, put in front of the code of --js.
-// $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
-// Only the numbers the code uses are made, as each one costs time when the code runs once per match.
-function numbersCode(numbers, code) {
-	return Object.entries(numbers)
-		.filter(([name]) => new RegExp('\\$' + name + '(?![A-Za-z])').test(code))
-		.map(([name, value]) => {
-			const cousins = [`$${name} = ${value}`, `$${name}_ = '${value} '`];
-			for (let width = 2; width <= 10; width++) {
-				const zeros = '0'.repeat(width - 1);
-				const padded = String(value).padStart(width, '0');
-				cousins.push(`$${name}${zeros} = '${padded}'`, `$${name}${zeros}_ = '${padded} '`);
-			}
-			return 'var ' + cousins.join(', ') + '; ';
-		})
-		.join('');
+// The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
+// and the ones with _ at the end have a space at the end. They are all given to the code as values, so they cost no time to compile.
+const widths = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+const numberNames = ['n', 't', 'i', 'c', 'm', 'M'].flatMap(name =>
+	[name, ...widths.map(width => name + '0'.repeat(width - 1))].flatMap(cousin => [
+		'$' + cousin,
+		'$' + cousin + '_',
+	])
+);
+
+// The values in the order of numberNames, from {n, t, i, c, m, M}
+function numberValues(numbers) {
+	return Object.values(numbers).flatMap(value => {
+		const padded = widths.map(width => String(value).padStart(width, '0'));
+		return [value, ...padded].flatMap(cousin => [cousin, cousin + ' ']);
+	});
 }
 
-// The places in a stack, one for each line, like `at fn (/path/file.js:2:15)` or `at /path/file.js:2:15`.
-// The place is at the end of the line, so a path with parentheses is read as a whole.
-function stackPlaces(stack) {
-	return String(stack)
+// The stack trace of an error lists the calls that led to it, one line each, like `at fn (/path/file.js:2:15)` or `at /path/file.js:2:15`.
+// These are the locations in it. The location is at the end of the line, so a path with parentheses is read as a whole.
+function stackTraceLocations(stackTrace) {
+	return String(stackTrace)
 		.split('\n')
-		.map(line => line.match(/^\s*at (?:.*? \()?(?:file:\/\/)?(.+?)(:\d+:\d+)\)?\s*$/))
+		.map(
+			line =>
+				// Without a function name the location comes right after at, like `at /dir/a (copy)/anon.js:1:59`
+				line.match(/^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/) ||
+				// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`
+				line.match(/^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/)
+		)
 		.filter(Boolean)
-		.map(([, file, place]) => ({file, place}));
+		.map(([, file, position]) => ({file, position}));
 }
 
-// The folder of RexReplace itself, from the first place in a stack made here
+// The folder of RexReplace itself, from the first location in a stack trace made here
 const ownFolder = (() => {
-	const [own] = stackPlaces(new Error().stack);
+	const [own] = stackTraceLocations(new Error().stack);
 	return own ? path.dirname(own.file) + path.sep : null;
 })();
 
-// The first place in the stack of an error that is in a file of the user, like `helper.js:2:15`.
-// Only the places above the code of RexReplace are from the code of the user, so the search stops there.
-// Places in Node itself, in eval and in node_modules are skipped. Reading the stack can throw, so it is tried.
-function stackPlace(thrown) {
+// The first location in the stack trace of an error that is in a file of the user, like `helper.js:2:15`.
+// Only the locations above the code of RexReplace are from the code of the user, so the search stops there.
+// Locations in Node itself, in eval and in node_modules are skipped. Reading the stack trace can throw, so it is tried.
+function userCodeLocation(thrown) {
 	try {
-		for (const {file, place} of stackPlaces(thrown?.stack ?? '')) {
+		for (const {file, position} of stackTraceLocations(thrown?.stack ?? '')) {
 			if (ownFolder && file.startsWith(ownFolder)) {
 				return '';
 			}
 			// A file is an absolute path, so the frames of code run with eval are skipped too
 			if (/^(\/|[A-Za-z]:[\\/])/.test(file) && !file.includes('node_modules')) {
-				return path.relative(process.cwd(), file) + place;
+				return path.relative(process.cwd(), file) + position;
 			}
 		}
 	} catch (e) {}
@@ -887,24 +913,31 @@ function thrownText(thrown) {
 	if (text && '[object Object]' !== text) {
 		return text;
 	}
-	if ('object' === typeof thrown && null !== thrown) {
-		// Like an Error whose message can not be read: its name is still known
-		let name = '';
-		try {
-			name = thrown.constructor?.name;
-		} catch (e) {}
-		if (name && 'Object' !== name) {
-			return 'a ' + name + ' was thrown';
-		}
-		let json = '';
-		try {
-			json = JSON.stringify(thrown);
-		} catch (e) {}
-		// The object can hold a whole file, so only the start of it is told
-		const start = json.length > 300 ? json.slice(0, 300) + '…' : json;
-		return 'an object was thrown' + (json && '{}' !== json ? ': ' + start : '');
+	if ('object' !== typeof thrown || null === thrown) {
+		return 'an empty ' + typeof thrown + ' was thrown';
 	}
-	return 'an empty ' + typeof thrown + ' was thrown';
+	// The name of the class, like an Error whose message can not be read, or a class of the user
+	let name = '';
+	try {
+		name = String(thrown.constructor?.name ?? '');
+	} catch (e) {}
+	let json = '';
+	try {
+		json = JSON.stringify(thrown) ?? '';
+	} catch (e) {}
+	const what = name && 'Object' !== name ? name : 'object';
+	return cut(
+		(/^[aeiou]/i.test(what) ? 'an ' : 'a ') +
+			what +
+			' was thrown' +
+			(json && '{}' !== json ? ': ' + json : '')
+	);
+}
+
+// The thrown value can hold a whole file, so only the start is told. It is cut by characters, so an emoji is not split.
+function cut(text, length = 300) {
+	const chars = Array.from(text);
+	return chars.length > length ? chars.slice(0, length).join('') + '…' : text;
 }
 
 function dynamicReplacement(
@@ -920,8 +953,7 @@ function dynamicReplacement(
 		_find = _config_rr.pattern,
 		// The code of the user is in a block of its own, so it can declare the same names with let and const.
 		// The value of the block is the value of its last statement, like before. The line break ends a comment at the end.
-		code_rr =
-			numbersCode(_numbers_rr, _config_rr.replacementOri) + '{' + _config_rr.replacementOri + '\n}',
+		code_rr = '{' + _config_rr.replacementOri + '\n}',
 		_cwd = process.cwd(),
 		_now = _time,
 		_ = ' ',
@@ -995,6 +1027,7 @@ function dynamicReplacement(
 			'size_',
 			'nl',
 			'_',
+			...numberNames,
 			'__code_rr',
 			'var path = require("path");' +
 			'var __require_ = require;' +
@@ -1019,10 +1052,13 @@ function dynamicReplacement(
 		} catch (e) {
 			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
 			// With --verbose it also tells where the code failed, when that is in a file of the user, like a module loaded with r()
-			const at = _config_rr.verbose ? stackPlace(e) : '';
+			const at = _config_rr.verbose ? userCodeLocation(e) : '';
 			return panic(
-				'The code of --js failed for ' + where + ':',
-				thrownText(e) + (at ? '\n    at ' + at : '')
+				'The code of --js failed for ' +
+					where +
+					'\n    ' +
+					thrownText(e) +
+					(at ? '\n    at ' + at : '')
 			);
 		}
 	};
@@ -1060,6 +1096,15 @@ function dynamicReplacement(
 		_bytes = Buffer.byteLength(_text, _config_rr.encoding);
 		_size = readableSize(_bytes);
 	}
+
+	// The file counts for $i once the code runs for a match in it
+	let found = false;
+	const foundMatch = () => {
+		if (!found) {
+			found = true;
+			_config_rr.numbers.matched++;
+		}
+	};
 
 	// Run only once if no captured groups (replacement cant change).
 	// The result is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded.
@@ -1116,9 +1161,14 @@ function dynamicReplacement(
 			_size + _,
 			_nl,
 			_,
+			// The code runs once for the file, so it is the first match
+			...numberValues({..._numbers_rr, m: 1, M: _config_rr.numbers.matches + 1}),
 			code_rr
 		);
-		return () => result;
+		return () => {
+			foundMatch();
+			return result;
+		};
 	}
 	// Capture groups used, so need to run once per match
 	let _match_rr = 0;
@@ -1148,12 +1198,10 @@ function dynamicReplacement(
 			__ = _,
 			__code_rr = code_rr;
 
+		foundMatch();
 		_match_rr++;
 		_config_rr.numbers.matches++;
-		var capturedGroups = numbersCode(
-			{m: _match_rr, M: _config_rr.numbers.matches},
-			_config_rr.replacementOri
-		);
+		var capturedGroups = '';
 		// The match and the groups are followed by the offset and the full text, and by the named groups if the pattern has any
 		const named = arguments[arguments.length - 1];
 		const hasNamed = 'object' === typeof named && null !== named;
@@ -1220,6 +1268,7 @@ function dynamicReplacement(
 			__size + __,
 			__nl,
 			__,
+			...numberValues({..._numbers_rr, m: _match_rr, M: _config_rr.numbers.matches}),
 			capturedGroups + __code_rr
 		);
 	};
@@ -1250,7 +1299,7 @@ function getFilePaths(conf) {
 
 	// --exclude-glob is always globs, also for the name of a file. They are used together, and the files they find are taken away.
 	if (excludeGlob.length) {
-		const excluded = new Set(glob(excludeGlob, globOptions).map(file => path.resolve(file)));
+		const excluded = new Set(glob(excludeGlob, globOptions, true).map(file => path.resolve(file)));
 		files = files.filter(file => !excluded.has(path.resolve(file)));
 	}
 
@@ -1315,21 +1364,34 @@ function sortFiles(files, sort, conf) {
 	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
 }
 
-// A path that can not be looked at (like a name that is too long) is not a file, so it is globbed
+// Is the path a file (true), something to glob (false), or a path that can not be looked at (null, with an error)?
+// A path that is not there, or has a file where a folder should be, is globbed like before. So is a glob,
+// like a long brace glob that is too long as a name. A plain path that can not be looked at, like a name
+// that is too long or a symlink loop, is an error, so it is not hidden as 0 files found.
 function isFile(file) {
 	try {
 		return Boolean(fs.statSync(file, {throwIfNoEntry: false})?.isFile());
 	} catch (e) {
-		return false;
+		if ('ENOENT' === e.code || 'ENOTDIR' === e.code || globs.isDynamicPattern(file)) {
+			return false;
+		}
+		error(e.message);
+		return null;
 	}
 }
 
-// When the file system gives an error, the files can not be known, so the run can not go on
-function glob(patterns, globOptions) {
+// A glob that finds files and meets a folder that can not be read, like one with no access, is an error,
+// and the run goes on with the files that can be found. A glob of --exclude-glob that fails is a panic,
+// as the files it should take away can not be known, and they must not be changed.
+function glob(patterns, globOptions, exclude = false) {
 	try {
 		return globs.sync(patterns, globOptions);
 	} catch (e) {
-		return panic('The files can not be found:', e.message);
+		if (exclude) {
+			return panic('The files to exclude can not be found:', e.message);
+		}
+		error('Not all paths could be accessed:', e.message);
+		return globs.sync(patterns, {...globOptions, suppressErrors: true});
 	}
 }
 
@@ -1339,9 +1401,10 @@ function findFiles(paths, globOptions, sort) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
-		if (isFile(file)) {
+		const kind = isFile(file);
+		if (kind) {
 			files.push(file);
-		} else {
+		} else if (false === kind) {
 			patterns.push(file);
 		}
 	});
