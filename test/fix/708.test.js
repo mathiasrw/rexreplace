@@ -3,7 +3,7 @@
 import {describe, test, expect, spyOn} from 'bun:test';
 import fs from 'fs';
 import os from 'os';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 const workers = Math.max(16, os.availableParallelism() * 2);
 

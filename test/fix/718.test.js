@@ -3,7 +3,7 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import path from 'path';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 const content = name => fs.readFileSync(name, 'utf8');
 

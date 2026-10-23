@@ -3,7 +3,7 @@
 // Finding no files was an error with the exit code 1, also when there was just nothing to do.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, rrStatus} from '../../helper.js';
+import {rr, rrStatus} from '../helper.js';
 
 describe('#720 every error starts with ❌', () => {
 	test('an error from a file, and the other files are still changed', async () => {
