@@ -130,14 +130,18 @@ const printError = function (text, stop) {
 // The detail, like the file, goes on a line of its own under the message
 const errorText = (msg, data) => msg + (data ? '\n    ' + data : '');
 
-// The run can not go on, so it stops here
+// The run can not go on, so it stops here.
+// The files in work are finished, and they can fail too. Only the first panic is told, the rest are only in the status.
 export const panic = function (msg = '', data = '', displayHelp = false) {
-	if (displayHelp && !config.quietTotal) {
-		config.showHelp();
-	}
 	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
-	printError(text, true);
+	if (!config.stopped) {
+		config.stopped = true;
+		if (displayHelp && !config.quietTotal) {
+			config.showHelp();
+		}
+		printError(text, true);
+	}
 	throw new Panic(text);
 };
 
@@ -152,8 +156,12 @@ export const checkFailed = function (text) {
 export const error = function (msg, data = '') {
 	const text = errorText(msg, data);
 	config.statusInfo?.errors.push(text);
-	printError(text, config.halt);
+	// After a panic only the status is told about the files that are finished
+	if (!config.stopped) {
+		printError(text, config.halt);
+	}
 	if (config.halt) {
+		config.stopped = true;
 		throw new Panic(text);
 	}
 	return false;

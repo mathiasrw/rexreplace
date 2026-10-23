@@ -7,6 +7,11 @@ describe('#816 named groups with letters that are not ASCII', () => {
 	test.each([
 		['año', '(?<año>\\d)', '"[" + rr_año + "]"', 'a[1]b[2]'],
 		['日', '(?<日>\\d)', 'rr_日 * 2', 'a2b4'],
+		['año with a space at the end', '(?<año>\\d)', 'rr_año_ + "|"', 'a1 |b2 |'],
+		['𝒜, outside the BMP', '(?<𝒜>\\d)', 'rr_𝒜 * 2', 'a2b4'],
+		['$é, with $', '(?<$é>\\d)', 'rr_$é * 2', 'a2b4'],
+		['Æble, in uppercase', '(?<Æble>\\d)', 'rr_Æble * 2', 'a2b4'],
+		['x٣, with a digit that is not ASCII', '(?<x٣>\\d)', 'rr_x٣ * 2', 'a2b4'],
 	])('can be used, like %s', async (name, pattern, code, out) => {
 		expect((await rr(pattern, code, {pipedData: 'a1b2', replacementJs: true})).out).toBe(out);
 	});
@@ -21,6 +26,12 @@ describe('#816 named groups with letters that are not ASCII', () => {
 		const config = {replacementJs: true};
 		expect((await rr('\\(?<a_>b', '"z"', {...config, pipedData: 'x(?<a_>b'})).out).toBe('x(?z');
 		expect((await rr('[(?<a_>]', '"z"', {...config, pipedData: 'ab'})).out).toBe('zb');
+	});
+
+	test('are only seen as the whole name, so rr_rr_year is not the group year', async () => {
+		const result = await rr('(?<year>\\d)', 'rr_rr_year', {pipedData: '1', replacementJs: true});
+		expect(result.err).toContain('ReferenceError: rr_rr_year is not defined');
+		expect(result.exit).toBe(3);
 	});
 
 	test('can be used with a space at the end on its own, like rr_year_', async () => {

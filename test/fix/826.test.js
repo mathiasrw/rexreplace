@@ -1,24 +1,88 @@
 // https://github.com/mathiasrw/rexreplace/issues/826
-// --rename put control characters into the new name, like the line break at the end of a replacement file.
+// https://github.com/mathiasrw/rexreplace/issues/848
+// https://github.com/mathiasrw/rexreplace/issues/843
+// --rename could make a name with a line break, like from the end of a replacement file. A path with a control character
+// is now a clash, and so is a new name of only dots and spaces, or one that ends with a space or a dot.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr} from '../helper.js';
 
-describe('#826 control characters in a new name', () => {
-	test('are removed, like the line break at the end of a replacement file', async () => {
+const controls = ' ❌ Names can not have control characters, like a line break or a tab.';
+const dots =
+	' ❌ A name must have more than dots and spaces, and can not end with a space or a dot.';
+
+describe('#826 a new name with a control character', () => {
+	test('is a clash, also from the line break at the end of a replacement file', async () => {
 		fs.writeFileSync('a.md', 'foo');
 		fs.writeFileSync('name.txt', 'b\n');
-		const config = {includeGlob: ['a.md'], rename: true, replacementFile: true, verbose: true};
-		const result = await rr('^a', 'name.txt', config);
-		expect(result.out).toBe('b.md\n');
-		expect(result.err).toContain('Removed control characters from the new name of: a.md');
-		expect(fs.readdirSync('.').sort()).toEqual(['b.md', 'name.txt']);
+		const result = await rr('^a', 'name.txt', {
+			includeGlob: ['a.md'],
+			rename: true,
+			replacementFile: true,
+		});
+		expect(result.err).toStartWith(
+			controls + ' Use --trim-file for the line break at the end of a file.'
+		);
+		expect(result.exit).toBe(3);
+		expect(fs.readdirSync('.').sort()).toEqual(['a.md', 'name.txt']);
 	});
 
-	test('are removed with --rename-path too, also a tab, a null byte and DEL', async () => {
+	test('is fine with --trim-file', async () => {
 		fs.writeFileSync('a.md', 'foo');
-		const config = {includeGlob: ['a.md'], renamePath: true};
-		expect((await rr('^a', 'b\t\0\x7f\x01c', config)).out).toBe('bc.md\n');
-		expect(fs.readdirSync('.')).toEqual(['bc.md']);
+		fs.writeFileSync('name.txt', 'b\n');
+		const config = {includeGlob: ['a.md'], rename: true, replacementFile: true, trimFile: true};
+		expect((await rr('^a', 'name.txt', config)).out).toBe('b.md\n');
+	});
+
+	test('is a clash with --rename-path and --js too, and nothing is renamed', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.writeFileSync('b.md', 'foo');
+		const config = {includeGlob: ['*.md'], renamePath: true, replacementJs: true};
+		expect((await rr('^a', '"x\\t"', config)).err).toStartWith(controls);
+		expect(fs.readdirSync('.').sort()).toEqual(['a.md', 'b.md']);
+	});
+
+	test('is a clash for DEL too', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		const config = {includeGlob: ['a.md'], rename: true, replacementJs: true};
+		expect((await rr('^a', '"x\\x7f"', config)).err).toStartWith(controls);
+		expect(fs.readdirSync('.')).toEqual(['a.md']);
+	});
+});
+
+describe('#848 a path with a control character in the run', () => {
+	test('is a clash, also when the pattern would not change it', async () => {
+		fs.writeFileSync('a\tb.md', 'foo');
+		fs.writeFileSync('c.md', 'foo');
+		const result = await rr('zzz', 'yyy', {includeGlob: ['*.md'], rename: true});
+		expect(result.err).toStartWith(controls + '\n    From: a\tb.md\n');
+		expect(result.exit).toBe(3);
+		expect(fs.readdirSync('.').sort()).toEqual(['a\tb.md', 'c.md']);
+	});
+});
+
+describe('#843 a new name of only dots and spaces, or with a space or a dot at the end', () => {
+	test.each([
+		['empty, in a folder', '^x\\.md$', ''],
+		['a dot', '^x\\.md$', '.'],
+		['two dots', '^x\\.md$', '..'],
+		['spaces', '^x\\.md$', '  '],
+		['ending with a space', '^x\\.md$', 'x '],
+		['ending with a dot', '^x\\.md$', 'x.'],
+	])('is a clash when it is %s', async (name, pattern, replacement) => {
+		fs.mkdirSync('d');
+		fs.writeFileSync('d/x.md', 'foo');
+		const result = await rr(pattern, replacement, {includeGlob: ['d/x.md'], rename: true});
+		expect(result.err).toStartWith(dots);
+		expect(result.err.match(/❌/g)).toHaveLength(2);
+		expect(result.exit).toBe(3);
+		expect(fs.readdirSync('d')).toEqual(['x.md']);
+	});
+
+	test('is fine when it starts with a dot, like .env', async () => {
+		fs.writeFileSync('x.md', 'foo');
+		expect((await rr('^x\\.md$', '.env', {includeGlob: ['x.md'], rename: true})).out).toBe(
+			'.env\n'
+		);
 	});
 });

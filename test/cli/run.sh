@@ -55,11 +55,11 @@ assert_failure		"rexreplace o-ho"
 
 
 # The exit code: 0 when done, 2 when a file gave an error and the run went on, 3 when the run stopped
-# --halt (or --bail) stops at the first error, here that my.file can not be read
+# --halt (or --bail) stops at the first error, here that my.file can not be read. With -A the files come one at a time, so your.file is not started.
 reset
 chmod 000 my.file
-assert_raises		"rexreplace b x my.file your.file --halt"    3
-assert_raises		"rexreplace b x my.file your.file --bail"    3
+assert_raises		"rexreplace b x my.file your.file --halt -A"    3
+assert_raises		"rexreplace b x my.file your.file --bail -A"    3
 assert			"cat your.file"    "abc123"
 assert_raises		"rexreplace b x my.file your.file"    2
 assert			"cat your.file"    "axc123"
@@ -274,6 +274,12 @@ assert_raises		"rexreplace 'oo' 'x' nope.file --expect-files"    1
 # --sort decides the order of the files, and --sort-reverse turns it around
 reset
 assert		 		"rexreplace 'b' 'x' my.file your.file --sort-reverse --name-delimiter ','"    'your.file,my.file,'
+
+# The natural order is the same on Node and Bun, and in every locale. In Danish aa sorts after z.
+reset
+echo 'foo' > aab.file
+echo 'foo' > b.file
+assert		 		"LC_ALL=da_DK.UTF-8 rexreplace 'foo' 'x' b.file aab.file --sort natural --simulate --name-delimiter ','"    'aab.file,b.file,'
 
 
 # --full-path prints the full path of each name
