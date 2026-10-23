@@ -294,7 +294,7 @@ Files identified for potential processing are identified by:
 - Supports backreference to matching groups in the replacement
 - Data can be piped in, both as the text to search and as the replacement
 - The names of the changed files are printed to stdout, so they can be piped on (to stderr with `--output` and `--output-match`)
-- Pick the delimiter between names and between the content of files, like `--null-out` for `xargs -0`
+- Pick the delimiter between names and between the content of files
 - See the [release note](https://github.com/mathiasrw/rexreplace/releases) for a log of changes. Descriptions are given in latest patch version.
 
 ### Quirks
@@ -316,7 +316,7 @@ Files identified for potential processing are identified by:
 ### Limitations
 
 - RexReplace reads each file fully into memory, so working on your 8Gb log files will probably not be ideal.
-- Null bytes are kept as they are. Files are read as utf8 by default, so in binary data the bytes that are not valid UTF-8 become `�` when the file is changed. Use `--encoding latin1` to keep every byte.
+- Files are read as utf8 by default. Null bytes are kept as they are but for binary data in general not all bytes are valid and becomes `�` if changed. Use `--encoding latin1` to run binary safe: every byte is kept, but note that because that means one byte per char search and replace only works with ASCII chars (no utf8 or emojis).
 - For versions of Node prior to 6, please use version 2.2.x. For versions of Node prior to 0.12, please use [the legacy version of RexReplace called rreplace](https://www.npmjs.com/package/rreplace)
 
 ### Priorities
