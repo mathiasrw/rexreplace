@@ -46,12 +46,18 @@ describe('--replacement-js', () => {
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('xxxbar');
 	});
 
-	test('throws the errors of the code', async () => {
+	test('stops the run with the error of the code (#808)', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const config = {includeGlob: ['my.file'], replacementJs: true};
-		await expect(rr('foo', 'this is not javascript', config)).rejects.toThrow(SyntaxError);
-		await expect(rr('foo', 'nope.nope', config)).rejects.toThrow(ReferenceError);
-		await expect(rr('foo', 'throw new Error("my own")', config)).rejects.toThrow('my own');
+		for (const [code, message] of [
+			['this is not javascript', 'SyntaxError'],
+			['nope.nope', 'ReferenceError'],
+			['throw new Error("my own")', 'Error: my own'],
+		]) {
+			const result = await rr('foo', code, config);
+			expect(result.err).toContain(message);
+			expect(result.exit).toBe(3);
+		}
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
@@ -302,9 +308,8 @@ describe('--replacement-js', () => {
 	describe('combined', () => {
 		test('with --void-euro there is only the $ to get to the groups', async () => {
 			expect(await js('(o)', '$1.toUpperCase()', 'fo', {voidEuro: true})).toBe('fO');
-			await expect(js('(o)', '€1.toUpperCase()', 'fo', {voidEuro: true})).rejects.toThrow(
-				SyntaxError
-			);
+			const config = {pipedData: 'fo', replacementJs: true, voidEuro: true};
+			expect((await rr('(o)', '€1.toUpperCase()', config)).err).toContain('SyntaxError');
 		});
 
 		test('with --void-section a § can be used in the code', async () => {

@@ -261,7 +261,7 @@ const yargs = require('yargs')
 	.boolean('S')
 	.describe(
 		'S',
-		'Do everything but write the files. The names of the files that would be changed are printed as usual, and no backup is made.'
+		'Execute everything during a run except changes to the file system. Names of affected files and content are still printed as in a usual run.'
 	)
 	.alias('S', 'simulate')
 
