@@ -233,11 +233,12 @@ assert		 		"rexreplace 'oo' 'x' my.file your.file --simulate"    'my.file'
 assert		 		"cat my.file"    'foobar'
 
 
-# --rename (-r) does the search and replace on the path, and renames the file to the result
+# --rename (-r) does the search and replace on the name, and renames the file to the result
 reset
 assert		 		"rexreplace '^my' 'our' my.file --rename"    'our.file'
 assert		 		"cat our.file"    'foobar'
-assert		 		"rexreplace '^' 'sub/' our.file -r"    'sub/our.file'
+# --rename-path does it on the whole path, so the file can be moved
+assert		 		"rexreplace '^' 'sub/' our.file --rename-path"    'sub/our.file'
 assert		 		"cat sub/our.file"    'foobar'
 rm -rf sub
 
