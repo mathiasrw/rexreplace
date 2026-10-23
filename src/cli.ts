@@ -82,6 +82,18 @@ const yargs = require('yargs')
 	)
 	.alias('l', 'literal-replacement')
 
+	.boolean('replacement-file')
+	.describe(
+		'replacement-file',
+		'The replacement is the path to a file, and the content of the file is used as the replacement. With --js the code gives the path.'
+	)
+
+	.boolean('trim-file')
+	.describe('trim-file', 'Trim the content of the replacement file.')
+
+	.boolean('trim')
+	.describe('trim', 'Shorthand for --trim-pipe and --trim-file.')
+
 	.boolean('I')
 	.describe('I', 'Void case insensitive search. Applies to the pattern and to all globs.')
 	.alias('I', 'void-ignore-case')
@@ -546,6 +558,10 @@ Object.keys(yargs.argv).forEach(key => {
 		config[key] = yargs.argv[key];
 	}
 });
+
+if (config.trim) {
+	config.trimPipe = config.trimFile = true;
+}
 
 if (config.jsPipe) {
 	config.replacementJs = config.pipe = true;
