@@ -849,6 +849,25 @@ function numbersCode(numbers) {
 		.join('');
 }
 
+// The text of what code threw. Code can throw anything, also a value that can not be made into text.
+function thrownText(thrown) {
+	let text = '';
+	try {
+		text = String(thrown);
+	} catch (e) {}
+	if (text && '[object Object]' !== text) {
+		return text;
+	}
+	if ('object' === typeof thrown && null !== thrown) {
+		let json = '';
+		try {
+			json = JSON.stringify(thrown);
+		} catch (e) {}
+		return 'an object was thrown' + (json && '{}' !== json ? ': ' + json : '');
+	}
+	return 'an empty ' + typeof thrown + ' was thrown';
+}
+
 function dynamicReplacement(
 	_file_rr,
 	_config_rr,
@@ -957,7 +976,7 @@ function dynamicReplacement(
 			return dynamicContent(...args);
 		} catch (e) {
 			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
-			return panic('The code of --js failed for ' + where + ':', String(e));
+			return panic('The code of --js failed for ' + where + ':', thrownText(e));
 		}
 	};
 
