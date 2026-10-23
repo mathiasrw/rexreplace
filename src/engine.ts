@@ -253,7 +253,7 @@ function doReplacement(_file_rr: string, _config_rr: any, _data_rr: string) {
 	const result = _data_rr.replace(
 		_config_rr.regex,
 		_config_rr.replacementJs && !_config_rr.outputMatch
-			? dynamicReplacement(_file_rr, _config_rr, _data_rr)
+			? codeReplacement(_file_rr, _config_rr, _data_rr)
 			: _config_rr.replacement
 	);
 
@@ -342,7 +342,7 @@ function renameFiles(files, config) {
 		chat('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
 		const replacement =
 			config.replacementJs && !config.outputMatch
-				? dynamicReplacement(file, config, text)
+				? codeReplacement(file, config, text)
 				: config.replacement;
 		const result = text.replace(config.regex, replacement);
 		if (result === text) {
@@ -565,10 +565,6 @@ function getFinalPattern(pattern, conf: any) {
 }
 
 function getFinalReplacement(replacement, conf: any) {
-	/*if(config.replacementFile){
-		return oneLinerFromFile(fs.readFileSync(replacement,'utf8'));
-	}*/
-
 	if (conf.replacementPipe) {
 		conf.pipedDataUsed = true;
 		if (null === conf.pipedData) {
@@ -578,6 +574,11 @@ function getFinalReplacement(replacement, conf: any) {
 	}
 
 	if (conf.outputMatch) {
+		if (conf.replacementFile) {
+			warn(
+				'The replacement file is not read with --output-match, as only the matches are printed.'
+			);
+		}
 		if (parseInt(process.versions.node) < 6) {
 			return panic('outputMatch is only supported in node 6+');
 		}
@@ -605,7 +606,50 @@ function getFinalReplacement(replacement, conf: any) {
 		return panic('Captured groups for javascript replacement is only supported in node 6+');
 	}
 
+	// --replacement-file: the replacement is the path to the file with the replacement.
+	// With --js the code gives the path, so the file is read when the code has run.
+	if (conf.replacementFile && !conf.replacementJs) {
+		try {
+			return readReplacementFile(replacement, conf);
+		} catch (e) {
+			return panic('The replacement file can not be read:', replacement);
+		}
+	}
+
 	return replacement;
+}
+
+// Each replacement file is read once, also when the code of --js gives the same path for many matches
+function readReplacementFile(filepath, conf) {
+	conf.replacementFiles ??= new Map();
+	if (!conf.replacementFiles.has(filepath)) {
+		chat('Read the replacement file: ' + filepath);
+		const content = fs.readFileSync(filepath, conf.encoding);
+		conf.replacementFiles.set(filepath, conf.trimFile ? content.trim() : content);
+	}
+	return conf.replacementFiles.get(filepath);
+}
+
+// The code of --js. With --replacement-file its value is the path to the file with the replacement.
+function codeReplacement(file, config, text) {
+	const code = dynamicReplacement(file, config, text);
+	if (!config.replacementFile) {
+		return code;
+	}
+	// A path that can not be read is an error once, and its matches are left as they are
+	const failed = new Set();
+	return (...args) => {
+		const filepath = String(code(...args));
+		if (!failed.has(filepath)) {
+			try {
+				return readReplacementFile(filepath, config);
+			} catch (e) {
+				failed.add(filepath);
+				error('The replacement file can not be read:', filepath);
+			}
+		}
+		return args[0];
+	};
 }
 
 /*function oneLinerFromFile(str){

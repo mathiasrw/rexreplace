@@ -178,6 +178,11 @@ reset
 assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
 
 
+# --replacement-file: the replacement is the path to a file, and its content goes in
+reset
+echo 'baz' > rep.file
+assert		 		"rexreplace 'foo' rep.file my.file -o --replacement-file --trim-file"    'bazbar'
+
 # --literal-replacement (-l) uses the replacement as it is, so `$1` is just text
 reset
 assert		 		"rexreplace '(foo)' '€1' my.file -o --literal-replacement"    '$1bar'
