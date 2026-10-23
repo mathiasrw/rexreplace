@@ -451,6 +451,17 @@ assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 
 assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
 assert		 		"cat my.file"    'foobar'
 
+# UTF-8 goes in and out as it is (#735)
+reset
+assert		 		"printf 'a🦖b' | rexreplace '🦖' '👩‍💻'"    'a👩‍💻b'
+# Without --unicode . is half an emoji, so 'x.y' does not match an emoji between x and y
+assert		 		"printf 'x🦖y' | rexreplace 'x.y' '_'"    'x🦖y'
+assert		 		"printf 'x🦖y' | rexreplace 'x.y' '_' --unicode"    '_'
+echo foo > '🦖 中.file'
+assert		 		"rexreplace 'o' 'x' '🦖 中.file'"    '🦖 中.file'
+assert		 		"cat '🦖 中.file'"    'fxx'
+
+
 # --glob-pipe: each line of the piped data is a path or a glob to work on (#711)
 reset
 assert		 		"printf 'my.file\nyour.file\n' | rexreplace 'b' 'x' --glob-pipe -A"    'my.file\nyour.file'
