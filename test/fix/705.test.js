@@ -94,11 +94,13 @@ describe('#705 the engine returns a promise that resolves when all files are don
 		});
 	});
 
-	describe('the promise is rejected when the work can not be done', () => {
+	describe('the run stops when the work can not be done', () => {
 		test.each(flows)('like with code that fails with %s', async (name, flags) => {
 			fs.writeFileSync('my.file', 'foo');
 			const config = {includeGlob: ['my.file'], replacementJs: true, ...flags};
-			await expect(rr('o', 'nope.nope', config)).rejects.toThrow(ReferenceError);
+			const result = await rr('o', 'nope.nope', config);
+			expect(result.err).toContain('ReferenceError');
+			expect(result.exit).toBe(3);
 			expect(fs.readdirSync('.')).toEqual(['my.file']);
 		});
 	});

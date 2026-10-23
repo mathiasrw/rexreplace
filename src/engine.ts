@@ -905,6 +905,16 @@ function dynamicReplacement(
 			'return eval(__code_rr);'
 		);
 
+	// When the code fails, only the message is told, and not the stack trace with all the code put in front of the code of the user
+	const runCode = (...args) => {
+		try {
+			return dynamicContent(...args);
+		} catch (e) {
+			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
+			return panic('The code of --js failed for ' + where + ':', String(e));
+		}
+	};
+
 	const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
 	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
 
@@ -947,7 +957,7 @@ function dynamicReplacement(
 		!re.matchNumbers.test(_config_rr.replacement) &&
 		!usesNamedGroups(_config_rr)
 	) {
-		const result = dynamicContent(
+		const result = runCode(
 			require,
 			fs,
 			globs,
@@ -1042,7 +1052,7 @@ function dynamicReplacement(
 			}
 		}
 
-		return dynamicContent(
+		return runCode(
 			require,
 			fs,
 			globs,

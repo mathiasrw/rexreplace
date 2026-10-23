@@ -54,13 +54,8 @@ describe('--void-euro', () => {
 			expect(
 				(await rr('(o)', '€1.toUpperCase()', {pipedData: 'fo', replacementJs: true})).out
 			).toBe('fO');
-			await expect(
-				rr('(o)', '€1.toUpperCase()', {
-					pipedData: 'fo',
-					replacementJs: true,
-					voidEuro: true,
-				})
-			).rejects.toThrow(SyntaxError);
+			const voided = {pipedData: 'fo', replacementJs: true, voidEuro: true};
+			expect((await rr('(o)', '€1.toUpperCase()', voided)).err).toContain('SyntaxError');
 		});
 
 		test('with --replacement-pipe the piped replacement is never converted', async () => {
