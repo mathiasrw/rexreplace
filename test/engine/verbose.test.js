@@ -35,13 +35,6 @@ describe('--verbose', () => {
 		);
 	});
 
-	test('is not needed to be told that piped data is not used (a warning since #719)', async () => {
-		fs.writeFileSync('my.file', 'foobar');
-		const config = {includeGlob: ['my.file'], pipedData: 'boo'};
-		expect((await rr('o', 'x', {...config, verbose: true})).err).toContain('Data is piped in');
-		expect((await rr('x', 'o', config)).err).toContain('Data is piped in');
-	});
-
 	test('never writes to stdout', async () => {
 		expect((await rr('o', 'x', {pipedData: 'foobar', verbose: true})).out).toBe('fxxbar');
 	});
@@ -80,7 +73,7 @@ describe('--verbose', () => {
 				verbose: true,
 				replacementJs: true,
 			};
-			expect((await rr('foo', 'pipe', config)).err).not.toContain('Data is piped in');
+			await rr('foo', 'pipe', config);
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('boobar');
 		});
 	});

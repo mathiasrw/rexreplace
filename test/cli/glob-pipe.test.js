@@ -15,7 +15,7 @@ describe('--glob-pipe', () => {
 		});
 	});
 
-	test.each([['--replacement-pipe'], ['--pipe'], ['--js-pipe']])(
+	test.each([['--replacement-pipe'], ['--js-pipe']])(
 		'can not be used with %s, as the piped data can only be one thing',
 		async flag => {
 			fs.writeFileSync('my.file', 'foobar\n');

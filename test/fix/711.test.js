@@ -79,7 +79,7 @@ describe('#711 --glob-pipe', () => {
 
 	test.each([
 		['--replacement-pipe', {replacementPipe: true}],
-		['--pipe', {pipe: true}],
+		['--js-pipe', {replacementJs: true, pipe: true}],
 	])('can not be used with %s, as the piped data can only be one thing', async (name, flags) => {
 		fs.writeFileSync('a.file', 'foo');
 		const result = await rr('o', 'x', {pipedData: 'a.file', globPipe: true, ...flags});

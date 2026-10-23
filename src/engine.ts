@@ -108,7 +108,7 @@ async function run(config) {
 	if (config.globPipe) {
 		if (config.replacementPipe || config.pipe) {
 			panic(
-				'--glob-pipe can not be used with --replacement-pipe or --pipe, as the piped data can only be one thing'
+				'--glob-pipe can not be used with --replacement-pipe or --js-pipe, as the piped data can only be one thing'
 			);
 		}
 		config.pipedDataUsed = true;
@@ -521,18 +521,8 @@ function pipeType(config, piped) {
 }
 
 function handlePipedData(config) {
+	// With files the piped data is only read when a flag asks for it, and then the flag uses it
 	if (config.includeGlob.length) {
-		// Empty piped data (or only a line break) is not worth a warning
-		if (
-			!config.replacementJs &&
-			!config.pipedDataUsed &&
-			config.pipedData &&
-			'\n' !== config.pipedData &&
-			'\r\n' !== config.pipedData
-		) {
-			warn('Data is piped in, but no flag tells what to do with it. It is not used.');
-		}
-
 		return false;
 	}
 
