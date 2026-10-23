@@ -1,6 +1,7 @@
 // https://github.com/mathiasrw/rexreplace/issues/735
 // Emoji and other UTF-8 in every way data comes in and goes out.
 import {describe, test, expect} from 'bun:test';
+import fs from 'fs';
 import path from 'path';
 import {rr} from '../helper.js';
 
@@ -48,21 +49,19 @@ describe('#735 UTF-8 in the replacement', () => {
 
 describe('#735 UTF-8 in the content of a file', () => {
 	test('is written as UTF-8 when changed in place', async () => {
-		await Bun.write('my.file', text);
+		fs.writeFileSync('my.file', text);
 		await rr('🦖', '🦕', {includeGlob: ['my.file']});
-		expect(Buffer.from(await Bun.file('my.file').arrayBuffer())).toEqual(
-			Buffer.from('æ 中 🦕 👩‍💻\r\n')
-		);
+		expect(fs.readFileSync('my.file')).toEqual(Buffer.from('æ 中 🦕 👩‍💻\r\n'));
 	});
 
 	test('is printed with --output', async () => {
-		await Bun.write('my.file', text);
+		fs.writeFileSync('my.file', text);
 		const out = (await rr('🦖', '🦕', {includeGlob: ['my.file'], output: true})).out;
 		expect(asUtf8(out)).toBe('æ 中 🦕 👩‍💻\r\n');
 	});
 
 	test('is printed with --output-match', async () => {
-		await Bun.write('my.file', text);
+		fs.writeFileSync('my.file', text);
 		const config = {includeGlob: ['my.file'], outputMatch: true};
 		expect(asUtf8((await rr('🦖|👩‍💻', '_', config)).out)).toBe('🦖\n👩‍💻\n');
 	});
@@ -74,9 +73,9 @@ describe('#735 UTF-8 in piped data', () => {
 	});
 
 	test('can be the replacement with --replacement-pipe', async () => {
-		await Bun.write('my.file', 'aXb');
+		fs.writeFileSync('my.file', 'aXb');
 		await rr('X', '_', {includeGlob: ['my.file'], replacementPipe: true, pipedData: '🦖'});
-		expect(await Bun.file('my.file').text()).toBe('a🦖b');
+		expect(fs.readFileSync('my.file', 'utf8')).toBe('a🦖b');
 	});
 });
 
@@ -84,19 +83,19 @@ describe('#735 UTF-8 in file names', () => {
 	const name = '🦖 中.file';
 
 	test('a name is printed as it was given', async () => {
-		await Bun.write(name, 'foo');
+		fs.writeFileSync(name, 'foo');
 		expect(asUtf8((await rr('o', 'x', {includeGlob: [name]})).out)).toBe(name + '\n');
-		expect(await Bun.file(name).text()).toBe('fxx');
+		expect(fs.readFileSync(name, 'utf8')).toBe('fxx');
 	});
 
 	test('a glob finds a name with emoji', async () => {
-		await Bun.write(name, 'foo');
-		await Bun.write('other.file', 'foo');
+		fs.writeFileSync(name, 'foo');
+		fs.writeFileSync('other.file', 'foo');
 		expect(asUtf8((await rr('o', 'x', {includeGlob: ['*🦖*']})).out)).toBe(name + '\n');
 	});
 
 	test('a name is printed with its full path with --full-path', async () => {
-		await Bun.write(name, 'foo');
+		fs.writeFileSync(name, 'foo');
 		const out = (await rr('o', 'x', {includeGlob: [name], fullPath: true})).out;
 		expect(asUtf8(out)).toBe(path.resolve(name) + '\n');
 	});
@@ -104,26 +103,26 @@ describe('#735 UTF-8 in file names', () => {
 
 describe('#735 UTF-8 in the delimiters', () => {
 	test('--name-delimiter, also with no tail', async () => {
-		await Bun.write('a.file', 'foo');
-		await Bun.write('b.file', 'foo');
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
 		const config = {includeGlob: ['*.file'], nameDelimiter: '🦖'};
 		expect(asUtf8((await rr('o', 'x', config)).out)).toBe('a.file🦖b.file🦖');
-		await Bun.write('a.file', 'foo');
-		await Bun.write('b.file', 'foo');
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
 		const noTail = {...config, nameDelimiterTail: false};
 		expect(asUtf8((await rr('o', 'x', noTail)).out)).toBe('a.file🦖b.file');
 	});
 
 	test('--content-delimiter with a combined emoji', async () => {
-		await Bun.write('a.file', 'foo');
-		await Bun.write('b.file', 'foo');
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
 		const config = {includeGlob: ['*.file'], output: true, contentDelimiter: '👩‍💻'};
 		expect(asUtf8((await rr('o', 'x', config)).out)).toBe('fxx👩‍💻fxx👩‍💻');
 	});
 
 	test('--delimiter sets both', async () => {
-		await Bun.write('a.file', 'foo');
-		await Bun.write('b.file', 'foo');
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'foo');
 		const config = {includeGlob: ['*.file'], output: true, delimiter: '🦕'};
 		const result = await rr('o', 'x', config);
 		expect(asUtf8(result.out)).toBe('fxx🦕fxx🦕');

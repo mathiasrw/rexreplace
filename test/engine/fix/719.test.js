@@ -1,21 +1,22 @@
 // https://github.com/mathiasrw/rexreplace/issues/719
 // Data piped in together with files was not used, and nothing told about it.
 import {describe, test, expect} from 'bun:test';
+import fs from 'fs';
 import {rr} from '../../helper.js';
 
 const warning = ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used.\n\n';
 const expectedOutput = 'my.file\n';
 
 // Run on my.file (with the content `foobar`) with `x` piped in
-async function piped(flags = {}, replacement = '_') {
-	await Bun.write('my.file', 'foobar');
+function piped(flags = {}, replacement = '_') {
+	fs.writeFileSync('my.file', 'foobar');
 	return rr('b', replacement, {includeGlob: ['my.file'], pipedData: 'x', ...flags});
 }
 
 describe('#719 a warning when piped data is not used', () => {
 	test('is given when data is piped in and files are also given', async () => {
 		expect(await piped()).toEqual({out: expectedOutput, err: warning, exit: null});
-		expect(await Bun.file('my.file').text()).toBe('foo_ar');
+		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo_ar');
 	});
 
 	test.each(['quiet', 'quietTotal'])('is not shown with --%s', async flag => {
@@ -28,7 +29,7 @@ describe('#719 a warning when piped data is not used', () => {
 			err: warning,
 			exit: null,
 		});
-		expect(await Bun.file('my.file').text()).toBe('foo_ar');
+		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo_ar');
 	});
 
 	test('is not given when the piped data is used', async () => {
@@ -42,7 +43,7 @@ describe('#719 a warning when piped data is not used', () => {
 			err: '',
 			exit: null,
 		});
-		expect(await Bun.file('my.file').text()).toBe('fooxar');
+		expect(fs.readFileSync('my.file', 'utf8')).toBe('fooxar');
 	});
 
 	test.each([null, '', '\n', '\r\n'])('is not given when %j is piped in', async pipedData => {

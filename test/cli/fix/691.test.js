@@ -2,6 +2,7 @@
 // A replacement containing a real line break, a `\'` or a lone backslash at the end crashed the CLI with a SyntaxError and a stack trace.
 // The replacement is unescaped by the CLI (not the engine), so these tests run the CLI itself.
 import {describe, test, expect} from 'bun:test';
+import fs from 'fs';
 import {$} from 'bun';
 import {cli, sh} from '../../helper.js';
 
@@ -10,8 +11,8 @@ const expectedOutput = 'my.file\n';
 
 // Replace each `o` in `foobar` with the replacement and return what the CLI gives back.
 // Without the tail only the result of the replacement is given.
-async function replaceO(replacement, ...flags) {
-	await Bun.write('my.file', 'foobar');
+function replaceO(replacement, ...flags) {
+	fs.writeFileSync('my.file', 'foobar');
 	return sh($`bun ${cli} o ${replacement} my.file --output --no-content-delimiter-tail ${flags}`);
 }
 

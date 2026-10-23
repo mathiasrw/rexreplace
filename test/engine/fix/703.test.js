@@ -8,17 +8,17 @@ import {rr} from '../../helper.js';
 // Note that rr() from the helper sets voidAsync per default, so the names come in the order of the file list
 
 // Replace in a.file, b.file and c.file where b.file has nothing to replace
-async function run(flags = {}) {
-	await Bun.write('a.file', 'foo');
-	await Bun.write('b.file', 'bar');
-	await Bun.write('c.file', 'foo');
+function run(flags = {}) {
+	fs.writeFileSync('a.file', 'foo');
+	fs.writeFileSync('b.file', 'bar');
+	fs.writeFileSync('c.file', 'foo');
 	return rr('o', 'x', {includeGlob: ['*.file'], ...flags});
 }
 
 describe('#703 the names of affected files', () => {
 	test('go to stdout with one name on each line', async () => {
 		expect(await run()).toEqual({out: 'a.file\nc.file\n', err: '', exit: null});
-		expect(await Bun.file('a.file').text()).toBe('fxx');
+		expect(fs.readFileSync('a.file', 'utf8')).toBe('fxx');
 	});
 
 	// A file is named when the result differs from the content, so `rexreplace o o` names nothing
@@ -41,7 +41,7 @@ describe('#703 the names of affected files', () => {
 
 	test.each(['quiet', 'quietTotal'])('are not printed with --%s', async flag => {
 		expect(await run({[flag]: true})).toEqual({out: '', err: '', exit: null});
-		expect(await Bun.file('c.file').text()).toBe('fxx');
+		expect(fs.readFileSync('c.file', 'utf8')).toBe('fxx');
 	});
 
 	test('are not printed for piped data', async () => {
@@ -54,7 +54,8 @@ describe('#703 the names of affected files', () => {
 	});
 
 	test('are printed the way the path was given', async () => {
-		await Bun.write('sub/my.file', 'foo');
+		fs.mkdirSync('sub', {recursive: true});
+		fs.writeFileSync('sub/my.file', 'foo');
 		expect((await rr('o', 'x', {includeGlob: ['sub/*.file']})).out).toBe('sub/my.file\n');
 
 		const file = path.resolve('sub/my.file');
@@ -67,7 +68,7 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('keeps a name with a line break in one piece', async () => {
-			await Bun.write('my\n.file', 'foo');
+			fs.writeFileSync('my\n.file', 'foo');
 			expect((await rr('o', 'x', {includeGlob: ['*.file'], nullOut: true})).out).toBe(
 				'my\n.file\0'
 			);
@@ -103,7 +104,7 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('prints no delimiter when only one file is changed', async () => {
-			await Bun.write('my.file', 'foo');
+			fs.writeFileSync('my.file', 'foo');
 			const config = {
 				includeGlob: ['my.file'],
 				nameDelimiter: ', ',
@@ -121,8 +122,9 @@ describe('#703 the names of affected files', () => {
 
 		// The names must not be held back until all files are done
 		test('prints the files changed before the run is stopped by --halt', async () => {
-			await Bun.write('a.file', 'foo');
-			await Bun.write('locked/b.file', 'foo');
+			fs.writeFileSync('a.file', 'foo');
+			fs.mkdirSync('locked', {recursive: true});
+			fs.writeFileSync('locked/b.file', 'foo');
 			fs.chmodSync('locked', 0o555);
 			try {
 				const result = await rr('o', 'x', {
@@ -140,8 +142,9 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('with --nl still ends with a line break when the run is stopped by --halt', async () => {
-			await Bun.write('a.file', 'foo');
-			await Bun.write('locked/b.file', 'foo');
+			fs.writeFileSync('a.file', 'foo');
+			fs.mkdirSync('locked', {recursive: true});
+			fs.writeFileSync('locked/b.file', 'foo');
 			fs.chmodSync('locked', 0o555);
 			try {
 				const result = await rr('o', 'x', {
@@ -165,7 +168,7 @@ describe('#703 the names of affected files', () => {
 				err: '',
 				exit: null,
 			});
-			expect(await Bun.file('b.file').text()).toBe('bar');
+			expect(fs.readFileSync('b.file', 'utf8')).toBe('bar');
 		});
 
 		test('names every file printed with --output', async () => {
@@ -192,9 +195,9 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('adds no line break by default to content that already ends with one', async () => {
-			await Bun.write('a.file', 'foo\n');
-			await Bun.write('b.file', '');
-			await Bun.write('c.file', 'bar');
+			fs.writeFileSync('a.file', 'foo\n');
+			fs.writeFileSync('b.file', '');
+			fs.writeFileSync('c.file', 'bar');
 			const config = {includeGlob: ['*.file'], output: true};
 			expect((await rr('o', 'x', config)).out).toBe('fxx\n\nbar\n');
 		});
@@ -219,7 +222,7 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('is put after the last match, from a file or a pipe', async () => {
-			await Bun.write('a.file', 'foo');
+			fs.writeFileSync('a.file', 'foo');
 			const fromFile = await rr('o', '_', {includeGlob: ['a.file'], outputMatch: true});
 			const fromPipe = await rr('o', '_', {pipedData: 'foo', outputMatch: true});
 			expect(fromFile.out).toBe('o\no\n');
@@ -279,15 +282,15 @@ describe('#703 the names of affected files', () => {
 
 		test('adds nothing when the output already ends with a line break', async () => {
 			expect((await rr('o', 'x', {pipedData: 'foo\n\n', nl: true})).out).toBe('fxx\n\n');
-			await Bun.write('a.file', 'foo\n');
-			await Bun.write('b.file', '');
+			fs.writeFileSync('a.file', 'foo\n');
+			fs.writeFileSync('b.file', '');
 			const config = {includeGlob: ['*.file'], output: true, nl: true};
 			expect((await rr('o', 'x', config)).out).toBe('fxx\n\n');
 		});
 
 		test('adds nothing when nothing is printed', async () => {
 			expect((await rr('nope', 'x', {pipedData: 'foo', outputMatch: true, nl: true})).out).toBe('');
-			await Bun.write('a.file', 'foo');
+			fs.writeFileSync('a.file', 'foo');
 			expect((await rr('nope', 'x', {includeGlob: ['a.file'], nl: true})).out).toBe('');
 		});
 
@@ -347,7 +350,7 @@ describe('#703 the names of affected files', () => {
 	])('with --%s', (flag, out) => {
 		test('go to stderr', async () => {
 			expect(await run({[flag]: true})).toEqual({out, err: 'a.file\nc.file\n', exit: null});
-			expect(await Bun.file('a.file').text()).toBe('foo');
+			expect(fs.readFileSync('a.file', 'utf8')).toBe('foo');
 		});
 
 		test('are the same names as without the flag', async () => {
@@ -378,11 +381,12 @@ describe('#703 the names of affected files', () => {
 
 		test('leaves a path that is already full as it is', async () => {
 			fs.mkdirSync('work');
+			fs.mkdirSync('other');
 			const file = path.resolve('other', 'my.file');
-			await Bun.write(file, 'foo');
+			fs.writeFileSync(file, 'foo');
 			process.chdir('work');
 			expect((await rr('o', 'x', {includeGlob: [file], fullPath: true})).out).toBe(file + '\n');
-			expect(await Bun.file(file).text()).toBe('fxx');
+			expect(fs.readFileSync(file, 'utf8')).toBe('fxx');
 		});
 
 		test.each([
