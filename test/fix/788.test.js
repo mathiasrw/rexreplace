@@ -16,23 +16,23 @@ describe('#788 a path that can not be looked at', () => {
 		expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');
 	});
 
-	test.each([
-		[
-			'a symlink loop',
-			() => fs.symlinkSync('l2', 'l1') || fs.symlinkSync('l1', 'l2') || 'l1',
-			'ELOOP',
-		],
-		['a name that is too long', () => 'x'.repeat(300) + '.md', 'ENAMETOOLONG'],
-	])(
-		'is an error when it is %s, and the other files are still changed',
-		async (name, make, code) => {
-			fs.writeFileSync('a.md', 'foo');
-			const result = await rr('foo', 'bar', {includeGlob: [make(), 'a.md']});
-			expect(result.err).toStartWith(' ❌ ' + code);
-			expect(result.exit).toBe(2);
-			expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');
-		}
-	);
+	test('is an error when it is a symlink loop, and the other files are still changed', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		fs.symlinkSync('l2', 'l1');
+		fs.symlinkSync('l1', 'l2');
+		const result = await rr('foo', 'bar', {includeGlob: ['l1', 'a.md']});
+		expect(result.err).toStartWith(' ❌ ELOOP');
+		expect(result.exit).toBe(2);
+		expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');
+	});
+
+	test('is an error when the name is too long, and the other files are still changed', async () => {
+		fs.writeFileSync('a.md', 'foo');
+		const result = await rr('foo', 'bar', {includeGlob: ['x'.repeat(300) + '.md', 'a.md']});
+		expect(result.err).toStartWith(' ❌ ENAMETOOLONG');
+		expect(result.exit).toBe(2);
+		expect(fs.readFileSync('a.md', 'utf8')).toBe('bar');
+	});
 
 	test.each([
 		['as an argument', {includeGlob: ['a.md/x']}],
