@@ -3,7 +3,7 @@
 // These tests pin that file globs, `--exclude-glob` and piped data are used exactly as they are.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 const voided = {voidEuro: true, voidSection: true};
 

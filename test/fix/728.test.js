@@ -2,7 +2,7 @@
 // An error from a file was printed, but the exit code was 0, so a script could not see that something went wrong.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 // Note that rr() from the helper sets voidAsync per default, so the async flow is `voidAsync: false`
 const flows = [

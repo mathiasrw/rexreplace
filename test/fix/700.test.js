@@ -3,7 +3,7 @@
 // The replacement is unescaped by the CLI (not the engine), so these tests run the CLI itself.
 import {describe, test, expect} from 'bun:test';
 import {$} from 'bun';
-import {cli, sh} from '../../helper.js';
+import {cli, sh} from '../helper.js';
 
 // Give `input` to the CLI as piped data and return what it gives back
 const run = (input, ...args) => sh($`bun ${cli} ${args} < ${new Response(input)}`);

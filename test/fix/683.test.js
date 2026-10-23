@@ -2,7 +2,7 @@
 // `--exclude-re` promises to "follow same regex flags and setup as the main search" but was used as a regex with no flags (so it was always case sensitive).
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 describe('#683 --exclude-re follows the regex flags of the main search', () => {
 	test('the example from the issue', async () => {

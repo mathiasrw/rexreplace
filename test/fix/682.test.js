@@ -2,7 +2,7 @@
 // `--quiet` promises "Only display errors (no other info)" but used to hide errors too (making it behave like `--quiet-total`).
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 describe('#682 --quiet still displays errors', () => {
 	test('invalid regular expression', async () => {
