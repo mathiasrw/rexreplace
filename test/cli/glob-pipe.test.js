@@ -21,7 +21,7 @@ describe('--glob-pipe', () => {
 			fs.writeFileSync('my.file', 'foobar\n');
 			const result = await sh($`echo -n my.file | bun ${cli} b x --glob-pipe ${flag}`);
 			expect(result.err).toContain('are mutually exclusive');
-			expect(result.exit).toBe(1);
+			expect(result.exit).toBe(3);
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar\n');
 		}
 	);
@@ -29,7 +29,7 @@ describe('--glob-pipe', () => {
 	test('--null-in can only be used with --glob-pipe', async () => {
 		fs.writeFileSync('my.file', 'foobar\n');
 		const result = await sh($`echo -n my.file | bun ${cli} b x --null-in`);
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar\n');
 	});
 });

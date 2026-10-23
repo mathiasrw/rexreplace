@@ -15,7 +15,7 @@ describe('#720 every error starts with ❌', () => {
 		expect(result.err).toStartWith(' ❌ ');
 		expect(result.err).toContain('EACCES');
 		expect(result.err).toEndWith('\n\n');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 	});
 
 	test('an error that stops the run', async () => {

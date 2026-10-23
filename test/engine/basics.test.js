@@ -42,7 +42,7 @@ describe('pattern', () => {
 	test('stops with an error and leaves the files alone if it is not a valid regex', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('(', 'x', {includeGlob: ['my.file']});
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(result.err).toContain('Invalid regular expression');
 		expect(result.out).toBe('');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');

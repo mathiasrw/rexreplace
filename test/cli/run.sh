@@ -54,12 +54,15 @@ assert_failure		"rexreplace my-vile"
 assert_failure		"rexreplace o-ho"
 
 
+# The exit code: 0 when done, 2 when a file gave an error and the run went on, 3 when the run stopped
 # --halt (or --bail) stops at the first error, here that my.file can not be read
 reset
 chmod 000 my.file
-assert_raises		"rexreplace b x my.file your.file --halt"    1
-assert_raises		"rexreplace b x my.file your.file --bail"    1
+assert_raises		"rexreplace b x my.file your.file --halt"    3
+assert_raises		"rexreplace b x my.file your.file --bail"    3
 assert			"cat your.file"    "abc123"
+assert_raises		"rexreplace b x my.file your.file"    2
+assert			"cat your.file"    "axc123"
 
 # Finding no files is a warning and not an error
 assert_raises		"rexreplace o x nope.file"    0

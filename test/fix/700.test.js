@@ -40,7 +40,7 @@ describe('#700 § is a full substitute for \\ in the replacement', () => {
 		expect(await replaceB('§x4')).toEqual({
 			out: '',
 			err: ' ❌ Invalid escape sequence in replacement: §x4\n    No further processing.\n\n',
-			exit: 1,
+			exit: 3,
 		});
 	});
 

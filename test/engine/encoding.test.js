@@ -51,7 +51,7 @@ describe('--encoding', () => {
 	const unknownEncoding = {
 		out: '',
 		err: ' ❌ Unknown encoding: nope\n    No further processing.\n\n',
-		exit: 1,
+		exit: 3,
 	};
 
 	test('stops the run with an error if it is unknown (#690)', async () => {

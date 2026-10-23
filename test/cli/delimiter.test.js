@@ -170,7 +170,7 @@ describe('an invalid escape sequence in a delimiter', () => {
 			fs.writeFileSync('my.file', 'foobar\n');
 			const result = await sh($`bun ${cli} b x my.file ${flag} '\x4'`);
 			expect(result.err).toContain(`Invalid escape sequence in ${flag}`);
-			expect(result.exit).toBe(1);
+			expect(result.exit).toBe(3);
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar\n');
 		}
 	);

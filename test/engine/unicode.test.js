@@ -38,7 +38,7 @@ describe('--unicode', () => {
 	test('is strict about escapes that have no meaning', async () => {
 		expect((await rr('\\-', 'x', {pipedData: 'a-b'})).out).toBe('axb');
 		const result = await rr('\\-', 'x', {pipedData: 'a-b', unicode: true});
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(result.err).toContain('Invalid regular expression');
 		expect(result.out).toBe('');
 	});

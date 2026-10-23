@@ -10,7 +10,7 @@ describe('--halt', () => {
 		fs.chmodSync('a.file', 0);
 		const result = await rr('o', 'x', {includeGlob: ['a.file', 'b.file'], halt: true});
 		expect(result.err).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('b.file', 'utf8')).toBe('foo');
 	});
 
@@ -20,7 +20,7 @@ describe('--halt', () => {
 		fs.chmodSync('a.file', 0);
 		const result = await rr('o', 'x', {includeGlob: ['a.file', 'b.file']});
 		expect(result.err).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 		expect(fs.readFileSync('b.file', 'utf8')).toBe('fxx');
 	});
 
@@ -34,8 +34,8 @@ describe('--halt', () => {
 	test('stops with a number as exit code', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.chmodSync('a.file', 0);
-		expect((await rr('o', 'x', {includeGlob: ['a.file'], halt: true})).exit).toBe(1);
-		expect((await rr('(', 'x', {pipedData: 'foobar', halt: true})).exit).toBe(1);
+		expect((await rr('o', 'x', {includeGlob: ['a.file'], halt: true})).exit).toBe(3);
+		expect((await rr('(', 'x', {pipedData: 'foobar', halt: true})).exit).toBe(3);
 	});
 
 	describe('combined', () => {
@@ -52,7 +52,7 @@ describe('--halt', () => {
 
 		test('with an invalid pattern it stops with or without it', async () => {
 			expect((await rr('(', 'x', {pipedData: 'foobar', halt: true})).exit).not.toBe(null);
-			expect((await rr('(', 'x', {pipedData: 'foobar'})).exit).toBe(1);
+			expect((await rr('(', 'x', {pipedData: 'foobar'})).exit).toBe(3);
 		});
 
 		test('with piped data and several flags when all goes well', async () => {

@@ -15,7 +15,7 @@ describe('--engine', () => {
 	test('stops with an error if the engine is the one of another runtime', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], engine: 'V8'});
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(result.err).toContain(
 			'When running via the Bun runtime you can only use default or JSC as engine'
 		);
@@ -25,13 +25,13 @@ describe('--engine', () => {
 	test('stops with an error if the engine is unknown', async () => {
 		fs.writeFileSync('my.file', 'foobar');
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], engine: 'nope'});
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(result.err).toContain('Engine nope not supported');
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
 	test('is case sensitive', async () => {
-		expect((await rr('o', 'x', {pipedData: 'foobar', engine: 'jsc'})).exit).toBe(1);
+		expect((await rr('o', 'x', {pipedData: 'foobar', engine: 'jsc'})).exit).toBe(3);
 	});
 
 	describe('combined', () => {
@@ -54,7 +54,7 @@ describe('--engine', () => {
 				engine: 'nope',
 				quietTotal: true,
 			});
-			expect(result).toEqual({out: '', err: '', exit: 1});
+			expect(result).toEqual({out: '', err: '', exit: 3});
 		});
 	});
 });

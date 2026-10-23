@@ -69,17 +69,17 @@ async function run(pattern, replacement, config) {
 		};
 		alias(options);
 		status = await engine(options);
-		// Like the CLI, an error gives the exit code 1 when the run is done
+		// Like the CLI, an error gives the exit code 2 when the run is done
 		if (status.errors.length) {
-			result.exit = 1;
+			result.exit = 2;
 		}
 	} catch (e) {
-		// Like the CLI, a panic stops the run with the exit code 1
+		// Like the CLI, a panic stops the run with the exit code 3
 		if (!e?.panic) {
 			throw e;
 		}
 		status = e.status;
-		result.exit = 1;
+		result.exit = 3;
 	} finally {
 		spies.forEach(spy => spy.mockRestore());
 	}

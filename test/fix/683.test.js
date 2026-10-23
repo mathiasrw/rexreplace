@@ -83,7 +83,7 @@ describe('#683 --exclude-re follows the regex flags of the main search', () => {
 		fs.writeFileSync('my.file', 'foo');
 		const result = await rr('foo', 'x', {includeGlob: ['my.file'], excludeRe: ['(']});
 		expect(result.err).toContain('Invalid regular expression');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo');
 	});
 });

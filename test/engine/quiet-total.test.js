@@ -25,7 +25,7 @@ describe('--quiet-total', () => {
 
 	test('still stops on an error', async () => {
 		fs.writeFileSync('my.file', 'foobar');
-		expect((await rr('(', 'x', {includeGlob: ['my.file'], quietTotal: true})).exit).toBe(1);
+		expect((await rr('(', 'x', {includeGlob: ['my.file'], quietTotal: true})).exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
 
@@ -50,7 +50,7 @@ describe('--quiet-total', () => {
 		test('with --replacement-pipe and nothing piped it stops in silence', async () => {
 			fs.writeFileSync('my.file', 'foobar');
 			const config = {includeGlob: ['my.file'], quietTotal: true, replacementPipe: true};
-			expect(await rr('o', '_', config)).toEqual({out: '', err: '', exit: 1});
+			expect(await rr('o', '_', config)).toEqual({out: '', err: '', exit: 3});
 		});
 
 		test('with --halt it stops in silence', async () => {

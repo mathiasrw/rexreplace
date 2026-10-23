@@ -10,13 +10,13 @@ describe('#681 --halt exits with a numeric non-zero code', () => {
 		fs.chmodSync('a.file', 0);
 		const result = await rr('o', 'x', {includeGlob: ['a.file'], halt: true});
 		expect(result.err).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 	});
 
 	test('invalid regular expression', async () => {
 		const result = await rr('(', 'x', {pipedData: 'foobar', halt: true});
 		expect(result.err).toContain('Invalid regular expression');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 	});
 
 	test('--quiet-total still halts with the exit code but shows no message', async () => {
@@ -27,6 +27,6 @@ describe('#681 --halt exits with a numeric non-zero code', () => {
 			halt: true,
 			quietTotal: true,
 		});
-		expect(result).toEqual({out: '', err: '', exit: 1});
+		expect(result).toEqual({out: '', err: '', exit: 3});
 	});
 });

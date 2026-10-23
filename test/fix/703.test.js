@@ -204,7 +204,7 @@ describe('#703 the names of affected files', () => {
 				});
 				expect(result.out).toBe('a.file');
 				expect(result.err).toContain('EACCES');
-				expect(result.exit).toBe(1);
+				expect(result.exit).toBe(3);
 			} finally {
 				fs.chmodSync('locked', 0o755);
 			}
@@ -223,7 +223,7 @@ describe('#703 the names of affected files', () => {
 					nl: true,
 				});
 				expect(result.out).toBe('a.file\n');
-				expect(result.exit).toBe(1);
+				expect(result.exit).toBe(3);
 			} finally {
 				fs.chmodSync('locked', 0o755);
 			}

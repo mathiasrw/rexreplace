@@ -79,7 +79,7 @@ describe('#708 the number of files in work at the same time is limited', () => {
 
 		expect(result.out).toBe('my.file\n');
 		expect(result.err).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('fxx');
 	});
 });

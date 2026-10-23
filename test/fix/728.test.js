@@ -10,7 +10,7 @@ const flows = [
 	['--void-async', {voidAsync: true}],
 ];
 
-describe('#728 the exit code is 1 when a file gives an error', () => {
+describe('#728 the exit code is not 0 when a file gives an error', () => {
 	test.each(flows)('and the other files are still changed with %s', async (name, flags) => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.writeFileSync('b.file', 'foo');
@@ -18,7 +18,7 @@ describe('#728 the exit code is 1 when a file gives an error', () => {
 		const result = await rr('o', 'x', {includeGlob: ['a.file', 'b.file'], ...flags});
 		expect(result.out).toBe('a.file\n');
 		expect(result.err).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 		expect(fs.readFileSync('a.file', 'utf8')).toBe('fxx');
 	});
 
@@ -31,7 +31,7 @@ describe('#728 the exit code is 1 when a file gives an error', () => {
 			const result = await rr('o', 'x', {includeGlob: ['locked/my.file']});
 			expect(result.out).toBe('');
 			expect(result.err).toContain('EACCES');
-			expect(result.exit).toBe(1);
+			expect(result.exit).toBe(2);
 			expect(fs.readFileSync('locked/my.file', 'utf8')).toBe('foo');
 		} finally {
 			// The folder must be writable again so the test folder can be removed
@@ -43,6 +43,6 @@ describe('#728 the exit code is 1 when a file gives an error', () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.writeFileSync('b.file', 'foo');
 		fs.chmodSync('b.file', 0);
-		expect((await rr('o', 'x', {includeGlob: ['a.file', 'b.file'], [flag]: true})).exit).toBe(1);
+		expect((await rr('o', 'x', {includeGlob: ['a.file', 'b.file'], [flag]: true})).exit).toBe(2);
 	});
 });

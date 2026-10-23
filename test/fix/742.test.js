@@ -96,7 +96,7 @@ describe('#742 a panic', () => {
 		fs.writeFileSync('c.file', 'foo');
 		fs.chmodSync('b.file', 0);
 		const config = {includeGlob: ['*.file'], halt: true};
-		expect((await rr('o', 'x', config)).exit).toBe(1);
+		expect((await rr('o', 'x', config)).exit).toBe(3);
 		fs.writeFileSync('a.file', 'foo');
 		const status = await rrStatus('o', 'x', config);
 		expect(status.files).toEqual({searched: ['a.file', 'b.file'], updated: ['a.file']});
@@ -104,7 +104,7 @@ describe('#742 a panic', () => {
 	});
 
 	test('is thrown when the run can not go on, with the error in the status', async () => {
-		expect(await rr('(', 'x', {pipedData: 'foo'})).toMatchObject({out: '', exit: 1});
+		expect(await rr('(', 'x', {pipedData: 'foo'})).toMatchObject({out: '', exit: 3});
 		expect((await rrStatus('(', 'x', {pipedData: 'foo'})).errors).toHaveLength(1);
 	});
 });
@@ -213,18 +213,18 @@ describe('#742 the CLI', () => {
 		}
 	);
 
-	test('sets the exit code to 1 when a file gives an error, and prints the status report', async () => {
+	test('sets the exit code to 2 when a file gives an error, and prints the status report', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.chmodSync('a.file', 0);
 		const result = await sh($`bun ${cli} o x a.file --status-compact --quiet-total`);
 		expect(JSON.parse(result.out).errors[0]).toContain('EACCES');
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(2);
 	});
 
 	test('ends the process on a panic, and still prints the status report', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		const result = await sh($`bun ${cli} '(' x a.file --status-compact --quiet-total`);
 		expect(JSON.parse(result.out).errors).toHaveLength(1);
-		expect(result.exit).toBe(1);
+		expect(result.exit).toBe(3);
 	});
 });
