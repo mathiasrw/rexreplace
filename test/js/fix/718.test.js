@@ -148,11 +148,11 @@ describe('#718 with --exclude-re', () => {
 		expect(content('a[1].file')).toBe('foo');
 	});
 
-	test('it sees the full path with --absolute-path', async () => {
+	test('it sees the full path with --full-path', async () => {
 		makeFiles('a.file');
 		expect((await rr('o', 'x', {includeGlob: ['a.file'], excludeRe: ['^/']})).out).toBe('a.file\n');
 		fs.writeFileSync('a.file', 'foo');
-		const config = {includeGlob: ['a.file'], excludeRe: ['^/'], absolutePath: true};
+		const config = {includeGlob: ['a.file'], excludeRe: ['^/'], fullPath: true};
 		expect((await rr('o', 'x', config)).exit).toBe(1);
 		expect(content('a.file')).toBe('foo');
 	});

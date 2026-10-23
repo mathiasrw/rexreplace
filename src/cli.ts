@@ -128,9 +128,9 @@ const yargs = require('yargs')
 	.describe('Q', 'Never display errors or info')
 	.alias('Q', 'quiet-total')
 
-	.boolean('a')
-	.describe('a', 'Print the full path of the named files instead of the relative path.')
-	.alias('a', 'absolute-path')
+	.boolean('f')
+	.describe('f', 'Print the full path of the named files instead of the relative path.')
+	.alias('f', 'full-path')
 
 	.boolean('name-all')
 	.describe(
@@ -386,12 +386,11 @@ Upper Case Free	Lower Case Free
 	a
 C	c
 D	
-F	f
+F	
 	g
 	i
 J	
 K	k
-	l
 N	n
 O	
 P	
