@@ -33,6 +33,13 @@ const re = {
 	// The numbers of #791 that count what came before: $i, $c, $m and $M with their cousins, like $i00 or $M_
 	runNumbers: /\$[icmM](?![A-Za-z])/,
 	matchNumbers: /\$[mM](?![A-Za-z])/,
+	// A path that is not clear as it is printed: a space at the start or the end, or a char that can not be seen,
+	// like a line break from echo or a zero-width space
+	unclearPath: /^\s|\s$|[\x00-\x1f\x7f-\x9f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/,
+	// The chars of unclearPath that JSON.stringify does not escape
+	invisibleChars: /[\x7f-\x9f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/g,
+	// The end of the message of a failed file call, like `, open 'nope.txt'`
+	fileCallInMessage: /, \w+( '.*')?$/s,
 };
 
 // Only the version ends up in the bundle
@@ -696,28 +703,25 @@ function getFinalReplacement(replacement, conf: any) {
 		try {
 			return readReplacementFile(replacement, conf);
 		} catch (e) {
-			return panic('The replacement file can not be read:', unreadable(replacement, e));
+			return panic('The replacement file can not be read:', pathAndReason(replacement, e));
 		}
 	}
 
 	return replacement;
 }
 
-// The path as it is, and the reason, like `nope.txt (ENOENT: no such file or directory)`.
-// A path that starts or ends with a space, or has a char that can not be seen, like a line break from echo or a zero-width space,
-// is shown as JSON, so the char can be seen.
-function unreadable(filepath, e) {
-	const unseen = /[\x7f-\x9f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/g;
-	const shown =
-		/^\s|\s$|[\x00-\x1f]/.test(filepath) || unseen.test(filepath)
-			? JSON.stringify(filepath).replace(
-					unseen,
-					char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0')
-				)
-			: filepath;
-	// The message ends with the call and the path, like `, open 'nope.txt'`, which is already told
-	const reason = String(e.message || e.code).replace(/, \w+( '.*')?$/s, '');
-	return shown + ' (' + reason + ')';
+// The path and why it can not be read, like `nope.txt (ENOENT: no such file or directory)`.
+// A path that is not clear as it is printed is shown as JSON, with each char that can not be seen escaped.
+function pathAndReason(filepath, e) {
+	let shownPath = filepath;
+	if (re.unclearPath.test(filepath)) {
+		shownPath = JSON.stringify(filepath).replace(
+			re.invisibleChars,
+			char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0')
+		);
+	}
+	// The call and the path at the end of the message are told already
+	return shownPath + ' (' + e.message.replace(re.fileCallInMessage, '') + ')';
 }
 
 // Each replacement file is read once, also when the code of --js gives the same path for many matches
@@ -746,7 +750,7 @@ function codeReplacement(file, config, text, numbers) {
 				return readReplacementFile(filepath, config);
 			} catch (e) {
 				config.unreadableFiles.add(filepath);
-				error('The replacement file can not be read:', unreadable(filepath, e));
+				error('The replacement file can not be read:', pathAndReason(filepath, e));
 			}
 		}
 		return args[0];
