@@ -1135,7 +1135,7 @@ function getFilePaths(conf) {
 
 	// --exclude-glob is always globs, also for the name of a file. They are used together, and the files they find are taken away.
 	if (excludeGlob.length) {
-		const excluded = new Set(globs.sync(excludeGlob, globOptions).map(file => path.resolve(file)));
+		const excluded = new Set(glob(excludeGlob, globOptions, true).map(file => path.resolve(file)));
 		files = files.filter(file => !excluded.has(path.resolve(file)));
 	}
 
@@ -1200,15 +1200,47 @@ function sortFiles(files, sort, conf) {
 	return files.sort((a, b) => key(stats.get(a)) - key(stats.get(b)) || ascii(a, b));
 }
 
+// Is the path a file (true), something to glob (false), or a path that can not be looked at (null, with an error)?
+// A path that is not there, or has a file where a folder should be, is globbed like before. So is a glob,
+// like a long brace glob that is too long as a name. A plain path that can not be looked at, like a name
+// that is too long or a symlink loop, is an error, so it is not hidden as 0 files found.
+function isFile(file) {
+	try {
+		return Boolean(fs.statSync(file, {throwIfNoEntry: false})?.isFile());
+	} catch (e) {
+		if ('ENOENT' === e.code || 'ENOTDIR' === e.code || globs.isDynamicPattern(file)) {
+			return false;
+		}
+		error(e.message);
+		return null;
+	}
+}
+
+// A glob that finds files and meets a folder that can not be read, like one with no access, is an error,
+// and the run goes on with the files that can be found. A glob of --exclude-glob that fails is a panic,
+// as the files it should take away can not be known, and they must not be changed.
+function glob(patterns, globOptions, exclude = false) {
+	try {
+		return globs.sync(patterns, globOptions);
+	} catch (e) {
+		if (exclude) {
+			return panic('The files to exclude can not be found:', e.message);
+		}
+		error('Not all paths could be accessed:', e.message);
+		return globs.sync(patterns, {...globOptions, suppressErrors: true});
+	}
+}
+
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
 // The other paths are globbed together, so a pattern that starts with `!` can take files away from the other patterns.
 function findFiles(paths, globOptions, sort) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
-		if (fs.statSync(file, {throwIfNoEntry: false})?.isFile()) {
+		const kind = isFile(file);
+		if (kind) {
 			files.push(file);
-		} else {
+		} else if (false === kind) {
 			patterns.push(file);
 		}
 	});
@@ -1216,7 +1248,7 @@ function findFiles(paths, globOptions, sort) {
 	// A file given by its name and also found by a glob is only handled once
 	const seen = new Set();
 	// A glob has no order of its own, so with --sort none its files come after the paths, sorted with natural
-	const found = patterns.length ? globs.sync(patterns, globOptions) : [];
+	const found = patterns.length ? glob(patterns, globOptions) : [];
 	return files.concat('none' === sort ? found.sort(natural) : found).filter(file => {
 		const fullPath = path.resolve(file);
 		if (seen.has(fullPath)) {
