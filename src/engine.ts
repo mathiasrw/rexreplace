@@ -819,27 +819,37 @@ function numbersCode(numbers) {
 		.join('');
 }
 
-// A place in a stack, like `at fn (/path/file.js:2:15)`, also with `file://` in front
-const stackPlaces = /\(?(?:file:\/\/)?((?:\/|[A-Za-z]:\\)[^()]+?)(:\d+:\d+)\)?\s*$/gm;
+// The places in a stack, one for each line, like `at fn (/path/file.js:2:15)` or `at /path/file.js:2:15`.
+// The place is at the end of the line, so a path with parentheses is read as a whole.
+function stackPlaces(stack) {
+	return String(stack)
+		.split('\n')
+		.map(line => line.match(/^\s*at (?:.*? \()?(?:file:\/\/)?(.+?)(:\d+:\d+)\)?\s*$/))
+		.filter(Boolean)
+		.map(([, file, place]) => ({file, place}));
+}
 
 // The folder of RexReplace itself, from the first place in a stack made here
 const ownFolder = (() => {
-	const [place] = String(new Error().stack).matchAll(stackPlaces);
-	return place ? path.dirname(place[1]) + path.sep : null;
+	const [own] = stackPlaces(new Error().stack);
+	return own ? path.dirname(own.file) + path.sep : null;
 })();
 
 // The first place in the stack of an error that is in a file of the user, like `helper.js:2:15`.
 // Only the places above the code of RexReplace are from the code of the user, so the search stops there.
+// Places in Node itself, in eval and in node_modules are skipped. Reading the stack can throw, so it is tried.
 function stackPlace(thrown) {
-	const stack = 'object' === typeof thrown && null !== thrown ? thrown.stack : '';
-	for (const [, file, place] of String(stack ?? '').matchAll(stackPlaces)) {
-		if (ownFolder && file.startsWith(ownFolder)) {
-			return '';
+	try {
+		for (const {file, place} of stackPlaces(thrown?.stack ?? '')) {
+			if (ownFolder && file.startsWith(ownFolder)) {
+				return '';
+			}
+			// A file is an absolute path, so the frames of code run with eval are skipped too
+			if (/^(\/|[A-Za-z]:[\\/])/.test(file) && !file.includes('node_modules')) {
+				return path.relative(process.cwd(), file) + place;
+			}
 		}
-		if (!file.includes('node:')) {
-			return path.relative(process.cwd(), file) + place;
-		}
-	}
+	} catch (e) {}
 	return '';
 }
 

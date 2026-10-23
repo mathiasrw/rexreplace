@@ -19,4 +19,30 @@ describe('#824 --js code that fails in a module', () => {
 		expect((await rr('o', 'r("helper")($0)', config)).err).not.toContain(' at ');
 		expect((await rr('o', 'nope()', {...config, verbose: true})).err).not.toContain(' at ');
 	});
+
+	test('reads a path with parentheses as a whole', async () => {
+		fs.mkdirSync('a (copy)');
+		fs.writeFileSync(
+			'a (copy)/helper.js',
+			'module.exports = value => {\n\treturn value.nope.deeper;\n};\n'
+		);
+		const config = {pipedData: 'foo', replacementJs: true, verbose: true};
+		expect((await rr('o', 'r("a (copy)/helper.js")($0)', config)).err).toMatch(
+			/\n {4}at a \(copy\)\/helper\.js:2:\d+\n/
+		);
+	});
+
+	test('does not tell places in the runtime itself', async () => {
+		const config = {pipedData: 'foo', replacementJs: true, verbose: true};
+		expect((await rr('o', 'new URL("x")', config)).err).not.toContain(' at ');
+	});
+
+	test('does not crash when the stack can not be read', async () => {
+		const config = {pipedData: 'foo', replacementJs: true, verbose: true};
+		const result = await rr('o', 'throw new Proxy({}, {get() { throw 1; }})', config);
+		expect(result.err).toContain(
+			'The code of --js failed for the piped data: an object was thrown'
+		);
+		expect(result.exit).toBe(3);
+	});
 });
