@@ -1,6 +1,17 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import {rr} from '../helper.js';
+
+// On a file system that is case-sensitive (like on Linux), `a.md` and `A.md` can be two files
+const caseSensitive = (() => {
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rexreplace-case-'));
+	fs.writeFileSync(path.join(dir, 'a'), '');
+	const result = !fs.existsSync(path.join(dir, 'A'));
+	fs.rmSync(dir, {recursive: true});
+	return result;
+})();
 
 describe('--rename-force', () => {
 	test('writes over a file that is there already', async () => {
@@ -29,6 +40,22 @@ describe('--rename-force', () => {
 		expect((await rr('^a\\.md$', 'b.txt', config)).exit).toBe(3);
 		expect(fs.readFileSync('b.txt', 'utf8')).toBe('bar');
 	});
+
+	test.if(caseSensitive)(
+		'does not write over a file in the run that differs only in case',
+		async () => {
+			fs.writeFileSync('a.md', 'foo');
+			fs.writeFileSync('A.md', 'bar');
+			const config = {
+				includeGlob: ['a.md', 'A.md'],
+				rename: true,
+				renameForce: true,
+				voidIgnoreCase: true,
+			};
+			expect((await rr('^a', 'A', config)).exit).toBe(3);
+			expect(fs.readFileSync('A.md', 'utf8')).toBe('bar');
+		}
+	);
 
 	test('does not let two new paths differ only in case', async () => {
 		fs.writeFileSync('a.md', 'foo');
