@@ -61,14 +61,16 @@ describe('#703 the names of affected files', () => {
 		expect((await rr('x', 'o', {includeGlob: [file]})).out).toBe(file + '\n');
 	});
 
-	describe('--null', () => {
+	describe('--null-out', () => {
 		test('ends each name with a NUL byte', async () => {
-			expect(await run({null: true})).toEqual({out: 'a.file\0c.file\0', err: '', exit: null});
+			expect(await run({nullOut: true})).toEqual({out: 'a.file\0c.file\0', err: '', exit: null});
 		});
 
 		test('keeps a name with a line break in one piece', async () => {
 			await Bun.write('my\n.file', 'foo');
-			expect((await rr('o', 'x', {includeGlob: ['*.file'], null: true})).out).toBe('my\n.file\0');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], nullOut: true})).out).toBe(
+				'my\n.file\0'
+			);
 		});
 	});
 
@@ -301,7 +303,7 @@ describe('#703 the names of affected files', () => {
 		});
 	});
 
-	describe('--delimiter and --null', () => {
+	describe('--delimiter and --null-out', () => {
 		test('--delimiter sets both delimiters', async () => {
 			expect(await run({output: true, delimiter: ', '})).toEqual({
 				out: 'fxx, bar, fxx, ',
@@ -310,8 +312,8 @@ describe('#703 the names of affected files', () => {
 			});
 		});
 
-		test('--null is the same as --delimiter with a NUL byte', async () => {
-			expect(await run({output: true, null: true})).toEqual({
+		test('--null-out is the same as --delimiter with a NUL byte', async () => {
+			expect(await run({output: true, nullOut: true})).toEqual({
 				out: 'fxx\0bar\0fxx\0',
 				err: 'a.file\0c.file\0',
 				exit: null,
@@ -319,7 +321,9 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('the most specific delimiter wins', async () => {
-			expect((await run({output: true, delimiter: ', ', null: true})).out).toBe('fxx, bar, fxx, ');
+			expect((await run({output: true, delimiter: ', ', nullOut: true})).out).toBe(
+				'fxx, bar, fxx, '
+			);
 			expect(
 				await run({
 					output: true,
@@ -328,7 +332,7 @@ describe('#703 the names of affected files', () => {
 					nameDelimiter: ';',
 				})
 			).toEqual({out: 'fxx|bar|fxx|', err: 'a.file;c.file;', exit: null});
-			expect(await run({output: true, null: true, nameDelimiter: ', '})).toEqual({
+			expect(await run({output: true, nullOut: true, nameDelimiter: ', '})).toEqual({
 				out: 'fxx\0bar\0fxx\0',
 				err: 'a.file, c.file, ',
 				exit: null,
@@ -354,8 +358,8 @@ describe('#703 the names of affected files', () => {
 			expect(await run({[flag]: true, [quiet]: true})).toEqual({out, err: '', exit: null});
 		});
 
-		test('follow --null, --name-delimiter and --full-path', async () => {
-			expect((await run({[flag]: true, null: true})).err).toBe('a.file\0c.file\0');
+		test('follow --null-out, --name-delimiter and --full-path', async () => {
+			expect((await run({[flag]: true, nullOut: true})).err).toBe('a.file\0c.file\0');
 			expect((await run({[flag]: true, nameDelimiter: ', '})).err).toBe('a.file, c.file, ');
 			expect((await run({[flag]: true, fullPath: true})).err).toBe(
 				path.resolve('a.file') + '\n' + path.resolve('c.file') + '\n'
@@ -382,7 +386,7 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test.each([
-			['null', {null: true}, '\0', '\0'],
+			['null', {nullOut: true}, '\0', '\0'],
 			['name-delimiter', {nameDelimiter: ', ', nameDelimiterTail: false}, ', ', ''],
 		])('works with --%s', async (name, flags, between, last) => {
 			expect((await run({fullPath: true, ...flags})).out).toBe(

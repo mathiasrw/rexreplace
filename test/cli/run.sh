@@ -451,6 +451,36 @@ assert		 		"rexreplace 'b' 'x' my.file --content-delimiter '\x4' 2>&1 | grep -c 
 assert		 		"rexreplace 'b' 'x' my.file --delimiter '\x4' 2>&1 | grep -c 'Invalid escape sequence in --delimiter'"    '1'
 assert		 		"cat my.file"    'foobar'
 
+# --glob-pipe: each line of the piped data is a path or a glob to work on (#711)
+reset
+assert		 		"printf 'my.file\nyour.file\n' | rexreplace 'b' 'x' --glob-pipe -A"    'my.file\nyour.file'
+reset
+assert		 		"printf '*.file' | rexreplace 'b' 'x' -g -A"    'my.file\nyour.file'
+# The names of the changed files go on to the next command, also when a name has a line break in it
+reset
+assert		 		"rexreplace 'oo' 'x' '*.file' --null-out | rexreplace 'x' 'y' --glob-pipe --null-in"    'my.file'
+assert		 		"cat my.file"    'fybar'
+# The piped data can only be one thing
+reset
+assert_raises		"printf 'my.file' | rexreplace 'b' 'x' -g -R"    1
+assert_raises		"printf 'my.file' | rexreplace 'b' 'x' -g --js-pipe"    1
+assert_raises		"printf 'my.file' | rexreplace 'b' 'x' --null-in"    1
+assert		 		"cat my.file"    'foobar'
+
+
+# Data with NUL bytes is binary safe: the NUL bytes come out where they went in
+reset
+assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' | tr '\0' '|'"    'fxx|bxx|'
+assert		 		"printf 'foo\0boo\0' | rexreplace 'o' 'x' --output | tr '\0' '|'"    'fxx|bxx|'
+assert		 		"printf 'foo\0boo\0' | rexreplace 'o' '_' --output-match --null-out | tr '\0' '|'"    'o|o|o|o|'
+printf 'foo\0boo\0' > nul.file
+assert		 		"rexreplace 'o' 'x' nul.file"    'nul.file'
+assert		 		"tr '\0' '|' < nul.file"    'fxx|bxx|'
+printf 'foo\0boo\0' > nul.file
+assert		 		"rexreplace 'o' 'x' nul.file --output 2>/dev/null | tr '\0' '|'"    'fxx|bxx|'
+assert		 		"rexreplace 'o' '_' nul.file --output-match --null-out 2>/dev/null | tr '\0' '|'"    'o|o|o|o|'
+
+
 # Globs are case-insensitive like the search, unless --void-ignore-case (#716)
 reset
 assert		 		"rexreplace 'oo' 'x' '*.FILE' -X 'YOUR*'"    'my.file'
