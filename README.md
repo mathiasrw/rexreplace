@@ -100,6 +100,17 @@ Require has been given the alias `r` and both are expanded to understand relativ
 > rexreplace 'VERSION' 'r("package").version' -j dist/*.js
 ```
 
+Longer code can live in its own file. Let the file export a function, and give it the match:
+
+```js
+// fix.js
+module.exports = match => match.toUpperCase();
+```
+
+```bash
+> rexreplace 'foo' 'r("fix")($0)' --js myfile.md
+```
+
 ---
 
 #### Reference a matching group
