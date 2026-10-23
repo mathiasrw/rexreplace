@@ -70,9 +70,10 @@ async function run(pattern, replacement, config) {
 		alias(options);
 		status = await engine(options);
 		// Like the CLI, an error gives the exit code 2 and a check that is not met 1, when the run is done
-		if (status.errors.length) {
+		const checks = status.checks?.length ?? 0;
+		if (status.errors.length > checks) {
 			result.exit = 2;
-		} else if (status.checks?.length) {
+		} else if (checks) {
 			result.exit = 1;
 		}
 	} catch (e) {

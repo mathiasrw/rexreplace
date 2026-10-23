@@ -20,10 +20,10 @@ describe('--expect-files', () => {
 		});
 	});
 
-	test('is told in `checks` in the status report, and not in `errors`', async () => {
+	test('is in `errors` and in `checks` in the status report', async () => {
 		const status = await rrStatus('o', 'x', {includeGlob: ['nope.file'], expectFiles: true});
+		expect(status.errors).toEqual(['Expected files, but 0 files found']);
 		expect(status.checks).toEqual(['Expected files, but 0 files found']);
-		expect(status.errors).toEqual([]);
 	});
 
 	test('is still shown with --quiet, but not with --quiet-total', async () => {

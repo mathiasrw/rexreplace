@@ -595,9 +595,11 @@ const run = () =>
 	rexreplace.engine(config).then(
 		status => {
 			printStatus(config, status);
-			if (status.errors.length) {
+			// The failed checks are errors too, so 1 is when they are the only errors
+			const checks = status.checks?.length ?? 0;
+			if (status.errors.length > checks) {
 				process.exitCode = 2;
-			} else if (status.checks?.length) {
+			} else if (checks) {
 				process.exitCode = 1;
 			}
 		},
