@@ -300,7 +300,7 @@ const yargs = require('yargs')
 	.boolean('r')
 	.describe(
 		'r',
-		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file. A path with a character below space, like a line break or a tab, is a clash, and so is a new name of only dots and spaces, or one that ends with a space or a dot.'
+		'Search and replace in the name of each file, and rename the file to the result. The folder and the content are not touched. If planned renames clash the process is halted and no change is applied to any file. The process will halt before renaming begins if old or new names contain ASCII control characters, end on a space or a dot, or consist only of spaces and dots.'
 	)
 	.alias('r', 'rename')
 
