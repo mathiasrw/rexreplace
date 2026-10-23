@@ -704,11 +704,19 @@ function getFinalReplacement(replacement, conf: any) {
 }
 
 // The path as it is, and the reason, like `nope.txt (ENOENT: no such file or directory)`.
-// A path that starts or ends with a space, or has a control char, like a line break from echo, is shown as JSON, so it can be seen.
+// A path that starts or ends with a space, or has a char that can not be seen, like a line break from echo or a zero-width space,
+// is shown as JSON, so the char can be seen.
 function unreadable(filepath, e) {
-	const shown = /^\s|\s$|[\x00-\x1f\x7f]/.test(filepath) ? JSON.stringify(filepath) : filepath;
+	const unseen = /[\x7f-\x9f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/g;
+	const shown =
+		/^\s|\s$|[\x00-\x1f]/.test(filepath) || unseen.test(filepath)
+			? JSON.stringify(filepath).replace(
+					unseen,
+					char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0')
+				)
+			: filepath;
 	// The message ends with the call and the path, like `, open 'nope.txt'`, which is already told
-	const reason = String(e.message || e.code).replace(/, \w+ '.*'$/s, '');
+	const reason = String(e.message || e.code).replace(/, \w+( '.*')?$/s, '');
 	return shown + ' (' + reason + ')';
 }
 
