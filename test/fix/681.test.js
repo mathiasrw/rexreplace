@@ -2,7 +2,7 @@
 // `--halt` used the error message as exit code: Node 18 exited with 0, newer Node versions crashed with ERR_INVALID_ARG_TYPE.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 describe('#681 --halt exits with a numeric non-zero code', () => {
 	test('a file that can not be read', async () => {

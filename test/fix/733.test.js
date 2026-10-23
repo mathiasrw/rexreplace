@@ -3,7 +3,7 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {$} from 'bun';
-import {cli, sh} from '../../helper.js';
+import {cli, sh} from '../helper.js';
 
 describe('#733 a file glob that reads as a number', () => {
 	test.each(['2024', '1e3', '0x10'])('is kept as a string, like %s', async name => {

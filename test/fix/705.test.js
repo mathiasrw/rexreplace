@@ -2,8 +2,8 @@
 // The engine used to return before the files were done, and there was no way to wait for it.
 import {describe, test, expect, spyOn} from 'bun:test';
 import fs from 'fs';
-import {engine} from '../../../src/engine.ts';
-import {rr} from '../../helper.js';
+import {engine} from '../../src/engine.ts';
+import {rr} from '../helper.js';
 
 const content = names => names.map(name => fs.readFileSync(name, 'utf8'));
 

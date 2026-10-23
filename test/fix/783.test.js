@@ -3,7 +3,7 @@
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {$} from 'bun';
-import {cli, sh} from '../../helper.js';
+import {cli, sh} from '../helper.js';
 
 describe('#783 the exit code tells what happened', () => {
 	test('0 when it is done, also with a warning', async () => {

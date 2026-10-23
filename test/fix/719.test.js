@@ -2,7 +2,7 @@
 // Data piped in together with files was not used, and nothing told about it.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr} from '../../helper.js';
+import {rr} from '../helper.js';
 
 const warning = ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used.\n\n';
 const expectedOutput = 'my.file\n';
