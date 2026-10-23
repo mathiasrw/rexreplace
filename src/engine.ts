@@ -824,7 +824,13 @@ function numbersCode(numbers) {
 function stackPlaces(stack) {
 	return String(stack)
 		.split('\n')
-		.map(line => line.match(/^\s*at (?:.*? \()?(?:file:\/\/)?(.+?)(:\d+:\d+)\)?\s*$/))
+		.map(
+			line =>
+				// Without a function name the place comes right after at, like `at /dir/a (copy)/anon.js:1:59`
+				line.match(/^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/) ||
+				// With a name the place is in parentheses at the end, like `at fn (/path/file.js:2:15)`
+				line.match(/^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/)
+		)
 		.filter(Boolean)
 		.map(([, file, place]) => ({file, place}));
 }
