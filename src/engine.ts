@@ -6,33 +6,28 @@ const path = require('path');
 
 const globs = require('fast-glob');
 
-const now = new Date();
-
-import {
-	outputConfig,
-	chat,
-	info,
-	print,
-	printDone,
-	warn,
-	error,
-	panic,
-	checkFailed,
-} from './output.ts';
-
-import './shim.ts';
+import {print, printDone, printName} from './output.ts';
+import {statusConfig, verbose, warn, error, panic, checkExpectations} from './status.ts';
 
 const re = {
 	mctime: /[mc]time/,
 	colon: /:/g,
 	capturedGroupRef: /\$\d/,
+	startsWithVowel: /^[aeiou]/i,
+	// A path that is not welcome in --rename, also when the pattern would not change it
+	controlChar: /[\x00-\x1f\x7f]/,
+	slash: /[\\/]/,
+	// Like an empty name, . or .., which are folders. Windows does not allow a space or a dot at the end.
+	onlyDotsOrEndsWithDot: /^[. ]*$|[. ]$/,
+	absolutePath: /^(\/|[A-Za-z]:[\\/])/,
+	// A line of a stack trace without a function name has the location right after at, like `at /dir/a (copy)/anon.js:1:59`.
+	// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`.
+	stackLineWithoutName: /^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/,
+	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
 	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
 	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
 	byteOrSize: /bytes|size/,
 	folderName: /[\\\/]+([^\\\/]+)[\\\/]+[^\\\/]+$/,
-	// The numbers of #791 that count what came before: $i, $c, $m and $M with their cousins, like $i00 or $M_
-	runNumbers: /\$[icmM](?![A-Za-z])/,
-	matchNumbers: /\$[mM](?![A-Za-z])/,
 	// A path that is not clear as it is printed: a space at the start or the end, or a char that can not be seen,
 	// like a line break from echo or a zero-width space
 	unclearPath: /^\s|\s$|[\x00-\x1f\x7f-\x9f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/,
@@ -50,19 +45,16 @@ export {version};
 const runtime = process.versions.bun ? 'Bun' : 'Node';
 const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
-function validateEncoding(encoding = 'utf8') {
-	if (!Buffer.isEncoding(encoding)) {
-		panic('Unknown encoding:', encoding);
-	}
-}
-
 // Resolves with the status of the run when all files are done.
 // When the run can not go on, a panic is thrown with the status so far.
 export async function engine(config: any = {engine: 'default'}) {
 	config.statusInfo = newStatus(config);
-	// A new run has had no panic yet, also when the same config is used again
-	config.stopped = false;
-	outputConfig(config);
+	// A new run has had no panic yet, has read no replacement file, and has its own time, also when the same config is used again
+	config.plzStop = false;
+	config.replacementFiles = new Map();
+	config.unreadableFiles = new Set();
+	config.startTime = new Date();
+	statusConfig(config);
 	try {
 		await run(config);
 		checkExpectations(config);
@@ -109,9 +101,29 @@ function newStatus(config) {
 	return status;
 }
 
-async function run(config) {
-	validateEncoding(config.encoding);
+// Flags that can not go together
+function checkFlags(config) {
+	if (!Buffer.isEncoding(config.encoding ?? 'utf8')) {
+		panic('Unknown encoding:', config.encoding);
+	}
+	if (config.expectZeroDiff && (config.expectDiff || config.expectDiffAll)) {
+		panic('--expect-zero-diff can not be used with --expect-diff or --expect-diff-all');
+	}
+	if (config.globPipe && (config.replacementPipe || config.pipe)) {
+		panic(
+			'--glob-pipe can not be used with --replacement-pipe or --js-pipe, as the piped data can only be one thing'
+		);
+	}
+	if (config.rename && config.renamePath) {
+		panic('--rename can not be used with --rename-path');
+	}
+	if (config.renameForce && !config.rename && !config.renamePath) {
+		panic('--rename-force needs --rename or --rename-path');
+	}
+}
 
+// The config the run works with, made from the flags
+function unpackConfig(config) {
 	// For the numbers of --js: the files with a match, the files changed and the matches so far
 	config.numbers = {matched: 0, changed: 0, matches: 0};
 
@@ -119,30 +131,20 @@ async function run(config) {
 		warn('The code is not run with --output-match, as only the matches are printed.');
 	}
 
-	if (config.expectZeroDiff && (config.expectDiff || config.expectDiffAll)) {
-		panic('--expect-zero-diff can not be used with --expect-diff or --expect-diff-all');
-	}
-
 	// With --glob-pipe each line of the piped data is a path or a glob, used together with the ones given as arguments
 	if (config.globPipe) {
-		if (config.replacementPipe || config.pipe) {
-			panic(
-				'--glob-pipe can not be used with --replacement-pipe or --js-pipe, as the piped data can only be one thing'
-			);
-		}
 		config.pipedDataUsed = true;
 		const lines = (config.pipedData ?? '').split(config.nullIn ? '\0' : /\r?\n/);
 		config.includeGlob = config.includeGlob.concat(lines.filter(line => '' !== line));
 	}
 
-	config.pattern = getFinalPattern(config.pattern, config) || '';
+	config.pattern = regexPattern(config.pattern, config);
 
-	config.replacement = getFinalReplacement(config.replacement, config) || '';
-
+	config.replacement = readReplacement(config) || '';
 	config.replacementOri = config.replacement;
-
-	// $i and $c need one more search of each file, so the files are only counted when the code uses them
-	config.countFiles = config.replacementJs && /\$[ic](?![A-Za-z])/.test(config.replacementOri);
+	if (config.outputMatch) {
+		config.replacement = matchPrinter(config);
+	}
 
 	// The most specific delimiter wins. Without one there is a line break after each item, unless it already ends with one.
 	const delimiter = config.delimiter ?? (config.nullOut ? '\0' : null);
@@ -152,15 +154,16 @@ async function run(config) {
 	// --output-match wins over --output
 	config.output = config.output && !config.outputMatch;
 
-	config.regex = getFinalRegex(config.pattern, config) || '';
+	config.regex = getFinalRegex(config.pattern, config);
+
+	config.codeUses = config.replacementJs ? codeUses(config.replacementOri, config.regex) : null;
 
 	// In --js a named group is a variable like rr_year, and rr_year_ has a space at the end.
 	// A group that ends with _ would have the same name as another group with a space, so it can not be used.
 	// With --output-match the code is not run, so there are no variables.
-	const endsWith_ =
-		config.replacementJs && !config.outputMatch && config.regex
-			? namedGroups(config.regex).find(name => name.endsWith('_'))
-			: null;
+	const endsWith_ = config.outputMatch
+		? null
+		: config.codeUses?.groups.find(name => name.endsWith('_'));
 	if (endsWith_) {
 		panic('A named group can not end with _:', endsWith_);
 	}
@@ -186,12 +189,12 @@ async function run(config) {
 		config.replacement = () => text;
 	}
 
-	const piped = handlePipedData(config);
+	usePipeAsContent(config);
 
 	if (null !== config.pipedData) {
 		config.statusInfo.pipe = {
 			bytes: Buffer.byteLength(config.pipedData, config.encoding),
-			type: pipeType(config, piped),
+			type: pipeType(config),
 			updated: false,
 		};
 	}
@@ -199,21 +202,17 @@ async function run(config) {
 	// The more specific tail wins. Piped data that is printed is left as it came in, but matches are matches, from a file or a pipe.
 	config.nameDelimiterTail = config.nameDelimiterTail ?? config.tail ?? true;
 	config.contentDelimiterTail =
-		config.contentDelimiterTail ?? config.tail ?? !(piped && config.output);
+		config.contentDelimiterTail ?? config.tail ?? !(config.dataIsPiped && config.output);
+}
 
-	if (config.rename && config.renamePath) {
-		panic('--rename can not be used with --rename-path');
-	}
+async function run(config) {
+	checkFlags(config);
+	unpackConfig(config);
 
-	if (config.renameForce && !config.rename && !config.renamePath) {
-		panic('--rename-force needs --rename or --rename-path');
-	}
-
-	if ((config.rename || config.renamePath) && piped) {
-		panic('--rename and --rename-path need files, as piped data has no name to change');
-	}
-
-	if (piped) {
+	if (config.dataIsPiped) {
+		if (config.rename || config.renamePath) {
+			panic('--rename and --rename-path need files, as piped data has no name to change');
+		}
 		return doReplacement('Piped data', config, config.pipedData, 1, 1);
 	}
 
@@ -224,7 +223,7 @@ async function run(config) {
 		return warn('0 files found');
 	}
 
-	chat(config.files.length + ' files found');
+	verbose(config.files.length + ' files found');
 
 	// One file needs no async flow, and with -o, -m or --sort one file at a time gives the output in order
 	config.voidAsync =
@@ -235,7 +234,7 @@ async function run(config) {
 		null != config.sort ||
 		config.sortReverse ||
 		// The numbers that count what came before are only the same on every run when the files come in order
-		(config.replacementJs && re.runNumbers.test(config.replacementOri));
+		config.codeUses?.countsBefore;
 
 	const files = config.files.filter(filepath =>
 		fs.existsSync(filepath) ? true : error('File not found:', filepath)
@@ -244,9 +243,12 @@ async function run(config) {
 	if (config.rename || config.renamePath) {
 		return renameFiles(files, config);
 	}
+	return processFiles(files, config);
+}
 
-	// A limited number of files are in work at the same time, so the memory and the open files stay within bounds.
-	// Each worker takes the next file when it is done with one. Up to 16 files are all handled at once.
+// A limited number of files are in work at the same time, so the memory and the open files stay within bounds.
+// Each worker takes the next file when it is done with one. Up to 16 files are all handled at once.
+async function processFiles(files, config) {
 	const workers = config.voidAsync
 		? 1
 		: files.length <= 16
@@ -254,14 +256,13 @@ async function run(config) {
 			: Math.max(16, os.availableParallelism() * 2);
 	let next = 0;
 	// After a panic no worker starts a new file. A file that is already in work is finished.
-	let stopped = false;
 	const worker = async () => {
-		while (next < files.length && !stopped) {
+		while (next < files.length && !config.plzStop) {
 			const index = next++;
 			try {
 				await openFile(files[index], config, index + 1, files.length);
 			} catch (e) {
-				stopped = true;
+				config.plzStop = true;
 				throw e;
 			}
 		}
@@ -278,7 +279,7 @@ async function run(config) {
 function openFile(file, config, number, total) {
 	config.statusInfo.files.searched.push(file);
 	if (config.voidAsync) {
-		chat('Open sync: ' + file);
+		verbose('Open sync: ' + file);
 		let data;
 		try {
 			data = fs.readFileSync(file, config.encoding);
@@ -287,122 +288,137 @@ function openFile(file, config, number, total) {
 		}
 		return doReplacement(file, config, data, number, total);
 	} else {
-		chat('Open async: ' + file);
+		verbose('Open async: ' + file);
 		return fs.promises
 			.readFile(file, config.encoding)
 			.then(data => doReplacement(file, config, data, number, total), error);
 	}
 }
 
-// postfix argument names to limit the probabillity of user inputted javascript accidently using same values
-function doReplacement(
-	_file_rr: string,
-	_config_rr: any,
-	_data_rr: string,
-	_number_rr: number,
-	_total_rr: number
-) {
-	chat('Work on content from: ' + _file_rr);
+function doReplacement(file: string, config: any, data: string, number: number, total: number) {
+	verbose('Work on content from: ' + file);
 
 	// Main regexp of the whole thing. With --output-match the replacement prints the matches, so the code of --replacement-js is not run.
-	const result = _data_rr.replace(
-		_config_rr.regex,
-		_config_rr.replacementJs && !_config_rr.outputMatch
-			? codeReplacement(
-					_file_rr,
-					_config_rr,
-					_data_rr,
-					fileNumbers(_config_rr, _number_rr, _total_rr)
-				)
-			: _config_rr.replacement
+	const result = data.replace(
+		config.regex,
+		config.replacementJs && !config.outputMatch
+			? codeReplacement(file, config, data, fileNumbers(config, number, total))
+			: config.replacement
 	);
-	countFile(_config_rr, _data_rr, result);
+	countFile(config, data, result);
 
-	if (_config_rr.output || _config_rr.outputMatch) {
+	if (config.output || config.outputMatch) {
 		// With --output-match the matches are printed by the replacement
-		if (_config_rr.output) {
-			chat('Output result from: ' + _file_rr);
-			print(result, _config_rr.contentDelimiter, _config_rr.contentDelimiterTail);
+		if (config.output) {
+			verbose('Output result from: ' + file);
+			print(result, config.contentDelimiter, config.contentDelimiterTail);
 		}
 		// The file is not changed, but it is still named if its content would change
-		if (_config_rr.dataIsPiped) {
-			_config_rr.statusInfo.pipe.updated = result !== _data_rr;
-		} else if (result !== _data_rr) {
-			updated(_file_rr, _config_rr);
-		} else if (_config_rr.nameAll) {
-			info(_file_rr);
+		if (config.dataIsPiped) {
+			config.statusInfo.pipe.updated = result !== data;
+		} else if (result !== data) {
+			markFileChanged(file, config);
+		} else if (config.nameAll) {
+			printName(file);
 		}
 		return;
 	}
 
 	// Nothing replaced = no need for writing file again
-	if (result === _data_rr) {
-		chat('Nothing changed in: ' + _file_rr);
-		if (_config_rr.nameAll) {
-			info(_file_rr);
+	if (result === data) {
+		verbose('Nothing changed in: ' + file);
+		if (config.nameAll) {
+			printName(file);
 		}
 		return;
 	}
 
 	// --simulate does everything but write, so the file is named as if it was changed
-	if (_config_rr.simulate) {
-		return updated(_file_rr, _config_rr);
+	if (config.simulate) {
+		return markFileChanged(file, config);
 	}
 
 	// Release the memory while storing files
-	_data_rr = '';
+	data = '';
 
-	chat('Write new content to: ' + _file_rr);
+	verbose('Write new content to: ' + file);
 
 	// Write directly to the same file (if the process is killed all new and old data is lost)
-	if (_config_rr.voidBackup) {
+	if (config.voidBackup) {
 		return fs.promises
-			.writeFile(_file_rr, result, _config_rr.encoding)
-			.then(() => updated(_file_rr, _config_rr), error);
+			.writeFile(file, result, config.encoding)
+			.then(() => markFileChanged(file, config), error);
 	}
 
 	//Make sure data is always on disk
-	const oriFile = path.resolve(_file_rr);
+	const oriFile = path.resolve(file);
 	const salt = new Date().toISOString().replace(re.colon, '_').replace('Z', '');
 	const backupFile = oriFile + '.' + salt + '.backup';
 
-	if (_config_rr.voidAsync) {
+	if (config.voidAsync) {
 		try {
 			fs.renameSync(oriFile, backupFile);
-			fs.writeFileSync(oriFile, result, _config_rr.encoding);
-			if (!_config_rr.keepBackup) {
+			fs.writeFileSync(oriFile, result, config.encoding);
+			if (!config.keepBackup) {
 				fs.unlinkSync(backupFile);
 			}
 		} catch (e) {
 			return error(e);
 		}
-		return updated(_file_rr, _config_rr);
+		return markFileChanged(file, config);
 	}
 
 	return fs.promises
 		.rename(oriFile, backupFile)
-		.then(() => fs.promises.writeFile(oriFile, result, _config_rr.encoding))
-		.then(() => _config_rr.keepBackup || fs.promises.unlink(backupFile))
-		.then(() => updated(_file_rr, _config_rr), error);
+		.then(() => fs.promises.writeFile(oriFile, result, config.encoding))
+		.then(() => config.keepBackup || fs.promises.unlink(backupFile))
+		.then(() => markFileChanged(file, config), error);
 }
 
-// The content of the file was changed, or would be with --output and --output-match, so it is named
-function updated(file, config) {
+// The content of the file was changed, or would be with --simulate, --output and --output-match, so it is named
+function markFileChanged(file, config) {
 	config.statusInfo.files.updated.push(file);
-	info(file);
+	printName(file);
 }
 
 // --rename: the name of each file is the text that is searched and replaced, and the file is renamed to the result.
 // --rename-path: the same with the whole path, so the file can be moved.
 function renameFiles(files, config) {
-	// With --rename a / in the new name would move the file
-	const slashed = [];
-	// The new name of each file, before it is joined with its folder
+	const {plan, newNames} = planRenames(files, config);
+
+	// With --output-match the matches are printed by the replacement, and the names go to stderr.
+	// The replacement is not used, so nothing would be renamed: no clash check and no renames in the status.
+	if (config.outputMatch) {
+		return plan.forEach(item =>
+			item.new !== item.old
+				? markFileChanged(item.old, config)
+				: config.nameAll && printName(item.old)
+		);
+	}
+
+	checkNameClash(plan, checkNameInvalid(plan, newNames, config), config);
+
+	plan.forEach(item => {
+		if (item.new === item.old) {
+			verbose('Same name: ' + item.old);
+			return config.nameAll && nameRename(item, config);
+		}
+		// --simulate and --output do everything but rename
+		if (config.simulate || config.output) {
+			return renamed(item, config);
+		}
+		renameFile(item, config);
+	});
+}
+
+// The old and the new path of each file. The new name is also kept from before it is joined with its folder,
+// as an empty name would join to the folder itself.
+function planRenames(files, config) {
 	const newNames = new Map();
 	const plan = files.map((file, index) => {
 		config.statusInfo.files.searched.push(file);
 		const text = config.renamePath ? file : path.basename(file);
-		chat('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
+		verbose('Work on the ' + (config.renamePath ? 'path' : 'name') + ' of: ' + file);
 		const replacement =
 			config.replacementJs && !config.outputMatch
 				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
@@ -412,23 +428,21 @@ function renameFiles(files, config) {
 		if (result === text) {
 			return {old: file, new: file};
 		}
-		if (config.renamePath) {
-			const item = {old: file, new: result};
-			newNames.set(item, path.basename(result));
-			return item;
-		}
-		const item = {old: file, new: path.join(path.dirname(file), result)};
-		newNames.set(item, result);
-		if (/[\\/]/.test(result)) {
-			slashed.push(item);
-		}
+		const item = {
+			old: file,
+			new: config.renamePath ? result : path.join(path.dirname(file), result),
+		};
+		newNames.set(item, config.renamePath ? path.basename(result) : result);
 		return item;
 	});
-	// Names that can not be made. Each one is a clash of its own, and is left out of the other checks.
+	return {plan, newNames};
+}
+
+// The names that can not be made, each with the reason. Each one is a clash of its own, and is left out of the other checks.
+function checkNameInvalid(plan, newNames, config) {
 	const invalid = [];
-	// A path with a control character is not welcome, also when the pattern would not change it
 	plan.forEach(item => {
-		if (/[\x00-\x1f\x7f]/.test(item.old + item.new)) {
+		if (re.controlChar.test(item.old + item.new)) {
 			invalid.push([
 				'Names can not have control characters, like a line break or a tab.' +
 					(config.replacementFile
@@ -436,47 +450,34 @@ function renameFiles(files, config) {
 						: ''),
 				item,
 			]);
-		} else if (item.new !== item.old && /^[. ]*$|[. ]$/.test(newNames.get(item))) {
-			// Like an empty name, . or .., which are folders. Windows does not allow a space or a dot at the end.
+		} else if (item.new === item.old) {
+			return;
+		} else if (re.onlyDotsOrEndsWithDot.test(newNames.get(item))) {
 			invalid.push([
 				'A name must have more than dots and spaces, and can not end with a space or a dot.',
 				item,
 			]);
+		} else if (!config.renamePath && re.slash.test(newNames.get(item))) {
+			// With --rename a / in the new name would move the file
+			invalid.push(['"/" is not allowed in names. Use --rename-path to move files.', item]);
 		}
 	});
-	const renames = plan.filter(item => item.new !== item.old);
+	return invalid;
+}
 
-	// With --output-match the matches are printed by the replacement, and the names go to stderr.
-	// The replacement is not used, so nothing would be renamed: no clash check and no renames in the status.
-	if (config.outputMatch) {
-		return plan.forEach(item =>
-			item.new !== item.old ? updated(item.old, config) : config.nameAll && info(item.old)
-		);
-	}
-
-	findClashes(plan, renames, slashed, invalid, config);
-
-	plan.forEach(item => {
-		if (item.new === item.old) {
-			chat('Same name: ' + item.old);
-			return config.nameAll && nameRename(item, config);
-		}
-		// --simulate and --output do everything but rename
-		if (config.simulate || config.output) {
-			config.statusInfo.files.updated.push(item.old);
-			config.statusInfo.renames.push(item);
-			return nameRename(item, config);
-		}
-		renameFile(item, config);
-	});
+// The file was renamed, or would be with --simulate and --output
+function renamed(item, config) {
+	config.statusInfo.files.updated.push(item.old);
+	config.statusInfo.renames.push(item);
+	nameRename(item, config);
 }
 
 // With --simulate and --output the old name goes to stderr and the new one to stdout, so they come in pairs in a terminal
 function nameRename(item, config) {
 	if (config.simulate || config.output) {
-		info(item.old, process.stderr);
+		printName(item.old, process.stderr);
 	}
-	info(item.new, process.stdout);
+	printName(item.new, process.stdout);
 }
 
 // If planned renames clash the process is halted and no change is applied to any file.
@@ -484,11 +485,11 @@ function nameRename(item, config) {
 // and the case is ignored, as `A.md` and `a.md` are the same file on a file system that is case-insensitive.
 const pathKey = file => path.resolve(file).toLowerCase();
 
-function findClashes(plan, renames, slashed, invalid, config) {
+function checkNameClash(plan, invalid, config) {
 	const byTarget = new Map();
-	const left = new Set(invalid.map(([, item]) => item));
-	renames.forEach(item => {
-		if (left.has(item)) {
+	const invalidItems = new Set(invalid.map(([, item]) => item));
+	plan.forEach(item => {
+		if (item.new === item.old || invalidItems.has(item)) {
 			return;
 		}
 		const target = pathKey(item.new);
@@ -497,18 +498,12 @@ function findClashes(plan, renames, slashed, invalid, config) {
 	// All files in the run, also the ones that keep their name
 	const inRun = new Set(plan.map(item => pathKey(item.old)));
 	const inRunExact = new Set(plan.map(item => path.resolve(item.old)));
-	const ontoRun = new Set(byTarget.keys()).intersection(inRun);
 
 	// Each path on its own line, so long paths can be read
 	const clash = (title, items) =>
 		title + items.map(item => '\n    From: ' + item.old).join('') + '\n    To:   ' + items[0].new;
 
-	const clashes = [
-		...invalid.map(([title, item]) => clash(title, [item])),
-		...slashed.map(item =>
-			clash('"/" is not allowed in names. Use --rename-path to move files.', [item])
-		),
-	];
+	const clashes = invalid.map(([title, item]) => clash(title, [item]));
 	byTarget.forEach((items, target) => {
 		const [item] = items;
 		// The new path is another file, also when it differs from the old one only in case (on a file system that is case-sensitive)
@@ -516,10 +511,7 @@ function findClashes(plan, renames, slashed, invalid, config) {
 		const self = pathKey(item.old) === target;
 		if (1 < items.length) {
 			clashes.push(clash('Renames to the same path are not allowed.', items));
-		} else if (
-			ontoRun.has(target) &&
-			(!self || (other && inRunExact.has(path.resolve(item.new))))
-		) {
+		} else if (inRun.has(target) && (!self || (other && inRunExact.has(path.resolve(item.new))))) {
 			// Not even --rename-force writes over a file in the run. A file can still change the case of its own name.
 			clashes.push(clash('Renames clashing with other files in this run are not allowed.', items));
 		} else if (other && !config.renameForce) {
@@ -553,7 +545,7 @@ function renameFile(item, config) {
 	try {
 		const folder = path.dirname(target);
 		if (!fs.existsSync(folder)) {
-			chat('Make folder: ' + path.dirname(item.new));
+			verbose('Make folder: ' + path.dirname(item.new));
 			fs.mkdirSync(folder, {recursive: true});
 		}
 		// Checked again, as the files can have changed since the clashes were found
@@ -561,63 +553,28 @@ function renameFile(item, config) {
 			if (!config.renameForce) {
 				return error(item.new + ' is there already, so ' + item.old + ' is not renamed');
 			}
-			chat('Write over: ' + item.new);
+			verbose('Write over: ' + item.new);
 		}
 		// With --keep-backup the old file is kept, so the file is copied
 		if (config.keepBackup) {
-			chat('Copy: ' + item.old + ' to ' + item.new);
+			verbose('Copy: ' + item.old + ' to ' + item.new);
 			fs.copyFileSync(item.old, target);
 		} else {
-			chat('Rename: ' + item.old + ' to ' + item.new);
+			verbose('Rename: ' + item.old + ' to ' + item.new);
 			fs.renameSync(item.old, target);
 		}
 	} catch (e) {
 		return error(e);
 	}
-	config.statusInfo.files.updated.push(item.old);
-	config.statusInfo.renames.push(item);
-	info(item.new);
-}
-
-// The checks from --expect-* are done when the run is done. Piped data counts as one file.
-function checkExpectations(config) {
-	const status = config.statusInfo;
-	if (!status.checks) {
-		return;
-	}
-	const piped = Boolean(config.dataIsPiped);
-	const found = piped ? 1 : status.files.searched.length;
-	const changed = piped ? Number(status.pipe.updated) : status.files.updated.length;
-	// Nothing is written with --simulate, --output and --output-match
-	const would = !piped && (config.simulate || config.output || config.outputMatch);
-	const files = count => (piped ? 'the piped data' : count + (1 === count ? ' file' : ' files'));
-	const change = count =>
-		would ? 'would change' : 1 === count || piped ? 'was changed' : 'were changed';
-
-	if (config.expectFiles && !found) {
-		checkFailed('Expected files, but 0 files found');
-	}
-	if ((config.expectDiff || config.expectDiffAll) && !changed) {
-		checkFailed('Expected a diff, but nothing ' + (would ? 'would change' : 'was changed'));
-	} else if (config.expectDiffAll && changed < found) {
-		const unchanged = found - changed;
-		checkFailed(
-			'Expected all files to change, but ' +
-				files(unchanged) +
-				(would ? ' would not change' : 1 === unchanged ? ' was not changed' : ' were not changed')
-		);
-	}
-	if (config.expectZeroDiff && changed) {
-		checkFailed('Expected no diff, but ' + files(changed) + ' ' + change(changed));
-	}
+	renamed(item, config);
 }
 
 // How the piped data was used
-function pipeType(config, piped) {
+function pipeType(config) {
 	if (config.globPipe) {
 		return 'GLOBS';
 	}
-	if (piped) {
+	if (config.dataIsPiped) {
 		return 'CONTENT';
 	}
 	if (config.replacementJs) {
@@ -629,88 +586,62 @@ function pipeType(config, piped) {
 	return 'UNUSED';
 }
 
-function handlePipedData(config) {
-	// With files the piped data is only read when a flag asks for it, and then the flag uses it
-	if (config.includeGlob.length) {
-		return false;
-	}
-
-	if (null !== config.pipedData && !config.pipedDataUsed) {
-		config.dataIsPiped = true;
+// Piped data is the content to search when no files are given and no flag uses it for something else
+function usePipeAsContent(config) {
+	config.dataIsPiped =
+		!config.includeGlob.length && null !== config.pipedData && !config.pipedDataUsed;
+	if (config.dataIsPiped) {
 		// Piped data is printed, unless only the matches are
 		config.output = !config.outputMatch;
-		return true;
 	}
-
-	return false;
 }
 
-function getFinalPattern(pattern, conf: any) {
+function regexPattern(pattern, conf: any) {
 	if (conf.literal) {
 		pattern = pattern.replace(re.regexSpecialChars, '\\$&');
 	}
 
-	/*if (config.patternFile) {
-		pattern = fs.readFileSync(pattern, 'utf8');
-		pattern = new Function('return '+pattern)();
-	}*/
-
 	return pattern;
 }
 
-function getFinalReplacement(replacement, conf: any) {
-	if (conf.replacementPipe) {
-		conf.pipedDataUsed = true;
-		if (null === conf.pipedData) {
+// The replacement as text: from the pipe, from --replacement-file, or as it was typed
+function readReplacement(config) {
+	let replacement = config.replacement;
+	if (config.replacementPipe) {
+		config.pipedDataUsed = true;
+		if (null === config.pipedData) {
 			return panic('No data piped into replacement');
 		}
-		replacement = conf.pipedData;
-	}
-
-	if (conf.outputMatch) {
-		if (conf.replacementFile) {
-			warn(
-				'The replacement file is not read with --output-match, as only the matches are printed.'
-			);
-		}
-		if (parseInt(process.versions.node) < 6) {
-			return panic('outputMatch is only supported in node 6+');
-		}
-
-		return function (match, ...rest) {
-			// The groups are followed by the offset and the full text, and by the named groups if the pattern has any.
-			// Without groups the full match is printed, otherwise the groups are printed together.
-			const groups = rest.slice(0, 'object' === typeof rest[rest.length - 1] ? -3 : -2);
-			print(
-				groups.length ? groups.join('') : match,
-				conf.contentDelimiter,
-				conf.contentDelimiterTail
-			);
-			return '';
-		};
-	}
-
-	// If captured groups then run dynamicly
-	//console.log(process);
-	if (
-		conf.replacementJs &&
-		re.capturedGroupRef.test(conf.replacement) &&
-		parseInt(process.versions.node) < 6
-	) {
-		return panic('Captured groups for javascript replacement is only supported in node 6+');
+		replacement = config.pipedData;
 	}
 
 	// --replacement-file: the replacement is the path to the file with the replacement.
-	// With --js the code gives the path, so the file is read when the code has run.
-	if (conf.replacementFile && !conf.replacementJs) {
+	// With --js the code gives the path, so the file is read when the code has run. With --output-match it is not used.
+	if (config.replacementFile && !config.replacementJs && !config.outputMatch) {
 		try {
-			return readReplacementFile(replacement, conf);
+			return readReplacementFile(replacement, config);
 		} catch (e) {
 			return panic('The replacement file can not be read:', pathAndReason(replacement, e));
 		}
 	}
 
 	return replacement;
+}
+
+// --output-match prints each match: the full match, or the groups together when the pattern has groups
+function matchPrinter(config) {
+	if (config.replacementFile) {
+		warn('The replacement file is not read with --output-match, as only the matches are printed.');
+	}
+	return (...args) => {
+		const [match, ...groups] = splitMatch(args).groups;
+		print(
+			groups.length ? groups.join('') : match,
+			config.contentDelimiter,
+			config.contentDelimiterTail
+		);
+		return '';
+	};
 }
 
 // The path and why it can not be read, like `nope.txt (ENOENT: no such file or directory)`.
@@ -729,9 +660,8 @@ function pathAndReason(filepath, e) {
 
 // Each replacement file is read once, also when the code of --js gives the same path for many matches
 function readReplacementFile(filepath, conf) {
-	conf.replacementFiles ??= new Map();
 	if (!conf.replacementFiles.has(filepath)) {
-		chat('Read the replacement file: ' + filepath);
+		verbose('Read the replacement file: ' + filepath);
 		const content = fs.readFileSync(filepath, conf.encoding);
 		conf.replacementFiles.set(filepath, conf.trimFile ? content.trim() : content);
 	}
@@ -745,7 +675,6 @@ function codeReplacement(file, config, text, numbers) {
 		return code;
 	}
 	// A path that can not be read is an error once in the run, and its matches are left as they are
-	config.unreadableFiles ??= new Set();
 	return (...args) => {
 		const filepath = String(code(...args));
 		if (!config.unreadableFiles.has(filepath)) {
@@ -760,77 +689,27 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-/*function oneLinerFromFile(str){
-	let lines = str.split("\n");
-	if(lines.length===1){
-		return str;
-	}
-	return lines.map(function (line) {
-		return line.trim();
-	}).join(' ');
-}*/
-
 function getFinalRegex(pattern, config) {
 	const engine = 'default' === config.engine ? runtimeEngine : config.engine;
-
-	let regex;
-
-	let flags = getFlags(config);
-
-	switch (engine) {
-		case runtimeEngine:
-			try {
-				regex = new RegExp(pattern, flags);
-			} catch (e) {
-				panic(e.message);
-			}
-			break;
-		case 'V8':
-		case 'JSC':
-			panic(
-				`When running via the ${runtime} runtime you can only use default or ${runtimeEngine} as engine`
-			);
-			break;
-		case 'RE2':
-			try {
-				//const RE2 = require('re2');
-				//regex = new RE2(pattern, flags);
-				regex = new RegExp(pattern, flags);
-			} catch (e) {
-				panic(e.message);
-			}
-			break;
-		default:
-			panic(`Engine ${config.engine} not supported`);
+	// RE2 is not in yet, so it uses the engine of the runtime
+	if (engine !== runtimeEngine && 'RE2' !== engine) {
+		panic(
+			'V8' === engine || 'JSC' === engine
+				? `When running via the ${runtime} runtime you can only use default or ${runtimeEngine} as engine`
+				: `Engine ${config.engine} not supported`
+		);
 	}
-
-	return regex;
-}
-
-function getFlags(config) {
-	let flags = '';
-
-	if (!config.voidGlobal) {
-		flags += 'g';
+	const flags =
+		(config.voidGlobal ? '' : 'g') +
+		(config.voidIgnoreCase ? '' : 'i') +
+		(config.voidMultiline ? '' : 'm') +
+		(config.dotAll ? 's' : '') +
+		(config.unicode ? 'u' : '');
+	try {
+		return new RegExp(pattern, flags);
+	} catch (e) {
+		return panic(e.message);
 	}
-
-	if (!config.voidIgnoreCase) {
-		flags += 'i';
-	}
-
-	if (!config.voidMultiline) {
-		flags += 'm';
-	}
-
-	if (config.dotAll) {
-		flags += 's';
-	}
-
-	if (config.unicode) {
-		flags += 'u';
-	}
-
-	return flags;
 }
 
 function readableSize(size) {
@@ -852,7 +731,7 @@ function fileNumbers(config, number, total) {
 // When a file is done, it counts for $i if the pattern found something, and for $c if it was changed.
 // It takes one more search of the file, so it is only done when the code uses $i or $c.
 function countFile(config, text, result) {
-	if (!config.countFiles) {
+	if (!config.codeUses?.countFiles) {
 		return;
 	}
 	if (-1 !== text.search(config.regex)) {
@@ -863,15 +742,33 @@ function countFile(config, text, result) {
 	}
 }
 
-// The code uses a named group of the pattern, like rr_year for (?<year>…)
-function usesNamedGroups(config) {
-	return namedGroups(config.regex).some(name =>
+// What the code of --js names. It is found once, with a plain text search, so it can be fooled, like by `eval('$' + 'n')`.
+function codeUses(code, regex) {
+	const numbers = new Set(
+		['n', 't', 'i', 'c', 'm', 'M'].filter(name =>
+			new RegExp('\\$' + name + '(?![A-Za-z])').test(code)
+		)
+	);
+	const groups = namedGroups(regex);
+	// A named group is used as rr_year, or as rr_year_ with a space at the end
+	const usesGroup = name =>
 		new RegExp(
-			// rr_year_ is the group with a space at the end, so the code uses the group then too
 			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
 			'u'
-		).test(config.replacementOri)
-	);
+		).test(code);
+	const matchNumbers = numbers.has('m') || numbers.has('M');
+	return {
+		numbers,
+		groups,
+		// $i and $c need one more search of each file, so the files are only counted when the code uses them
+		countFiles: numbers.has('i') || numbers.has('c'),
+		// $i, $c, $m and $M count what came before
+		countsBefore: matchNumbers || numbers.has('i') || numbers.has('c'),
+		// The groups, the named groups, $m and $M are about the match, so the code runs once per match
+		perMatch: matchNumbers || re.capturedGroupRef.test(code) || groups.some(usesGroup),
+		stat: re.mctime.test(code),
+		size: re.byteOrSize.test(code),
+	};
 }
 
 // The names of the named groups of a regex, like year for (?<year>…). A name can have any letter, like año.
@@ -885,9 +782,9 @@ function namedGroups(regex) {
 // Code that makes the numbers and their cousins, put in front of the code of --js.
 // $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10, and the ones with _ at the end have a space at the end.
 // Only the numbers the code uses are made, as each one costs time when the code runs once per match.
-function numbersCode(numbers, code) {
+function numbersCode(numbers, used) {
 	return Object.entries(numbers)
-		.filter(([name]) => new RegExp('\\$' + name + '(?![A-Za-z])').test(code))
+		.filter(([name]) => used.has(name))
 		.map(([name, value]) => {
 			const cousins = [`$${name} = ${value}`, `$${name}_ = '${value} '`];
 			for (let width = 2; width <= 10; width++) {
@@ -905,13 +802,7 @@ function numbersCode(numbers, code) {
 function stackTraceLocations(stackTrace) {
 	return String(stackTrace)
 		.split('\n')
-		.map(
-			line =>
-				// Without a function name the location comes right after at, like `at /dir/a (copy)/anon.js:1:59`
-				line.match(/^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/) ||
-				// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`
-				line.match(/^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/)
-		)
+		.map(line => line.match(re.stackLineWithoutName) || line.match(re.stackLineWithName))
 		.filter(Boolean)
 		.map(([, file, position]) => ({file, position}));
 }
@@ -932,7 +823,7 @@ function userCodeLocation(thrown) {
 				return '';
 			}
 			// A file is an absolute path, so the frames of code run with eval are skipped too
-			if (/^(\/|[A-Za-z]:[\\/])/.test(file) && !file.includes('node_modules')) {
+			if (re.absolutePath.test(file) && !file.includes('node_modules')) {
 				return path.relative(process.cwd(), file) + position;
 			}
 		}
@@ -940,34 +831,31 @@ function userCodeLocation(thrown) {
 	return '';
 }
 
-// The text of what code threw. Code can throw anything, also a value that can not be made into text.
-function thrownText(thrown) {
-	let text = '';
+// Reading a value from the code of the user can throw, so it is tried
+function tryOr(read, fallback = '') {
 	try {
-		text = String(thrown);
-	} catch (e) {}
+		return read() ?? fallback;
+	} catch (e) {
+		return fallback;
+	}
+}
+
+// What the code threw, as text, like `Error: x` or `a Foo was thrown: {"a":1}`. Code can throw anything.
+function thrownText(thrown) {
+	const text = tryOr(() => String(thrown));
 	if (text && '[object Object]' !== text) {
 		return text;
 	}
-	if ('object' !== typeof thrown || null === thrown) {
-		return 'an empty ' + typeof thrown + ' was thrown';
+	// Any other value that is not an object gives text
+	if ('' === thrown) {
+		return 'an empty string was thrown';
 	}
-	// The name of the class, like an Error whose message can not be read, or a class of the user
-	let name = '';
-	try {
-		name = String(thrown.constructor?.name ?? '');
-	} catch (e) {}
-	let json = '';
-	try {
-		json = JSON.stringify(thrown) ?? '';
-	} catch (e) {}
+	// The class, like a class of the user, or an Error whose message can not be read
+	const name = tryOr(() => String(thrown.constructor.name));
 	const what = name && 'Object' !== name ? name : 'object';
-	return cut(
-		(/^[aeiou]/i.test(what) ? 'an ' : 'a ') +
-			what +
-			' was thrown' +
-			(json && '{}' !== json ? ': ' + json : '')
-	);
+	const json = tryOr(() => JSON.stringify(thrown));
+	const article = re.startsWithVowel.test(what) ? 'an' : 'a';
+	return cut(`${article} ${what} was thrown` + (json && '{}' !== json ? ': ' + json : ''));
 }
 
 // The thrown value can hold a whole file, so only the start is told. It is cut by characters, so an emoji is not split.
@@ -976,119 +864,115 @@ function cut(text, length = 300) {
 	return chars.length > length ? chars.slice(0, length).join('') + '…' : text;
 }
 
-function dynamicReplacement(
-	_file_rr,
-	_config_rr,
-	_data_rr,
-	_numbers_rr = {n: 1, t: 1, i: 1, c: 1}
-) {
-	const _time_obj = now;
-	const _time = localTimeString(_time_obj);
-	const _pipe = _config_rr.pipedData,
-		_text = _data_rr,
-		_find = _config_rr.pattern,
-		// The code of the user is in a block of its own, so it can declare the same names with let and const.
-		// The value of the block is the value of its last statement, like before. The line break ends a comment at the end.
-		code_rr =
-			numbersCode(_numbers_rr, _config_rr.replacementOri) + '{' + _config_rr.replacementOri + '\n}',
-		_cwd = process.cwd(),
-		_now = _time,
-		_ = ' ',
-		_nl = '\n';
+// The arguments of a replace function: the match and the groups, then the offset and the text, and the named groups if the pattern has any
+function splitMatch(args) {
+	const named = args[args.length - 1];
+	const hasNamed = 'object' === typeof named && null !== named;
+	return {groups: args.slice(0, hasNamed ? -3 : -2), named: hasNamed ? named : {}};
+}
 
+// The function that runs the code of --js. It is made once, as the names are the same for every file.
+let codeFunction = null;
+
+function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 1}) {
+	const cwd = process.cwd();
+	const time = localTimeString(config.startTime);
 	// biome-ignore format: one variable on each line
-	let _file = '❌',
-		_file_rel = '❌',
-		_dirpath = '❌',
-		_dirpath_rel = '❌',
-		_dirname = '❌',
-		_filename = '❌',
-		_name = '❌',
-		_ext = '❌',
-		_mtime = '❌',
-		_ctime = '❌',
-		_mtime_obj = new Date(0),
-		_ctime_obj = new Date(0),
-		_bytes = -1,
-		_size = '❌',
-		dynamicContent = new Function(
-			'require',
-			'fs',
-			'globs',
-			'path',
+	const values = {
+		pipe: config.pipedData,
+		find: config.pattern,
+		text,
+		file: '❌',
+		file_rel: '❌',
+		dirpath: '❌',
+		dirpath_rel: '❌',
+		dirname: '❌',
+		filename: '❌',
+		name: '❌',
+		ext: '❌',
+		cwd,
+		now: time,
+		time,
+		mtime: '❌',
+		ctime: '❌',
+		bytes: -1,
+		size: '❌',
+	};
+	let mtime_obj = new Date(0);
+	let ctime_obj = new Date(0);
 
-			'pipe',
-			'pipe_',
+	if (!config.dataIsPiped) {
+		const full = path.resolve(cwd, file);
+		const {dir, base, name, ext} = path.parse(full);
+		Object.assign(values, {
+			file: full,
+			file_rel: path.relative(cwd, full),
+			dirpath: dir,
+			dirpath_rel: path.relative(cwd, dir),
+			dirname: (full.match(re.folderName) || ' _')[1],
+			filename: base,
+			name,
+			ext,
+		});
+		// From around 50 MB the size is read from the file instead of counted in the text
+		if (config.codeUses.stat || (config.codeUses.size && 50000000 < text.length)) {
+			const stats = fs.statSync(full);
+			mtime_obj = stats.mtime;
+			ctime_obj = stats.ctime;
+			values.bytes = stats.size;
+			values.mtime = localTimeString(mtime_obj);
+			values.ctime = localTimeString(ctime_obj);
+		}
+	}
+	if (config.codeUses.size && -1 === values.bytes) {
+		// The size in the encoding of the file, not of the text as utf8
+		values.bytes = Buffer.byteLength(text, config.encoding);
+	}
+	if (-1 !== values.bytes) {
+		values.size = readableSize(values.bytes);
+	}
 
-			'find',
-			'find_',
-			'text',
-			'text_',
+	// require, and r for short, also find a file from the cwd when the path does not start with ./
+	const r = module => {
+		try {
+			return require(module);
+		} catch (e) {
+			return require(path.resolve(cwd, module));
+		}
+	};
+	// Each value but the modules, the date objects, nl and _ has a cousin with _ at the end, with a space at the end.
+	// Without piped data `pipe` is null, while `pipe_` is `❌ ` like the file variables.
+	const params = {
+		require: r,
+		r,
+		fs,
+		globs,
+		path,
+		time_obj: config.startTime,
+		mtime_obj,
+		ctime_obj,
+		nl: '\n',
+		_: ' ',
+	};
+	for (const [name, value] of Object.entries(values)) {
+		params[name] = value;
+		params[name + '_'] = (value ?? '❌') + ' ';
+	}
+	codeFunction ??= new Function(...Object.keys(params), '__code_rr', 'return eval(__code_rr);');
+	const args = Object.values(params);
 
-			'file',
-			'file_',
-			'file_rel',
-			'file_rel_',
-
-			'dirpath',
-			'dirpath_',
-			'dirpath_rel',
-			'dirpath_rel_',
-
-			'dirname',
-			'dirname_',
-			'filename',
-			'filename_',
-			'name',
-			'name_',
-			'ext',
-			'ext_',
-			'cwd',
-			'cwd_',
-
-			'now',
-			'now_',
-			'time_obj',
-			'time',
-			'time_',
-			'mtime_obj',
-			'mtime',
-			'mtime_',
-			'ctime_obj',
-			'ctime',
-			'ctime_',
-
-			'bytes',
-			'bytes_',
-			'size',
-			'size_',
-			'nl',
-			'_',
-			'__code_rr',
-			'var path = require("path");' +
-			'var __require_ = require;' +
-			'var r = function(file){' +
-			'var result = null;' +
-			'try{' +
-			'result = __require_(file);' +
-			'} catch (e){' +
-			'var dir = /^[\\\/]/.test(file) ? "" : cwd;' +
-			'result = __require_(path.resolve(dir, file));' +
-			'};' +
-			'return result;' +
-			'};' +
-			'require = r;' +
-			'return eval(__code_rr);'
-		);
+	// The code of the user is in a block of its own, so it can declare the same names with let and const.
+	// The value of the block is the value of its last statement, like before. The line break ends a comment at the end.
+	const code = numbersCode(numbers, config.codeUses.numbers) + '{' + config.replacementOri + '\n}';
 
 	// When the code fails, only the message is told, and not the stack trace with all the code put in front of the code of the user
-	const runCode = (...args) => {
+	const runCode = variables => {
 		try {
-			return dynamicContent(...args);
+			return codeFunction(...args, variables + code);
 		} catch (e) {
-			const where = _config_rr.dataIsPiped ? 'the piped data' : _file_rr;
+			const where = config.dataIsPiped ? 'the piped data' : file;
 			// With --verbose it also tells where the code failed, when that is in a file of the user, like a module loaded with r()
-			const at = _config_rr.verbose ? userCodeLocation(e) : '';
+			const at = config.verbose ? userCodeLocation(e) : '';
 			return panic(
 				'The code of --js failed for ' +
 					where +
@@ -1099,201 +983,25 @@ function dynamicReplacement(
 		}
 	};
 
-	const needsByteOrSize = re.byteOrSize.test(_config_rr.replacement);
-	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
-
-	if (!_config_rr.dataIsPiped) {
-		_file = path.resolve(_cwd, _file_rr);
-		_file_rel = path.relative(_cwd, _file);
-		const pathInfo = path.parse(_file);
-		_dirpath = pathInfo.dir;
-		_dirpath_rel = path.relative(_cwd, _dirpath);
-		_dirname = (_file.match(re.folderName) || ' _')[1];
-		_filename = pathInfo.base;
-		_name = pathInfo.name;
-		_ext = pathInfo.ext;
-
-		if (betterToReadfromFile || re.mctime.test(_config_rr.replacement)) {
-			const fileStats = fs.statSync(_file);
-			_bytes = fileStats.size;
-			_size = readableSize(_bytes);
-			_mtime_obj = fileStats.mtime;
-			_ctime_obj = fileStats.ctime;
-			_mtime = localTimeString(_mtime_obj);
-			_ctime = localTimeString(_ctime_obj);
-
-			//console.log('filesize: ', fileStats.size);
-			//console.log('dataSize: ', _bytes);
-		}
-	}
-
-	if (needsByteOrSize && -1 === _bytes) {
-		// The size in the encoding of the file, not of the text as utf8
-		_bytes = Buffer.byteLength(_text, _config_rr.encoding);
-		_size = readableSize(_bytes);
-	}
-
-	// Run only once if no captured groups (replacement cant change).
-	// The result is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded.
-	// $m, $M and the named groups are about the match, so they also need the code to run once per match
-	if (
-		!/\$\d/.test(_config_rr.replacement) &&
-		!re.matchNumbers.test(_config_rr.replacement) &&
-		!usesNamedGroups(_config_rr)
-	) {
-		const result = runCode(
-			require,
-			fs,
-			globs,
-			path,
-			_pipe,
-			// Without piped data `pipe` is null, while `pipe_` is `❌ ` like the file variables
-			(_pipe ?? '❌') + _,
-			_find,
-			_find + _,
-			_text,
-			_text + _,
-			_file,
-			_file + _,
-			_file_rel,
-			_file_rel + _,
-			_dirpath,
-			_dirpath + _,
-			_dirpath_rel,
-			_dirpath_rel + _,
-			_dirname,
-			_dirname + _,
-			_filename,
-			_filename + _,
-			_name,
-			_name + _,
-			_ext,
-			_ext + _,
-			_cwd,
-			_cwd + _,
-			_now,
-			_now + _,
-			_time_obj,
-			_time,
-			_time + _,
-			_mtime_obj,
-			_mtime,
-			_mtime + _,
-			_ctime_obj,
-			_ctime,
-			_ctime + _,
-			_bytes,
-			_bytes + _,
-			_size,
-			_size + _,
-			_nl,
-			_,
-			code_rr
-		);
+	// The value is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded
+	if (!config.codeUses.perMatch) {
+		const result = runCode('');
 		return () => result;
 	}
-	// Capture groups used, so need to run once per match
-	let _match_rr = 0;
-	return function () {
-		const __pipe = _pipe,
-			__text = _text,
-			__find = _find,
-			__file = _file,
-			__file_rel = _file_rel,
-			__dirpath = _dirpath,
-			__dirpath_rel = _dirpath_rel,
-			__dirname = _dirname,
-			__filename = _filename,
-			__name = _name,
-			__ext = _ext,
-			__cwd = _cwd,
-			__now = _now,
-			__time_obj = _time_obj,
-			__time = _time,
-			__mtime_obj = _mtime_obj,
-			__mtime = _mtime,
-			__ctime_obj = _ctime_obj,
-			__ctime = _ctime,
-			__bytes = _bytes,
-			__size = _size,
-			__nl = _nl,
-			__ = _,
-			__code_rr = code_rr;
-
-		_match_rr++;
-		_config_rr.numbers.matches++;
-		var capturedGroups = numbersCode(
-			{m: _match_rr, M: _config_rr.numbers.matches},
-			_config_rr.replacementOri
-		);
-		// The match and the groups are followed by the offset and the full text, and by the named groups if the pattern has any
-		const named = arguments[arguments.length - 1];
-		const hasNamed = 'object' === typeof named && null !== named;
-		for (var i = 0; i < arguments.length - (hasNamed ? 3 : 2); i++) {
-			capturedGroups += 'var $' + i + '=' + JSON.stringify(arguments[i]) + '; ';
-		}
+	let match = 0;
+	return (...matchArgs) => {
+		match++;
+		config.numbers.matches++;
+		const {groups, named} = splitMatch(matchArgs);
+		let variables = numbersCode({m: match, M: config.numbers.matches}, config.codeUses.numbers);
+		groups.forEach((value, i) => {
+			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
+		});
 		// A named group is a variable with rr_ in front, like rr_year for (?<year>…), and rr_year_ has a space at the end
-		if (hasNamed) {
-			for (const [name, value] of Object.entries(named)) {
-				capturedGroups += `var rr_${name} = ${JSON.stringify(value)}, rr_${name}_ = rr_${name} + ' '; `;
-			}
+		for (const [name, value] of Object.entries(named)) {
+			variables += `var rr_${name} = ${JSON.stringify(value)}, rr_${name}_ = rr_${name} + ' '; `;
 		}
-
-		return runCode(
-			require,
-			fs,
-			globs,
-			path,
-
-			__pipe,
-			(__pipe ?? '❌') + __,
-
-			__find,
-			__find + __,
-			__text,
-			__text + __,
-
-			__file,
-			__file + __,
-			__file_rel,
-			__file_rel + __,
-
-			__dirpath,
-			__dirpath + __,
-			__dirpath_rel,
-			__dirpath_rel + __,
-
-			__dirname,
-			__dirname + __,
-			__filename,
-			__filename + __,
-			__name,
-			__name + __,
-			__ext,
-			__ext + __,
-			__cwd,
-			__cwd + __,
-
-			__now,
-			__now + _,
-			__time_obj,
-			__time,
-			__time + _,
-			__mtime_obj,
-			__mtime,
-			__mtime + _,
-			__ctime_obj,
-			__ctime,
-			__ctime + _,
-
-			__bytes,
-			__bytes + __,
-			__size,
-			__size + __,
-			__nl,
-			__,
-			capturedGroups + __code_rr
-		);
+		return runCode(variables);
 	};
 }
 
@@ -1327,12 +1035,12 @@ function getFilePaths(conf) {
 	}
 
 	excludeRe
-		.map(el => getFinalRegex(getFinalPattern(el, conf), conf))
-		.forEach(re => {
-			files = files.filter(file => !file.match(re));
+		.map(pattern => getFinalRegex(regexPattern(pattern, conf), conf))
+		.forEach(exclude => {
+			files = files.filter(file => !file.match(exclude));
 		});
 
-	files = sortFiles(files, sort, conf);
+	files = sortFiles(files, sort);
 	return conf.sortReverse ? files.reverse() : files;
 }
 
@@ -1359,7 +1067,7 @@ const collator = new Intl.Collator('en', {numeric: true, sensitivity: 'base'}).c
 const natural = (a, b) => collator(a, b) || ascii(a, b);
 const ascii = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
-function sortFiles(files, sort, conf) {
+function sortFiles(files, sort) {
 	// One file has no order, so it is not sorted, and needs no stat
 	if (files.length < 2 || 'none' === sort) {
 		return files;
@@ -1404,16 +1112,16 @@ function sortFiles(files, sort, conf) {
 	return files.sort((a, b) => value(a) - value(b) || ascii(a, b));
 }
 
-// Is the path a file (true), something to glob (false), or a path that can not be looked at (null, with an error)?
+// Is the path a file, something to glob, or a path that can not be looked at (null, with an error)?
 // A path that is not there, or has a file where a folder should be, is globbed like before. So is a glob,
 // like a long brace glob that is too long as a name. A plain path that can not be looked at, like a name
 // that is too long or a symlink loop, is an error, so it is not hidden as 0 files found.
-function isFile(file) {
+function pathKind(file) {
 	try {
-		return Boolean(fs.statSync(file, {throwIfNoEntry: false})?.isFile());
+		return fs.statSync(file, {throwIfNoEntry: false})?.isFile() ? 'file' : 'glob';
 	} catch (e) {
 		if ('ENOENT' === e.code || 'ENOTDIR' === e.code || globs.isDynamicPattern(file)) {
-			return false;
+			return 'glob';
 		}
 		error(e.message);
 		return null;
@@ -1441,10 +1149,10 @@ function findFiles(paths, globOptions, sort) {
 	const files = [];
 	const patterns = [];
 	paths.forEach(file => {
-		const kind = isFile(file);
-		if (kind) {
+		const kind = pathKind(file);
+		if ('file' === kind) {
 			files.push(file);
-		} else if (false === kind) {
+		} else if ('glob' === kind) {
 			patterns.push(file);
 		}
 	});
