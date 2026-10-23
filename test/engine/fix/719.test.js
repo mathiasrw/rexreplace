@@ -7,24 +7,29 @@ import {rr} from '../../helper.js';
 const warning = ' 🟡 Data is piped in, but no flag tells what to do with it. It is not used.\n\n';
 const expectedOutput = 'my.file\n';
 
-// Run on my.file (with the content `foobar`) with `x` piped in
-function piped(flags = {}, replacement = '_') {
-	fs.writeFileSync('my.file', 'foobar');
-	return rr('b', replacement, {includeGlob: ['my.file'], pipedData: 'x', ...flags});
-}
-
 describe('#719 a warning when piped data is not used', () => {
 	test('is given when data is piped in and files are also given', async () => {
-		expect(await piped()).toEqual({out: expectedOutput, err: warning, exit: null});
+		fs.writeFileSync('my.file', 'foobar');
+		expect(await rr('b', '_', {includeGlob: ['my.file'], pipedData: 'x'})).toEqual({
+			out: expectedOutput,
+			err: warning,
+			exit: null,
+		});
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foo_ar');
 	});
 
 	test.each(['quiet', 'quietTotal'])('is not shown with --%s', async flag => {
-		expect(await piped({[flag]: true})).toEqual({out: '', err: '', exit: null});
+		fs.writeFileSync('my.file', 'foobar');
+		expect(await rr('b', '_', {includeGlob: ['my.file'], pipedData: 'x', [flag]: true})).toEqual({
+			out: '',
+			err: '',
+			exit: null,
+		});
 	});
 
 	test('does not stop the run with --halt', async () => {
-		expect(await piped({halt: true})).toEqual({
+		fs.writeFileSync('my.file', 'foobar');
+		expect(await rr('b', '_', {includeGlob: ['my.file'], pipedData: 'x', halt: true})).toEqual({
 			out: expectedOutput,
 			err: warning,
 			exit: null,
@@ -33,12 +38,18 @@ describe('#719 a warning when piped data is not used', () => {
 	});
 
 	test('is not given when the piped data is used', async () => {
-		expect(await piped({replacementPipe: true})).toEqual({
+		fs.writeFileSync('my.file', 'foobar');
+		expect(
+			await rr('b', '_', {includeGlob: ['my.file'], pipedData: 'x', replacementPipe: true})
+		).toEqual({
 			out: expectedOutput,
 			err: '',
 			exit: null,
 		});
-		expect(await piped({replacementJs: true}, 'pipe')).toEqual({
+		fs.writeFileSync('my.file', 'foobar');
+		expect(
+			await rr('b', 'pipe', {includeGlob: ['my.file'], pipedData: 'x', replacementJs: true})
+		).toEqual({
 			out: expectedOutput,
 			err: '',
 			exit: null,
@@ -47,7 +58,12 @@ describe('#719 a warning when piped data is not used', () => {
 	});
 
 	test.each([null, '', '\n', '\r\n'])('is not given when %j is piped in', async pipedData => {
-		expect(await piped({pipedData})).toEqual({out: expectedOutput, err: '', exit: null});
+		fs.writeFileSync('my.file', 'foobar');
+		expect(await rr('b', '_', {includeGlob: ['my.file'], pipedData})).toEqual({
+			out: expectedOutput,
+			err: '',
+			exit: null,
+		});
 	});
 
 	test('is not given when only data is piped in', async () => {

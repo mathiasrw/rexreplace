@@ -7,17 +7,17 @@ import {rr} from '../../helper.js';
 
 // Note that rr() from the helper sets voidAsync per default, so the names come in the order of the file list
 
-// Replace in a.file, b.file and c.file where b.file has nothing to replace
-function run(flags = {}) {
-	fs.writeFileSync('a.file', 'foo');
-	fs.writeFileSync('b.file', 'bar');
-	fs.writeFileSync('c.file', 'foo');
-	return rr('o', 'x', {includeGlob: ['*.file'], ...flags});
-}
-
+// Most tests replace in a.file, b.file and c.file, where b.file has nothing to replace
 describe('#703 the names of affected files', () => {
 	test('go to stdout with one name on each line', async () => {
-		expect(await run()).toEqual({out: 'a.file\nc.file\n', err: '', exit: null});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		expect(await rr('o', 'x', {includeGlob: ['*.file']})).toEqual({
+			out: 'a.file\nc.file\n',
+			err: '',
+			exit: null,
+		});
 		expect(fs.readFileSync('a.file', 'utf8')).toBe('fxx');
 	});
 
@@ -27,20 +27,33 @@ describe('#703 the names of affected files', () => {
 	);
 
 	test('all come with the async flow', async () => {
-		const result = await run({voidAsync: false});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		const result = await rr('o', 'x', {includeGlob: ['*.file'], voidAsync: false});
 		expect(result.out.split('\n').sort()).toEqual(['', 'a.file', 'c.file']);
 		expect(result.err).toBe('');
 	});
 
 	test('are alone on stdout with --verbose', async () => {
-		const result = await run({verbose: true});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		const result = await rr('o', 'x', {includeGlob: ['*.file'], verbose: true});
 		expect(result.out).toBe('a.file\nc.file\n');
 		expect(result.err).toContain('Open sync: a.file');
 		expect(result.err).toContain('Nothing changed in: b.file');
 	});
 
 	test.each(['quiet', 'quietTotal'])('are not printed with --%s', async flag => {
-		expect(await run({[flag]: true})).toEqual({out: '', err: '', exit: null});
+		fs.writeFileSync('a.file', 'foo');
+		fs.writeFileSync('b.file', 'bar');
+		fs.writeFileSync('c.file', 'foo');
+		expect(await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true})).toEqual({
+			out: '',
+			err: '',
+			exit: null,
+		});
 		expect(fs.readFileSync('c.file', 'utf8')).toBe('fxx');
 	});
 
@@ -64,7 +77,14 @@ describe('#703 the names of affected files', () => {
 
 	describe('--null-out', () => {
 		test('ends each name with a null byte', async () => {
-			expect(await run({nullOut: true})).toEqual({out: 'a.file\0c.file\0', err: '', exit: null});
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], nullOut: true})).toEqual({
+				out: 'a.file\0c.file\0',
+				err: '',
+				exit: null,
+			});
 		});
 
 		test('keeps a name with a line break in one piece', async () => {
@@ -77,7 +97,10 @@ describe('#703 the names of affected files', () => {
 
 	describe('--name-delimiter', () => {
 		test('is put after each name', async () => {
-			expect(await run({nameDelimiter: ', '})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiter: ', '})).toEqual({
 				out: 'a.file, c.file, ',
 				err: '',
 				exit: null,
@@ -85,22 +108,56 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('can be an empty string', async () => {
-			expect((await run({nameDelimiter: ''})).out).toBe('a.filec.file');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiter: ''})).out).toBe(
+				'a.filec.file'
+			);
 		});
 
 		test('has the € and § aliases like the replacement', async () => {
-			expect((await run({nameDelimiter: '€§'})).out).toBe('a.file$\\c.file$\\');
-			expect((await run({nameDelimiter: '€§', voidEuro: true})).out).toBe('a.file€\\c.file€\\');
-			expect((await run({nameDelimiter: '€§', voidSection: true})).out).toBe('a.file$§c.file$§');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiter: '€§'})).out).toBe(
+				'a.file$\\c.file$\\'
+			);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiter: '€§', voidEuro: true})).out
+			).toBe('a.file€\\c.file€\\');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiter: '€§', voidSection: true})).out
+			).toBe('a.file$§c.file$§');
 		});
 	});
 
 	describe('--no-name-delimiter-tail', () => {
 		test('puts the delimiter only between the names', async () => {
-			expect((await run({nameDelimiter: ', ', nameDelimiterTail: false})).out).toBe(
-				'a.file, c.file'
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(
+					await rr('o', 'x', {
+						includeGlob: ['*.file'],
+						nameDelimiter: ', ',
+						nameDelimiterTail: false,
+					})
+				).out
+			).toBe('a.file, c.file');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiterTail: false})).out).toBe(
+				'a.file\nc.file'
 			);
-			expect((await run({nameDelimiterTail: false})).out).toBe('a.file\nc.file');
 		});
 
 		test('prints no delimiter when only one file is changed', async () => {
@@ -114,10 +171,22 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('does not start the next run with a delimiter', async () => {
-			await run({nameDelimiter: ', ', nameDelimiterTail: false});
-			expect((await run({nameDelimiter: ', ', nameDelimiterTail: false})).out).toBe(
-				'a.file, c.file'
-			);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			await rr('o', 'x', {includeGlob: ['*.file'], nameDelimiter: ', ', nameDelimiterTail: false});
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(
+					await rr('o', 'x', {
+						includeGlob: ['*.file'],
+						nameDelimiter: ', ',
+						nameDelimiterTail: false,
+					})
+				).out
+			).toBe('a.file, c.file');
 		});
 
 		// The names must not be held back until all files are done
@@ -163,7 +232,10 @@ describe('#703 the names of affected files', () => {
 
 	describe('--name-all', () => {
 		test('also names the files where nothing is changed', async () => {
-			expect(await run({nameAll: true})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], nameAll: true})).toEqual({
 				out: 'a.file\nb.file\nc.file\n',
 				err: '',
 				exit: null,
@@ -172,7 +244,10 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('names every file printed with --output', async () => {
-			expect(await run({nameAll: true, output: true})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], nameAll: true, output: true})).toEqual({
 				out: 'fxx\nbar\nfxx\n',
 				err: 'a.file\nb.file\nc.file\n',
 				exit: null,
@@ -190,8 +265,15 @@ describe('#703 the names of affected files', () => {
 
 	describe('--content-delimiter', () => {
 		test('is a line break after each file and each match by default', async () => {
-			expect((await run({output: true})).out).toBe('fxx\nbar\nfxx\n');
-			expect((await run({outputMatch: true})).out).toBe('o\no\no\no\n');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], output: true})).out).toBe(
+				'fxx\nbar\nfxx\n'
+			);
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], outputMatch: true})).out).toBe(
+				'o\no\no\no\n'
+			);
 		});
 
 		test('adds no line break by default to content that already ends with one', async () => {
@@ -203,17 +285,32 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('is put after the content of each file', async () => {
-			expect((await run({output: true, contentDelimiter: '\t'})).out).toBe('fxx\tbar\tfxx\t');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], output: true, contentDelimiter: '\t'})).out
+			).toBe('fxx\tbar\tfxx\t');
 		});
 
 		test('is put after each match with --output-match, and not after the names', async () => {
-			const result = await run({outputMatch: true, contentDelimiter: ', '});
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			const result = await rr('o', 'x', {
+				includeGlob: ['*.file'],
+				outputMatch: true,
+				contentDelimiter: ', ',
+			});
 			expect(result).toEqual({out: 'o, o, o, o, ', err: 'a.file\nc.file\n', exit: null});
 		});
 
 		test('is only put between the content with --no-content-delimiter-tail', async () => {
 			const config = {output: true, contentDelimiter: ', ', contentDelimiterTail: false};
-			expect((await run(config)).out).toBe('fxx, bar, fxx');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], ...config})).out).toBe('fxx, bar, fxx');
 		});
 
 		test('leaves piped data as it is by default', async () => {
@@ -238,16 +335,28 @@ describe('#703 the names of affected files', () => {
 
 	describe('--tail', () => {
 		test('puts the delimiter after the last name and the last content', async () => {
-			expect(await run({output: true, delimiter: ', ', tail: true})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				await rr('o', 'x', {includeGlob: ['*.file'], output: true, delimiter: ', ', tail: true})
+			).toEqual({
 				out: 'fxx, bar, fxx, ',
 				err: 'a.file, c.file, ',
 				exit: null,
 			});
-			expect((await run({outputMatch: true, tail: true})).out).toBe('o\no\no\no\n');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], outputMatch: true, tail: true})).out
+			).toBe('o\no\no\no\n');
 		});
 
 		test('--no-tail puts the delimiter only between the names and the content', async () => {
-			expect(await run({output: true, delimiter: ', ', tail: false})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				await rr('o', 'x', {includeGlob: ['*.file'], output: true, delimiter: ', ', tail: false})
+			).toEqual({
 				out: 'fxx, bar, fxx',
 				err: 'a.file, c.file',
 				exit: null,
@@ -256,7 +365,10 @@ describe('#703 the names of affected files', () => {
 
 		test('the specific tail flags win', async () => {
 			const config = {output: true, delimiter: ', ', tail: false, nameDelimiterTail: true};
-			expect(await run(config)).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], ...config})).toEqual({
 				out: 'fxx, bar, fxx',
 				err: 'a.file, c.file, ',
 				exit: null,
@@ -267,12 +379,20 @@ describe('#703 the names of affected files', () => {
 	describe('--nl', () => {
 		test('ends the names with a line break', async () => {
 			const config = {nameDelimiter: ', ', nameDelimiterTail: false, nl: true};
-			expect((await run(config)).out).toBe('a.file, c.file\n');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], ...config})).out).toBe(
+				'a.file, c.file\n'
+			);
 		});
 
 		test('ends the content and the names on stderr with a line break', async () => {
 			const config = {outputMatch: true, delimiter: ', ', tail: false, nl: true};
-			expect(await run(config)).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], ...config})).toEqual({
 				out: 'o, o, o, o\n',
 				err: 'a.file, c.file\n',
 				exit: null,
@@ -301,14 +421,22 @@ describe('#703 the names of affected files', () => {
 				contentDelimiterTail: true,
 				nl: true,
 			};
-			expect((await run(config)).out).toBe('o, o, o, o, \n');
-			expect((await run({outputMatch: true, tail: true, nl: true})).out).toBe('o\no\no\no\n');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], ...config})).out).toBe('o, o, o, o, \n');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], outputMatch: true, tail: true, nl: true})).out
+			).toBe('o\no\no\no\n');
 		});
 	});
 
 	describe('--delimiter and --null-out', () => {
 		test('--delimiter sets both delimiters', async () => {
-			expect(await run({output: true, delimiter: ', '})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], output: true, delimiter: ', '})).toEqual({
 				out: 'fxx, bar, fxx, ',
 				err: 'a.file, c.file, ',
 				exit: null,
@@ -316,7 +444,10 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('--null-out is the same as --delimiter with a null byte', async () => {
-			expect(await run({output: true, nullOut: true})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], output: true, nullOut: true})).toEqual({
 				out: 'fxx\0bar\0fxx\0',
 				err: 'a.file\0c.file\0',
 				exit: null,
@@ -324,18 +455,36 @@ describe('#703 the names of affected files', () => {
 		});
 
 		test('the most specific delimiter wins', async () => {
-			expect((await run({output: true, delimiter: ', ', nullOut: true})).out).toBe(
-				'fxx, bar, fxx, '
-			);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
 			expect(
-				await run({
+				(
+					await rr('o', 'x', {
+						includeGlob: ['*.file'],
+						output: true,
+						delimiter: ', ',
+						nullOut: true,
+					})
+				).out
+			).toBe('fxx, bar, fxx, ');
+			expect(
+				await rr('o', 'x', {
+					includeGlob: ['*.file'],
 					output: true,
 					delimiter: ', ',
 					contentDelimiter: '|',
 					nameDelimiter: ';',
 				})
 			).toEqual({out: 'fxx|bar|fxx|', err: 'a.file;c.file;', exit: null});
-			expect(await run({output: true, nullOut: true, nameDelimiter: ', '})).toEqual({
+			expect(
+				await rr('o', 'x', {
+					includeGlob: ['*.file'],
+					output: true,
+					nullOut: true,
+					nameDelimiter: ', ',
+				})
+			).toEqual({
 				out: 'fxx\0bar\0fxx\0',
 				err: 'a.file, c.file, ',
 				exit: null,
@@ -349,30 +498,65 @@ describe('#703 the names of affected files', () => {
 		['outputMatch', 'o\no\no\no\n'],
 	])('with --%s', (flag, out) => {
 		test('go to stderr', async () => {
-			expect(await run({[flag]: true})).toEqual({out, err: 'a.file\nc.file\n', exit: null});
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true})).toEqual({
+				out,
+				err: 'a.file\nc.file\n',
+				exit: null,
+			});
 			expect(fs.readFileSync('a.file', 'utf8')).toBe('foo');
 		});
 
 		test('are the same names as without the flag', async () => {
-			expect((await run({[flag]: true})).err).toBe((await run()).out);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true})).err).toBe(
+				(await rr('o', 'x', {includeGlob: ['*.file']})).out
+			);
 		});
 
 		test.each(['quiet', 'quietTotal'])('are not printed with --%s', async quiet => {
-			expect(await run({[flag]: true, [quiet]: true})).toEqual({out, err: '', exit: null});
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true, [quiet]: true})).toEqual({
+				out,
+				err: '',
+				exit: null,
+			});
 		});
 
 		test('follow --null-out, --name-delimiter and --full-path', async () => {
-			expect((await run({[flag]: true, nullOut: true})).err).toBe('a.file\0c.file\0');
-			expect((await run({[flag]: true, nameDelimiter: ', '})).err).toBe('a.file, c.file, ');
-			expect((await run({[flag]: true, fullPath: true})).err).toBe(
-				path.resolve('a.file') + '\n' + path.resolve('c.file') + '\n'
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true, nullOut: true})).err).toBe(
+				'a.file\0c.file\0'
 			);
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true, nameDelimiter: ', '})).err
+			).toBe('a.file, c.file, ');
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(
+				(await rr('o', 'x', {includeGlob: ['*.file'], [flag]: true, fullPath: true})).err
+			).toBe(path.resolve('a.file') + '\n' + path.resolve('c.file') + '\n');
 		});
 	});
 
 	describe('--full-path', () => {
 		test('prints the full path of each name', async () => {
-			expect(await run({fullPath: true})).toEqual({
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect(await rr('o', 'x', {includeGlob: ['*.file'], fullPath: true})).toEqual({
 				out: path.resolve('a.file') + '\n' + path.resolve('c.file') + '\n',
 				err: '',
 				exit: null,
@@ -393,7 +577,10 @@ describe('#703 the names of affected files', () => {
 			['null', {nullOut: true}, '\0', '\0'],
 			['name-delimiter', {nameDelimiter: ', ', nameDelimiterTail: false}, ', ', ''],
 		])('works with --%s', async (name, flags, between, last) => {
-			expect((await run({fullPath: true, ...flags})).out).toBe(
+			fs.writeFileSync('a.file', 'foo');
+			fs.writeFileSync('b.file', 'bar');
+			fs.writeFileSync('c.file', 'foo');
+			expect((await rr('o', 'x', {includeGlob: ['*.file'], fullPath: true, ...flags})).out).toBe(
 				path.resolve('a.file') + between + path.resolve('c.file') + last
 			);
 		});
