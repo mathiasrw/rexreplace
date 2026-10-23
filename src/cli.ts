@@ -146,7 +146,10 @@ const yargs = require('yargs')
 	.default('E', 'default')
 
 	.boolean('q')
-	.describe('q', 'Only display errors (no other info)')
+	.describe(
+		'q',
+		'Hide the names of the files and the warnings. Errors are still shown, and so is the content of --output and the matches of --output-match.'
+	)
 	.alias('q', 'quiet')
 
 	.boolean('Q')
