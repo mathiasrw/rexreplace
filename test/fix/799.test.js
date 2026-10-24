@@ -9,16 +9,16 @@ describe('#799 groups in --js', () => {
 		expect((await rr('(?<x>a)(b)', '$1 + $2 + typeof $3', config)).out).toBe('abundefined');
 	});
 
-	test('a named group is a variable with rr_ in front, and _ at the end has a space', async () => {
+	test('a named group is a variable with $ in front, and _ at the end has a space', async () => {
 		const config = {pipedData: '2024-05 1999-12', replacementJs: true};
 		const pattern = '(?<year>\\d{4})-(?<month>\\d\\d)';
-		expect((await rr(pattern, 'rr_month + "/" + rr_year', config)).out).toBe('05/2024 12/1999');
-		expect((await rr(pattern, 'rr_month_ + rr_year', config)).out).toBe('05 2024 12 1999');
+		expect((await rr(pattern, '$month + "/" + $year', config)).out).toBe('05/2024 12/1999');
+		expect((await rr(pattern, '$month_ + $year', config)).out).toBe('05 2024 12 1999');
 	});
 
 	test('a named group that took no part in the match is undefined', async () => {
 		const config = {pipedData: 'ab', replacementJs: true};
-		expect((await rr('(?<x>a)|(?<y>b)', 'String(rr_x) + String(rr_y) + ","', config)).out).toBe(
+		expect((await rr('(?<x>a)|(?<y>b)', 'String($x) + String($y) + ","', config)).out).toBe(
 			'aundefined,undefinedb,'
 		);
 	});

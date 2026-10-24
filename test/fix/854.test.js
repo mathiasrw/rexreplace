@@ -1,6 +1,6 @@
 // https://github.com/mathiasrw/rexreplace/issues/854
 // Regex+ is behind the engines. rr, the default, reads patterns like the native engine, with the extended syntax of Regex+ on top.
-// regex+ is Regex+ with the flags v, x and n, regex+n leaves out x, and regex+x leaves out n.
+// regex+ is Regex+ with the flags v, x and n, and --flags sets all the flags of any engine.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr, rrStatus} from '../helper.js';
@@ -119,22 +119,12 @@ describe('#854 the other engines', () => {
 		}
 	);
 
-	test.each([['regex+n'], ['N']])(
-		'%s has no free spacing, and only named groups capture',
+	test.each([['regex+n'], ['N'], ['regex+x'], ['X'], ['regex+u'], ['U'], ['regex+v']])(
+		'%s is not an engine',
 		async engine => {
-			expect(await out('foo bar', 'X', 'foo bar', {engine})).toBe('X');
-			expect(await out('(foo)(?<rest>.*)', '$1', 'foox', {engine})).toBe('x');
+			expect((await rr('a', 'b', {pipedData: 'a', engine})).exit).toBe(3);
 		}
 	);
-
-	test.each([['regex+x'], ['X']])('%s has free spacing, and all groups capture', async engine => {
-		expect(await out('foo bar', 'X', 'foobar', {engine})).toBe('X');
-		expect(await out('(foo)(?<rest>.*)', '$1', 'foox', {engine})).toBe('foo');
-	});
-
-	test.each([['regex+u'], ['U'], ['regex+v']])('%s is not an engine', async engine => {
-		expect((await rr('a', 'b', {pipedData: 'a', engine})).exit).toBe(3);
-	});
 
 	test('regex+ stops the run on an escape that is not strict, and the file is not changed', async () => {
 		fs.writeFileSync('a.txt', 'a"b');
@@ -147,5 +137,52 @@ describe('#854 the other engines', () => {
 		expect(await out('a b #c (d)', 'X', 'a b #c (d)!', {engine: 'regex+', literal: true})).toBe(
 			'X!'
 		);
+	});
+});
+
+describe('#854 --flags', () => {
+	const plus = {engine: 'regex+'};
+
+	test('leaves free spacing out of regex+ without x', async () => {
+		expect(await out('foo bar', 'X', 'foo bar', {...plus, flags: 'gimvn'})).toBe('X');
+	});
+
+	test('lets all groups of regex+ capture without n', async () => {
+		expect(await out('(foo)', '[$1]', 'foo', {...plus, flags: 'gimvx'})).toBe('[foo]');
+	});
+
+	test('sets all the flags, so without i the search is case sensitive and without g only the first match', async () => {
+		expect(await out('o', 'x', 'oOo', {flags: 'm'})).toBe('xOo');
+	});
+
+	test('gives regex+ the flag u in place of v', async () => {
+		const {flags} = await compiled('a', {...plus, flags: 'gu'});
+		expect(flags).toContain('u');
+		expect(flags).not.toContain('v');
+	});
+
+	test.each([
+		['-I', {voidIgnoreCase: true, flags: 'g'}],
+		['x without regex+', {flags: 'gx'}],
+		['n without regex+', {flags: 'gn'}],
+		['regex+ without v or u', {...plus, flags: 'gx'}],
+		['a flag that is not a flag', {flags: 'gq'}],
+	])('stops the run with %s', async (name, config) => {
+		expect((await rr('a', 'b', {pipedData: 'a', ...config})).exit).toBe(3);
+	});
+});
+
+describe('#854 --js with the flag n of regex+', () => {
+	const config = {engine: 'regex+', replacementJs: true};
+
+	test('has the named groups and $0, but no group numbers', async () => {
+		expect(await out('(?<y>\\d)(?<m>\\d)', '$m + $y + $0', '12', config)).toBe('2112');
+		expect((await rr('(?<y>\\d)', '$1', {pipedData: '1', ...config})).err).toContain(
+			'ReferenceError: $1 is not defined'
+		);
+	});
+
+	test('has the group numbers again without n', async () => {
+		expect(await out('(\\d)(\\d)', '$2 + $1', '12', {...config, flags: 'gimvx'})).toBe('21');
 	});
 });

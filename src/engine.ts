@@ -26,6 +26,10 @@ const re = {
 	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
 	// Subroutines of Regex+, which the rr engine only looks for when the pattern has them
 	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
+	// The flags only Regex+ knows: free spacing (x) and only named groups capture (n)
+	regexPlusOnlyFlags: /[xn]/,
+	// The flags Regex+ takes as options, and not as flags
+	regexPlusFlags: /[uvxn]/g,
 	// A $ in a replacement: $$, $&, $`, $', $<name>, or a group number of one or two digits
 	replacementToken: /\$(\$|&|`|'|<[^>]*>|(\d)(\d?))/g,
 	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
@@ -170,9 +174,11 @@ function unpackConfig(config) {
 	// --output-match wins over --output
 	config.output = config.output && !config.outputMatch;
 
-	const {regex, hiddenCaptures} = compileRegex(config.pattern, config);
+	const {regex, hiddenCaptures, namedOnly} = compileRegex(config.pattern, config);
 	config.regex = regex;
 	config.hiddenCaptures = hiddenCaptures;
+	// With the flag n of Regex+ only named groups capture, so --js gets no $1 and on
+	config.namedOnly = namedOnly;
 
 	// The groups Regex+ adds for atomic groups and possessive quantifiers are not counted in the numbers of the replacement
 	if (
@@ -190,16 +196,6 @@ function unpackConfig(config) {
 	}
 
 	config.codeUses = config.replacementJs ? codeUses(config.replacementOri, config.regex) : null;
-
-	// In --js a named group is a variable like rr_year, and rr_year_ has a space at the end.
-	// A group that ends with _ would have the same name as another group with a space, so it can not be used.
-	// With --output-match the code is not run, so there are no variables.
-	const endsWith_ = config.outputMatch
-		? null
-		: config.codeUses?.groups.find(name => name.endsWith('_'));
-	if (endsWith_) {
-		panic('A named group can not end with _', endsWith_);
-	}
 
 	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
 	if (config.statusInfo.engine) {
@@ -724,16 +720,39 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-// -E: default is another name for rr, V for regex+, N for regex+n and X for regex+x
-const engineNames = {default: 'rr', V: 'regex+', N: 'regex+n', X: 'regex+x'};
-// regex+n leaves out free spacing (x), and regex+x leaves out that only named groups capture (n)
-const regexPlusDisable = {'regex+': {}, 'regex+n': {x: true}, 'regex+x': {n: true}};
+// -E: default is another name for rr, and V for regex+
+const engineNames = {default: 'rr', V: 'regex+'};
 const engineName = name => engineNames[name] ?? name ?? 'rr';
 
-// The regex and the numbers of the groups the engine added to it, which the user does not know about
+// The flags of the regex: --flags as they are, or the default flags with -G, -I, -M, -s and -u.
+// regex+ also has v, free spacing (x) and only named groups capture (n) by default, and v makes -u needless.
+function regexFlags(config, regexPlus) {
+	if (null != config.flags) {
+		if (
+			config.voidGlobal ||
+			config.voidIgnoreCase ||
+			config.voidMultiline ||
+			config.dotAll ||
+			config.unicode
+		) {
+			panic('--flags can not be used with -G, -I, -M, -s or -u, as it sets all the flags');
+		}
+		return String(config.flags);
+	}
+	return (
+		(config.voidGlobal ? '' : 'g') +
+		(config.voidIgnoreCase ? '' : 'i') +
+		(config.voidMultiline ? '' : 'm') +
+		(config.dotAll ? 's' : '') +
+		(regexPlus ? 'vxn' : config.unicode ? 'u' : '')
+	);
+}
+
+// The regex, the numbers of the groups the engine added to it, which the user does not know about,
+// and if only named groups capture
 function compileRegex(pattern, config) {
 	const engine = engineName(config.engine);
-	if (!['rr', 'regex+', 'regex+n', 'regex+x', 'V8', 'JSC', 'runtime'].includes(engine)) {
+	if (!['rr', 'regex+', 'V8', 'JSC', 'runtime'].includes(engine)) {
 		panic(`Engine ${config.engine} not supported`);
 	}
 	if (('V8' === engine || 'JSC' === engine) && engine !== runtimeEngine) {
@@ -741,33 +760,39 @@ function compileRegex(pattern, config) {
 			`When running via the ${runtime} runtime the native engine is ${runtimeEngine}, not ${engine}`
 		);
 	}
-	const regexPlus = engine in regexPlusDisable;
-	// Regex+ always uses v itself, or u on a runtime without v, and it is an error to ask for them
-	const flags =
-		(config.voidGlobal ? '' : 'g') +
-		(config.voidIgnoreCase ? '' : 'i') +
-		(config.voidMultiline ? '' : 'm') +
-		(config.dotAll ? 's' : '') +
-		(config.unicode && !regexPlus ? 'u' : '');
+	const regexPlus = 'regex+' === engine;
+	const flags = regexFlags(config, regexPlus);
+	if (!regexPlus && re.regexPlusOnlyFlags.test(flags)) {
+		panic('The flags x and n need -E regex+', flags);
+	}
+	if (regexPlus && !flags.includes('v') && !flags.includes('u')) {
+		panic('-E regex+ needs the flag v or u', flags);
+	}
+	// Regex+ takes v, u, x and n as options. It uses v, or u on a runtime without v.
+	const nativeFlags = regexPlus ? flags.replace(re.regexPlusFlags, '') : flags;
+	const unicode = flags.includes('v') && supportsFlagV ? 'v' : 'u';
 	try {
 		if (config.literal) {
 			// The text as it is, without the free spacing of Regex+
 			return {
-				regex: new RegExp(pattern, flags + (regexPlus ? (supportsFlagV ? 'v' : 'u') : '')),
+				regex: new RegExp(pattern, nativeFlags + (regexPlus ? unicode : '')),
 				hiddenCaptures: [],
+				namedOnly: false,
 			};
 		}
 		if (regexPlus) {
-			const result = rewrite(pattern, {flags, disable: regexPlusDisable[engine]});
+			const disable = {v: !flags.includes('v'), x: !flags.includes('x'), n: !flags.includes('n')};
+			const result = rewrite(pattern, {flags: nativeFlags, disable});
 			return {
 				regex: new RegExp(result.pattern, result.flags),
 				hiddenCaptures: result.hiddenCaptures,
+				namedOnly: flags.includes('n'),
 			};
 		}
 		if ('rr' === engine) {
-			return compileRr(pattern, flags);
+			return {...compileRr(pattern, flags), namedOnly: false};
 		}
-		return {regex: new RegExp(pattern, flags), hiddenCaptures: []};
+		return {regex: new RegExp(pattern, flags), hiddenCaptures: [], namedOnly: false};
 	} catch (e) {
 		return panic(e.message);
 	}
@@ -845,10 +870,10 @@ function countFile(config, text, result) {
 function codeUses(code, regex) {
 	const named = name => new RegExp('\\$' + name + '(?![A-Za-z])').test(code);
 	const groups = namedGroups(regex);
-	// A named group is used as rr_year, or as rr_year_ with a space at the end
+	// A named group is used as $year, or as $year_ with a space at the end
 	const usesGroup = name =>
 		new RegExp(
-			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
+			'(^|[^\\p{ID_Continue}$])\\$' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
 			'u'
 		).test(code);
 	const matchNumbers = named('m') || named('M');
@@ -1116,12 +1141,16 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		config.numbers.matches++;
 		const {groups, named} = splitMatch(matchArgs, config.hiddenCaptures);
 		let variables = '';
+		// $0 is the match. With the flag n the groups have no numbers, only names.
 		groups.forEach((value, i) => {
-			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
+			if (!i || !config.namedOnly) {
+				variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
+			}
 		});
-		// A named group is a variable with rr_ in front, like rr_year for (?<year>…), and rr_year_ has a space at the end
+		// A named group is $ and the name, like $year for (?<year>…), and $year_ has a space at the end.
+		// It comes after the numbers, so a group named like a number, like n, wins over $n.
 		for (const [name, value] of Object.entries(named)) {
-			variables += `var rr_${name} = ${JSON.stringify(value)}, rr_${name}_ = rr_${name} + ' '; `;
+			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
 		}
 		return runCode({m: match, M: config.numbers.matches}, variables);
 	};

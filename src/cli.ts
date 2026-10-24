@@ -118,6 +118,12 @@ const yargs = require('yargs')
 	.describe('u', 'Treat pattern as a sequence of unicode code points.')
 	.alias('u', 'unicode')
 
+	.string('flags')
+	.describe(
+		'flags',
+		'Set all the flags of the regex, like `gimsv`. Without it the flags are `gim` (`gimvxn` with `-E regex+`), changed by -G, -I, -M, -s and -u, which can not be used with --flags. `x` (free spacing) and `n` (only named groups capture) need `-E regex+`, which also needs `v` or `u`.'
+	)
+
 	.default('e', 'utf8')
 	.alias('e', 'encoding')
 	.describe('e', 'Encoding of files/piped data.')
@@ -141,21 +147,9 @@ const yargs = require('yargs')
 	.alias('E', 'engine')
 	.describe(
 		'E',
-		'What regex engine to use. `rr` (also `default`) is Regex+ wrapped to read patterns like the native engine, with the extended syntax of Regex+ on top: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>` with `(?(DEFINE)…)`. `regex+` (also `V`) is the Regex+ engine with flag v, free spacing (x), only named groups capture (n), atomic groups, possessive quantifiers and subroutines. On a runtime without v, like Node 18, it uses u. `regex+n` (also `N`) is the same without free spacing, and `regex+x` (also `X`) the same where all groups capture. `runtime` is the native engine of the runtime, and `V8` (Node) and `JSC` (JavaScriptCore, Bun) are the same, but stop the run on the other runtime.'
+		'What regex engine to use. `rr` (also `default`) is Regex+ wrapped to read patterns like the native engine, with the extended syntax of Regex+ on top: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>` with `(?(DEFINE)…)`. `regex+` (also `V`) is the Regex+ engine with flag v, free spacing (x), only named groups capture (n), atomic groups, possessive quantifiers and subroutines. On a runtime without v, like Node 18, it uses u. Use --flags to leave out x or n. `runtime` is the native engine of the runtime, and `V8` (Node) and `JSC` (JavaScriptCore, Bun) are the same, but stop the run on the other runtime.'
 	)
-	.choices('E', [
-		'rr',
-		'default',
-		'regex+',
-		'V',
-		'regex+n',
-		'N',
-		'regex+x',
-		'X',
-		'runtime',
-		'V8',
-		'JSC',
-	])
+	.choices('E', ['rr', 'default', 'regex+', 'V', 'runtime', 'V8', 'JSC'])
 	.default('E', 'rr')
 
 	.boolean('q')
@@ -426,7 +420,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 
 The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
 
-Access a named group via the name prepended with \`rr_\`. \`(?<year>...)\` gives you \`rr_year\`. A named group name can not end with \`_\`. 
+Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
 
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
