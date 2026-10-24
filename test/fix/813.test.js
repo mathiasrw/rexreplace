@@ -30,7 +30,7 @@ describe('#813 a run that stops', () => {
 
 	test('tells the panic of a second run with the same config again (#844)', async () => {
 		const config = {
-			engine: 'default',
+			engine: 'rr',
 			encoding: 'utf8',
 			pipedData: 'foo',
 			includeGlob: [],

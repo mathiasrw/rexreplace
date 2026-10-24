@@ -24,6 +24,10 @@ const re = {
 	// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`.
 	stackLineWithoutName: /^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/,
 	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
+	// Subroutines of Regex+, which the rr engine only looks for when the pattern has them
+	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
+	// A $ in a replacement: $$, $&, $`, $', $<name>, or a group number of one or two digits
+	replacementToken: /\$(\$|&|`|'|<[^>]*>|(\d)(\d?))/g,
 	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
 	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
 	byteOrSize: /bytes|size/,
@@ -39,6 +43,10 @@ const re = {
 
 // Only the version ends up in the bundle
 import {version} from '../package.json';
+
+// Regex+ by Steven Levithan, copied into src/libs until it exports the subroutines (see src/libs/README.md)
+import {atomic, possessive, subroutines} from './libs/regex/internals.js';
+import {rewrite} from './libs/regex/regex.js';
 export {version};
 
 // The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
@@ -47,7 +55,7 @@ const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
 
 // Resolves with the status of the run when all files are done.
 // When the run can not go on, a panic is thrown with the status so far.
-export async function engine(config: any = {engine: 'default'}) {
+export async function engine(config: any = {engine: 'rr'}) {
 	config.statusInfo = newStatus(config);
 	// A new run has had no panic yet, has read no replacement file, and has its own time, also when the same config is used again
 	config.plzStop = false;
@@ -154,7 +162,24 @@ function unpackConfig(config) {
 	// --output-match wins over --output
 	config.output = config.output && !config.outputMatch;
 
-	config.regex = getFinalRegex(config.pattern, config);
+	const {regex, hiddenCaptures} = compileRegex(config.pattern, config);
+	config.regex = regex;
+	config.hiddenCaptures = hiddenCaptures;
+
+	// The groups Regex+ adds for atomic groups and possessive quantifiers are not counted in the numbers of the replacement
+	if (
+		hiddenCaptures.length &&
+		'string' === typeof config.replacement &&
+		!config.replacementJs &&
+		!config.outputMatch &&
+		!config.literalReplacement
+	) {
+		config.replacement = visibleGroupNumbers(
+			config.replacement,
+			hiddenCaptures,
+			emptyMatch(regex).length - 1
+		);
+	}
 
 	config.codeUses = config.replacementJs ? codeUses(config.replacementOri, config.regex) : null;
 
@@ -171,6 +196,8 @@ function unpackConfig(config) {
 	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
 	if (config.statusInfo.engine) {
 		config.statusInfo.engine.execution = {
+			engine: engineName(config.engine),
+			hiddenCaptures,
 			search: config.regex.source,
 			flags: config.regex.flags,
 			replacement: config.replacementJs || config.outputMatch ? null : config.replacement,
@@ -634,7 +661,7 @@ function matchPrinter(config) {
 		warn('The replacement file is not read with --output-match, as only the matches are printed.');
 	}
 	return (...args) => {
-		const [match, ...groups] = splitMatch(args).groups;
+		const [match, ...groups] = splitMatch(args, config.hiddenCaptures).groups;
 		print(
 			groups.length ? groups.join('') : match,
 			config.contentDelimiter,
@@ -689,27 +716,96 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-function getFinalRegex(pattern, config) {
-	const engine = 'default' === config.engine ? runtimeEngine : config.engine;
-	// RE2 is not in yet, so it uses the engine of the runtime
-	if (engine !== runtimeEngine && 'RE2' !== engine) {
+// -E: default is another name for rr, regex+ and V for regex+v, and U for regex+u
+const engineNames = {default: 'rr', 'regex+': 'regex+v', V: 'regex+v', U: 'regex+u'};
+const engineName = name => engineNames[name] ?? name ?? 'rr';
+
+// The regex and the numbers of the groups the engine added to it, which the user does not know about
+function compileRegex(pattern, config) {
+	const engine = engineName(config.engine);
+	if (!['rr', 'regex+v', 'regex+u', 'V8', 'JSC', 'runtime'].includes(engine)) {
+		panic(`Engine ${config.engine} not supported`);
+	}
+	if (('V8' === engine || 'JSC' === engine) && engine !== runtimeEngine) {
 		panic(
-			'V8' === engine || 'JSC' === engine
-				? `When running via the ${runtime} runtime you can only use default or ${runtimeEngine} as engine`
-				: `Engine ${config.engine} not supported`
+			`When running via the ${runtime} runtime the native engine is ${runtimeEngine}, not ${engine}`
 		);
 	}
+	const regexPlus = 'regex+v' === engine || 'regex+u' === engine;
+	// Regex+ always uses u or v itself, and it is an error to ask for them
 	const flags =
 		(config.voidGlobal ? '' : 'g') +
 		(config.voidIgnoreCase ? '' : 'i') +
 		(config.voidMultiline ? '' : 'm') +
 		(config.dotAll ? 's' : '') +
-		(config.unicode ? 'u' : '');
+		(config.unicode && !regexPlus ? 'u' : '');
 	try {
-		return new RegExp(pattern, flags);
+		if (config.literal) {
+			// The text as it is, without the free spacing of Regex+
+			return {
+				regex: new RegExp(pattern, flags + (regexPlus ? ('regex+u' === engine ? 'u' : 'v') : '')),
+				hiddenCaptures: [],
+			};
+		}
+		if (regexPlus) {
+			const result = rewrite(pattern, {flags, disable: 'regex+u' === engine ? {v: true} : {}});
+			return {
+				regex: new RegExp(result.pattern, result.flags),
+				hiddenCaptures: result.hiddenCaptures,
+			};
+		}
+		if ('rr' === engine) {
+			return compileRr(pattern, flags);
+		}
+		return {regex: new RegExp(pattern, flags), hiddenCaptures: []};
 	} catch (e) {
 		return panic(e.message);
 	}
+}
+
+// The rr engine: the native engine with the flags of today, and the extended syntax of Regex+ on top.
+// Only the transforms of Regex+ run, in its own order, and not its flags, so a pattern that works natively gives the same regex.
+function compileRr(pattern, flags) {
+	let hiddenCaptures = [];
+	const transform = plugin => {
+		const result = plugin(pattern, {flags, hiddenCaptures});
+		pattern = result.pattern;
+		hiddenCaptures = result.hiddenCaptures ?? hiddenCaptures;
+	};
+	// The subroutines do not return early by themselves when the pattern has none
+	if (re.subroutineSyntax.test(pattern)) {
+		transform(subroutines);
+	}
+	transform(possessive);
+	transform(atomic);
+	return {regex: new RegExp(pattern, flags), hiddenCaptures};
+}
+
+// The group numbers in a replacement, like $1, count only the groups of the user, so they are moved past the hidden ones.
+// It follows the rules of javascript for $n and $nn with the visible groups, and always gives two digits,
+// so a digit after it is not read as part of the number. A number that is no visible group stays as text.
+function visibleGroupNumbers(replacement, hiddenCaptures, total) {
+	const real = [0];
+	for (let group = 1; group <= total; group++) {
+		if (!hiddenCaptures.includes(group)) {
+			real.push(group);
+		}
+	}
+	const visible = real.length - 1;
+	return replacement.replace(re.replacementToken, (token, kind, first, second) => {
+		if (undefined === first) {
+			return token;
+		}
+		const two = '' !== second ? Number(first + second) : 0;
+		if (1 <= two && two <= visible) {
+			return '$' + String(real[two]).padStart(2, '0');
+		}
+		const one = Number(first);
+		if (1 <= one && one <= visible) {
+			return '$' + String(real[one]).padStart(2, '0') + second;
+		}
+		return '$$' + first + second;
+	});
 }
 
 function readableSize(size) {
@@ -757,12 +853,15 @@ function codeUses(code, regex) {
 	};
 }
 
+// With | at the end the regex matches an empty text, and the match has all the groups
+function emptyMatch(regex) {
+	return new RegExp(regex.source + '|', regex.flags.replace(/[gy]/g, '')).exec('');
+}
+
 // The names of the named groups of a regex, like year for (?<year>…). A name can have any letter, like año.
 // They come from the regex itself, so text that only looks like a group, like \(?<a> or [(?<a>], is not one.
-// With | at the end the regex matches an empty text, and the match has all the groups.
 function namedGroups(regex) {
-	const match = new RegExp(regex.source + '|', regex.flags.replace(/[gy]/g, '')).exec('');
-	return Object.keys(match?.groups ?? {});
+	return Object.keys(emptyMatch(regex)?.groups ?? {});
 }
 
 // The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
@@ -850,11 +949,18 @@ function cut(text, length = 300) {
 	return chars.length > length ? chars.slice(0, length).join('') + '…' : text;
 }
 
-// The arguments of a replace function: the match and the groups, then the offset and the text, and the named groups if the pattern has any
-function splitMatch(args) {
+// The arguments of a replace function: the match and the groups, then the offset and the text, and the named groups if the pattern has any.
+// The groups the engine added are left out, so $1 is the first group of the user.
+function splitMatch(args, hiddenCaptures) {
 	const named = args[args.length - 1];
 	const hasNamed = 'object' === typeof named && null !== named;
-	return {groups: args.slice(0, hasNamed ? -3 : -2), named: hasNamed ? named : {}};
+	const groups = args.slice(0, hasNamed ? -3 : -2);
+	return {
+		groups: hiddenCaptures.length
+			? groups.filter((_, group) => !hiddenCaptures.includes(group))
+			: groups,
+		named: hasNamed ? named : {},
+	};
 }
 
 // The function that runs the code of --js. It is made once, as the names are the same for every file.
@@ -998,7 +1104,7 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		foundMatch();
 		match++;
 		config.numbers.matches++;
-		const {groups, named} = splitMatch(matchArgs);
+		const {groups, named} = splitMatch(matchArgs, config.hiddenCaptures);
 		let variables = '';
 		groups.forEach((value, i) => {
 			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
@@ -1041,7 +1147,7 @@ function getFilePaths(conf) {
 	}
 
 	excludeRe
-		.map(pattern => getFinalRegex(regexPattern(pattern, conf), conf))
+		.map(pattern => compileRegex(regexPattern(pattern, conf), conf).regex)
 		.forEach(exclude => {
 			files = files.filter(file => !file.match(exclude));
 		});

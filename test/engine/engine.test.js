@@ -3,7 +3,7 @@ import fs from 'fs';
 import {rr} from '../helper.js';
 
 describe('--engine', () => {
-	test('default is the engine of the runtime', async () => {
+	test('default is rr', async () => {
 		expect((await rr('o', 'x', {pipedData: 'foobar', engine: 'default'})).out).toBe('fxxbar');
 	});
 
@@ -17,7 +17,7 @@ describe('--engine', () => {
 		const result = await rr('o', 'x', {includeGlob: ['my.file'], engine: 'V8'});
 		expect(result.exit).toBe(3);
 		expect(result.err).toContain(
-			'When running via the Bun runtime you can only use default or JSC as engine'
+			'When running via the Bun runtime the native engine is JSC, not V8'
 		);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});

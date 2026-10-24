@@ -141,6 +141,8 @@ describe('#742 the engine part of the status', () => {
 				...flags,
 			});
 			expect(status.engine.execution).toEqual({
+				engine: 'rr',
+				hiddenCaptures: [],
 				search: 'o+',
 				flags: 'gi',
 				replacement,

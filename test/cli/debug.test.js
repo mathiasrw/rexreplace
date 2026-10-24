@@ -16,6 +16,8 @@ describe('--debug', () => {
 			expect(status.files).toEqual({searched: ['my.file'], updated: ['my.file']});
 			expect(status.engine.config).toMatchObject({pattern: 'o', replacement: 'x'});
 			expect(status.engine.execution).toEqual({
+				engine: 'rr',
+				hiddenCaptures: [],
 				search: 'o',
 				flags: 'gim',
 				replacement: 'x',
