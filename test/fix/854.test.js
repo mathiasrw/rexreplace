@@ -3,7 +3,8 @@
 // regex+ is Regex+ with the flags v, x and n, and --flags sets all the flags of any engine.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
-import {rr, rrStatus} from '../helper.js';
+import {$} from 'bun';
+import {rr, rrStatus, sh, cli} from '../helper.js';
 
 // What the regex engine was asked to do: the source and the flags of the regex
 async function compiled(pattern, config = {}) {
@@ -155,6 +156,16 @@ describe('#854 --flags', () => {
 		expect(await out('o', 'x', 'oOo', {flags: 'm'})).toBe('xOo');
 	});
 
+	test('gives regex+ the flag v when it has neither v nor u', async () => {
+		expect((await compiled('a', {...plus, flags: 'gx'})).flags).toContain('v');
+	});
+
+	test('can not go with -I, -G, -M, -s or -u in the CLI', async () => {
+		fs.writeFileSync('a.txt', 'a');
+		expect((await sh($`bun ${cli} a b a.txt --flags g -I`)).exit).toBe(3);
+		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a');
+	});
+
 	test('gives regex+ the flag u in place of v', async () => {
 		const {flags} = await compiled('a', {...plus, flags: 'gu'});
 		expect(flags).toContain('u');
@@ -162,10 +173,8 @@ describe('#854 --flags', () => {
 	});
 
 	test.each([
-		['-I', {voidIgnoreCase: true, flags: 'g'}],
 		['x without regex+', {flags: 'gx'}],
 		['n without regex+', {flags: 'gn'}],
-		['regex+ without v or u', {...plus, flags: 'gx'}],
 		['a flag that is not a flag', {flags: 'gq'}],
 	])('stops the run with %s', async (name, config) => {
 		expect((await rr('a', 'b', {pipedData: 'a', ...config})).exit).toBe(3);
@@ -180,6 +189,12 @@ describe('#854 --js with the flag n of regex+', () => {
 		expect((await rr('(?<y>\\d)', '$1', {pipedData: '1', ...config})).err).toContain(
 			'ReferenceError: $1 is not defined'
 		);
+	});
+
+	test('warns when the replacement text uses a group number, as it is the first named group', async () => {
+		const result = await rr('(?<y>\\d)', '[$1]', {pipedData: '1', engine: 'regex+'});
+		expect(result.out).toBe('[1]');
+		expect(result.err).toContain('With the flag n the groups have no numbers');
 	});
 
 	test('has the group numbers again without n', async () => {

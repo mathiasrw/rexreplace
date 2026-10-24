@@ -179,6 +179,21 @@ function unpackConfig(config) {
 	config.hiddenCaptures = hiddenCaptures;
 	// With the flag n of Regex+ only named groups capture, so --js gets no $1 and on
 	config.namedOnly = namedOnly;
+	// The replacement text still reads $1 as the first named group, which can be on purpose
+	if (
+		namedOnly &&
+		'string' === typeof config.replacement &&
+		!config.replacementJs &&
+		!config.outputMatch &&
+		!config.literalReplacement &&
+		[...config.replacement.matchAll(re.replacementToken)].some(
+			([, , first, second]) => 0 < Number(first + second)
+		)
+	) {
+		warn(
+			'With the flag n the groups have no numbers, but $1 in the replacement is the first named group. Use $<name>.'
+		);
+	}
 
 	// The groups Regex+ adds for atomic groups and possessive quantifiers are not counted in the numbers of the replacement
 	if (
@@ -728,15 +743,6 @@ const engineName = name => engineNames[name] ?? name ?? 'rr';
 // regex+ also has v, free spacing (x) and only named groups capture (n) by default, and v makes -u needless.
 function regexFlags(config, regexPlus) {
 	if (null != config.flags) {
-		if (
-			config.voidGlobal ||
-			config.voidIgnoreCase ||
-			config.voidMultiline ||
-			config.dotAll ||
-			config.unicode
-		) {
-			panic('--flags can not be used with -G, -I, -M, -s or -u, as it sets all the flags');
-		}
 		return String(config.flags);
 	}
 	return (
@@ -765,12 +771,9 @@ function compileRegex(pattern, config) {
 	if (!regexPlus && re.regexPlusOnlyFlags.test(flags)) {
 		panic('The flags x and n need -E regex+', flags);
 	}
-	if (regexPlus && !flags.includes('v') && !flags.includes('u')) {
-		panic('-E regex+ needs the flag v or u', flags);
-	}
-	// Regex+ takes v, u, x and n as options. It uses v, or u on a runtime without v.
+	// Regex+ takes v, u, x and n as options. It uses v, unless --flags has u, or the runtime has no v.
 	const nativeFlags = regexPlus ? flags.replace(re.regexPlusFlags, '') : flags;
-	const unicode = flags.includes('v') && supportsFlagV ? 'v' : 'u';
+	const unicode = !flags.includes('u') && supportsFlagV ? 'v' : 'u';
 	try {
 		if (config.literal) {
 			// The text as it is, without the free spacing of Regex+
@@ -781,7 +784,7 @@ function compileRegex(pattern, config) {
 			};
 		}
 		if (regexPlus) {
-			const disable = {v: !flags.includes('v'), x: !flags.includes('x'), n: !flags.includes('n')};
+			const disable = {v: flags.includes('u'), x: !flags.includes('x'), n: !flags.includes('n')};
 			const result = rewrite(pattern, {flags: nativeFlags, disable});
 			return {
 				regex: new RegExp(result.pattern, result.flags),

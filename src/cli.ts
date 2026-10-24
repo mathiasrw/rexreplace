@@ -119,9 +119,11 @@ const yargs = require('yargs')
 	.alias('u', 'unicode')
 
 	.string('flags')
+	// --flags sets all the flags, so the options that change a default flag can not go with it
+	.conflicts('flags', ['I', 'G', 'M', 's', 'u'])
 	.describe(
 		'flags',
-		'Set all the flags of the regex, like `gimsv`. Without it the flags are `gim` (`gimvxn` with `-E regex+`), changed by -G, -I, -M, -s and -u, which can not be used with --flags. `x` (free spacing) and `n` (only named groups capture) need `-E regex+`, which also needs `v` or `u`.'
+		'Set all the flags of the regex, like `gimsv`. Without it the flags are `gim` (`gimvxn` with `-E regex+`), changed by -G, -I, -M, -s and -u, which can not be used with --flags. `x` (free spacing) and `n` (only named groups capture) need `-E regex+`, which uses `v`, or `u` when it is given.'
 	)
 
 	.default('e', 'utf8')
