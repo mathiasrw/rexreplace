@@ -123,7 +123,11 @@ describe('#854 the other engines', () => {
 	test.each([['regex+n'], ['N'], ['regex+x'], ['X'], ['regex+u'], ['U'], ['regex+v']])(
 		'%s is not an engine',
 		async engine => {
-			expect((await rr('a', 'b', {pipedData: 'a', engine})).exit).toBe(3);
+			expect(await rr('a', 'b', {pipedData: 'a', engine})).toEqual({
+				out: '',
+				err: ` ❌ Engine ${engine} not supported\n    No further processing.\n\n`,
+				exit: 3,
+			});
 		}
 	);
 
@@ -131,6 +135,7 @@ describe('#854 the other engines', () => {
 		fs.writeFileSync('a.txt', 'a"b');
 		const result = await rr('\\"', 'x', {includeGlob: ['a.txt'], engine: 'regex+'});
 		expect(result.exit).toBe(3);
+		expect(result.err).toStartWith(' ❌ Invalid regular expression');
 		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a"b');
 	});
 
@@ -162,7 +167,9 @@ describe('#854 --flags', () => {
 
 	test('can not go with -I, -G, -M, -s or -u in the CLI', async () => {
 		fs.writeFileSync('a.txt', 'a');
-		expect((await sh($`bun ${cli} a b a.txt --flags g -I`)).exit).toBe(3);
+		const result = await sh($`bun ${cli} a b a.txt --flags g -I`);
+		expect(result.exit).toBe(3);
+		expect(result.err).toEndWith('Arguments flags and I are mutually exclusive\n');
 		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a');
 	});
 
@@ -173,11 +180,15 @@ describe('#854 --flags', () => {
 	});
 
 	test.each([
-		['x without regex+', {flags: 'gx'}],
-		['n without regex+', {flags: 'gn'}],
-		['a flag that is not a flag', {flags: 'gq'}],
-	])('stops the run with %s', async (name, config) => {
-		expect((await rr('a', 'b', {pipedData: 'a', ...config})).exit).toBe(3);
+		['x without regex+', {flags: 'gx'}, ' ❌ The flags x and n need -E regex+\n    gx'],
+		['n without regex+', {flags: 'gn'}, ' ❌ The flags x and n need -E regex+\n    gn'],
+		['a flag that is not a flag', {flags: 'gqz'}, ' ❌ Unknown flags in --flags\n    qz'],
+	])('stops the run with %s, and says so', async (name, config, message) => {
+		expect(await rr('a', 'b', {pipedData: 'a', ...config})).toEqual({
+			out: '',
+			err: message + '\n    No further processing.\n\n',
+			exit: 3,
+		});
 	});
 });
 

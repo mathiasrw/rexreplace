@@ -28,6 +28,8 @@ const re = {
 	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
 	// The flags only Regex+ knows: free spacing (x) and only named groups capture (n)
 	regexPlusOnlyFlags: /[xn]/,
+	// Every flag of a regex, and x and n of Regex+
+	regexFlagNames: /[dgimsuvyxn]/g,
 	// The flags Regex+ takes as options, and not as flags
 	regexPlusFlags: /[uvxn]/g,
 	// A $ in a replacement: $$, $&, $`, $', $<name>, or a group number of one or two digits
@@ -743,6 +745,11 @@ const engineName = name => engineNames[name] ?? name ?? 'rr';
 // regex+ also has v, free spacing (x) and only named groups capture (n) by default, and v makes -u needless.
 function regexFlags(config, regexPlus) {
 	if (null != config.flags) {
+		// The runtime does not always say which flag it does not know, so it is told here
+		const unknown = String(config.flags).replace(re.regexFlagNames, '');
+		if (unknown) {
+			panic('Unknown flags in --flags', unknown);
+		}
 		return String(config.flags);
 	}
 	return (
