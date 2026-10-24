@@ -63,6 +63,6 @@
 		}
 	],
 	"files": {
-		"includes": ["**", "!**/dist", "!**/bin", "!**/node_modules"]
+		"includes": ["**", "!**/dist", "!**/bin", "!**/node_modules", "!src/libs"]
 	}
 }

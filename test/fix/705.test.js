@@ -55,7 +55,7 @@ describe('#705 the engine returns a promise that resolves when all files are don
 				{includeGlob: ['nope.file'], quietTotal: true},
 			]) {
 				const done = engine({
-					engine: 'default',
+					engine: 'rr',
 					encoding: 'utf8',
 					pipedData: null,
 					includeGlob: ['my.file'],

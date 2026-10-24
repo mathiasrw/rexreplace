@@ -74,9 +74,12 @@ assert		 		"rexreplace o x my.file --output"    "fxxbar"
 assert		 		"cat my.file"    "foobar"
 
 
-# --engine: `default` is the engine of the runtime: V8 with Node and JSC with Bun
+# --engine: `rr` (also `default`) reads patterns like the native engine, with the extended syntax of Regex+, like atomic groups.
+# `runtime` is the native engine: V8 with Node and JSC with Bun.
 reset
 assert		 		"rexreplace o x my.file --output --engine default"    "fxxbar"
+assert		 		"rexreplace '(?>o+)(b)' '[\$1]' my.file --output"    "f[b]ar"
+assert		 		"rexreplace o x my.file --output --engine runtime"    "fxxbar"
 if [[ "$(rexreplace --version)" == *+bun ]]; then
 	assert_failure		"rexreplace o x my.file --output --engine V8"
 else

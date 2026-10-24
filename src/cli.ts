@@ -141,10 +141,10 @@ const yargs = require('yargs')
 	.alias('E', 'engine')
 	.describe(
 		'E',
-		'What regex engine to use. `default` is the default engine of the runtime (`V8` for  Node and `JSC` (JavaScriptCore) for Bun.'
+		'What regex engine to use. `rr` (also `default`) is Regex+ wrapped to read patterns like the native engine, with the extended syntax of Regex+ on top: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>` with `(?(DEFINE)…)`. `regex+v` (also `regex+` and `V`) is full Regex+ with the `v` flag, free spacing (`x`) and only named groups capturing (`n`). `regex+u` (also `U`) is the same with the `u` flag. `runtime` is the native engine of the runtime, and `V8` (Node) and `JSC` (JavaScriptCore, Bun) are the same, but stop the run on the other runtime.'
 	)
-	.choices('E', ['default', 'V8', 'JSC' /*'RE2' /*'sd', 'stream'*/])
-	.default('E', 'default')
+	.choices('E', ['rr', 'default', 'regex+v', 'regex+', 'V', 'regex+u', 'U', 'runtime', 'V8', 'JSC'])
+	.default('E', 'rr')
 
 	.boolean('q')
 	.describe(

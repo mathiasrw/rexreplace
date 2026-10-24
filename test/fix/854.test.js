@@ -1,0 +1,139 @@
+// https://github.com/mathiasrw/rexreplace/issues/854
+// Regex+ is behind the engines. rr, the default, reads patterns like the native engine, with the extended syntax of Regex+ on top.
+import {describe, test, expect} from 'bun:test';
+import fs from 'fs';
+import {rr, rrStatus} from '../helper.js';
+
+// What the regex engine was asked to do: the source and the flags of the regex
+async function compiled(pattern, config = {}) {
+	const status = await rrStatus(pattern, 'x', {
+		pipedData: '',
+		verbose: true,
+		status: true,
+		...config,
+	});
+	return status.engine.execution;
+}
+
+const out = async (pattern, replacement, text, config = {}) =>
+	(await rr(pattern, replacement, {pipedData: text, ...config})).out;
+
+describe('#854 the rr engine', () => {
+	test.each([
+		[`(['"])([^\\1]+)\\1`],
+		[`\\"`],
+		['a]'],
+		['a{'],
+		['\\01'],
+		['[(]'],
+		['[a-z-]'],
+		['\\++'],
+		['[+]+'],
+		['\\{2}+'],
+		['[(?>]'],
+		['[a++]'],
+		['\\(?>'],
+		['(?<n>a)\\k<n>'],
+		['\\k<x>'],
+		['a+?'],
+		['x{1,2}?'],
+		['(foo)(.*)'],
+		['[\\]+]+'],
+		['\\c'],
+		['\\x4'],
+		['(?<a>x)\\1'],
+		['$'],
+		['[[]'],
+	])('gives the same regex as the native engine for %s', async pattern => {
+		const native = new RegExp(pattern, 'gim');
+		expect(await compiled(pattern)).toMatchObject({search: native.source, flags: 'gim'});
+	});
+
+	test('only uses the u flag with -u', async () => {
+		expect((await compiled('a', {unicode: true})).flags).toBe('gimu');
+	});
+
+	test.each([
+		['an atomic group', '(?>a+)(b)', '[$1]', 'aab', '[b]'],
+		['a possessive quantifier', 'a++b', 'X', 'aaab', 'X'],
+		['a possessive quantifier that gives nothing back', 'a++a', 'X', 'aaa', 'aaa'],
+		['a subroutine', '(?<d>\\d)-\\g<d>', 'X', '1-2', 'X'],
+		[
+			'a DEFINE group',
+			'\\b(?<v>\\g<n>\\.\\g<n>\\.\\g<n>)(?(DEFINE)(?<n>0|[1-9]\\d*))',
+			'v$<v>',
+			'3.12.0 and 01.2.3',
+			'v3.12.0 and 01.2.3',
+		],
+	])('reads %s', async (name, pattern, replacement, text, result) => {
+		expect(await out(pattern, replacement, text)).toBe(result);
+	});
+
+	test('is the engine for default too', async () => {
+		expect(await out('(?>a+)(b)', '[$1]', 'aab', {engine: 'default'})).toBe('[b]');
+	});
+});
+
+describe('#854 the groups Regex+ adds', () => {
+	// (?>a+) adds a group of its own in front of (b) and (c)
+	test.each([
+		['$1', 'b'],
+		['$2$1', 'cb'],
+		['$3', '$3'],
+		['$10', 'b0'],
+		['$$1', '$1'],
+		['$&', 'aabc'],
+	])('are not counted in the replacement %s', async (replacement, result) => {
+		expect(await out('(?>a+)(b)(c)?', replacement, 'aabc')).toBe(result);
+	});
+
+	test('are not counted in --js', async () => {
+		expect(await out('(?>a+)(b)', "$1 + '!'", 'aab', {replacementJs: true})).toBe('b!');
+	});
+
+	test('are not printed by --output-match', async () => {
+		expect(await out('(?>a+)(b)', 'x', 'aab', {outputMatch: true})).toBe('b\n');
+	});
+
+	test('are told in the status report', async () => {
+		expect(await compiled('(?>a+)(b)')).toMatchObject({engine: 'rr', hiddenCaptures: [1]});
+	});
+});
+
+describe('#854 the other engines', () => {
+	// The tests are run by Bun, so the native engine is JSC
+	test.each([['JSC'], ['runtime']])(
+		'%s is the native engine, without the extended syntax',
+		async engine => {
+			expect(await out('(?<d>a)\\g<d>', 'X', 'ag<d>', {engine})).toBe('X');
+		}
+	);
+
+	test.each([['regex+v'], ['regex+'], ['V']])(
+		'%s has free spacing, and only named groups capture',
+		async engine => {
+			expect(await out('foo bar', 'X', 'foobar', {engine})).toBe('X');
+			expect(await out('(foo)(.*)', '$2$1', 'foox', {engine})).toBe('$2$1');
+			expect((await compiled('a', {engine})).flags).toContain('v');
+		}
+	);
+
+	test.each([['regex+u'], ['U']])('%s uses the u flag and not v', async engine => {
+		const {flags} = await compiled('a', {engine});
+		expect(flags).toContain('u');
+		expect(flags).not.toContain('v');
+	});
+
+	test('regex+ stops the run on an escape that is not strict, and the file is not changed', async () => {
+		fs.writeFileSync('a.txt', 'a"b');
+		const result = await rr('\\"', 'x', {includeGlob: ['a.txt'], engine: 'regex+'});
+		expect(result.exit).toBe(3);
+		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a"b');
+	});
+
+	test('--literal gives the text as it is, also with the free spacing of regex+', async () => {
+		expect(await out('a b #c (d)', 'X', 'a b #c (d)!', {engine: 'regex+', literal: true})).toBe(
+			'X!'
+		);
+	});
+});
