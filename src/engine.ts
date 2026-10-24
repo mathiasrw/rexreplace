@@ -52,6 +52,14 @@ export {version};
 // The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
 const runtime = process.versions.bun ? 'Bun' : 'Node';
 const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
+// Node 18 has no v flag, and then Regex+ uses u
+const supportsFlagV = (() => {
+	try {
+		return Boolean(new RegExp('', 'v'));
+	} catch (e) {
+		return false;
+	}
+})();
 
 // Resolves with the status of the run when all files are done.
 // When the run can not go on, a panic is thrown with the status so far.
@@ -716,14 +724,16 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-// -E: default is another name for rr, regex+ and V for regex+v, and U for regex+u
-const engineNames = {default: 'rr', 'regex+': 'regex+v', V: 'regex+v', U: 'regex+u'};
+// -E: default is another name for rr, V for regex+, N for regex+n and X for regex+x
+const engineNames = {default: 'rr', V: 'regex+', N: 'regex+n', X: 'regex+x'};
+// regex+n leaves out free spacing (x), and regex+x leaves out that only named groups capture (n)
+const regexPlusDisable = {'regex+': {}, 'regex+n': {x: true}, 'regex+x': {n: true}};
 const engineName = name => engineNames[name] ?? name ?? 'rr';
 
 // The regex and the numbers of the groups the engine added to it, which the user does not know about
 function compileRegex(pattern, config) {
 	const engine = engineName(config.engine);
-	if (!['rr', 'regex+v', 'regex+u', 'V8', 'JSC', 'runtime'].includes(engine)) {
+	if (!['rr', 'regex+', 'regex+n', 'regex+x', 'V8', 'JSC', 'runtime'].includes(engine)) {
 		panic(`Engine ${config.engine} not supported`);
 	}
 	if (('V8' === engine || 'JSC' === engine) && engine !== runtimeEngine) {
@@ -731,8 +741,8 @@ function compileRegex(pattern, config) {
 			`When running via the ${runtime} runtime the native engine is ${runtimeEngine}, not ${engine}`
 		);
 	}
-	const regexPlus = 'regex+v' === engine || 'regex+u' === engine;
-	// Regex+ always uses u or v itself, and it is an error to ask for them
+	const regexPlus = engine in regexPlusDisable;
+	// Regex+ always uses v itself, or u on a runtime without v, and it is an error to ask for them
 	const flags =
 		(config.voidGlobal ? '' : 'g') +
 		(config.voidIgnoreCase ? '' : 'i') +
@@ -743,12 +753,12 @@ function compileRegex(pattern, config) {
 		if (config.literal) {
 			// The text as it is, without the free spacing of Regex+
 			return {
-				regex: new RegExp(pattern, flags + (regexPlus ? ('regex+u' === engine ? 'u' : 'v') : '')),
+				regex: new RegExp(pattern, flags + (regexPlus ? (supportsFlagV ? 'v' : 'u') : '')),
 				hiddenCaptures: [],
 			};
 		}
 		if (regexPlus) {
-			const result = rewrite(pattern, {flags, disable: 'regex+u' === engine ? {v: true} : {}});
+			const result = rewrite(pattern, {flags, disable: regexPlusDisable[engine]});
 			return {
 				regex: new RegExp(result.pattern, result.flags),
 				hiddenCaptures: result.hiddenCaptures,

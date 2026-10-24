@@ -1,5 +1,6 @@
 // https://github.com/mathiasrw/rexreplace/issues/854
 // Regex+ is behind the engines. rr, the default, reads patterns like the native engine, with the extended syntax of Regex+ on top.
+// regex+ is Regex+ with the flags v, x and n, regex+n leaves out x, and regex+x leaves out n.
 import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr, rrStatus} from '../helper.js';
@@ -109,19 +110,30 @@ describe('#854 the other engines', () => {
 		}
 	);
 
-	test.each([['regex+v'], ['regex+'], ['V']])(
-		'%s has free spacing, and only named groups capture',
+	test.each([['regex+'], ['V']])(
+		'%s has free spacing, only named groups capture, and the v flag',
 		async engine => {
 			expect(await out('foo bar', 'X', 'foobar', {engine})).toBe('X');
-			expect(await out('(foo)(.*)', '$2$1', 'foox', {engine})).toBe('$2$1');
+			expect(await out('(foo)(?<rest>.*)', '$1', 'foox', {engine})).toBe('x');
 			expect((await compiled('a', {engine})).flags).toContain('v');
 		}
 	);
 
-	test.each([['regex+u'], ['U']])('%s uses the u flag and not v', async engine => {
-		const {flags} = await compiled('a', {engine});
-		expect(flags).toContain('u');
-		expect(flags).not.toContain('v');
+	test.each([['regex+n'], ['N']])(
+		'%s has no free spacing, and only named groups capture',
+		async engine => {
+			expect(await out('foo bar', 'X', 'foo bar', {engine})).toBe('X');
+			expect(await out('(foo)(?<rest>.*)', '$1', 'foox', {engine})).toBe('x');
+		}
+	);
+
+	test.each([['regex+x'], ['X']])('%s has free spacing, and all groups capture', async engine => {
+		expect(await out('foo bar', 'X', 'foobar', {engine})).toBe('X');
+		expect(await out('(foo)(?<rest>.*)', '$1', 'foox', {engine})).toBe('foo');
+	});
+
+	test.each([['regex+u'], ['U'], ['regex+v']])('%s is not an engine', async engine => {
+		expect((await rr('a', 'b', {pipedData: 'a', engine})).exit).toBe(3);
 	});
 
 	test('regex+ stops the run on an escape that is not strict, and the file is not changed', async () => {

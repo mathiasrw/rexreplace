@@ -141,9 +141,21 @@ const yargs = require('yargs')
 	.alias('E', 'engine')
 	.describe(
 		'E',
-		'What regex engine to use. `rr` (also `default`) is Regex+ wrapped to read patterns like the native engine, with the extended syntax of Regex+ on top: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>` with `(?(DEFINE)…)`. `regex+v` (also `regex+` and `V`) is full Regex+ with the `v` flag, free spacing (`x`) and only named groups capturing (`n`). `regex+u` (also `U`) is the same with the `u` flag. `runtime` is the native engine of the runtime, and `V8` (Node) and `JSC` (JavaScriptCore, Bun) are the same, but stop the run on the other runtime.'
+		'What regex engine to use. `rr` (also `default`) is Regex+ wrapped to read patterns like the native engine, with the extended syntax of Regex+ on top: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>` with `(?(DEFINE)…)`. `regex+` (also `V`) is the Regex+ engine with flag v, free spacing (x), only named groups capture (n), atomic groups, possessive quantifiers and subroutines. On a runtime without v, like Node 18, it uses u. `regex+n` (also `N`) is the same without free spacing, and `regex+x` (also `X`) the same where all groups capture. `runtime` is the native engine of the runtime, and `V8` (Node) and `JSC` (JavaScriptCore, Bun) are the same, but stop the run on the other runtime.'
 	)
-	.choices('E', ['rr', 'default', 'regex+v', 'regex+', 'V', 'regex+u', 'U', 'runtime', 'V8', 'JSC'])
+	.choices('E', [
+		'rr',
+		'default',
+		'regex+',
+		'V',
+		'regex+n',
+		'N',
+		'regex+x',
+		'X',
+		'runtime',
+		'V8',
+		'JSC',
+	])
 	.default('E', 'rr')
 
 	.boolean('q')
