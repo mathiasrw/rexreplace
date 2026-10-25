@@ -80,11 +80,7 @@ reset
 assert		 		"rexreplace o x my.file --output --engine default"    "fxxbar"
 assert		 		"rexreplace '(?>o+)(b)' '[\$1]' my.file --output"    "f[b]ar"
 assert		 		"rexreplace o x my.file --output --engine runtime"    "fxxbar"
-if [[ "$(rexreplace --version)" == *+bun ]]; then
-	assert_failure		"rexreplace o x my.file --output --engine V8"
-else
-	assert_failure		"rexreplace o x my.file --output --engine JSC"
-fi
+assert_failure		"rexreplace o x my.file --output --engine V8"
 
 
 # --encoding

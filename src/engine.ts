@@ -24,15 +24,13 @@ const re = {
 	// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`.
 	stackLineWithoutName: /^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/,
 	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
-	// Subroutines of Regex+, which the rr engine only looks for when the pattern has them
 	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
-	// The flags only Regex+ knows: free spacing (x) and only named groups capture (n)
+	atomicSyntax: /\(\?>/,
+	// v is a native flag too, but only Regex+ knows x and n
 	regexPlusOnlyFlags: /[xn]/,
-	// Every flag of a regex, and x and n of Regex+
 	regexFlagNames: /[dgimsuvyxn]/g,
 	// The flags Regex+ takes as options, and not as flags
 	regexPlusFlags: /[uvxn]/g,
-	// A $ in a replacement: $$, $&, $`, $', $<name>, or a group number of one or two digits
 	replacementToken: /\$(\$|&|`|'|<[^>]*>|(\d)(\d?))/g,
 	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
 	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
@@ -50,9 +48,11 @@ const re = {
 // Only the version ends up in the bundle
 import {version} from '../package.json';
 
-// Regex+ by Steven Levithan, copied into src/libs until it exports the subroutines (see src/libs/README.md)
-import {atomic, possessive, subroutines} from './libs/regex/internals.js';
-import {rewrite} from './libs/regex/regex.js';
+// Regex+ by Steven Levithan. Its subroutines are copied into src/libs until it exports them.
+import {rewrite} from 'regex';
+import {atomic, possessive} from 'regex/internals';
+import {Context, hasUnescaped} from 'regex-utilities';
+import {subroutines} from './libs/regex/subroutines.js';
 export {version};
 
 // The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
@@ -181,23 +181,8 @@ function unpackConfig(config) {
 	config.hiddenCaptures = hiddenCaptures;
 	// With the flag n of Regex+ only named groups capture, so --js gets no $1 and on
 	config.namedOnly = namedOnly;
-	// The replacement text still reads $1 as the first named group, which can be on purpose
-	if (
-		namedOnly &&
-		'string' === typeof config.replacement &&
-		!config.replacementJs &&
-		!config.outputMatch &&
-		!config.literalReplacement &&
-		[...config.replacement.matchAll(re.replacementToken)].some(
-			([, , first, second]) => 0 < Number(first + second)
-		)
-	) {
-		warn(
-			'With the flag n the groups have no numbers, but $1 in the replacement is the first named group. Use $<name>.'
-		);
-	}
 
-	// The groups Regex+ adds for atomic groups and possessive quantifiers are not counted in the numbers of the replacement
+	// The user does not know the groups Regex+ adds for atomic groups and possessive quantifiers
 	if (
 		hiddenCaptures.length &&
 		'string' === typeof config.replacement &&
@@ -738,11 +723,9 @@ function codeReplacement(file, config, text, numbers) {
 }
 
 // -E: default is another name for rr, and V for regex+
-const engineNames = {default: 'rr', V: 'regex+'};
-const engineName = name => engineNames[name] ?? name ?? 'rr';
+const engineName = name => ('default' === name ? 'rr' : (name ?? 'rr'));
 
-// The flags of the regex: --flags as they are, or the default flags with -G, -I, -M, -s and -u.
-// regex+ also has v, free spacing (x) and only named groups capture (n) by default, and v makes -u needless.
+// -u is needless with regex+, as it has v
 function regexFlags(config, regexPlus) {
 	if (null != config.flags) {
 		// The runtime does not always say which flag it does not know, so it is told here
@@ -750,7 +733,8 @@ function regexFlags(config, regexPlus) {
 		if (unknown) {
 			panic('Unknown flags in --flags', unknown);
 		}
-		return String(config.flags);
+		// The runtime does not take a flag twice, and there is no harm in it
+		return [...new Set(String(config.flags))].join('');
 	}
 	return (
 		(config.voidGlobal ? '' : 'g') +
@@ -761,24 +745,17 @@ function regexFlags(config, regexPlus) {
 	);
 }
 
-// The regex, the numbers of the groups the engine added to it, which the user does not know about,
-// and if only named groups capture
 function compileRegex(pattern, config) {
 	const engine = engineName(config.engine);
-	if (!['rr', 'regex+', 'V8', 'JSC', 'runtime'].includes(engine)) {
+	if (!['rr', 'regex+', 'runtime'].includes(engine)) {
 		panic(`Engine ${config.engine} not supported`);
-	}
-	if (('V8' === engine || 'JSC' === engine) && engine !== runtimeEngine) {
-		panic(
-			`When running via the ${runtime} runtime the native engine is ${runtimeEngine}, not ${engine}`
-		);
 	}
 	const regexPlus = 'regex+' === engine;
 	const flags = regexFlags(config, regexPlus);
 	if (!regexPlus && re.regexPlusOnlyFlags.test(flags)) {
 		panic('The flags x and n need -E regex+', flags);
 	}
-	// Regex+ takes v, u, x and n as options. It uses v, unless --flags has u, or the runtime has no v.
+	// Regex+ takes v, u, x and n as options, and gives an error when they come as flags
 	const nativeFlags = regexPlus ? flags.replace(re.regexPlusFlags, '') : flags;
 	const unicode = !flags.includes('u') && supportsFlagV ? 'v' : 'u';
 	try {
@@ -791,16 +768,29 @@ function compileRegex(pattern, config) {
 			};
 		}
 		if (regexPlus) {
-			const disable = {v: flags.includes('u'), x: !flags.includes('x'), n: !flags.includes('n')};
+			// The subroutines and the atomic groups are left to extendedSyntax, as rewrite() does not tell which groups they add
+			const disable = {
+				v: flags.includes('u'),
+				x: !flags.includes('x'),
+				n: !flags.includes('n'),
+				atomic: true,
+				subroutines: true,
+			};
 			const result = rewrite(pattern, {flags: nativeFlags, disable});
+			const extended = extendedSyntax(result.pattern, result.flags);
 			return {
-				regex: new RegExp(result.pattern, result.flags),
-				hiddenCaptures: result.hiddenCaptures,
+				regex: new RegExp(extended.pattern, result.flags),
+				hiddenCaptures: extended.hiddenCaptures,
 				namedOnly: flags.includes('n'),
 			};
 		}
 		if ('rr' === engine) {
-			return {...compileRr(pattern, flags), namedOnly: false};
+			const extended = extendedSyntax(pattern, flags);
+			return {
+				regex: new RegExp(extended.pattern, flags),
+				hiddenCaptures: extended.hiddenCaptures,
+				namedOnly: false,
+			};
 		}
 		return {regex: new RegExp(pattern, flags), hiddenCaptures: [], namedOnly: false};
 	} catch (e) {
@@ -808,27 +798,25 @@ function compileRegex(pattern, config) {
 	}
 }
 
-// The rr engine: the native engine with the flags of today, and the extended syntax of Regex+ on top.
 // Only the transforms of Regex+ run, in its own order, and not its flags, so a pattern that works natively gives the same regex.
-function compileRr(pattern, flags) {
+// A transform only runs when its syntax is outside a character class, as Regex+ does not always look, like for [(?>]\1 (#858).
+function extendedSyntax(pattern, flags) {
 	let hiddenCaptures = [];
-	const transform = plugin => {
+	const transform = (plugin, syntax = null) => {
+		if (syntax && !hasUnescaped(pattern, syntax.source, Context.DEFAULT)) {
+			return;
+		}
 		const result = plugin(pattern, {flags, hiddenCaptures});
 		pattern = result.pattern;
 		hiddenCaptures = result.hiddenCaptures ?? hiddenCaptures;
 	};
-	// The subroutines do not return early by themselves when the pattern has none
-	if (re.subroutineSyntax.test(pattern)) {
-		transform(subroutines);
-	}
+	transform(subroutines, re.subroutineSyntax);
 	transform(possessive);
-	transform(atomic);
-	return {regex: new RegExp(pattern, flags), hiddenCaptures};
+	transform(atomic, re.atomicSyntax);
+	return {pattern, hiddenCaptures};
 }
 
-// The group numbers in a replacement, like $1, count only the groups of the user, so they are moved past the hidden ones.
-// It follows the rules of javascript for $n and $nn with the visible groups, and always gives two digits,
-// so a digit after it is not read as part of the number. A number that is no visible group stays as text.
+// Always two digits, so a digit after it is not read as part of the number. A number that is no group of the user stays text, as in javascript.
 function visibleGroupNumbers(replacement, hiddenCaptures, total) {
 	const real = [0];
 	for (let group = 1; group <= total; group++) {
@@ -880,7 +868,6 @@ function countFile(config, text, result) {
 function codeUses(code, regex) {
 	const named = name => new RegExp('\\$' + name + '(?![A-Za-z])').test(code);
 	const groups = namedGroups(regex);
-	// A named group is used as $year, or as $year_ with a space at the end
 	const usesGroup = name =>
 		new RegExp(
 			'(^|[^\\p{ID_Continue}$])\\$' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
@@ -1157,8 +1144,7 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 				variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
 			}
 		});
-		// A named group is $ and the name, like $year for (?<year>…), and $year_ has a space at the end.
-		// It comes after the numbers, so a group named like a number, like n, wins over $n.
+		// After the numbers, so a group named like a number, like n, wins over $n
 		for (const [name, value] of Object.entries(named)) {
 			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
 		}

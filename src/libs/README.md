@@ -1,28 +1,12 @@
-# Copied libraries
+# Copied code
 
-These are copies of other packages, bundled into RexReplace, so they are not runtime dependencies.
-Keep them as they are upstream, so they are easy to compare. Biome leaves this folder alone.
+RexReplace uses [Regex+](https://github.com/slevithan/regex) by Steven Levithan, from the npm packages [`regex`](https://www.npmjs.com/package/regex) and [`regex-utilities`](https://www.npmjs.com/package/regex-utilities). Both are dependencies, and the build bundles them, as they are ES modules only.
 
-| Folder | Package | Upstream |
-| --- | --- | --- |
-| `regex/` | [`regex`](https://www.npmjs.com/package/regex) 6.1.0, the `src/` folder | https://github.com/slevithan/regex |
-| `regex-utilities/` | [`regex-utilities`](https://www.npmjs.com/package/regex-utilities) 2.3.0, `src/index.js` | https://github.com/slevithan/regex-utilities |
+One part of `regex` 6.1.0 is not exported: the subroutines. So it is copied here, as it is upstream, until upstream exports it:
 
-Both are MIT, and their `LICENSE` files are next to the code.
+- `regex/subroutines.js` and `regex/utils-internals.js`, unchanged.
+- `regex/utils.js`, only the three parts of it that `subroutines.js` uses.
 
-## Changes from upstream
+The license of `regex` (MIT) is in `regex/LICENSE`. Biome leaves this folder alone, so it stays easy to compare with upstream.
 
-Changes 2 and 3 are marked with a `// rexreplace patch:` comment.
-
-1. `regex/*.js` import `regex-utilities` as `../regex-utilities/index.js`, as the build leaves bare imports out of the bundle.
-2. `regex/internals.js` also exports `subroutines`. Asked for upstream.
-3. `rewrite()` in `regex/regex.js` also gives `hiddenCaptures`, the numbers of the groups Regex+ added, so RexReplace can skip them without `RegExpSubclass`, which makes `.replace()` 3 to 5 times slower.
-
-## Removal plan
-
-When upstream exports `subroutines`:
-
-1. Add `regex` as a dependency.
-2. Import from `regex/internals` and `regex` in place of `./libs/regex/internals.js` and `./libs/regex/regex.js`.
-3. If `rewrite()` does not give `hiddenCaptures` upstream, ask for it first, as change 3 is still needed.
-4. Delete `src/libs/` and its line in `biome.json`. The tests must pass without changes.
+When `regex` exports `subroutines`, import it from `regex/internals`, and delete this folder and its line in `biome.json`.

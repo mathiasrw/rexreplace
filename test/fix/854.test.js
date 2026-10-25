@@ -33,6 +33,9 @@ describe('#854 the rr engine', () => {
 		['[+]+'],
 		['\\{2}+'],
 		['[(?>]'],
+		// #858
+		['[(?>]\\1'],
+		['[\\g<x>]'],
 		['[a++]'],
 		['\\(?>'],
 		['(?<n>a)\\k<n>'],
@@ -104,14 +107,11 @@ describe('#854 the groups Regex+ adds', () => {
 
 describe('#854 the other engines', () => {
 	// The tests are run by Bun, so the native engine is JSC
-	test.each([['JSC'], ['runtime']])(
-		'%s is the native engine, without the extended syntax',
-		async engine => {
-			expect(await out('(?<d>a)\\g<d>', 'X', 'ag<d>', {engine})).toBe('X');
-		}
-	);
+	test.each([['runtime']])('%s is the native engine, without the extended syntax', async engine => {
+		expect(await out('(?<d>a)\\g<d>', 'X', 'ag<d>', {engine})).toBe('X');
+	});
 
-	test.each([['regex+'], ['V']])(
+	test.each([['regex+']])(
 		'%s has free spacing, only named groups capture, and the v flag',
 		async engine => {
 			expect(await out('foo bar', 'X', 'foobar', {engine})).toBe('X');
@@ -120,7 +120,7 @@ describe('#854 the other engines', () => {
 		}
 	);
 
-	test.each([['regex+n'], ['N'], ['regex+x'], ['X'], ['regex+u'], ['U'], ['regex+v']])(
+	test.each([['V'], ['V8'], ['JSC'], ['regex+n'], ['regex+x'], ['regex+u'], ['regex+v']])(
 		'%s is not an engine',
 		async engine => {
 			expect(await rr('a', 'b', {pipedData: 'a', engine})).toEqual({
@@ -159,6 +159,10 @@ describe('#854 --flags', () => {
 
 	test('sets all the flags, so without i the search is case sensitive and without g only the first match', async () => {
 		expect(await out('o', 'x', 'oOo', {flags: 'm'})).toBe('xOo');
+	});
+
+	test('takes a flag that is given twice once', async () => {
+		expect(await out('o', 'x', 'oO', {flags: 'gg'})).toBe('xO');
 	});
 
 	test('gives regex+ the flag v when it has neither v nor u', async () => {
@@ -200,12 +204,6 @@ describe('#854 --js with the flag n of regex+', () => {
 		expect((await rr('(?<y>\\d)', '$1', {pipedData: '1', ...config})).err).toContain(
 			'ReferenceError: $1 is not defined'
 		);
-	});
-
-	test('warns when the replacement text uses a group number, as it is the first named group', async () => {
-		const result = await rr('(?<y>\\d)', '[$1]', {pipedData: '1', engine: 'regex+'});
-		expect(result.out).toBe('[1]');
-		expect(result.err).toContain('With the flag n the groups have no numbers');
 	});
 
 	test('has the group numbers again without n', async () => {
