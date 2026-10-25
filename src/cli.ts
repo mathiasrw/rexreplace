@@ -119,11 +119,10 @@ const yargs = require('yargs')
 	.alias('u', 'unicode')
 
 	.string('flags')
-	// --flags sets all the flags, so the options that change a default flag can not go with it
 	.conflicts('flags', ['I', 'G', 'M', 's', 'u'])
 	.describe(
 		'flags',
-		'Set all the flags of the regex, like `gimsv`. Without it the flags are `gim` (`gimvxn` with `-E regex+`), changed by -G, -I, -M, -s and -u, which can not be used with --flags. `x` (free spacing) and `n` (only named groups capture) need `-E regex+`, which uses `v`, or `u` when it is given.'
+		'The flags of the regex, like `gimsv`, in place of the defaults: `gim`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`.'
 	)
 
 	.default('e', 'utf8')
@@ -149,7 +148,7 @@ const yargs = require('yargs')
 	.alias('E', 'engine')
 	.describe(
 		'E',
-		'What regex engine to use. `rr` (also `default`) is Regex+ wrapped to read patterns like the native engine, with the extended syntax of Regex+ on top: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>` with `(?(DEFINE)…)`. `regex+` (also `V`) is the Regex+ engine with flag v, free spacing (x), only named groups capture (n), atomic groups, possessive quantifiers and subroutines. On a runtime without v, like Node 18, it uses u. Use --flags to leave out x or n. `runtime` is the native engine of the runtime, and `V8` (Node) and `JSC` (JavaScriptCore, Bun) are the same, but stop the run on the other runtime.'
+		'The regex engine. `rr` (also `default`) reads patterns like the native engine and adds the extended syntax of Regex+: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>`. `regex+` (also `V`) is Regex+ with the flags v, x and n. `runtime` is the native engine of the runtime. `V8` and `JSC` (JavaScriptCore) are the native engines of Node and Bun, and need that runtime.'
 	)
 	.choices('E', ['rr', 'default', 'regex+', 'V', 'runtime', 'V8', 'JSC'])
 	.default('E', 'rr')

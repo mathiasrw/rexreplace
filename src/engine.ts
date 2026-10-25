@@ -24,17 +24,14 @@ const re = {
 	// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`.
 	stackLineWithoutName: /^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/,
 	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
-	// Subroutines of Regex+, which the rr engine only looks for when the pattern has them
 	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
 	// The code uses the rr object, like rr.year or rr[1], so it can reach a group in a way a search can not see
 	usesRr: /(^|[^\p{ID_Continue}$])rr[.[]/u,
-	// The flags only Regex+ knows: free spacing (x) and only named groups capture (n)
+	// v is a native flag too, but only Regex+ knows x and n
 	regexPlusOnlyFlags: /[xn]/,
-	// Every flag of a regex, and x and n of Regex+
 	regexFlagNames: /[dgimsuvyxn]/g,
 	// The flags Regex+ takes as options, and not as flags
 	regexPlusFlags: /[uvxn]/g,
-	// A $ in a replacement: $$, $&, $`, $', $<name>, or a group number of one or two digits
 	replacementToken: /\$(\$|&|`|'|<[^>]*>|(\d)(\d?))/g,
 	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
 	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
@@ -199,7 +196,7 @@ function unpackConfig(config) {
 		);
 	}
 
-	// The groups Regex+ adds for atomic groups and possessive quantifiers are not counted in the numbers of the replacement
+	// The user does not know the groups Regex+ adds for atomic groups and possessive quantifiers
 	if (
 		hiddenCaptures.length &&
 		'string' === typeof config.replacement &&
@@ -739,12 +736,10 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-// -E: default is another name for rr, and V for regex+
 const engineNames = {default: 'rr', V: 'regex+'};
 const engineName = name => engineNames[name] ?? name ?? 'rr';
 
-// The flags of the regex: --flags as they are, or the default flags with -G, -I, -M, -s and -u.
-// regex+ also has v, free spacing (x) and only named groups capture (n) by default, and v makes -u needless.
+// -u is needless with regex+, as it has v
 function regexFlags(config, regexPlus) {
 	if (null != config.flags) {
 		// The runtime does not always say which flag it does not know, so it is told here
@@ -763,8 +758,6 @@ function regexFlags(config, regexPlus) {
 	);
 }
 
-// The regex, the numbers of the groups the engine added to it, which the user does not know about,
-// and if only named groups capture
 function compileRegex(pattern, config) {
 	const engine = engineName(config.engine);
 	if (!['rr', 'regex+', 'V8', 'JSC', 'runtime'].includes(engine)) {
@@ -780,7 +773,7 @@ function compileRegex(pattern, config) {
 	if (!regexPlus && re.regexPlusOnlyFlags.test(flags)) {
 		panic('The flags x and n need -E regex+', flags);
 	}
-	// Regex+ takes v, u, x and n as options. It uses v, unless --flags has u, or the runtime has no v.
+	// Regex+ takes v, u, x and n as options, and gives an error when they come as flags
 	const nativeFlags = regexPlus ? flags.replace(re.regexPlusFlags, '') : flags;
 	const unicode = !flags.includes('u') && supportsFlagV ? 'v' : 'u';
 	try {
@@ -810,8 +803,7 @@ function compileRegex(pattern, config) {
 	}
 }
 
-// The rr engine: the native engine with the flags of today, and the extended syntax of Regex+ on top.
-// Only the transforms of Regex+ run, in its own order, and not its flags, so a pattern that works natively gives the same regex.
+// Only the transforms of Regex+ run, in its own order, and not its flags, so a pattern that works natively gives the same regex
 function compileRr(pattern, flags) {
 	let hiddenCaptures = [];
 	const transform = plugin => {
@@ -828,9 +820,7 @@ function compileRr(pattern, flags) {
 	return {regex: new RegExp(pattern, flags), hiddenCaptures};
 }
 
-// The group numbers in a replacement, like $1, count only the groups of the user, so they are moved past the hidden ones.
-// It follows the rules of javascript for $n and $nn with the visible groups, and always gives two digits,
-// so a digit after it is not read as part of the number. A number that is no visible group stays as text.
+// Always two digits, so a digit after it is not read as part of the number. A number that is no group of the user stays text, as in javascript.
 function visibleGroupNumbers(replacement, hiddenCaptures, total) {
 	const real = [0];
 	for (let group = 1; group <= total; group++) {
@@ -882,7 +872,6 @@ function countFile(config, text, result) {
 function codeUses(code, regex) {
 	const named = name => new RegExp('\\$' + name + '(?![A-Za-z])').test(code);
 	const groups = namedGroups(regex);
-	// A named group is used as $year, or as $year_ with a space at the end
 	const usesGroup = name =>
 		new RegExp(
 			'(^|[^\\p{ID_Continue}$])\\$' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
@@ -892,7 +881,7 @@ function codeUses(code, regex) {
 	const rr = re.usesRr.test(code);
 	return {
 		groups,
-		// The rr object is only made when the code uses it
+		// Making rr costs time at each match, so it is only made when the code uses it
 		rr,
 		// $i, $c, $m and $M count what came before, so the files are done in order
 		countsBefore: matchNumbers || named('i') || named('c'),
@@ -924,7 +913,6 @@ const numberNames = ['n', 't', 'i', 'c', 'm', 'M'].flatMap(name =>
 	])
 );
 
-// The names of $n, $t, $i and $c come first in numberNames, and those of $m and $M last
 const perFileNumbers = (numberNames.length / 6) * 4;
 
 // The values in the order of numberNames, from {n, t, i, c, m, M}
@@ -1136,8 +1124,7 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 	};
 	const own = {text, find: values.find, pipe: values.pipe, cwd, time, timeObj: config.startTime};
 
-	// rr is the object behind the short names: rr.n is $n, rr[1] is $1 and rr.year is $year.
-	// The values of the file are made once, and each match gets an object on top with its own numbers and groups.
+	// A new object for each match costs time, so the values of the file are made once, and each match builds on them.
 	// The groups come last, so a group overwrites a name it shares, also _.
 	let rrOfFile = null;
 	const rrObject = (allNumbers, shortNumbers, groups, named) => {
@@ -1216,7 +1203,7 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 
 	// The value is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded
 	if (!config.codeUses.perMatch) {
-		// The code runs once for the file, at the first match, so a file without a match does not run it
+		// At the first match, so a file without a match does not run the code
 		let result;
 		return () => {
 			if (!found) {
@@ -1238,8 +1225,7 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		numbered.forEach((value, i) => {
 			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
 		});
-		// A named group is $ and the name, like $year for (?<year>…), and $year_ has a space at the end.
-		// It comes after the numbers, so a group named like a number, like n, wins over $n.
+		// After the numbers, so a group named like a number, like n, wins over $n
 		for (const [name, value] of Object.entries(named)) {
 			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
 		}
