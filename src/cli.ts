@@ -347,7 +347,15 @@ function unescapeString(str = '') {
 	/*if(Boolean(process.stdout.isTTY)){
         config.output = true;
     }*/
-	if (Boolean(process.stdin.isTTY)) {
+	// Like grep, stdin is only read when the piped data can be used: as the content when no files are given,
+	// with --replacement-pipe, or as `pipe` in the code of --replacement-js.
+	// An open pipe that nobody writes to would otherwise make the run wait forever.
+	const pipeDataExpected =
+		!config.includeGlob.length ||
+		config.replacementPipe ||
+		(config.replacementJs && /\bpipe_?\b/.test(config.replacement));
+
+	if (Boolean(process.stdin.isTTY) || !pipeDataExpected) {
 		if (config.replacementPipe) {
 			return backOut();
 		}

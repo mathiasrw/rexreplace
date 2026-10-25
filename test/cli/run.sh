@@ -216,6 +216,20 @@ reset
 assert		 		"printf x | rexreplace 'b' _ my.file -o --replacement-pipe"    'fooxar'
 
 
+# The pipe is only read when the piped data can be used, so an open pipe that nobody writes to does not make the run wait (#736)
+reset
+start=$SECONDS
+rexreplace 'o' 'x' my.file < <(sleep 5)
+assert_raises		"[ $(( SECONDS - start )) -lt 4 ]"    0
+assert		 		"cat my.file"    'fxxbar'
+reset
+start=$SECONDS
+rexreplace 'o' '"y"' my.file --replacement-js < <(sleep 5)
+assert_raises		"[ $(( SECONDS - start )) -lt 4 ]"    0
+reset
+assert		 		"printf P | rexreplace 'o' 'pipe' my.file -o --replacement-js"    'fPPbar'
+
+
 	
 
 # -L
