@@ -331,6 +331,8 @@ function openFile(file, config, number, total) {
 function doReplacement(file: string, config: any, data: string, number: number, total: number) {
 	verbose('Work on content from: ' + file);
 
+	// A regex with the flag y and not g starts where the last file ended, so each file starts from the beginning
+	config.regex.lastIndex = 0;
 	// Main regexp of the whole thing. With --output-match the replacement prints the matches, so the code of --replacement-js is not run.
 	const result = data.replace(
 		config.regex,
@@ -456,6 +458,7 @@ function planRenames(files, config) {
 			config.replacementJs && !config.outputMatch
 				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
 				: config.replacement;
+		config.regex.lastIndex = 0;
 		const result = text.replace(config.regex, replacement);
 		countFile(config, text, result);
 		if (result === text) {
@@ -1187,7 +1190,10 @@ function getFilePaths(conf) {
 	excludeRe
 		.map(pattern => compileRegex(regexPattern(pattern, conf), conf).regex)
 		.forEach(exclude => {
-			files = files.filter(file => !file.match(exclude));
+			files = files.filter(file => {
+				exclude.lastIndex = 0;
+				return !file.match(exclude);
+			});
 		});
 
 	files = sortFiles(files, sort);

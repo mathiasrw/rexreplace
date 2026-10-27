@@ -165,6 +165,31 @@ describe('#854 --flags', () => {
 		expect(await out('o', 'x', 'oOo', {flags: 'm'})).toBe('xOo');
 	});
 
+	test('with y, starts each file from the beginning', async () => {
+		const names = ['a1.txt', 'a2.txt', 'a3.txt'];
+		names.forEach(name => fs.writeFileSync(name, 'axx'));
+		await rr('a', '_', {includeGlob: names, flags: 'y'});
+		expect(names.map(name => fs.readFileSync(name, 'utf8'))).toEqual(['_xx', '_xx', '_xx']);
+	});
+
+	test('with y, checks each path of --exclude-re from the beginning', async () => {
+		const names = ['a1.txt', 'a2.txt', 'b.txt'];
+		names.forEach(name => fs.writeFileSync(name, 'o'));
+		const result = await rr('o', 'x', {
+			includeGlob: names,
+			excludeRe: ['a'],
+			flags: 'y',
+			simulate: true,
+		});
+		expect(result.out).toBe('b.txt\n');
+	});
+
+	test('with y, starts each name of --rename from the beginning', async () => {
+		['a1.txt', 'a2.txt'].forEach(name => fs.writeFileSync(name, 'o'));
+		await rr('a', 'b', {includeGlob: ['a1.txt', 'a2.txt'], flags: 'y', rename: true});
+		expect(fs.readdirSync('.').sort()).toEqual(['b1.txt', 'b2.txt']);
+	});
+
 	test('takes a flag that is given twice once', async () => {
 		expect(await out('o', 'x', 'oO', {flags: 'gg'})).toBe('xO');
 	});
