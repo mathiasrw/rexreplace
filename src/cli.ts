@@ -419,7 +419,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 \`mtime_obj\`: date object representing \`mtime\`, 
 \`ctime_obj\`: date object representing \`ctime\`.
 
-The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
+The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file, at its first match, unless it names the match, a group, \`$m\` or \`$M\`. A file without a match does not run the code.
 
 Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
 

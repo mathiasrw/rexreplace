@@ -1124,9 +1124,12 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 
 	// The value is given back from a function, so `$&` and `$$` in it are inserted as they are and not expanded
 	if (!config.codeUses.perMatch) {
-		// The code runs once for the file, so it is the first match
-		const result = runCode({m: 1, M: config.numbers.matches + 1}, '');
+		// At the first match, so a file without a match does not run the code
+		let result;
 		return () => {
+			if (!found) {
+				result = runCode({m: 1, M: config.numbers.matches + 1}, '');
+			}
 			foundMatch();
 			return result;
 		};
