@@ -1,10 +1,11 @@
-const fs = require('fs');
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import {createRequire} from 'module';
+import globs from 'fast-glob';
 
-const os = require('os');
-
-const path = require('path');
-
-const globs = require('fast-glob');
+// An ES module has no require, and --js code loads modules with require and r
+const require = createRequire(import.meta.url);
 
 import {print, printDone, printName} from './output.ts';
 import {statusConfig, verbose, warn, error, panic, checkExpectations} from './status.ts';
