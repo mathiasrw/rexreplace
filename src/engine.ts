@@ -48,9 +48,9 @@ const re = {
 // Only the version ends up in the bundle
 import {version} from '../package.json';
 
-// Regex+ by Steven Levithan. Its subroutines are copied into src/libs until it exports them.
+// Regex+ by Steven Levithan. regex/internals is an ES module only, so what is used from it is copied into src/libs.
 import {rewrite} from 'regex';
-import {atomic, possessive} from 'regex/internals';
+import {atomic, possessive} from './libs/regex/atomic.js';
 import {Context, hasUnescaped} from 'regex-utilities';
 import {subroutines} from './libs/regex/subroutines.js';
 export {version};
