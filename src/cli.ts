@@ -521,7 +521,7 @@ Z	z
 	.boolean('status')
 	.describe(
 		'status',
-		'Same as `--status-compact`, but always starting with a `\n` followed by pretty printed JSON'
+		'Same as `--status-compact`, but always starting with a `\\n` followed by pretty printed JSON.'
 	)
 
 	.boolean('d')
