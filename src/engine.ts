@@ -24,6 +24,14 @@ const re = {
 	// With a name the location is in parentheses at the end, like `at fn (/path/file.js:2:15)`.
 	stackLineWithoutName: /^\s*at (?:file:\/\/)?((?:\/|[A-Za-z]:[\\/]).*?)(:\d+:\d+)\s*$/,
 	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
+	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
+	atomicSyntax: /\(\?>/,
+	// v is a native flag too, but only Regex+ knows x and n
+	regexPlusOnlyFlags: /[xn]/,
+	regexFlagNames: /[dgimsuvyxn]/g,
+	// The flags Regex+ takes as options, and not as flags
+	regexPlusFlags: /[uvxn]/g,
+	replacementToken: /\$(\$|&|`|'|<[^>]*>|(\d)(\d?))/g,
 	// Only the chars with a meaning outside a character class. Unicode mode does not allow to escape the others (#686).
 	regexSpecialChars: /[\[\]{}()*+?.\/\\^$|]/g,
 	byteOrSize: /bytes|size/,
@@ -39,15 +47,29 @@ const re = {
 
 // Only the version ends up in the bundle
 import {version} from '../package.json';
+
+// Regex+ by Steven Levithan. Its subroutines are copied into src/libs until it exports them.
+import {rewrite} from 'regex';
+import {atomic, possessive} from 'regex/internals';
+import {Context, hasUnescaped} from 'regex-utilities';
+import {subroutines} from './libs/regex/subroutines.js';
 export {version};
 
 // The regex engine comes with the runtime: Node has V8 and Bun has JSC (JavaScriptCore)
 const runtime = process.versions.bun ? 'Bun' : 'Node';
 const runtimeEngine = process.versions.bun ? 'JSC' : 'V8';
+// Node 18 has no v flag, and then Regex+ uses u
+const supportsFlagV = (() => {
+	try {
+		return Boolean(new RegExp('', 'v'));
+	} catch (e) {
+		return false;
+	}
+})();
 
 // Resolves with the status of the run when all files are done.
 // When the run can not go on, a panic is thrown with the status so far.
-export async function engine(config: any = {engine: 'default'}) {
+export async function engine(config: any = {engine: 'rr'}) {
 	config.statusInfo = newStatus(config);
 	// A new run has had no panic yet, has read no replacement file, and has its own time, also when the same config is used again
 	config.plzStop = false;
@@ -154,23 +176,34 @@ function unpackConfig(config) {
 	// --output-match wins over --output
 	config.output = config.output && !config.outputMatch;
 
-	config.regex = getFinalRegex(config.pattern, config);
+	const {regex, hiddenCaptures, namedOnly} = compileRegex(config.pattern, config);
+	config.regex = regex;
+	config.hiddenCaptures = hiddenCaptures;
+	// With the flag n of Regex+ only named groups capture, so --js gets no $1 and on
+	config.namedOnly = namedOnly;
+
+	// The user does not know the groups Regex+ adds for atomic groups and possessive quantifiers
+	if (
+		hiddenCaptures.length &&
+		'string' === typeof config.replacement &&
+		!config.replacementJs &&
+		!config.outputMatch &&
+		!config.literalReplacement
+	) {
+		config.replacement = visibleGroupNumbers(
+			config.replacement,
+			hiddenCaptures,
+			emptyMatch(regex).length - 1
+		);
+	}
 
 	config.codeUses = config.replacementJs ? codeUses(config.replacementOri, config.regex) : null;
-
-	// In --js a named group is a variable like rr_year, and rr_year_ has a space at the end.
-	// A group that ends with _ would have the same name as another group with a space, so it can not be used.
-	// With --output-match the code is not run, so there are no variables.
-	const endsWith_ = config.outputMatch
-		? null
-		: config.codeUses?.groups.find(name => name.endsWith('_'));
-	if (endsWith_) {
-		panic('A named group can not end with _', endsWith_);
-	}
 
 	// What the regex engine is asked to do. With --replacement-js and --output-match it gets a function.
 	if (config.statusInfo.engine) {
 		config.statusInfo.engine.execution = {
+			engine: engineName(config.engine),
+			hiddenCaptures,
 			search: config.regex.source,
 			flags: config.regex.flags,
 			replacement: config.replacementJs || config.outputMatch ? null : config.replacement,
@@ -298,6 +331,8 @@ function openFile(file, config, number, total) {
 function doReplacement(file: string, config: any, data: string, number: number, total: number) {
 	verbose('Work on content from: ' + file);
 
+	// A regex with the flag y and not g starts where the last file ended, so each file starts from the beginning
+	config.regex.lastIndex = 0;
 	// Main regexp of the whole thing. With --output-match the replacement prints the matches, so the code of --replacement-js is not run.
 	const result = data.replace(
 		config.regex,
@@ -423,6 +458,7 @@ function planRenames(files, config) {
 			config.replacementJs && !config.outputMatch
 				? codeReplacement(file, config, text, fileNumbers(config, index + 1, files.length))
 				: config.replacement;
+		config.regex.lastIndex = 0;
 		const result = text.replace(config.regex, replacement);
 		countFile(config, text, result);
 		if (result === text) {
@@ -634,7 +670,7 @@ function matchPrinter(config) {
 		warn('The replacement file is not read with --output-match, as only the matches are printed.');
 	}
 	return (...args) => {
-		const [match, ...groups] = splitMatch(args).groups;
+		const [match, ...groups] = splitMatch(args, config.hiddenCaptures).groups;
 		print(
 			groups.length ? groups.join('') : match,
 			config.contentDelimiter,
@@ -689,27 +725,126 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-function getFinalRegex(pattern, config) {
-	const engine = 'default' === config.engine ? runtimeEngine : config.engine;
-	// RE2 is not in yet, so it uses the engine of the runtime
-	if (engine !== runtimeEngine && 'RE2' !== engine) {
-		panic(
-			'V8' === engine || 'JSC' === engine
-				? `When running via the ${runtime} runtime you can only use default or ${runtimeEngine} as engine`
-				: `Engine ${config.engine} not supported`
-		);
+const engineName = name => ('default' === name ? 'rr' : (name ?? 'rr'));
+
+// regex+ has v, or u with -u
+function regexFlags(config, regexPlus) {
+	if (null != config.flags) {
+		// The runtime does not always say which flag it does not know, so it is told here
+		const unknown = String(config.flags).replace(re.regexFlagNames, '');
+		if (unknown) {
+			panic('Unknown flags in --flags', unknown);
+		}
+		// The runtime does not take a flag twice, and there is no harm in it
+		return [...new Set(String(config.flags))].join('');
 	}
-	const flags =
+	return (
 		(config.voidGlobal ? '' : 'g') +
 		(config.voidIgnoreCase ? '' : 'i') +
 		(config.voidMultiline ? '' : 'm') +
 		(config.dotAll ? 's' : '') +
-		(config.unicode ? 'u' : '');
+		(regexPlus ? (config.unicode ? 'uxn' : 'vxn') : config.unicode ? 'u' : '')
+	);
+}
+
+function compileRegex(pattern, config) {
+	const engine = engineName(config.engine);
+	if (!['rr', 'regex+', 'runtime'].includes(engine)) {
+		panic(`Engine ${config.engine} not supported`);
+	}
+	const regexPlus = 'regex+' === engine;
+	const flags = regexFlags(config, regexPlus);
+	if (!regexPlus && re.regexPlusOnlyFlags.test(flags)) {
+		panic('The flags x and n need -E regex+', flags);
+	}
+	// The runtime does not say why it does not take them
+	if (flags.includes('u') && flags.includes('v')) {
+		panic('The flags u and v can not go together', flags);
+	}
+	// Regex+ takes v, u, x and n as options, and gives an error when they come as flags
+	const nativeFlags = regexPlus ? flags.replace(re.regexPlusFlags, '') : flags;
+	const unicode = !flags.includes('u') && supportsFlagV ? 'v' : 'u';
 	try {
-		return new RegExp(pattern, flags);
+		if (config.literal) {
+			// The text as it is, without the free spacing of Regex+
+			return {
+				regex: new RegExp(pattern, nativeFlags + (regexPlus ? unicode : '')),
+				hiddenCaptures: [],
+				namedOnly: false,
+			};
+		}
+		if (regexPlus) {
+			// The subroutines and the atomic groups are left to extendedSyntax, as rewrite() does not tell which groups they add
+			const disable = {
+				v: flags.includes('u'),
+				x: !flags.includes('x'),
+				n: !flags.includes('n'),
+				atomic: true,
+				subroutines: true,
+			};
+			const result = rewrite(pattern, {flags: nativeFlags, disable});
+			const extended = extendedSyntax(result.pattern, result.flags);
+			return {
+				regex: new RegExp(extended.pattern, result.flags),
+				hiddenCaptures: extended.hiddenCaptures,
+				namedOnly: flags.includes('n'),
+			};
+		}
+		if ('rr' === engine) {
+			const extended = extendedSyntax(pattern, flags);
+			return {
+				regex: new RegExp(extended.pattern, flags),
+				hiddenCaptures: extended.hiddenCaptures,
+				namedOnly: false,
+			};
+		}
+		return {regex: new RegExp(pattern, flags), hiddenCaptures: [], namedOnly: false};
 	} catch (e) {
 		return panic(e.message);
 	}
+}
+
+// Only the transforms of Regex+ run, in its own order, and not its flags, so a pattern that works natively gives the same regex.
+// A transform only runs when its syntax is outside a character class, as Regex+ does not always look, like for [(?>]\1 (#858).
+function extendedSyntax(pattern, flags) {
+	let hiddenCaptures = [];
+	const transform = (plugin, syntax = null) => {
+		if (syntax && !hasUnescaped(pattern, syntax.source, Context.DEFAULT)) {
+			return;
+		}
+		const result = plugin(pattern, {flags, hiddenCaptures});
+		pattern = result.pattern;
+		hiddenCaptures = result.hiddenCaptures ?? hiddenCaptures;
+	};
+	transform(subroutines, re.subroutineSyntax);
+	transform(possessive);
+	transform(atomic, re.atomicSyntax);
+	return {pattern, hiddenCaptures};
+}
+
+// Always two digits, so a digit after it is not read as part of the number. A number that is no group of the user stays text, as in javascript.
+function visibleGroupNumbers(replacement, hiddenCaptures, total) {
+	const real = [0];
+	for (let group = 1; group <= total; group++) {
+		if (!hiddenCaptures.includes(group)) {
+			real.push(group);
+		}
+	}
+	const visible = real.length - 1;
+	return replacement.replace(re.replacementToken, (token, kind, first, second) => {
+		if (undefined === first) {
+			return token;
+		}
+		const two = '' !== second ? Number(first + second) : 0;
+		if (1 <= two && two <= visible) {
+			return '$' + String(real[two]).padStart(2, '0');
+		}
+		const one = Number(first);
+		if (1 <= one && one <= visible) {
+			return '$' + String(real[one]).padStart(2, '0') + second;
+		}
+		return '$$' + first + second;
+	});
 }
 
 function readableSize(size) {
@@ -739,10 +874,9 @@ function countFile(config, text, result) {
 function codeUses(code, regex) {
 	const named = name => new RegExp('\\$' + name + '(?![A-Za-z])').test(code);
 	const groups = namedGroups(regex);
-	// A named group is used as rr_year, or as rr_year_ with a space at the end
 	const usesGroup = name =>
 		new RegExp(
-			'(^|[^\\p{ID_Continue}$])rr_' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
+			'(^|[^\\p{ID_Continue}$])\\$' + name.replace(/\$/g, '\\$') + '_?(?![\\p{ID_Continue}$])',
 			'u'
 		).test(code);
 	const matchNumbers = named('m') || named('M');
@@ -757,12 +891,15 @@ function codeUses(code, regex) {
 	};
 }
 
+// With | at the end the regex matches an empty text, and the match has all the groups
+function emptyMatch(regex) {
+	return new RegExp(regex.source + '|', regex.flags.replace(/[gy]/g, '')).exec('');
+}
+
 // The names of the named groups of a regex, like year for (?<year>…). A name can have any letter, like año.
 // They come from the regex itself, so text that only looks like a group, like \(?<a> or [(?<a>], is not one.
-// With | at the end the regex matches an empty text, and the match has all the groups.
 function namedGroups(regex) {
-	const match = new RegExp(regex.source + '|', regex.flags.replace(/[gy]/g, '')).exec('');
-	return Object.keys(match?.groups ?? {});
+	return Object.keys(emptyMatch(regex)?.groups ?? {});
 }
 
 // The numbers of --js and their cousins: $n0 is $n with zeros in front to 2 digits, $n00 to 3 and so on to 10,
@@ -850,11 +987,18 @@ function cut(text, length = 300) {
 	return chars.length > length ? chars.slice(0, length).join('') + '…' : text;
 }
 
-// The arguments of a replace function: the match and the groups, then the offset and the text, and the named groups if the pattern has any
-function splitMatch(args) {
+// The arguments of a replace function: the match and the groups, then the offset and the text, and the named groups if the pattern has any.
+// The groups the engine added are left out, so $1 is the first group of the user.
+function splitMatch(args, hiddenCaptures) {
 	const named = args[args.length - 1];
 	const hasNamed = 'object' === typeof named && null !== named;
-	return {groups: args.slice(0, hasNamed ? -3 : -2), named: hasNamed ? named : {}};
+	const groups = args.slice(0, hasNamed ? -3 : -2);
+	return {
+		groups: hiddenCaptures.length
+			? groups.filter((_, group) => !hiddenCaptures.includes(group))
+			: groups,
+		named: hasNamed ? named : {},
+	};
 }
 
 // The function that runs the code of --js. It is made once, as the names are the same for every file.
@@ -998,14 +1142,17 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		foundMatch();
 		match++;
 		config.numbers.matches++;
-		const {groups, named} = splitMatch(matchArgs);
+		const {groups, named} = splitMatch(matchArgs, config.hiddenCaptures);
 		let variables = '';
+		// $0 is the match. With the flag n the groups have no numbers, only names.
 		groups.forEach((value, i) => {
-			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
+			if (!i || !config.namedOnly) {
+				variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
+			}
 		});
-		// A named group is a variable with rr_ in front, like rr_year for (?<year>…), and rr_year_ has a space at the end
+		// After the numbers, so a group named like a number, like n, wins over $n
 		for (const [name, value] of Object.entries(named)) {
-			variables += `var rr_${name} = ${JSON.stringify(value)}, rr_${name}_ = rr_${name} + ' '; `;
+			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
 		}
 		return runCode({m: match, M: config.numbers.matches}, variables);
 	};
@@ -1041,9 +1188,12 @@ function getFilePaths(conf) {
 	}
 
 	excludeRe
-		.map(pattern => getFinalRegex(regexPattern(pattern, conf), conf))
+		.map(pattern => compileRegex(regexPattern(pattern, conf), conf).regex)
 		.forEach(exclude => {
-			files = files.filter(file => !file.match(exclude));
+			files = files.filter(file => {
+				exclude.lastIndex = 0;
+				return !file.match(exclude);
+			});
 		});
 
 	files = sortFiles(files, sort);

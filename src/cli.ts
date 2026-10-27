@@ -118,6 +118,15 @@ const yargs = require('yargs')
 	.describe('u', 'Treat pattern as a sequence of unicode code points.')
 	.alias('u', 'unicode')
 
+	.string('flags')
+	.conflicts('flags', ['I', 'G', 'M', 's', 'u'])
+	// Like the other options, the last one wins when it is given twice
+	.coerce('flags', value => [].concat(value).pop())
+	.describe(
+		'flags',
+		'The flags of the regex, like `gimsv`, in place of the defaults: `gim`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`. Not with -G, -I, -M, -s or -u.'
+	)
+
 	.default('e', 'utf8')
 	.alias('e', 'encoding')
 	.describe('e', 'Encoding of files/piped data.')
@@ -127,7 +136,7 @@ const yargs = require('yargs')
 	.string('x')
 	.describe(
 		'x',
-		'Files with a path that matches this regular expression will be excluded from processing. Can be provided multiple times.'
+		'Files with a path that matches this regular expression will be excluded from processing. It uses the same engine and flags as the pattern. Can be provided multiple times.'
 	)
 	.alias('x', 'exclude-re')
 
@@ -141,10 +150,10 @@ const yargs = require('yargs')
 	.alias('E', 'engine')
 	.describe(
 		'E',
-		'What regex engine to use. `default` is the default engine of the runtime (`V8` for  Node and `JSC` (JavaScriptCore) for Bun.'
+		'The regex engine. `rr` (also `default`) reads patterns like the native engine and adds the extended syntax of Regex+: atomic groups `(?>…)`, possessive quantifiers like `a++`, and subroutines `\\g<name>`. `regex+` is Regex+ with the flags v, x and n. `runtime` is the native engine of the runtime: V8 in Node and JavaScriptCore in Bun.'
 	)
-	.choices('E', ['default', 'V8', 'JSC' /*'RE2' /*'sd', 'stream'*/])
-	.default('E', 'default')
+	.choices('E', ['rr', 'default', 'regex+', 'runtime'])
+	.default('E', 'rr')
 
 	.boolean('q')
 	.describe(
@@ -414,7 +423,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 
 The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
 
-Access a named group via the name prepended with \`rr_\`. \`(?<year>...)\` gives you \`rr_year\`. A named group name can not end with \`_\`. 
+Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
 
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `

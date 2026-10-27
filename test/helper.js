@@ -56,7 +56,7 @@ async function run(pattern, replacement, config) {
 
 	try {
 		const options = {
-			engine: 'default',
+			engine: 'rr',
 			encoding: 'utf8',
 			pipedData: null,
 			includeGlob: [],
