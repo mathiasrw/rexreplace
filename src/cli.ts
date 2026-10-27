@@ -4,6 +4,7 @@ import * as rexreplace from './engine.ts';
 import {writeTo} from './output.ts';
 import {statusConfig, panic} from './status.ts';
 import {alias} from './alias.ts';
+import {createRequire} from 'module';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
 // Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
@@ -26,7 +27,9 @@ if (process.argv.length < 4) {
 	[pattern, replacement] = process.argv.splice(2, 2);
 }
 
-const yargs = require('yargs')
+// As an ES module yargs breaks the lines of the help in the middle of words, so it is loaded as CommonJS.
+// It reads process.argv when it is loaded, which is after the pattern and the replacement are taken out above.
+const yargs = createRequire(import.meta.url)('yargs')
 	// A file can be named with only digits, like `2024`, so each glob is kept as the string that was given
 	.parserConfiguration({'parse-positional-numbers': false})
 	.strict()
@@ -424,7 +427,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 
 The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file, at its first match, unless it names the match, a group, \`$m\`, \`$M\` or \`rr\`. A file without a match does not run the code.
 
-Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
+Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so the code has no \`$1\`, while a replacement text still reads \`$1\` as the first named group, as in javascript. 
 
 \`rr\` has the values with long names: \`filePath\`, \`filePathRel\`, \`dirPath\`, \`dirPathRel\`, \`dirName\`, \`fileName\`, \`name\`, \`ext\`, \`bytes\`, \`size\`, \`mtime\`, \`ctime\`, \`mtimeObj\`, \`ctimeObj\`, \`fileNumber\`, \`filesTotal\`, \`matchedFileNumber\`, \`changedFileNumber\`, \`matchThisFile\`, \`matchUntilNow\`, \`text\`, \`find\`, \`stdin\`, \`cwd\`, \`time\` and \`timeObj\`, and the groups, like \`rr[1]\` and \`rr.year\`, which overwrite a name they share. Code that names \`rr\`, also in a string or a comment, runs once per match. \`print()\` and \`printErr()\`, also on \`rr\`, print to stdout and stderr, also with --quiet-total. \`pad(value, width = 3, char = '0')\` pads a value, like \`pad($1)\` for \`007\`.
 
@@ -518,7 +521,7 @@ Z	z
 	.boolean('status')
 	.describe(
 		'status',
-		'Same as `--status-compact`, but always starting with a `\n` followed by pretty printed JSON'
+		'Same as `--status-compact`, but always starting with a `\\n` followed by pretty printed JSON.'
 	)
 
 	.boolean('d')

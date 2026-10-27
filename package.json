@@ -17,19 +17,29 @@
 		"rexreplace": "bin/rexreplace.cli.node.js",
 		"rexreplace-bun": "bin/rexreplace.cli.bun.js"
 	},
-	"main": "src/engine.js",
+	"type": "module",
+	"main": "./dist/engine.cjs",
+	"exports": {
+		".": {
+			"import": "./dist/engine.js",
+			"require": "./dist/engine.cjs"
+		},
+		"./bin/*": "./bin/*",
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"tst": "AGENT=1 yarn build && yarn test-js",
 		"test": "AGENT=1 yarn build && yarn test-cli && yarn test-js && yarn test-fuzzy",
 		"postbuild": "cp bin/rexreplace.cli.node.js bin/rexreplace.cli.node.min.js && cp bin/rexreplace.cli.bun.js bin/rexreplace.cli.bun.min.js",
 		"version": "yarn build-minify && yarn sync-version && git add npm/rexreplace-bun/package.json",
-		"build": "yarn bundle-node --outfile=bin/rexreplace.cli.node.js && yarn bundle-bun --outfile=bin/rexreplace.cli.bun.js",
+		"build": "yarn bundle-node --outfile=bin/rexreplace.cli.node.js && yarn bundle-bun --outfile=bin/rexreplace.cli.bun.js && yarn build-lib",
+		"build-lib": "bun build src/engine.ts --target=node --format=esm --packages=external --outfile=dist/engine.js && bun build src/engine.ts --target=node --format=cjs --external fast-glob --external yargs --outfile=dist/engine.cjs",
 		"build-minify": "yarn build && yarn minify",
 		"minify": "yarn bundle-node --minify --outfile=bin/rexreplace.cli.node.min.js && yarn bundle-bun --minify --outfile=bin/rexreplace.cli.bun.min.js",
-		"bundle-node": "bun build src/cli.node.ts --target=node --format=cjs --external fast-glob --external yargs",
-		"bundle-bun": "bun build src/cli.bun.ts --target=bun --format=cjs --external fast-glob --external yargs",
-		"prebuild": "rm -fr bin && yarn format",
-		"sync-version": "bun npm/sync-version.js",
+		"bundle-node": "bun build src/cli.node.ts --target=node --format=esm --packages=external",
+		"bundle-bun": "bun build src/cli.bun.ts --target=bun --format=esm --packages=external",
+		"prebuild": "rm -fr bin dist && yarn format",
+		"sync-version": "bun npm/sync-version.cjs",
 		"test-js": "AGENT=1 bun test ./test/engine ./test/cli ./test/fix",
 		"test-fuzzy": "AGENT=1 bun test ./test/fuzzy",
 		"test-minify": "AGENT=1 yarn build-minify && yarn test-cli && yarn test-js",

@@ -1,10 +1,13 @@
-const fs = require('fs');
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import {createRequire} from 'module';
+import globs from 'fast-glob';
 
-const os = require('os');
-
-const path = require('path');
-
-const globs = require('fast-glob');
+// --js code loads modules with require and r. An ES module has no require, and a CommonJS build of Bun
+// fixes import.meta.url to the path of the build, so the require of the CommonJS build is used there.
+// @ts-ignore
+const requireModule = typeof require === 'function' ? require : createRequire(import.meta.url);
 
 import {print, printDone, printName} from './output.ts';
 import {statusConfig, verbose, warn, error, panic, checkExpectations} from './status.ts';
@@ -1074,9 +1077,9 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 	// require, and r for short, also find a file from the cwd when the path does not start with ./
 	const r = module => {
 		try {
-			return require(module);
+			return requireModule(module);
 		} catch (e) {
-			return require(path.resolve(cwd, module));
+			return requireModule(path.resolve(cwd, module));
 		}
 	};
 	// Each value but the modules, the date objects, nl and _ has a cousin with _ at the end, with a space at the end.
@@ -1207,9 +1210,13 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		numbered.forEach((value, i) => {
 			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
 		});
-		// After the numbers, so a group named like a number, like n, wins over $n
+		// After the numbers, so a group named like a number, like n, wins over $n.
+		// The cousins come first, so a group named like a cousin, like a_, wins over the cousin of a.
 		for (const [name, value] of Object.entries(named)) {
-			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
+			variables += `var $${name}_ = ${JSON.stringify(value + ' ')}; `;
+		}
+		for (const [name, value] of Object.entries(named)) {
+			variables += `var $${name} = ${JSON.stringify(value)}; `;
 		}
 		return runCode({m: match, M: config.numbers.matches}, variables, numbered, named);
 	};
