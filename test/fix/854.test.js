@@ -186,6 +186,12 @@ describe('#854 --flags', () => {
 		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a');
 	});
 
+	test('gives regex+ the flag u in place of v with -u too', async () => {
+		const {flags} = await compiled('a', {engine: 'regex+', unicode: true});
+		expect(flags).toContain('u');
+		expect(flags).not.toContain('v');
+	});
+
 	test('gives regex+ the flag u in place of v', async () => {
 		const {flags} = await compiled('a', {...plus, flags: 'gu'});
 		expect(flags).toContain('u');
@@ -196,6 +202,7 @@ describe('#854 --flags', () => {
 		['x without regex+', {flags: 'gx'}, ' ❌ The flags x and n need -E regex+\n    gx'],
 		['n without regex+', {flags: 'gn'}, ' ❌ The flags x and n need -E regex+\n    gn'],
 		['a flag that is not a flag', {flags: 'gqz'}, ' ❌ Unknown flags in --flags\n    qz'],
+		['u and v', {flags: 'guv'}, ' ❌ The flags u and v can not go together\n    guv'],
 	])('stops the run with %s, and says so', async (name, config, message) => {
 		expect(await rr('a', 'b', {pipedData: 'a', ...config})).toEqual({
 			out: '',

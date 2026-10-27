@@ -724,7 +724,7 @@ function codeReplacement(file, config, text, numbers) {
 
 const engineName = name => ('default' === name ? 'rr' : (name ?? 'rr'));
 
-// -u is needless with regex+, as it has v
+// regex+ has v, or u with -u
 function regexFlags(config, regexPlus) {
 	if (null != config.flags) {
 		// The runtime does not always say which flag it does not know, so it is told here
@@ -740,7 +740,7 @@ function regexFlags(config, regexPlus) {
 		(config.voidIgnoreCase ? '' : 'i') +
 		(config.voidMultiline ? '' : 'm') +
 		(config.dotAll ? 's' : '') +
-		(regexPlus ? 'vxn' : config.unicode ? 'u' : '')
+		(regexPlus ? (config.unicode ? 'uxn' : 'vxn') : config.unicode ? 'u' : '')
 	);
 }
 
@@ -753,6 +753,10 @@ function compileRegex(pattern, config) {
 	const flags = regexFlags(config, regexPlus);
 	if (!regexPlus && re.regexPlusOnlyFlags.test(flags)) {
 		panic('The flags x and n need -E regex+', flags);
+	}
+	// The runtime does not say why it does not take them
+	if (flags.includes('u') && flags.includes('v')) {
+		panic('The flags u and v can not go together', flags);
 	}
 	// Regex+ takes v, u, x and n as options, and gives an error when they come as flags
 	const nativeFlags = regexPlus ? flags.replace(re.regexPlusFlags, '') : flags;
