@@ -26,6 +26,8 @@ const re = {
 	stackLineWithName: /^\s*at .*? \((?:file:\/\/)?(.+?)(:\d+:\d+)\)\s*$/,
 	subroutineSyntax: /\\g<|\(\?\(DEFINE\)/,
 	atomicSyntax: /\(\?>/,
+	// The code uses rr, which can reach a group in a way a search of the code can not see, like rr[name]
+	usesRr: /(^|[^\p{ID_Continue}$])rr(?![\p{ID_Continue}$])/u,
 	// v is a native flag too, but only Regex+ knows x and n
 	regexPlusOnlyFlags: /[xn]/,
 	regexFlagNames: /[dgimsuvyxn]/g,
@@ -874,12 +876,15 @@ function codeUses(code, regex) {
 			'u'
 		).test(code);
 	const matchNumbers = named('m') || named('M');
+	const rr = re.usesRr.test(code);
 	return {
 		groups,
+		// Making rr costs time at each match, so it is only made when the code uses it
+		rr,
 		// $i, $c, $m and $M count what came before, so the files are done in order
 		countsBefore: matchNumbers || named('i') || named('c'),
 		// The groups, the named groups, $m and $M are about the match, so the code runs once per match
-		perMatch: matchNumbers || re.capturedGroupRef.test(code) || groups.some(usesGroup),
+		perMatch: matchNumbers || re.capturedGroupRef.test(code) || groups.some(usesGroup) || rr,
 		stat: re.mctime.test(code),
 		size: re.byteOrSize.test(code),
 	};
@@ -1008,6 +1013,8 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		text,
 		file: '❌',
 		file_rel: '❌',
+		file_path: '❌',
+		file_path_rel: '❌',
 		dirpath: '❌',
 		dirpath_rel: '❌',
 		dirname: '❌',
@@ -1031,6 +1038,8 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		Object.assign(values, {
 			file: full,
 			file_rel: path.relative(cwd, full),
+			file_path: full,
+			file_path_rel: path.relative(cwd, full),
 			dirpath: dir,
 			dirpath_rel: path.relative(cwd, dir),
 			dirname: (full.match(re.folderName) || ' _')[1],
@@ -1077,6 +1086,10 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		ctime_obj,
 		nl: '\n',
 		_: ' ',
+		pad: (value, width = 3, char = '0') => String(value).padStart(width, char),
+		// The code of the user asks for it, so it is printed also with --quiet-total
+		print: value => print(String(value), null, true, process.stdout),
+		printErr: value => print(String(value), null, true, process.stderr),
 	};
 	for (const [name, value] of Object.entries(values)) {
 		params[name] = value;
@@ -1084,22 +1097,64 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 	}
 	codeFunction ??= new Function(
 		...Object.keys(params),
+		'rr',
 		...numberNames,
 		'__code_rr',
 		'return eval(__code_rr);'
 	);
 	const args = Object.values(params);
 
+	// The values of the file are the same for each match, so they are made once.
+	// The groups come last, so a group overwrites a name it shares.
+	let rrOfFile = null;
+	const rrObject = (allNumbers, groups, named) => {
+		rrOfFile ??= {
+			filePath: values.file,
+			filePathRel: values.file_rel,
+			dirPath: values.dirpath,
+			dirPathRel: values.dirpath_rel,
+			dirName: values.dirname,
+			fileName: values.filename,
+			name: values.name,
+			ext: values.ext,
+			bytes: values.bytes,
+			size: values.size,
+			mtime: values.mtime,
+			ctime: values.ctime,
+			mtimeObj: mtime_obj,
+			ctimeObj: ctime_obj,
+			fileNumber: allNumbers.n,
+			filesTotal: allNumbers.t,
+			matchedFileNumber: allNumbers.i,
+			changedFileNumber: allNumbers.c,
+			text,
+			find: values.find,
+			stdin: values.pipe,
+			cwd,
+			time,
+			timeObj: config.startTime,
+			print: params.print,
+			printErr: params.printErr,
+		};
+		const object = {...rrOfFile, matchThisFile: allNumbers.m, matchUntilNow: allNumbers.M};
+		groups.forEach((value, i) => {
+			object[i] = value;
+		});
+		return Object.assign(object, named);
+	};
+
 	// The code of the user is in a block of its own, so it can declare the same names with let and const.
 	// The value of the block is the value of its last statement, like before. The line break ends a comment at the end.
 	const code = '{' + config.replacementOri + '\n}';
 
 	// When the code fails, only the message is told, and not the stack trace with all the code put in front of the code of the user
-	const runCode = (matchNumbers, variables) => {
+	const runCode = (matchNumbers, variables, groups = [], named = {}) => {
+		const allNumbers = {...numbers, ...matchNumbers};
 		try {
 			return codeFunction(
 				...args,
-				...numberValues({...numbers, ...matchNumbers}),
+				config.codeUses.rr ? rrObject(allNumbers, groups, named) : undefined,
+				...numberValues(allNumbers),
 				variables + code
 			);
 		} catch (e) {
@@ -1142,16 +1197,15 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		const {groups, named} = splitMatch(matchArgs, config.hiddenCaptures);
 		let variables = '';
 		// $0 is the match. With the flag n the groups have no numbers, only names.
-		groups.forEach((value, i) => {
-			if (!i || !config.namedOnly) {
-				variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
-			}
+		const numbered = config.namedOnly ? groups.slice(0, 1) : groups;
+		numbered.forEach((value, i) => {
+			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
 		});
 		// After the numbers, so a group named like a number, like n, wins over $n
 		for (const [name, value] of Object.entries(named)) {
 			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
 		}
-		return runCode({m: match, M: config.numbers.matches}, variables);
+		return runCode({m: match, M: config.numbers.matches}, variables, numbered, named);
 	};
 }
 

@@ -409,6 +409,7 @@ The code has access to the following variables:
 The following values defaults to \`❌\` if haystack does not originate from a file:
 \`file\`: contains the full path of the active file being searched (including full filename), 
 \`file_rel\`: contains \`file\` relative to current process working dir, 
+\`file_path\` and \`file_path_rel\`: the same as \`file\` and \`file_rel\`, 
 \`dirpath\`: contains the full path without filename of the active file being searched, 
 \`dirpath_rel\`: contains \`dirpath\` relative to current process working dir, 
 \`filename\`: is the full filename of the active file being searched without path, 
@@ -419,9 +420,11 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 \`mtime_obj\`: date object representing \`mtime\`, 
 \`ctime_obj\`: date object representing \`ctime\`.
 
-The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file, at its first match, unless it names the match, a group, \`$m\` or \`$M\`. A file without a match does not run the code.
+The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file, at its first match, unless it names the match, a group, \`$m\`, \`$M\` or \`rr\`. A file without a match does not run the code.
 
 Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
+
+\`rr\` has the values with long names: \`filePath\`, \`filePathRel\`, \`dirPath\`, \`dirPathRel\`, \`dirName\`, \`fileName\`, \`name\`, \`ext\`, \`bytes\`, \`size\`, \`mtime\`, \`ctime\`, \`mtimeObj\`, \`ctimeObj\`, \`fileNumber\`, \`filesTotal\`, \`matchedFileNumber\`, \`changedFileNumber\`, \`matchThisFile\`, \`matchUntilNow\`, \`text\`, \`find\`, \`stdin\`, \`cwd\`, \`time\` and \`timeObj\`, and the groups, like \`rr[1]\` and \`rr.year\`, which overwrite a name they share. Code that uses \`rr\` runs once per match. \`print()\` and \`printErr()\`, also on \`rr\`, print to stdout and stderr, also with --quiet-total. \`pad(value, width = 3, char = '0')\` pads a value, like \`pad($1)\` for \`007\`.
 
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
