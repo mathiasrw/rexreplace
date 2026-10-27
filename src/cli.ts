@@ -423,7 +423,7 @@ The following values defaults to \`❌\` if haystack does not originate from a f
 
 The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`: the number of the file among the files with a match so far, \`$c\`: among the files changed so far, \`$m\`: the number of the match in the file, \`$M\`: across all files. Each has cousins with zeros in front (\`$n0\` has 2 digits, \`$n00\` 3, and so on to 10) and with a space at the end (\`$n_\`). For speed, the code runs once per file unless it names the match, a group, \`$m\` or \`$M\`.
 
-Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so the code has no \`$1\`, while a replacement text still reads \`$1\` as the first named group, as in javascript. 
+Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
 
 All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
