@@ -722,7 +722,6 @@ function codeReplacement(file, config, text, numbers) {
 	};
 }
 
-// -E: default is another name for rr, and V for regex+
 const engineName = name => ('default' === name ? 'rr' : (name ?? 'rr'));
 
 // -u is needless with regex+, as it has v

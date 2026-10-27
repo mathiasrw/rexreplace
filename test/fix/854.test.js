@@ -100,6 +100,10 @@ describe('#854 the groups Regex+ adds', () => {
 		expect(await out('(?>a+)(b)', 'x', 'aab', {outputMatch: true})).toBe('b\n');
 	});
 
+	test('are not hidden for the unnamed groups a subroutine copies, as the README says', async () => {
+		expect(await out('(?<p>(a)(b))\\g<p>', '[$4$5]', 'abab')).toBe('[ab]');
+	});
+
 	test('are told in the status report', async () => {
 		expect(await compiled('(?>a+)(b)')).toMatchObject({engine: 'rr', hiddenCaptures: [1]});
 	});
@@ -167,6 +171,11 @@ describe('#854 --flags', () => {
 
 	test('gives regex+ the flag v when it has neither v nor u', async () => {
 		expect((await compiled('a', {...plus, flags: 'gx'})).flags).toContain('v');
+	});
+
+	test('takes the last one when it is given twice in the CLI', async () => {
+		fs.writeFileSync('a.txt', 'Aa');
+		expect((await sh($`bun ${cli} a _ a.txt --flags g --flags i -o`)).out).toBe('_a\n');
 	});
 
 	test('can not go with -I, -G, -M, -s or -u in the CLI', async () => {

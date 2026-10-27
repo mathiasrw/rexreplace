@@ -120,9 +120,11 @@ const yargs = require('yargs')
 
 	.string('flags')
 	.conflicts('flags', ['I', 'G', 'M', 's', 'u'])
+	// Like the other options, the last one wins when it is given twice
+	.coerce('flags', value => [].concat(value).pop())
 	.describe(
 		'flags',
-		'The flags of the regex, like `gimsv`, in place of the defaults: `gim`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`.'
+		'The flags of the regex, like `gimsv`, in place of the defaults: `gim`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`. Not with -G, -I, -M, -s or -u.'
 	)
 
 	.default('e', 'utf8')
