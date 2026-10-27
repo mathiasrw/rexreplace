@@ -426,9 +426,9 @@ The numbers: \`$n\`: the number of the file, \`$t\`: the number of files, \`$i\`
 
 Access a named group as \`$\` and the name: \`(?<year>...)\` gives you \`$year\`. A group named like a number, like \`n\`, wins over the number. With the flag \`n\` of \`-E regex+\` only named groups capture, so there is no \`$1\`. 
 
-\`rr\` has the values with long names: \`filePath\`, \`filePathRel\`, \`dirPath\`, \`dirPathRel\`, \`dirName\`, \`fileName\`, \`name\`, \`ext\`, \`bytes\`, \`size\`, \`mtime\`, \`ctime\`, \`mtimeObj\`, \`ctimeObj\`, \`fileNumber\`, \`filesTotal\`, \`matchedFileNumber\`, \`changedFileNumber\`, \`matchThisFile\`, \`matchUntilNow\`, \`text\`, \`find\`, \`stdin\`, \`cwd\`, \`time\` and \`timeObj\`, and the groups, like \`rr[1]\` and \`rr.year\`, which overwrite a name they share. Code that uses \`rr\` runs once per match. \`print()\` and \`printErr()\`, also on \`rr\`, print to stdout and stderr, also with --quiet-total. \`pad(value, width = 3, char = '0')\` pads a value, like \`pad($1)\` for \`007\`.
+\`rr\` has the values with long names: \`filePath\`, \`filePathRel\`, \`dirPath\`, \`dirPathRel\`, \`dirName\`, \`fileName\`, \`name\`, \`ext\`, \`bytes\`, \`size\`, \`mtime\`, \`ctime\`, \`mtimeObj\`, \`ctimeObj\`, \`fileNumber\`, \`filesTotal\`, \`matchedFileNumber\`, \`changedFileNumber\`, \`matchThisFile\`, \`matchUntilNow\`, \`text\`, \`find\`, \`stdin\`, \`cwd\`, \`time\` and \`timeObj\`, and the groups, like \`rr[1]\` and \`rr.year\`, which overwrite a name they share. Code that names \`rr\`, also in a string or a comment, runs once per match. \`print()\` and \`printErr()\`, also on \`rr\`, print to stdout and stderr, also with --quiet-total. \`pad(value, width = 3, char = '0')\` pads a value, like \`pad($1)\` for \`007\`.
 
-All variables, except from module, date objects, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
+All variables, except from module, date objects, functions, \`nl\` and \`_\`, has a corresponding variable name followed by \`_\` where the content has an extra space at the end (for easy concatenation). 
 `
 	)
 
