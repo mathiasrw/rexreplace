@@ -4,7 +4,7 @@ import * as rexreplace from './engine.ts';
 import {writeTo} from './output.ts';
 import {statusConfig, panic} from './status.ts';
 import {alias} from './alias.ts';
-import makeYargs from 'yargs';
+import {createRequire} from 'module';
 
 // Make it visible when Bun is the runtime (like with rexreplace-bun) as the regex engine is then not the one from Node.
 // Added as semver build metadata (`+bun`) as a `-bun` would make it a prerelease.
@@ -27,8 +27,9 @@ if (process.argv.length < 4) {
 	[pattern, replacement] = process.argv.splice(2, 2);
 }
 
-// The pattern and the replacement are taken out of argv above, so yargs only gets the rest
-const yargs = makeYargs(process.argv.slice(2))
+// As an ES module yargs breaks the lines of the help in the middle of words, so it is loaded as CommonJS.
+// It reads process.argv when it is loaded, which is after the pattern and the replacement are taken out above.
+const yargs = createRequire(import.meta.url)('yargs')
 	// A file can be named with only digits, like `2024`, so each glob is kept as the string that was given
 	.parserConfiguration({'parse-positional-numbers': false})
 	.strict()
