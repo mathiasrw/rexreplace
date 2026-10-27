@@ -44,6 +44,10 @@ describe('#825 a named group with the name of another variable', () => {
 		);
 	});
 
+	test('can end with _, and then wins over the cousin with a space of the group without it, in either order', async () => {
+		expect((await rr('(?<a_>\\w)(?<a>\\d)', '$a + $a_', {...js, pipedData: 'x1'})).out).toBe('1x');
+	});
+
 	test('can end with _, and then wins over the cousin with a space of the group without it', async () => {
 		expect((await rr('(?<a>\\d)(?<a_>\\w)', '$a + $a_', {...js, pipedData: '1x'})).out).toBe('1x');
 	});
