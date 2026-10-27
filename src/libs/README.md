@@ -1,8 +1,8 @@
 # Copied code
 
-RexReplace uses [Regex+](https://github.com/slevithan/regex) by Steven Levithan, from the npm packages [`regex`](https://www.npmjs.com/package/regex) and [`regex-utilities`](https://www.npmjs.com/package/regex-utilities). Both are dependencies, and the build bundles them, as they are ES modules only.
+RexReplace uses [Regex+](https://github.com/slevithan/regex) by Steven Levithan, from the npm packages [`regex`](https://www.npmjs.com/package/regex) and [`regex-utilities`](https://www.npmjs.com/package/regex-utilities), which are dependencies.
 
-One part of `regex` 6.1.0 is not exported: the subroutines. So it is copied here, as it is upstream, until upstream exports it:
+RexReplace runs the subroutines of `regex` 6.1.0 itself, to know which groups they add, and they are not exported. So they are copied here, as they are upstream, until upstream exports them:
 
 - `regex/subroutines.js` and `regex/utils-internals.js`, unchanged.
 - `regex/utils.js`, only the three parts of it that `subroutines.js` uses.
