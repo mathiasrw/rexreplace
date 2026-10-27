@@ -100,6 +100,10 @@ describe('#854 the groups Regex+ adds', () => {
 		expect(await out('(?>a+)(b)', 'x', 'aab', {outputMatch: true})).toBe('b\n');
 	});
 
+	test('are not hidden for the unnamed groups a subroutine copies, as the README says', async () => {
+		expect(await out('(?<p>(a)(b))\\g<p>', '[$4$5]', 'abab')).toBe('[ab]');
+	});
+
 	test('are told in the status report', async () => {
 		expect(await compiled('(?>a+)(b)')).toMatchObject({engine: 'rr', hiddenCaptures: [1]});
 	});
@@ -161,6 +165,31 @@ describe('#854 --flags', () => {
 		expect(await out('o', 'x', 'oOo', {flags: 'm'})).toBe('xOo');
 	});
 
+	test('with y, starts each file from the beginning', async () => {
+		const names = ['a1.txt', 'a2.txt', 'a3.txt'];
+		names.forEach(name => fs.writeFileSync(name, 'axx'));
+		await rr('a', '_', {includeGlob: names, flags: 'y'});
+		expect(names.map(name => fs.readFileSync(name, 'utf8'))).toEqual(['_xx', '_xx', '_xx']);
+	});
+
+	test('with y, checks each path of --exclude-re from the beginning', async () => {
+		const names = ['a1.txt', 'a2.txt', 'b.txt'];
+		names.forEach(name => fs.writeFileSync(name, 'o'));
+		const result = await rr('o', 'x', {
+			includeGlob: names,
+			excludeRe: ['a'],
+			flags: 'y',
+			simulate: true,
+		});
+		expect(result.out).toBe('b.txt\n');
+	});
+
+	test('with y, starts each name of --rename from the beginning', async () => {
+		['a1.txt', 'a2.txt'].forEach(name => fs.writeFileSync(name, 'o'));
+		await rr('a', 'b', {includeGlob: ['a1.txt', 'a2.txt'], flags: 'y', rename: true});
+		expect(fs.readdirSync('.').sort()).toEqual(['b1.txt', 'b2.txt']);
+	});
+
 	test('takes a flag that is given twice once', async () => {
 		expect(await out('o', 'x', 'oO', {flags: 'gg'})).toBe('xO');
 	});
@@ -169,12 +198,23 @@ describe('#854 --flags', () => {
 		expect((await compiled('a', {...plus, flags: 'gx'})).flags).toContain('v');
 	});
 
+	test('takes the last one when it is given twice in the CLI', async () => {
+		fs.writeFileSync('a.txt', 'Aa');
+		expect((await sh($`bun ${cli} a _ a.txt --flags g --flags i -o`)).out).toBe('_a\n');
+	});
+
 	test('can not go with -I, -G, -M, -s or -u in the CLI', async () => {
 		fs.writeFileSync('a.txt', 'a');
 		const result = await sh($`bun ${cli} a b a.txt --flags g -I`);
 		expect(result.exit).toBe(3);
 		expect(result.err).toEndWith('Arguments flags and I are mutually exclusive\n');
 		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a');
+	});
+
+	test('gives regex+ the flag u in place of v with -u too', async () => {
+		const {flags} = await compiled('a', {engine: 'regex+', unicode: true});
+		expect(flags).toContain('u');
+		expect(flags).not.toContain('v');
 	});
 
 	test('gives regex+ the flag u in place of v', async () => {
@@ -187,6 +227,7 @@ describe('#854 --flags', () => {
 		['x without regex+', {flags: 'gx'}, ' ❌ The flags x and n need -E regex+\n    gx'],
 		['n without regex+', {flags: 'gn'}, ' ❌ The flags x and n need -E regex+\n    gn'],
 		['a flag that is not a flag', {flags: 'gqz'}, ' ❌ Unknown flags in --flags\n    qz'],
+		['u and v', {flags: 'guv'}, ' ❌ The flags u and v can not go together\n    guv'],
 	])('stops the run with %s, and says so', async (name, config, message) => {
 		expect(await rr('a', 'b', {pipedData: 'a', ...config})).toEqual({
 			out: '',
