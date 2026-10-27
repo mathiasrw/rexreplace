@@ -1204,9 +1204,13 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		numbered.forEach((value, i) => {
 			variables += 'var $' + i + '=' + JSON.stringify(value) + '; ';
 		});
-		// After the numbers, so a group named like a number, like n, wins over $n
+		// After the numbers, so a group named like a number, like n, wins over $n.
+		// The cousins come first, so a group named like a cousin, like a_, wins over the cousin of a.
 		for (const [name, value] of Object.entries(named)) {
-			variables += `var $${name} = ${JSON.stringify(value)}, $${name}_ = $${name} + ' '; `;
+			variables += `var $${name}_ = ${JSON.stringify(value + ' ')}; `;
+		}
+		for (const [name, value] of Object.entries(named)) {
+			variables += `var $${name} = ${JSON.stringify(value)}; `;
 		}
 		return runCode({m: match, M: config.numbers.matches}, variables, numbered, named);
 	};
