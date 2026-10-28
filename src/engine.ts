@@ -748,7 +748,7 @@ function regexFlags(config, regexPlus) {
 		(config.voidIgnoreCase ? '' : 'i') +
 		(config.voidMultiline ? '' : 'm') +
 		(config.dotAll ? 's' : '') +
-		(regexPlus ? (config.unicode ? 'uxn' : 'vxn') : config.unicode ? 'u' : '')
+		(regexPlus ? (config.unicode ? 'uxn' : 'vxn') : config.voidUnicode ? '' : 'u')
 	);
 }
 
@@ -805,7 +805,22 @@ function compileRegex(pattern, config) {
 		}
 		return {regex: new RegExp(pattern, flags), hiddenCaptures: [], namedOnly: false};
 	} catch (e) {
+		// The flag u is on by default, and it is strict about the syntax, so a pattern that worked without it can fail on it
+		if (!regexPlus && null == config.flags && worksWithoutUnicode(pattern, flags, engine)) {
+			return panic(e.message, 'It works without the flag u, which -U (--void-unicode) turns off.');
+		}
 		return panic(e.message);
+	}
+}
+
+function worksWithoutUnicode(pattern, flags, engine) {
+	const legacy = flags.replace('u', '');
+	try {
+		return Boolean(
+			new RegExp('rr' === engine ? extendedSyntax(pattern, legacy).pattern : pattern, legacy)
+		);
+	} catch (e) {
+		return false;
 	}
 }
 

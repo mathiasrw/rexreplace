@@ -19,9 +19,9 @@ describe('--void-section', () => {
 
 	test('makes § a plain char in the pattern', async () => {
 		expect((await rr('§d', '#', {pipedData: 'a1 §d', voidSection: true})).out).toBe('a1 #');
-		expect((await rr('[§]]', '[', {pipedData: 'foo[bar]', voidSection: true})).out).toBe(
-			'foo[bar]'
-		);
+		expect(
+			(await rr('[§]]', '[', {pipedData: 'foo[bar]', voidSection: true, voidUnicode: true})).out
+		).toBe('foo[bar]');
 	});
 
 	test('makes § a plain char in the replacement', async () => {

@@ -138,7 +138,7 @@ assert		 		"rexreplace '.€' '€' my.file -o --void-euro"    'foobar'
 reset
 echo foo[bar] > my.file
 assert		 		"rexreplace '[§]]' '[' my.file -o"    'foo[bar['
-assert		 		"rexreplace '[§]]' '[' my.file -o --void-section"    'foo[bar]'
+assert		 		"rexreplace '[§]]' '[' my.file -o --void-section -U"    'foo[bar]'
 reset
 rexreplace 'b' '§n' my.file
 assert		 		"cat my.file"    "foo\nar"

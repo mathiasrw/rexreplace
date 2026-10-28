@@ -118,16 +118,26 @@ const yargs = createRequire(import.meta.url)('yargs')
 	.alias('M', 'void-multiline')
 
 	.boolean('u')
-	.describe('u', 'Treat pattern as a sequence of unicode code points.')
+	.describe(
+		'u',
+		'Treat patterns as a sequence of unicode code points. For the default engine it is on by default. For the regex+ engine (`-E regex+`) it swaps from v mode to u mode.'
+	)
 	.alias('u', 'unicode')
 
+	.boolean('U')
+	.describe(
+		'U',
+		'Void unicode. For the default engine it means reading the pattern as UTF-16 parts (escapes of chars that need no escaping are allowed). For the regex+ engine it has no impact, as it defaults to v mode.'
+	)
+	.alias('U', 'void-unicode')
+
 	.string('flags')
-	.conflicts('flags', ['I', 'G', 'M', 's', 'u'])
+	.conflicts('flags', ['I', 'G', 'M', 's', 'u', 'U'])
 	// Like the other options, the last one wins when it is given twice
 	.coerce('flags', value => [].concat(value).pop())
 	.describe(
 		'flags',
-		'The flags of the regex, like `gimsv`, in place of the defaults: `gim`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`. Not with -G, -I, -M, -s or -u.'
+		'The flags of the regex, like `gimsv`, in place of the defaults: `gimu`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`. Not with -G, -I, -M, -s, -u or -U.'
 	)
 
 	.default('e', 'utf8')

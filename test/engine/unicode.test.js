@@ -7,13 +7,14 @@ describe('--unicode', () => {
 		expect((await rr('^.$', 'x', {pipedData: '🦖', unicode: true})).out).toBe('x');
 	});
 
-	test('is not the default', async () => {
-		expect((await rr('^.$', 'x', {pipedData: '🦖'})).out).toBe('🦖');
+	test('is the default, and --void-unicode turns it off', async () => {
+		expect((await rr('^.$', 'x', {pipedData: '🦖'})).out).toBe('x');
+		expect((await rr('^.$', 'x', {pipedData: '🦖', voidUnicode: true})).out).toBe('🦖');
 	});
 
 	test('understands code point escapes', async () => {
 		expect((await rr('\\u{1F996}', 'x', {pipedData: 'a🦖b', unicode: true})).out).toBe('axb');
-		expect((await rr('\\u{1F996}', 'x', {pipedData: 'a🦖b'})).out).toBe('a🦖b');
+		expect((await rr('\\u{1F996}', 'x', {pipedData: 'a🦖b', voidUnicode: true})).out).toBe('a🦖b');
 	});
 
 	test('understands unicode property escapes', async () => {
@@ -36,11 +37,19 @@ describe('--unicode', () => {
 	});
 
 	test('is strict about escapes that have no meaning', async () => {
-		expect((await rr('\\-', 'x', {pipedData: 'a-b'})).out).toBe('axb');
-		const result = await rr('\\-', 'x', {pipedData: 'a-b', unicode: true});
+		expect((await rr('\\-', 'x', {pipedData: 'a-b', voidUnicode: true})).out).toBe('axb');
+		const result = await rr('\\-', 'x', {pipedData: 'a-b'});
 		expect(result.exit).toBe(3);
 		expect(result.err).toContain('Invalid regular expression');
 		expect(result.out).toBe('');
+	});
+
+	test('tells that a pattern from before works without it', async () => {
+		const result = await rr('\\-', 'x', {pipedData: 'a-b'});
+		expect(result.err).toContain(
+			'\n    It works without the flag u, which -U (--void-unicode) turns off.\n'
+		);
+		expect((await rr('(', 'x', {pipedData: 'a'})).err).not.toContain('-U');
 	});
 
 	describe('combined', () => {
