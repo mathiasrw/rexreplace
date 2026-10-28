@@ -120,14 +120,14 @@ const yargs = createRequire(import.meta.url)('yargs')
 	.boolean('u')
 	.describe(
 		'u',
-		'Treat pattern as a sequence of unicode code points. It is the default, so it is only needed with `-E regex+`, where it gives `u` in place of `v`.'
+		'Treat patterns as a sequence of unicode code points. For the default engine it is on by default. For the regex+ engine (`-E regex+`) it swaps from v mode to u mode.'
 	)
 	.alias('u', 'unicode')
 
 	.boolean('U')
 	.describe(
 		'U',
-		'Void unicode: read the pattern as UTF-16 parts, without the strict syntax of the flag `u`, as before v8.'
+		'Void unicode. For the default engine it means reading the pattern as UTF-16 parts (escapes of chars that need no escaping are allowed). For the regex+ engine it has no impact, as it defaults to v mode.'
 	)
 	.alias('U', 'void-unicode')
 

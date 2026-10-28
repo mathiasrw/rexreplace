@@ -805,7 +805,7 @@ function compileRegex(pattern, config) {
 		}
 		return {regex: new RegExp(pattern, flags), hiddenCaptures: [], namedOnly: false};
 	} catch (e) {
-		// The flag u is on by default, and it is strict about the syntax, so a pattern from before v8 can fail on it
+		// The flag u is on by default, and it is strict about the syntax, so a pattern that worked without it can fail on it
 		if (!regexPlus && null == config.flags && worksWithoutUnicode(pattern, flags, engine)) {
 			return panic(e.message, 'It works without the flag u, which -U (--void-unicode) turns off.');
 		}
