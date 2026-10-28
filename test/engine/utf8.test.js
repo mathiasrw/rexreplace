@@ -15,13 +15,13 @@ describe('#735 UTF-8 in the pattern', () => {
 		expect(asUtf8((await rr('🦖', 'x', {pipedData: text})).out)).toBe('æ 中 x 👩‍💻\r\n');
 	});
 
-	test('. takes half an emoji without --unicode, which then shows as �', async () => {
-		const out = (await rr('.', 'x', {pipedData: '🦖a', voidGlobal: true})).out;
+	test('. takes half an emoji with --void-unicode, which then shows as �', async () => {
+		const out = (await rr('.', 'x', {pipedData: '🦖a', voidGlobal: true, voidUnicode: true})).out;
 		expect(asUtf8(out)).toBe('x�a');
 	});
 
-	test('. takes the whole emoji with --unicode', async () => {
-		const config = {pipedData: '🦖a', voidGlobal: true, unicode: true};
+	test('. takes the whole emoji, as --unicode is the default', async () => {
+		const config = {pipedData: '🦖a', voidGlobal: true};
 		expect(asUtf8((await rr('.', 'x', config)).out)).toBe('xa');
 	});
 

@@ -4,7 +4,7 @@ import fs from 'fs';
 import {rr} from '../helper.js';
 
 describe('regex flags', () => {
-	const flags = ['voidIgnoreCase', 'voidGlobal', 'voidMultiline', 'dotAll', 'unicode'];
+	const flags = ['voidIgnoreCase', 'voidGlobal', 'voidMultiline', 'dotAll', 'voidUnicode'];
 	const text = 'Foo\nfoo 🦖\r\nFOO bar\n';
 	const patterns = ['foo', '^.', '.$', 'o.f', '^f.*o$', '\\S+$', 'O\\s', '.'];
 
@@ -22,7 +22,7 @@ describe('regex flags', () => {
 				(config.voidIgnoreCase ? '' : 'i') +
 				(config.voidMultiline ? '' : 'm') +
 				(config.dotAll ? 's' : '') +
-				(config.unicode ? 'u' : '');
+				(config.voidUnicode ? '' : 'u');
 
 			for (const pattern of patterns) {
 				expect((await rr(pattern, '<$&>', {pipedData: text, ...config})).out, pattern).toBe(

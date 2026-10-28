@@ -49,13 +49,17 @@ describe('#854 the rr engine', () => {
 		['(?<a>x)\\1'],
 		['$'],
 		['[[]'],
-	])('gives the same regex as the native engine for %s', async pattern => {
+	])('gives the same regex as the native engine for %s, without the flag u', async pattern => {
 		const native = new RegExp(pattern, 'gim');
-		expect(await compiled(pattern)).toMatchObject({search: native.source, flags: 'gim'});
+		expect(await compiled(pattern, {voidUnicode: true})).toMatchObject({
+			search: native.source,
+			flags: 'gim',
+		});
 	});
 
-	test('only uses the u flag with -u', async () => {
-		expect((await compiled('a', {unicode: true})).flags).toBe('gimu');
+	test('has the flag u by default, and not with -U', async () => {
+		expect((await compiled('a')).flags).toBe('gimu');
+		expect((await compiled('a', {voidUnicode: true})).flags).toBe('gim');
 	});
 
 	test.each([
@@ -112,7 +116,7 @@ describe('#854 the groups Regex+ adds', () => {
 describe('#854 the other engines', () => {
 	// The tests are run by Bun, so the native engine is JSC
 	test.each([['runtime']])('%s is the native engine, without the extended syntax', async engine => {
-		expect(await out('(?<d>a)\\g<d>', 'X', 'ag<d>', {engine})).toBe('X');
+		expect(await out('(?<d>a)\\g<d>', 'X', 'ag<d>', {engine, voidUnicode: true})).toBe('X');
 	});
 
 	test.each([['regex+']])(

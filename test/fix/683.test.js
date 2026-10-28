@@ -69,9 +69,10 @@ describe('#683 --exclude-re follows the regex flags of the main search', () => {
 	test('--unicode lets \\u{...} match in the path', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.writeFileSync('b.file', 'foo');
-		expect((await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['\\u{61}']})).out).toBe(
-			'a.file\nb.file\n'
-		);
+		expect(
+			(await rr('foo', 'x', {includeGlob: ['*.file'], excludeRe: ['\\u{61}'], voidUnicode: true}))
+				.out
+		).toBe('a.file\nb.file\n');
 		fs.writeFileSync('a.file', 'foo');
 		fs.writeFileSync('b.file', 'foo');
 		expect(
