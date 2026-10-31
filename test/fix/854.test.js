@@ -211,7 +211,7 @@ describe('#854 --flags', () => {
 		fs.writeFileSync('a.txt', 'a');
 		const result = await sh($`bun ${cli} a b a.txt --flags g -I`);
 		expect(result.exit).toBe(3);
-		expect(result.err).toEndWith('Arguments flags and I are mutually exclusive\n');
+		expect(result.err).toEndWith("The parameter '--flags' conflicts with '-I'\n");
 		expect(fs.readFileSync('a.txt', 'utf8')).toBe('a');
 	});
 

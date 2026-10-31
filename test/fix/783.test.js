@@ -35,7 +35,7 @@ describe('#783 the exit code tells what happened', () => {
 		const result = await sh($`bun ${cli} o x my.file --nope`);
 		expect(result.exit).toBe(3);
 		expect(result.out).toBe('');
-		expect(result.err).toEndWith('Unknown argument: nope\n');
+		expect(result.err).toEndWith("Unknown parameter 'nope' not allowed\n");
 		expect((await sh($`bun ${cli} o`)).exit).toBe(3);
 		expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar');
 	});
