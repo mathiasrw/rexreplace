@@ -326,6 +326,17 @@ assert		 		"cat your.file"    					'abc123'
 # assert		 		"rexreplace ??? ??? my.file -d"    "foobar"
 # reset
 
+
+# A file given with an absolute path outside the working folder is changed (#726)
+reset
+outside="$(mktemp -d)"
+echo 'foobar' > "$outside/my.file"
+assert_raises		"rexreplace o x '$outside/my.file'"    0
+assert		 		"cat '$outside/my.file'"    "fxxbar"
+assert		 		"rexreplace fxxbar 'file' '$outside/my.file' -j -o"    "$outside/my.file"
+rm -r "$outside"
+
+
 rm my.file
 rm your.file
 
