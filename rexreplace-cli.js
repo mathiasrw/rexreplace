@@ -227,6 +227,8 @@ function error(msg, data=''){
 	if(!args.quiet && !args['quiet-total']){
 		console.error(font.red(msg), data);
 	}
+	// The run goes on, but the process ends with 1 so a script can see that a file failed (#728)
+	process.exitCode = 1;
 	if(args.halt){
 		kill();
 	}

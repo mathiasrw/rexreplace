@@ -77,6 +77,14 @@ assert_success		"rexreplace o x $outside/myfile -Q"
 assert		 		"cat $outside/myfile"    "fxxbar"
 rm -r "$outside"
 
+# A file that can not be read gives exit code 1, and the other files are still changed (#728)
+reset
+echo foobar > myfile2
+chmod 000 myfile2
+assert_raises		"rexreplace o x myfile myfile2 -Q" 1
+assert		 		"cat myfile"    "fxxbar"
+rm -f myfile2
+
 # Todo: test -e
 # assert		 		"rexreplace ??? ??? myfile -e"    "foobar"
 # reset
