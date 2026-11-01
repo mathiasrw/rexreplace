@@ -251,6 +251,10 @@ assert		 		"cat $outside/my.file"    "fxxbar"
 assert		 		"rexreplace 'fxxbar' 'file' $outside/my.file -o --replacement-js"    "$outside/my.file"
 rm -r "$outside"
 
+# A file that gives an error ends the run with exit code 1 (#728)
+reset
+assert_raises		"rexreplace o x nope.file"    1
+
 rm my.file
 
 assert_end 			"rexreplace"
