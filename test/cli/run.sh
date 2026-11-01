@@ -209,6 +209,13 @@ assert		 		"cat '$abs_dir/abs.file'"    "fxxbar"
 rm -fr "$abs_dir"
 
 
+# An error gives exit code 1 (#728)
+reset
+assert_raises		"rexreplace o x nope.file"    1
+
+
+
+
 # Todo: test -e
 # assert		 		"rexreplace ??? ??? my.file -e"    "foobar"
 # reset
