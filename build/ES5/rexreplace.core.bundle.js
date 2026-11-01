@@ -2,19 +2,21 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-(function e(t, n, r) {
-  function s(o, u) {
-    if (!n[o]) {
-      if (!t[o]) {
-        var a = typeof require == "function" && require;if (!u && a) return a(o, !0);if (i) return i(o, !0);var f = new Error("Cannot find module '" + o + "'");throw f.code = "MODULE_NOT_FOUND", f;
-      }var l = n[o] = { exports: {} };t[o][0].call(l.exports, function (e) {
-        var n = t[o][1][e];return s(n ? n : e);
-      }, l, l.exports, e, t, n, r);
-    }return n[o].exports;
-  }var i = typeof require == "function" && require;for (var o = 0; o < r.length; o++) {
-    s(r[o]);
-  }return s;
-})({ 1: [function (require, module, exports) {
+(function () {
+  function r(e, n, t) {
+    function o(i, f) {
+      if (!n[i]) {
+        if (!e[i]) {
+          var c = "function" == typeof require && require;if (!f && c) return c(i, !0);if (u) return u(i, !0);var a = new Error("Cannot find module '" + i + "'");throw a.code = "MODULE_NOT_FOUND", a;
+        }var p = n[i] = { exports: {} };e[i][0].call(p.exports, function (r) {
+          var n = e[i][1][r];return o(n || r);
+        }, p, p.exports, r, e, n, t);
+      }return n[i].exports;
+    }for (var u = "function" == typeof require && require, i = 0; i < t.length; i++) {
+      o(t[i]);
+    }return o;
+  }return r;
+})()({ 1: [function (require, module, exports) {
     'use strict';
 
     module.exports = function () {
@@ -119,6 +121,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var i = ai;
 
       if (ai >= 0 && bi > 0) {
+        if (a === b) {
+          return [ai, bi];
+        }
         begs = [];
         left = str.length;
 
@@ -160,6 +165,40 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var escComma = '\0COMMA' + Math.random() + '\0';
     var escPeriod = '\0PERIOD' + Math.random() + '\0';
 
+    var EXPANSION_MAX = 100000;
+
+    // `EXPANSION_MAX` caps the *number* of expansions, but not their length. An
+    // input like `'{a,b}'.repeat(1500)` stays under that count - its output is
+    // truncated to 100k results - while making every result ~1500 characters
+    // long. The result set, and the intermediate arrays built while combining
+    // brace sets, then grow large enough to exhaust memory and crash the process
+    // (CVE-2026-14257). `EXPANSION_MAX_LENGTH` bounds the total number of
+    // characters the accumulator may hold at any point, so memory stays flat no
+    // matter how many brace groups are chained. The limit sits well above any
+    // realistic expansion (100k results hitting `EXPANSION_MAX` measure ~1M
+    // characters) so legitimate input is unaffected.
+    var EXPANSION_MAX_LENGTH = 4000000;
+
+    // `expand` recurses once per level of brace *nesting* - both when expanding a
+    // set's comma members and when re-wrapping a set whose body is a single part.
+    // The CVE-2026-14257 fix made the *tail* iterative (recursion on `m.post`, one
+    // level per chained group), which left nesting depth unbounded: about 3,100
+    // levels of `{{{...a,b...}}}` - only ~6KB of input - exhausted the native stack
+    // and crashed the process. `EXPANSION_MAX_DEPTH` bounds how deep the parser
+    // will follow nesting. It sits far above any realistic pattern and well below
+    // the depth at which the stack runs out.
+    var EXPANSION_MAX_DEPTH = 1000;
+
+    // Bash keeps a quirk where a brace group followed by a comma set still expands
+    // (`{a},b}`). The parser implements it by rewriting the string and restarting
+    // the scan, absorbing one `}` per pass. `n` trailing braces therefore cost `n`
+    // full passes over a string that itself grows by one `escClose` sentinel each
+    // time - quadratic in `n`, with a ~26x constant from the sentinel's length.
+    // 128KB of `'{a}' + '}'.repeat(n) + ',z}'` blocked the event loop for 27
+    // seconds to produce two results. `EXPANSION_MAX_REWRITES` bounds how many
+    // times the scan may restart. Real `{a},b}` input needs a handful.
+    var EXPANSION_MAX_REWRITES = 1000;
+
     function numeric(str) {
       return parseInt(str, 10) == str ? parseInt(str, 10) : str.charCodeAt(0);
     }
@@ -172,36 +211,64 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return str.split(escSlash).join('\\').split(escOpen).join('{').split(escClose).join('}').split(escComma).join(',').split(escPeriod).join('.');
     }
 
+    // Like `target.push(...items)` but doesn't overflow the stack
+    function pushAll(target, items) {
+      for (var i = 0; i < items.length; i++) {
+        target.push(items[i]);
+      }
+    }
+
     // Basically just str.split(","), but handling cases
     // where we have nested braced sections, which should be
     // treated as individual members, like {a,{b,c},d}
     function parseCommaParts(str) {
-      if (!str) return [''];
-
       var parts = [];
-      var m = balanced('{', '}', str);
 
-      if (!m) return str.split(',');
+      // Walk the brace groups iteratively. Recursing on `post` once per group let a
+      // chain of them exhaust the stack - the parsing-side counterpart to
+      // the `expand` overflow fixed for CVE-2026-14257, and not something `max` or
+      // `maxLength` can bound, since it happens before expansion.
+      //
+      // The part the next chunk continues
+      var carry = '';
 
-      var pre = m.pre;
-      var body = m.body;
-      var post = m.post;
-      var p = pre.split(',');
+      for (;;) {
+        var m = balanced('{', '}', str);
 
-      p[p.length - 1] += '{' + body + '}';
-      var postParts = parseCommaParts(post);
-      if (post.length) {
-        p[p.length - 1] += postParts.shift();
-        p.push.apply(p, postParts);
+        if (!m) {
+          var tail = str.split(',');
+          tail[0] = carry + tail[0];
+          pushAll(parts, tail);
+          return parts;
+        }
+
+        var pre = m.pre;
+        var body = m.body;
+        var post = m.post;
+        var p = pre.split(',');
+
+        p[0] = carry + p[0];
+        p[p.length - 1] += '{' + body + '}';
+
+        if (!post.length) {
+          pushAll(parts, p);
+          return parts;
+        }
+
+        carry = p.pop();
+        pushAll(parts, p);
+        str = post;
       }
-
-      parts.push.apply(parts, p);
-
-      return parts;
     }
 
-    function expandTop(str) {
+    function expandTop(str, options) {
       if (!str) return [];
+
+      options = options || {};
+      var max = options.max == null ? EXPANSION_MAX : options.max;
+      var maxLength = options.maxLength == null ? EXPANSION_MAX_LENGTH : options.maxLength;
+      var maxDepth = options.maxDepth == null ? EXPANSION_MAX_DEPTH : options.maxDepth;
+      var maxRewrites = options.maxRewrites == null ? EXPANSION_MAX_REWRITES : options.maxRewrites;
 
       // I don't know why Bash 4.3 does this, but it does.
       // Anything starting with {} will have the first two bytes preserved
@@ -213,7 +280,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         str = '\\{\\}' + str.substr(2);
       }
 
-      return expand(escapeBraces(str), true).map(unescapeBraces);
+      return expand(escapeBraces(str), max, maxLength, maxDepth, 0, maxRewrites, true).map(unescapeBraces);
     }
 
     function identity(e) {
@@ -235,97 +302,232 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return i >= y;
     }
 
-    function expand(str, isTop) {
-      var expansions = [];
-
-      var m = balanced('{', '}', str);
-      if (!m || /\$$/.test(m.pre)) return [str];
-
-      var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
-      var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
-      var isSequence = isNumericSequence || isAlphaSequence;
-      var isOptions = m.body.indexOf(',') >= 0;
-      if (!isSequence && !isOptions) {
-        // {a},b}
-        if (m.post.match(/,.*\}/)) {
-          str = m.pre + '{' + m.body + escClose + m.post;
-          return expand(str);
+    // Build `{ acc[a] + pre + values[v] }` for every combination, capping the
+    // number of results at `max` and the total number of characters at `maxLength`.
+    // This is the one place output grows, so bounding it here keeps the single
+    // accumulator - and therefore memory - flat regardless of how many brace groups
+    // are combined (CVE-2026-14257).
+    //
+    // `base[a]` is the length of the part of `acc[a]` that predates the current
+    // empty-drop baseline (see `expand`). The matching baselines for the results
+    // are appended to `outBase`, which the caller carries forward alongside them.
+    function combine(acc, base, pre, values, max, maxLength, dropEmpties, outBase) {
+      var out = [];
+      var length = 0;
+      for (var a = 0; a < acc.length; a++) {
+        for (var v = 0; v < values.length; v++) {
+          if (out.length >= max) return out;
+          var expansion = acc[a] + pre + values[v];
+          // Bash drops empty results at the top level. Skip them before they count
+          // against `max`, so `max` bounds the number of *kept* results. "Empty"
+          // means "adds nothing past the baseline", not "empty overall".
+          if (dropEmpties && expansion.length === base[a]) continue;
+          if (length + expansion.length > maxLength) return out;
+          out.push(expansion);
+          outBase.push(base[a]);
+          length += expansion.length;
         }
-        return [str];
       }
+      return out;
+    }
 
-      var n;
-      if (isSequence) {
-        n = m.body.split(/\.\./);
-      } else {
-        n = parseCommaParts(m.body);
-        if (n.length === 1) {
-          // x{{a,b}}y ==> x{a}y x{b}y
-          n = expand(n[0], false).map(embrace);
-          if (n.length === 1) {
-            var post = m.post.length ? expand(m.post, false) : [''];
-            return post.map(function (p) {
-              return m.pre + n[0] + p;
-            });
+    // The expansion values of a single numeric (`1..5`) or alphabetic (`a..e..2`)
+    // sequence body.
+    function expandSequence(body, isAlphaSequence, max, maxLength) {
+      var n = body.split(/\.\./);
+      var N = [];
+      // A sequence body always splits into two or three parts, but the compiler
+      // can't know that.
+      /* c8 ignore start */
+      if (n[0] === undefined || n[1] === undefined) {
+        return N;
+      }
+      /* c8 ignore stop */
+      var x = numeric(n[0]);
+      var y = numeric(n[1]);
+      var width = Math.max(n[0].length, n[1].length);
+      var incr = n.length === 3 && n[2] !== undefined ? Math.max(Math.abs(numeric(n[2])), 1) : 1;
+      var test = lte;
+      var reverse = y < x;
+      if (reverse) {
+        incr *= -1;
+        test = gte;
+      }
+      var pad = n.some(isPadded);
+
+      var length = 0;
+      for (var i = x; test(i, y) && N.length < max; i += incr) {
+        var c;
+        if (isAlphaSequence) {
+          c = String.fromCharCode(i);
+          if (c === '\\') {
+            c = '';
           }
-        }
-      }
-
-      // at this point, n is the parts, and we know it's not a comma set
-      // with a single entry.
-
-      // no need to expand pre, since it is guaranteed to be free of brace-sets
-      var pre = m.pre;
-      var post = m.post.length ? expand(m.post, false) : [''];
-
-      var N;
-
-      if (isSequence) {
-        var x = numeric(n[0]);
-        var y = numeric(n[1]);
-        var width = Math.max(n[0].length, n[1].length);
-        var incr = n.length == 3 ? Math.abs(numeric(n[2])) : 1;
-        var test = lte;
-        var reverse = y < x;
-        if (reverse) {
-          incr *= -1;
-          test = gte;
-        }
-        var pad = n.some(isPadded);
-
-        N = [];
-
-        for (var i = x; test(i, y); i += incr) {
-          var c;
-          if (isAlphaSequence) {
-            c = String.fromCharCode(i);
-            if (c === '\\') c = '';
-          } else {
-            c = String(i);
-            if (pad) {
-              var need = width - c.length;
-              if (need > 0) {
-                var z = new Array(need + 1).join('0');
-                if (i < 0) c = '-' + z + c.slice(1);else c = z + c;
+        } else {
+          c = String(i);
+          if (pad) {
+            var need = width - c.length;
+            if (need > 0) {
+              var z = new Array(need + 1).join('0');
+              if (i < 0) {
+                c = '-' + z + c.slice(1);
+              } else {
+                c = z + c;
               }
             }
           }
-          N.push(c);
         }
-      } else {
-        N = concatMap(n, function (el) {
-          return expand(el, false);
-        });
+        if (length + c.length > maxLength) break;
+        N.push(c);
+        length += c.length;
+      }
+      return N;
+    }
+
+    function expand(str, max, maxLength, maxDepth, depth, maxRewrites, isTop) {
+      // Too deeply nested to keep following: treat the rest as literal, the same
+      // way a group that cannot expand is already handled. Truncating rather than
+      // throwing keeps expansion total, matching `max` and `maxLength`.
+      if (depth > maxDepth) {
+        return [str];
       }
 
-      for (var j = 0; j < N.length; j++) {
-        for (var k = 0; k < post.length; k++) {
-          var expansion = pre + N[j] + post[k];
-          if (!isTop || isSequence || expansion) expansions.push(expansion);
+      // Consume the string's top-level brace groups left to right, threading a
+      // running set of combined prefixes (`acc`). Expanding the tail iteratively -
+      // rather than recursing on `m.post` once per group - keeps the native stack
+      // depth constant, so deeply chained input (`'{a,b}'.repeat(3000)`) can no
+      // longer overflow the stack, and leaves a single accumulator whose size
+      // `maxLength` bounds directly (CVE-2026-14257).
+      var acc = [''];
+
+      // Bash drops empty results, but only when the *first* group of the run is a
+      // comma set - a sequence like `{a..\}` may legitimately yield ''. The drop
+      // is on the final strings, so it is applied to whichever `combine` produces
+      // them (the one with no brace set left in the tail).
+      //
+      // The old implementation recursed on `m.post`, so the drop tested only the
+      // expansion of the current call's substring. The `{a},b}` rewrite below turns
+      // `isTop` back on part-way through a string, starting a fresh such run, so
+      // the drop must ignore whatever `acc` already holds from earlier groups.
+      // `accBase[a]` records how much of `acc[a]` predates the current run;
+      // `combine` treats an expansion as empty when it adds nothing past that.
+      var accBase = [0];
+      // How many times the `{a},b}` rewrite below has restarted the scan. Each pass
+      // re-reads the whole string, so leaving this unbounded is quadratic.
+      var rewrites = 0;
+      var dropEmpties = false;
+      var firstGroup = true;
+      var nextBase;
+
+      for (;;) {
+        var m = balanced('{', '}', str);
+
+        // No brace set left: the rest of the string is literal.
+        if (!m) {
+          return combine(acc, accBase, str, [''], max, maxLength, dropEmpties, []);
         }
+
+        // no need to expand pre, since it is guaranteed to be free of brace-sets
+        var pre = m.pre;
+
+        // For compatibility reasons, `${` is not eligible for brace expansion, and
+        // on the 1.x line it suppresses expansion of the rest of the string too:
+        // the whole remainder is literal. The 2.x and 5.x lines instead keep
+        // expanding the tail, which is what bash does, but changing that here would
+        // be a breaking change for 1.x consumers. Routed through `combine` so the
+        // result is still bounded by `max` and `maxLength`.
+        if (/\$$/.test(pre)) {
+          return combine(acc, accBase, str, [''], max, maxLength, dropEmpties, []);
+        }
+
+        var isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
+        var isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
+        var isSequence = isNumericSequence || isAlphaSequence;
+        var isOptions = m.body.indexOf(',') >= 0;
+        if (!isSequence && !isOptions) {
+          // {a},b}
+          if (rewrites < maxRewrites && m.post.match(/,(?!,).*\}/)) {
+            rewrites++;
+            str = m.pre + '{' + m.body + escClose + m.post;
+            // The rewritten string is expanded as if it were a fresh top-level one,
+            // so start a new empty-drop run: anchor the baseline at what `acc`
+            // holds now, and let the next expanding group decide whether to drop.
+            isTop = true;
+            firstGroup = true;
+            dropEmpties = false;
+            accBase = [];
+            for (var b = 0; b < acc.length; b++) {
+              accBase.push(acc[b].length);
+            }
+            continue;
+          }
+          // Nothing here expands, so the whole remaining string is literal.
+          return combine(acc, accBase, pre + '{' + m.body + '}' + m.post, [''], max, maxLength, dropEmpties, []);
+        }
+
+        if (firstGroup) {
+          dropEmpties = isTop && !isSequence;
+          firstGroup = false;
+        }
+
+        var values;
+        if (isSequence) {
+          values = expandSequence(m.body, isAlphaSequence, max, maxLength);
+        } else {
+          var n = parseCommaParts(m.body);
+          if (n.length === 1 && n[0] !== undefined) {
+            // x{{a,b}}y ==> x{a}y x{b}y
+            n = expand(n[0], max, maxLength, maxDepth, depth + 1, maxRewrites, false).map(embrace);
+            //XXX is this necessary? Can't seem to hit it in tests.
+            /* c8 ignore start */
+            if (n.length === 1) {
+              nextBase = [];
+              acc = combine(acc, accBase, pre + n[0], [''], max, maxLength, dropEmpties && !m.post.length, nextBase);
+              accBase = nextBase;
+              if (!m.post.length) break;
+              str = m.post;
+              continue;
+            }
+            /* c8 ignore stop */
+          }
+
+          // Values that `combine` is going to drop as empty produce no result, so
+          // they must not count against `max` - otherwise `{a,,b}` with `max: 2`
+          // would stop at `['a', '']` and yield one result instead of two. Skipping
+          // them outright keeps `values` bounded while leaving `max` a bound on
+          // *kept* results. A value is dropped when it adds nothing past the
+          // baseline, which is what `combine` tests.
+          var dropsEmpties = dropEmpties && !m.post.length && !pre;
+          for (var d = 0; dropsEmpties && d < acc.length; d++) {
+            if (acc[d].length !== accBase[d]) {
+              dropsEmpties = false;
+            }
+          }
+
+          values = [];
+          var valuesLength = 0;
+          outer: for (var j = 0; j < n.length; j++) {
+            var expanded = expand(n[j], max, maxLength, maxDepth, depth + 1, maxRewrites, false);
+            for (var k = 0; k < expanded.length; k++) {
+              var v = expanded[k];
+              if (dropsEmpties && !v) continue;
+              if (values.length >= max || valuesLength + v.length > maxLength) {
+                break outer;
+              }
+              values.push(v);
+              valuesLength += v.length;
+            }
+          }
+        }
+
+        nextBase = [];
+        acc = combine(acc, accBase, pre, values, max, maxLength, dropEmpties && !m.post.length, nextBase);
+        accBase = nextBase;
+        if (!m.post.length) break;
+        str = m.post;
       }
 
-      return expansions;
+      return acc;
     }
   }, { "balanced-match": 3, "concat-map": 6 }], 5: [function (require, module, exports) {
     'use strict';
@@ -832,8 +1034,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     };
   }, { "fs": undefined, "path": undefined }], 10: [function (require, module, exports) {
-    exports.alphasort = alphasort;
-    exports.alphasorti = alphasorti;
     exports.setopts = setopts;
     exports.ownProp = ownProp;
     exports.makeAbs = makeAbs;
@@ -846,17 +1046,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return Object.prototype.hasOwnProperty.call(obj, field);
     }
 
+    var fs = require("fs");
     var path = require("path");
     var minimatch = require("minimatch");
     var isAbsolute = require("path-is-absolute");
     var Minimatch = minimatch.Minimatch;
 
-    function alphasorti(a, b) {
-      return a.toLowerCase().localeCompare(b.toLowerCase());
-    }
-
     function alphasort(a, b) {
-      return a.localeCompare(b);
+      return a.localeCompare(b, 'en');
     }
 
     function setupIgnores(self, options) {
@@ -912,6 +1109,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       self.stat = !!options.stat;
       self.noprocess = !!options.noprocess;
       self.absolute = !!options.absolute;
+      self.fs = options.fs || fs;
 
       self.maxLength = options.maxLength || Infinity;
       self.cache = options.cache || Object.create(null);
@@ -941,6 +1139,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       // Note that they are not supported in Glob itself anyway.
       options.nonegate = true;
       options.nocomment = true;
+      // always treat \ in patterns as escapes, not path separators
+      options.allowWindowsEscape = false;
 
       self.minimatch = new Minimatch(pattern, options);
       self.options = self.minimatch.options;
@@ -969,7 +1169,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       if (!nou) all = Object.keys(all);
 
-      if (!self.nosort) all = all.sort(self.nocase ? alphasorti : alphasort);
+      if (!self.nosort) all = all.sort(alphasort);
 
       // at *some* point we statted all of these
       if (self.mark) {
@@ -1048,7 +1248,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return !!(item.gmatcher && item.gmatcher.match(path));
       });
     }
-  }, { "minimatch": 18, "path": undefined, "path-is-absolute": 20 }], 11: [function (require, module, exports) {
+  }, { "fs": undefined, "minimatch": 18, "path": undefined, "path-is-absolute": 20 }], 11: [function (require, module, exports) {
     // Approach:
     //
     // 1. Get the minimatch set
@@ -1091,7 +1291,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     module.exports = glob;
 
-    var fs = require('fs');
     var rp = require('fs.realpath');
     var minimatch = require('minimatch');
     var Minimatch = minimatch.Minimatch;
@@ -1102,8 +1301,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var isAbsolute = require('path-is-absolute');
     var globSync = require('./sync.js');
     var common = require('./common.js');
-    var alphasort = common.alphasort;
-    var alphasorti = common.alphasorti;
     var setopts = common.setopts;
     var ownProp = common.ownProp;
     var inflight = require('inflight');
@@ -1372,7 +1569,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       // get the list of entries.
       var read;
-      if (prefix === null) read = '.';else if (isAbsolute(prefix) || isAbsolute(pattern.join('/'))) {
+      if (prefix === null) read = '.';else if (isAbsolute(prefix) || isAbsolute(pattern.map(function (p) {
+        return typeof p === 'string' ? p : '[*]';
+      }).join('/'))) {
         if (!prefix || !isAbsolute(prefix)) prefix = '/' + prefix;
         read = prefix;
       } else read = prefix;
@@ -1504,7 +1703,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var self = this;
       var lstatcb = inflight(lstatkey, lstatcb_);
 
-      if (lstatcb) fs.lstat(abs, lstatcb);
+      if (lstatcb) self.fs.lstat(abs, lstatcb);
 
       function lstatcb_(er, lstat) {
         if (er && er.code === 'ENOENT') return cb();
@@ -1538,7 +1737,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       var self = this;
-      fs.readdir(abs, readdirCb(this, abs, cb));
+      self.fs.readdir(abs, readdirCb(this, abs, cb));
     };
 
     function readdirCb(self, abs, cb) {
@@ -1717,13 +1916,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       var self = this;
       var statcb = inflight('stat\0' + abs, lstatcb_);
-      if (statcb) fs.lstat(abs, statcb);
+      if (statcb) self.fs.lstat(abs, statcb);
 
       function lstatcb_(er, lstat) {
         if (lstat && lstat.isSymbolicLink()) {
           // If it's a symlink, then treat it as the target, unless
           // the target does not exist, then treat it as a file.
-          return fs.stat(abs, function (er, stat) {
+          return self.fs.stat(abs, function (er, stat) {
             if (er) self._stat2(f, abs, null, lstat, cb);else self._stat2(f, abs, er, stat, cb);
           });
         } else {
@@ -1751,11 +1950,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       return cb(null, c, stat);
     };
-  }, { "./common.js": 10, "./sync.js": 12, "assert": undefined, "events": undefined, "fs": undefined, "fs.realpath": 8, "inflight": 15, "inherits": 16, "minimatch": 18, "once": 19, "path": undefined, "path-is-absolute": 20, "util": undefined }], 12: [function (require, module, exports) {
+  }, { "./common.js": 10, "./sync.js": 12, "assert": undefined, "events": undefined, "fs.realpath": 8, "inflight": 15, "inherits": 16, "minimatch": 18, "once": 19, "path": undefined, "path-is-absolute": 20, "util": undefined }], 12: [function (require, module, exports) {
     module.exports = globSync;
     globSync.GlobSync = GlobSync;
 
-    var fs = require('fs');
     var rp = require('fs.realpath');
     var minimatch = require('minimatch');
     var Minimatch = minimatch.Minimatch;
@@ -1765,8 +1963,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var assert = require('assert');
     var isAbsolute = require('path-is-absolute');
     var common = require('./common.js');
-    var alphasort = common.alphasort;
-    var alphasorti = common.alphasorti;
     var setopts = common.setopts;
     var ownProp = common.ownProp;
     var childrenIgnored = common.childrenIgnored;
@@ -1798,7 +1994,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 
     GlobSync.prototype._finish = function () {
-      assert(this instanceof GlobSync);
+      assert.ok(this instanceof GlobSync);
       if (this.realpath) {
         var self = this;
         this.matches.forEach(function (matchset, index) {
@@ -1818,7 +2014,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     GlobSync.prototype._process = function (pattern, index, inGlobStar) {
-      assert(this instanceof GlobSync);
+      assert.ok(this instanceof GlobSync);
 
       // Get the first [n] parts of pattern that are all strings.
       var n = 0;
@@ -1853,7 +2049,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       // get the list of entries.
       var read;
-      if (prefix === null) read = '.';else if (isAbsolute(prefix) || isAbsolute(pattern.join('/'))) {
+      if (prefix === null) read = '.';else if (isAbsolute(prefix) || isAbsolute(pattern.map(function (p) {
+        return typeof p === 'string' ? p : '[*]';
+      }).join('/'))) {
         if (!prefix || !isAbsolute(prefix)) prefix = '/' + prefix;
         read = prefix;
       } else read = prefix;
@@ -1964,7 +2162,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var lstat;
       var stat;
       try {
-        lstat = fs.lstatSync(abs);
+        lstat = this.fs.lstatSync(abs);
       } catch (er) {
         if (er.code === 'ENOENT') {
           // lstat failed, doesn't exist
@@ -1995,7 +2193,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       try {
-        return this._readdirEntries(abs, fs.readdirSync(abs));
+        return this._readdirEntries(abs, this.fs.readdirSync(abs));
       } catch (er) {
         this._readdirError(abs, er);
         return null;
@@ -2140,7 +2338,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (!stat) {
         var lstat;
         try {
-          lstat = fs.lstatSync(abs);
+          lstat = this.fs.lstatSync(abs);
         } catch (er) {
           if (er && (er.code === 'ENOENT' || er.code === 'ENOTDIR')) {
             this.statCache[abs] = false;
@@ -2150,7 +2348,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         if (lstat && lstat.isSymbolicLink()) {
           try {
-            stat = fs.statSync(abs);
+            stat = this.fs.statSync(abs);
           } catch (er) {
             stat = lstat;
           }
@@ -2178,7 +2376,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     GlobSync.prototype._makeAbs = function (f) {
       return common.makeAbs(this, f);
     };
-  }, { "./common.js": 10, "./glob.js": 11, "assert": undefined, "fs": undefined, "fs.realpath": 8, "minimatch": 18, "path": undefined, "path-is-absolute": 20, "util": undefined }], 13: [function (require, module, exports) {
+  }, { "./common.js": 10, "./glob.js": 11, "assert": undefined, "fs.realpath": 8, "minimatch": 18, "path": undefined, "path-is-absolute": 20, "util": undefined }], 13: [function (require, module, exports) {
     'use strict';
 
     var glob = require('glob');
@@ -2343,43 +2541,53 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   }, { "once": 19, "wrappy": 23 }], 16: [function (require, module, exports) {
     try {
       var util = require('util');
+      /* istanbul ignore next */
       if (typeof util.inherits !== 'function') throw '';
       module.exports = util.inherits;
     } catch (e) {
+      /* istanbul ignore next */
       module.exports = require('./inherits_browser.js');
     }
   }, { "./inherits_browser.js": 17, "util": undefined }], 17: [function (require, module, exports) {
     if (typeof Object.create === 'function') {
       // implementation from standard node.js 'util' module
       module.exports = function inherits(ctor, superCtor) {
-        ctor.super_ = superCtor;
-        ctor.prototype = Object.create(superCtor.prototype, {
-          constructor: {
-            value: ctor,
-            enumerable: false,
-            writable: true,
-            configurable: true
-          }
-        });
+        if (superCtor) {
+          ctor.super_ = superCtor;
+          ctor.prototype = Object.create(superCtor.prototype, {
+            constructor: {
+              value: ctor,
+              enumerable: false,
+              writable: true,
+              configurable: true
+            }
+          });
+        }
       };
     } else {
       // old school shim for old browsers
       module.exports = function inherits(ctor, superCtor) {
-        ctor.super_ = superCtor;
-        var TempCtor = function TempCtor() {};
-        TempCtor.prototype = superCtor.prototype;
-        ctor.prototype = new TempCtor();
-        ctor.prototype.constructor = ctor;
+        if (superCtor) {
+          ctor.super_ = superCtor;
+          var TempCtor = function TempCtor() {};
+          TempCtor.prototype = superCtor.prototype;
+          ctor.prototype = new TempCtor();
+          ctor.prototype.constructor = ctor;
+        }
       };
     }
   }, {}], 18: [function (require, module, exports) {
     module.exports = minimatch;
     minimatch.Minimatch = Minimatch;
 
-    var path = { sep: '/' };
-    try {
-      path = require('path');
-    } catch (er) {}
+    var path = function () {
+      try {
+        return require('path');
+      } catch (e) {}
+    }() || {
+      sep: '/'
+    };
+    minimatch.sep = path.sep;
 
     var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {};
     var expand = require('brace-expansion');
@@ -2430,43 +2638,64 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 
     function ext(a, b) {
-      a = a || {};
       b = b || {};
       var t = {};
-      Object.keys(b).forEach(function (k) {
-        t[k] = b[k];
-      });
       Object.keys(a).forEach(function (k) {
         t[k] = a[k];
+      });
+      Object.keys(b).forEach(function (k) {
+        t[k] = b[k];
       });
       return t;
     }
 
     minimatch.defaults = function (def) {
-      if (!def || !Object.keys(def).length) return minimatch;
+      if (!def || (typeof def === "undefined" ? "undefined" : _typeof(def)) !== 'object' || !Object.keys(def).length) {
+        return minimatch;
+      }
 
       var orig = minimatch;
 
       var m = function minimatch(p, pattern, options) {
-        return orig.minimatch(p, pattern, ext(def, options));
+        return orig(p, pattern, ext(def, options));
       };
 
       m.Minimatch = function Minimatch(pattern, options) {
         return new orig.Minimatch(pattern, ext(def, options));
+      };
+      m.Minimatch.defaults = function defaults(options) {
+        return orig.defaults(ext(def, options)).Minimatch;
+      };
+
+      m.filter = function filter(pattern, options) {
+        return orig.filter(pattern, ext(def, options));
+      };
+
+      m.defaults = function defaults(options) {
+        return orig.defaults(ext(def, options));
+      };
+
+      m.makeRe = function makeRe(pattern, options) {
+        return orig.makeRe(pattern, ext(def, options));
+      };
+
+      m.braceExpand = function braceExpand(pattern, options) {
+        return orig.braceExpand(pattern, ext(def, options));
+      };
+
+      m.match = function (list, pattern, options) {
+        return orig.match(list, pattern, ext(def, options));
       };
 
       return m;
     };
 
     Minimatch.defaults = function (def) {
-      if (!def || !Object.keys(def).length) return Minimatch;
       return minimatch.defaults(def).Minimatch;
     };
 
     function minimatch(p, pattern, options) {
-      if (typeof pattern !== 'string') {
-        throw new TypeError('glob pattern string required');
-      }
+      assertValidPattern(pattern);
 
       if (!options) options = {};
 
@@ -2474,9 +2703,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (!options.nocomment && pattern.charAt(0) === '#') {
         return false;
       }
-
-      // "" only matches ""
-      if (pattern.trim() === '') return p === '';
 
       return new Minimatch(pattern, options).match(p);
     }
@@ -2486,25 +2712,26 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return new Minimatch(pattern, options);
       }
 
-      if (typeof pattern !== 'string') {
-        throw new TypeError('glob pattern string required');
-      }
+      assertValidPattern(pattern);
 
       if (!options) options = {};
+
       pattern = pattern.trim();
 
       // windows support: need to use /, not \
-      if (path.sep !== '/') {
+      if (!options.allowWindowsEscape && path.sep !== '/') {
         pattern = pattern.split(path.sep).join('/');
       }
 
       this.options = options;
+      this.maxGlobstarRecursion = options.maxGlobstarRecursion !== undefined ? options.maxGlobstarRecursion : 200;
       this.set = [];
       this.pattern = pattern;
       this.regexp = null;
       this.negate = false;
       this.comment = false;
       this.empty = false;
+      this.partial = !!options.partial;
 
       // make the set of regexps etc.
       this.make();
@@ -2514,9 +2741,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     Minimatch.prototype.make = make;
     function make() {
-      // don't do it more than once.
-      if (this._made) return;
-
       var pattern = this.pattern;
       var options = this.options;
 
@@ -2536,7 +2760,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       // step 2: expand braces
       var set = this.globSet = this.braceExpand();
 
-      if (options.debug) this.debug = console.error;
+      if (options.debug) this.debug = function debug() {
+        console.error.apply(console, arguments);
+      };
 
       this.debug(this.pattern, set);
 
@@ -2613,17 +2839,28 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       pattern = typeof pattern === 'undefined' ? this.pattern : pattern;
 
-      if (typeof pattern === 'undefined') {
-        throw new TypeError('undefined pattern');
-      }
+      assertValidPattern(pattern);
 
-      if (options.nobrace || !pattern.match(/\{.*\}/)) {
+      // Thanks to Yeting Li <https://github.com/yetingli> for
+      // improving this regexp to avoid a ReDOS vulnerability.
+      if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
         // shortcut. no need to expand.
         return [pattern];
       }
 
       return expand(pattern);
     }
+
+    var MAX_PATTERN_LENGTH = 1024 * 64;
+    var assertValidPattern = function assertValidPattern(pattern) {
+      if (typeof pattern !== 'string') {
+        throw new TypeError('invalid pattern');
+      }
+
+      if (pattern.length > MAX_PATTERN_LENGTH) {
+        throw new TypeError('pattern is too long');
+      }
+    };
 
     // parse a component of the expanded set.
     // At this point, no pattern may contain "/" in it
@@ -2639,14 +2876,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     Minimatch.prototype.parse = parse;
     var SUBPARSE = {};
     function parse(pattern, isSub) {
-      if (pattern.length > 1024 * 64) {
-        throw new TypeError('pattern is too long');
-      }
+      assertValidPattern(pattern);
 
       var options = this.options;
 
       // shortcuts
-      if (!options.noglobstar && pattern === '**') return GLOBSTAR;
+      if (pattern === '**') {
+        if (!options.noglobstar) return GLOBSTAR;else pattern = '*';
+      }
       if (pattern === '') return '';
 
       var re = '';
@@ -2699,10 +2936,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
 
         switch (c) {
+          /* istanbul ignore next */
           case '/':
-            // completely not allowed, even escaped.
-            // Should already be path-split by now.
-            return false;
+            {
+              // completely not allowed, even escaped.
+              // Should already be path-split by now.
+              return false;
+            }
 
           case '\\':
             clearStateChar();
@@ -2726,6 +2966,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               re += c;
               continue;
             }
+
+            // coalesce consecutive non-globstar * characters
+            if (c === '*' && stateChar === '*') continue;
 
             // if we already have a stateChar, then it means
             // that there was something like ** or +? in there.
@@ -2821,25 +3064,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
             // handle the case where we left a class open.
             // "[z-a]" is valid, equivalent to "\[z-a\]"
-            if (inClass) {
-              // split where the last [ was, make sure we don't have
-              // an invalid re. if so, re-walk the contents of the
-              // would-be class to re-translate any characters that
-              // were passed through as-is
-              // TODO: It would probably be faster to determine this
-              // without a try/catch and a new RegExp, but it's tricky
-              // to do safely.  For now, this is safe and works.
-              var cs = pattern.substring(classStart + 1, i);
-              try {
-                RegExp('[' + cs + ']');
-              } catch (er) {
-                // not a valid class!
-                var sp = this.parse(cs, SUBPARSE);
-                re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]';
-                hasMagic = hasMagic || sp[1];
-                inClass = false;
-                continue;
-              }
+            // split where the last [ was, make sure we don't have
+            // an invalid re. if so, re-walk the contents of the
+            // would-be class to re-translate any characters that
+            // were passed through as-is
+            // TODO: It would probably be faster to determine this
+            // without a try/catch and a new RegExp, but it's tricky
+            // to do safely.  For now, this is safe and works.
+            var cs = pattern.substring(classStart + 1, i);
+            try {
+              RegExp('[' + cs + ']');
+            } catch (er) {
+              // not a valid class!
+              var sp = this.parse(cs, SUBPARSE);
+              re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]';
+              hasMagic = hasMagic || sp[1];
+              inClass = false;
+              continue;
             }
 
             // finish up the class.
@@ -2920,9 +3161,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       // something that could conceivably capture a dot
       var addPatternStart = false;
       switch (re.charAt(0)) {
-        case '.':
-        case '[':
-        case '(':
+        case '[':case '.':case '(':
           addPatternStart = true;
       }
 
@@ -2985,7 +3224,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var flags = options.nocase ? 'i' : '';
       try {
         var regExp = new RegExp('^' + re + '$', flags);
-      } catch (er) {
+      } catch (er) /* istanbul ignore next - should be impossible */{
         // If it was an invalid regular expression, then it can't match
         // anything.  This trick looks for a character after the end of
         // the string, which is of course impossible, except in multi-line
@@ -3039,7 +3278,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       try {
         this.regexp = new RegExp(re, flags);
-      } catch (ex) {
+      } catch (ex) /* istanbul ignore next - should be impossible */{
         this.regexp = false;
       }
       return this.regexp;
@@ -3057,8 +3296,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return list;
     };
 
-    Minimatch.prototype.match = match;
-    function match(f, partial) {
+    Minimatch.prototype.match = function match(f, partial) {
+      if (typeof partial === 'undefined') partial = this.partial;
       this.debug('match', f, this.pattern);
       // short-circuit in the case of busted things.
       // comments, etc.
@@ -3111,7 +3350,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       // pattern, failure otherwise.
       if (options.flipNegate) return false;
       return this.negate;
-    }
+    };
 
     // set partial to true to test if, for example,
     // "/a/b" matches the start of "/*/b/*/d"
@@ -3119,13 +3358,144 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     // out of pattern, then that's fine, as long as all
     // the parts match.
     Minimatch.prototype.matchOne = function (file, pattern, partial) {
-      var options = this.options;
+      if (pattern.indexOf(GLOBSTAR) !== -1) {
+        return this._matchGlobstar(file, pattern, partial, 0, 0);
+      }
+      return this._matchOne(file, pattern, partial, 0, 0);
+    };
 
-      this.debug('matchOne', { 'this': this, file: file, pattern: pattern });
+    Minimatch.prototype._matchGlobstar = function (file, pattern, partial, fileIndex, patternIndex) {
+      var i;
 
-      this.debug('matchOne', file.length, pattern.length);
+      // find first globstar from patternIndex
+      var firstgs = -1;
+      for (i = patternIndex; i < pattern.length; i++) {
+        if (pattern[i] === GLOBSTAR) {
+          firstgs = i;break;
+        }
+      }
 
-      for (var fi = 0, pi = 0, fl = file.length, pl = pattern.length; fi < fl && pi < pl; fi++, pi++) {
+      // find last globstar
+      var lastgs = -1;
+      for (i = pattern.length - 1; i >= 0; i--) {
+        if (pattern[i] === GLOBSTAR) {
+          lastgs = i;break;
+        }
+      }
+
+      var head = pattern.slice(patternIndex, firstgs);
+      var body = partial ? pattern.slice(firstgs + 1) : pattern.slice(firstgs + 1, lastgs);
+      var tail = partial ? [] : pattern.slice(lastgs + 1);
+
+      // check the head
+      if (head.length) {
+        var fileHead = file.slice(fileIndex, fileIndex + head.length);
+        if (!this._matchOne(fileHead, head, partial, 0, 0)) {
+          return false;
+        }
+        fileIndex += head.length;
+      }
+
+      // check the tail
+      var fileTailMatch = 0;
+      if (tail.length) {
+        if (tail.length + fileIndex > file.length) return false;
+
+        var tailStart = file.length - tail.length;
+        if (this._matchOne(file, tail, partial, tailStart, 0)) {
+          fileTailMatch = tail.length;
+        } else {
+          // affordance for stuff like a/**/* matching a/b/
+          if (file[file.length - 1] !== '' || fileIndex + tail.length === file.length) {
+            return false;
+          }
+          tailStart--;
+          if (!this._matchOne(file, tail, partial, tailStart, 0)) {
+            return false;
+          }
+          fileTailMatch = tail.length + 1;
+        }
+      }
+
+      // if body is empty (single ** between head and tail)
+      if (!body.length) {
+        var sawSome = !!fileTailMatch;
+        for (i = fileIndex; i < file.length - fileTailMatch; i++) {
+          var f = String(file[i]);
+          sawSome = true;
+          if (f === '.' || f === '..' || !this.options.dot && f.charAt(0) === '.') {
+            return false;
+          }
+        }
+        return partial || sawSome;
+      }
+
+      // split body into segments at each GLOBSTAR
+      var bodySegments = [[[], 0]];
+      var currentBody = bodySegments[0];
+      var nonGsParts = 0;
+      var nonGsPartsSums = [0];
+      for (var bi = 0; bi < body.length; bi++) {
+        var b = body[bi];
+        if (b === GLOBSTAR) {
+          nonGsPartsSums.push(nonGsParts);
+          currentBody = [[], 0];
+          bodySegments.push(currentBody);
+        } else {
+          currentBody[0].push(b);
+          nonGsParts++;
+        }
+      }
+
+      var idx = bodySegments.length - 1;
+      var fileLength = file.length - fileTailMatch;
+      for (var si = 0; si < bodySegments.length; si++) {
+        bodySegments[si][1] = fileLength - (nonGsPartsSums[idx--] + bodySegments[si][0].length);
+      }
+
+      return !!this._matchGlobStarBodySections(file, bodySegments, fileIndex, 0, partial, 0, !!fileTailMatch);
+    };
+
+    // return false for "nope, not matching"
+    // return null for "not matching, cannot keep trying"
+    Minimatch.prototype._matchGlobStarBodySections = function (file, bodySegments, fileIndex, bodyIndex, partial, globStarDepth, sawTail) {
+      var bs = bodySegments[bodyIndex];
+      if (!bs) {
+        // just make sure there are no bad dots
+        for (var i = fileIndex; i < file.length; i++) {
+          sawTail = true;
+          var f = file[i];
+          if (f === '.' || f === '..' || !this.options.dot && f.charAt(0) === '.') {
+            return false;
+          }
+        }
+        return sawTail;
+      }
+
+      var body = bs[0];
+      var after = bs[1];
+      while (fileIndex <= after) {
+        var m = this._matchOne(file.slice(0, fileIndex + body.length), body, partial, fileIndex, 0);
+        // if limit exceeded, no match. intentional false negative,
+        // acceptable break in correctness for security.
+        if (m && globStarDepth < this.maxGlobstarRecursion) {
+          var sub = this._matchGlobStarBodySections(file, bodySegments, fileIndex + body.length, bodyIndex + 1, partial, globStarDepth + 1, sawTail);
+          if (sub !== false) {
+            return sub;
+          }
+        }
+        var f = file[fileIndex];
+        if (f === '.' || f === '..' || !this.options.dot && f.charAt(0) === '.') {
+          return false;
+        }
+        fileIndex++;
+      }
+      return partial || null;
+    };
+
+    Minimatch.prototype._matchOne = function (file, pattern, partial, fileIndex, patternIndex) {
+      var fi, pi, fl, pl;
+      for (fi = fileIndex, pi = patternIndex, fl = file.length, pl = pattern.length; fi < fl && pi < pl; fi++, pi++) {
         this.debug('matchOne loop');
         var p = pattern[pi];
         var f = file[fi];
@@ -3134,95 +3504,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         // should be impossible.
         // some invalid regexp stuff in the set.
-        if (p === false) return false;
-
-        if (p === GLOBSTAR) {
-          this.debug('GLOBSTAR', [pattern, p, f]);
-
-          // "**"
-          // a/**/b/**/c would match the following:
-          // a/b/x/y/z/c
-          // a/x/y/z/b/c
-          // a/b/x/b/x/c
-          // a/b/c
-          // To do this, take the rest of the pattern after
-          // the **, and see if it would match the file remainder.
-          // If so, return success.
-          // If not, the ** "swallows" a segment, and try again.
-          // This is recursively awful.
-          //
-          // a/**/b/**/c matching a/b/x/y/z/c
-          // - a matches a
-          // - doublestar
-          //   - matchOne(b/x/y/z/c, b/**/c)
-          //     - b matches b
-          //     - doublestar
-          //       - matchOne(x/y/z/c, c) -> no
-          //       - matchOne(y/z/c, c) -> no
-          //       - matchOne(z/c, c) -> no
-          //       - matchOne(c, c) yes, hit
-          var fr = fi;
-          var pr = pi + 1;
-          if (pr === pl) {
-            this.debug('** at the end');
-            // a ** at the end will just swallow the rest.
-            // We have found a match.
-            // however, it will not swallow /.x, unless
-            // options.dot is set.
-            // . and .. are *never* matched by **, for explosively
-            // exponential reasons.
-            for (; fi < fl; fi++) {
-              if (file[fi] === '.' || file[fi] === '..' || !options.dot && file[fi].charAt(0) === '.') return false;
-            }
-            return true;
-          }
-
-          // ok, let's see if we can swallow whatever we can.
-          while (fr < fl) {
-            var swallowee = file[fr];
-
-            this.debug('\nglobstar while', file, fr, pattern, pr, swallowee);
-
-            // XXX remove this slice.  Just pass the start index.
-            if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
-              this.debug('globstar found match!', fr, fl, swallowee);
-              // found a match.
-              return true;
-            } else {
-              // can't swallow "." or ".." ever.
-              // can only swallow ".foo" when explicitly asked.
-              if (swallowee === '.' || swallowee === '..' || !options.dot && swallowee.charAt(0) === '.') {
-                this.debug('dot detected!', file, fr, pattern, pr);
-                break;
-              }
-
-              // ** swallows a segment, and continue.
-              this.debug('globstar swallow a segment, and continue');
-              fr++;
-            }
-          }
-
-          // no match was found.
-          // However, in partial mode, we can't say this is necessarily over.
-          // If there's more *pattern* left, then
-          if (partial) {
-            // ran out of file
-            this.debug('\n>>> no match, partial?', file, fr, pattern, pr);
-            if (fr === fl) return true;
-          }
-          return false;
-        }
+        /* istanbul ignore if */
+        if (p === false || p === GLOBSTAR) return false;
 
         // something other than **
         // non-magic patterns just have to match exactly
         // patterns with magic have been turned into regexps.
         var hit;
         if (typeof p === 'string') {
-          if (options.nocase) {
-            hit = f.toLowerCase() === p.toLowerCase();
-          } else {
-            hit = f === p;
-          }
+          hit = f === p;
           this.debug('string match', p, f, hit);
         } else {
           hit = f.match(p);
@@ -3231,17 +3521,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         if (!hit) return false;
       }
-
-      // Note: ending in / means that we'll get a final ""
-      // at the end of the pattern.  This can only match a
-      // corresponding "" at the end of the file.
-      // If the file ends in /, then it can only match a
-      // a pattern that ends in /, unless the pattern just
-      // doesn't have any more for it. But, a/b/ should *not*
-      // match "a/b/*", even though "" matches against the
-      // [^/]*? pattern, except in partial mode, where it might
-      // simply not be reached yet.
-      // However, a/b/ should still satisfy a/*
 
       // now either we fell off the end of the pattern, or we're done.
       if (fi === fl && pi === pl) {
@@ -3253,16 +3532,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         // this is ok if we're doing the match as part of
         // a glob fs traversal.
         return partial;
-      } else if (pi === pl) {
-        // ran out of pattern, still have file left.
-        // this is only acceptable if we're on the very last
-        // empty segment of a file with a trailing slash.
-        // a/* should match a/b/
-        var emptyFileEnd = fi === fl - 1 && file[fi] === '';
-        return emptyFileEnd;
-      }
+      } else /* istanbul ignore else */if (pi === pl) {
+          // ran out of pattern, still have file left.
+          // this is only acceptable if we're on the very last
+          // empty segment of a file with a trailing slash.
+          // a/* should match a/b/
+          return fi === fl - 1 && file[fi] === '';
+        }
 
       // should be unreachable.
+      /* istanbul ignore next */
       throw new Error('wtf?');
     };
 
@@ -3431,7 +3710,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var path = require('path');
     var globs = require('globs');
 
-    var version = '2.5.3-dev';
+    var version = '2.5.4';
 
     module.exports = function (config) {
       var _require = require('./output')(config),
@@ -3672,6 +3951,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (config.halt) {
           me.kill();
         }
+        // The run goes on, but the process ends with 1 so a script can see that something went wrong
+        process.exitCode = 1;
         return false;
       };
 
