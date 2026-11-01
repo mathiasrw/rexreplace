@@ -69,6 +69,14 @@ reset
 echo foobar >> myfile
 assert		 		"rexreplace '^.' 'x' myfile -o --void-multiline"    "xoobar\nfoobar"
 
+# A file given with an absolute path outside the working folder is changed (#726)
+reset
+outside=$(mktemp -d)
+echo foobar > "$outside/myfile"
+assert_success		"rexreplace o x $outside/myfile -Q"
+assert		 		"cat $outside/myfile"    "fxxbar"
+rm -r "$outside"
+
 # Todo: test -e
 # assert		 		"rexreplace ??? ??? myfile -e"    "foobar"
 # reset

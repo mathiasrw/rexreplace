@@ -169,7 +169,7 @@ const files = globs.sync(args._);
 
 files
 	// Correct filepath
-	.map(filepath=>path.normalize(process.cwd()+'/'+filepath))
+	.map(filepath=>path.resolve(filepath))
 	
 	// Find out if any filepaths are invalid
 	.filter(filepath=>fs.existsSync(filepath)?true:error('File not found:',filepath))
