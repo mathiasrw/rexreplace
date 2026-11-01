@@ -266,6 +266,21 @@ assert		 		"rexreplace '*+*' 'b' my.file -o --literal"    'foobar'
 # assert		 		"rexreplace ??? ??? my.file -d"    "foobar"
 # reset
 
+
+# A file given with an absolute path outside the working folder is changed (#726)
+reset
+OUTSIDE="$(mktemp -d)"
+echo 'foobar' > "$OUTSIDE/my.file"
+assert_raises		"rexreplace o x $OUTSIDE/my.file"    0
+assert		 		"cat $OUTSIDE/my.file"    "fxxbar"
+
+# and --replacement-js gets the path of the file as it is
+echo 'foobar' > "$OUTSIDE/my.file"
+rexreplace 'foobar' 'file' "$OUTSIDE/my.file" -j
+assert		 		"cat $OUTSIDE/my.file"    "$OUTSIDE/my.file"
+rm -rf "$OUTSIDE"
+
+
 rm my.file
 
 assert_end 			"rexreplace"

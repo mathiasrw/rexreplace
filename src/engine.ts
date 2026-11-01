@@ -112,7 +112,7 @@ export function engine(config: any = {engine: 'V8'}) {
 		}
 
 		//Make sure data is always on disk
-		const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+		const oriFile = path.resolve(_file_rr);
 		const salt = new Date().toISOString().replace(/:/g, '_').replace('Z', '');
 		const backupFile = oriFile + '.' + salt + '.backup';
 
@@ -434,7 +434,7 @@ function dynamicReplacement(_file_rr, _config_rr, _data_rr) {
 	const betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
 
 	if (!_config_rr.dataIsPiped) {
-		_file = path.normalize(path.join(_cwd, _file_rr));
+		_file = path.resolve(_cwd, _file_rr);
 		_file_rel = path.relative(_cwd, _file);
 		const pathInfo = path.parse(_file);
 		_dirpath = pathInfo.dir;
