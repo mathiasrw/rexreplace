@@ -39,6 +39,8 @@ export const error = function (msg, data = '') {
 	if (config.halt) {
 		kill(msg);
 	}
+	// The run goes on, and the exit code tells that something went wrong
+	process.exitCode = 1;
 	return false;
 };
 

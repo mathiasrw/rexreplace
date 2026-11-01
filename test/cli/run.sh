@@ -337,6 +337,12 @@ assert		 		"rexreplace fxxbar 'file' '$outside/my.file' -j -o"    "$outside/my.f
 rm -r "$outside"
 
 
+# An error from a file gives exit code 1 (#728)
+reset
+assert_raises		"rexreplace o x nope.file"    1
+assert_raises		"rexreplace o x nope.file -Q"    1
+
+
 rm my.file
 rm your.file
 
