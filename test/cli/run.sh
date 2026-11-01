@@ -237,6 +237,14 @@ assert_raises		"rexreplace o x $outside/my.file"    0
 assert		 		"cat $outside/my.file"    "fxxbar"
 rm -r "$outside"
 
+# A file that gives an error makes the exit code 1, also when the run goes on (#728)
+reset
+assert_raises		"rexreplace o x nope.file"    1
+mkdir a.dir
+assert_raises		"rexreplace o x a.dir my.file"    1
+assert		 		"cat my.file"    "fxxbar"
+rmdir a.dir
+
 rm my.file
 
 assert_end 			"rexreplace"
