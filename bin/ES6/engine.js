@@ -55,7 +55,7 @@ export function engine(config) {
             const _cwd = process.cwd();
             let _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function('_fs', '_globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', 'return eval(code_rr)');
             if (!_config_rr.dataIsPiped) {
-                _file = path.normalize(path.join(process.cwd(), _file_rr));
+                _file = path.resolve(_cwd, _file_rr);
                 let pathInfo = path.parse(_file);
                 _path = pathInfo.dir;
                 _filename = pathInfo.base;
@@ -107,7 +107,7 @@ export function engine(config) {
             });
         }
         //Make sure data is always on disk
-        const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+        const oriFile = path.resolve(_file_rr);
         const salt = new Date()
             .toISOString()
             .toString()

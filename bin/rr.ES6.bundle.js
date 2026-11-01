@@ -47,6 +47,7 @@
         if (config.halt) {
             kill(msg);
         }
+        process.exitCode = 1;
         return false;
     };
     function debug(data) {
@@ -70,7 +71,7 @@
     var fs = require('fs');
     var path = require('path');
     var globs = require('globs');
-    var version = '3.1.0';
+    var version = '3.1.2';
     function engine(config) {
         outputConfig(config);
         step('Displaying steps for:');
@@ -123,7 +124,7 @@
                 var _cwd = process.cwd();
                 var _file = '', _path = '', _filename = '', _name = '', _ext = '', dynamicContent = new Function('_fs', '_globs', '_pipe', '_text', '_find', '_file', '_path', '_filename', '_name', '_ext', '_cwd', 'code_rr', 'return eval(code_rr)');
                 if (!_config_rr.dataIsPiped) {
-                    _file = path.normalize(path.join(process.cwd(), _file_rr));
+                    _file = path.resolve(_cwd, _file_rr);
                     var pathInfo = path.parse(_file);
                     _path = pathInfo.dir;
                     _filename = pathInfo.base;
@@ -177,7 +178,7 @@
                 });
             }
             //Make sure data is always on disk
-            var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+            var oriFile = path.resolve(_file_rr);
             var salt = new Date()
                 .toISOString()
                 .toString()
