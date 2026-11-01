@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const version = `1.1.0`;
+const version = `1.1.1`;
 const fs = require('fs');
 const path = require('path'); 
 const font = require('chalk');

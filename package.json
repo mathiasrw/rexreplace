@@ -1,6 +1,6 @@
 {
   "name": "rexreplace",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CLI regexp replacement for files with lookahead and backreference to matching groups in the replacement.",
   "author": "Mathias Rangel Wulff",
   "license": "MIT",
