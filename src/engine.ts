@@ -94,7 +94,7 @@ export function engine(config) {
 					'return eval(code_rr)'
 				);
 			if (!_config_rr.dataIsPiped) {
-				_file = path.normalize(path.join(process.cwd(), _file_rr));
+				_file = path.resolve(_cwd, _file_rr);
 				let pathInfo = path.parse(_file);
 				_path = pathInfo.dir;
 				_filename = pathInfo.base;
@@ -191,7 +191,7 @@ export function engine(config) {
 		}
 
 		//Make sure data is always on disk
-		const oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+		const oriFile = path.resolve(_file_rr);
 		const salt = new Date()
 			.toISOString()
 			.toString()
