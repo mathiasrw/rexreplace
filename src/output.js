@@ -36,6 +36,8 @@ module.exports = function(config){
 		if(config.halt){
 			me.kill();
 		}
+		// The run goes on, but the process ends with 1 so a script can see that something went wrong
+		process.exitCode = 1;
 		return false;
 	};
 

@@ -199,6 +199,23 @@ assert		 		"printf x | rexreplace 'b' _ myfile -o --replacement-pipe"    'fooxar
 # assert		 		"rexreplace ??? ??? myfile -d"    "foobar"
 # reset
 
+# A file that can not be read gives exit code 1, and the run goes on (#728)
+reset
+echo 'foobar' > locked.file
+chmod 000 locked.file
+assert_raises		"rexreplace o x locked.file"    1
+assert_raises		"rexreplace o x locked.file myfile"    1
+assert		 		"cat myfile"    "fxxbar"
+rm -f locked.file
+
+# A file given with an absolute path outside the working folder is changed (#726)
+reset
+outside="$(mktemp -d)"
+echo 'foobar' > "$outside/myfile"
+assert_raises		"rexreplace o x $outside/myfile"    0
+assert		 		"cat $outside/myfile"    "fxxbar"
+rm -r "$outside"
+
 rm myfile
 
 assert_end 			"rexreplace"
