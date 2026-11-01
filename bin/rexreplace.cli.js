@@ -150,7 +150,7 @@
                 });
             }
             //Make sure data is always on disk
-            var oriFile = path.normalize(path.join(process.cwd(), _file_rr));
+            var oriFile = path.resolve(_file_rr);
             var salt = new Date()
                 .toISOString()
                 .replace(/:/g, '_')
@@ -336,7 +336,7 @@
         var needsByteOrSize = /bytes|size/.test(_config_rr.replacement);
         var betterToReadfromFile = needsByteOrSize && 50000000 < _text.length; // around 50 Mb will lead to reading filezise from file instead of copying into buffer
         if (!_config_rr.dataIsPiped) {
-            _file = path.normalize(path.join(_cwd, _file_rr));
+            _file = path.resolve(_cwd, _file_rr);
             _file_rel = path.relative(_cwd, _file);
             var pathInfo = path.parse(_file);
             _dirpath = pathInfo.dir;
