@@ -10,7 +10,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$DIR/../../.." && pwd)"
 SIZES="${*:-1KB 10KB 100KB 500KB 1MB 5MB 10MB 50MB 100MB}"
 
-# The file to change is in tmp of the repo, and given by a path from the repo, as rr 3 to 7 can not write to an absolute path outside the working folder
+# The file to change is in tmp of the repo, and given by a path from the repo, as rr is most often run on files under the working folder
 mkdir -p "$ROOT/tmp"
 TMP="$(mktemp -d)"
 WORK="$(mktemp -d "$ROOT/tmp/performance.XXXXXX")"

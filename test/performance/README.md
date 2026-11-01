@@ -6,7 +6,7 @@ Each test has its own folder with a `run.sh`. It builds rr from the working tree
 
 `shared` has what the tests have in common, the build of rr (`build.sh`), the check that each tool gives the same file (`check.sh`) and the tables (`table.js`).
 
-Before the timing of each size, every command runs once, and the test stops if one fails or gives another file than the others. A tool that does other work, or no work, would else be timed for it. The file to change is in the ignored `tmp` folder of the repo and is given by a path from the repo, as rr 3 to 7 can not write to an absolute path outside the working folder (#726). They say nothing and end with exit code 0 (#728), so without the check they look fast on big files.
+Before the timing of each size, every command runs once, and the test stops if one fails or gives another file than the others. A tool that does other work, or no work, would else be timed for it. The file to change is in the ignored `tmp` folder of the repo and is given by a path from the repo, as rr is most often run on files under the working folder.
 
 ## tools
 
@@ -25,7 +25,7 @@ A small file shows the start of each tool, and a big file shows the regex engine
 
 ## readme-speed
 
-Runs the speed test of the README again, so its numbers can be checked. rr runs against `sed` on the same sizes as the table there, from 1 KB to 100 MB, with the last release of each major of rr from npm, and with rr from the working tree on Node and on Bun.
+Runs the speed test of the README again, so its numbers can be checked. rr runs against `sed` on the same sizes as the table there, from 1 KB to 100 MB, with the last release of each major of rr from npm, and with rr from the working tree on Node and on Bun. rr from the working tree also runs with `-U`, as the flag u is on by default and `-U` turns it off, so the table shows what the flag costs.
 
 ```bash
 bash test/performance/readme-speed/run.sh
@@ -35,6 +35,17 @@ bash test/performance/readme-speed/run.sh 1KB 10MB
 The files are made as the README says. Up to 500 KB they are cut from the book, and a larger file is the first 500 KB put together again and again. Each command runs 10 times, as in the README. The pattern stops at a line break for rr, as in the tools test.
 
 The releases are installed in the temp folder for the run. rr 6 needs `re2`, and the version it asks for does not build on a new Node, so a later `re2` stands in for it.
+
+## flag-u
+
+Shows what the flag u costs, as it is on by default and `-U` turns it off. rr from the working tree runs with and without `-U`, on Node and on Bun, on files from 1 KB to 100 MB.
+
+```bash
+bash test/performance/flag-u/run.sh
+bash test/performance/flag-u/run.sh 1KB 10MB
+```
+
+Each size runs with two patterns. One removes the HTML tags, so it matches often. The other looks for a tag that ends in `~>`, which is not in the book, so it never matches and the file stays the same. Both try at each `<` and read the tag, so they do the same work, apart from the replacing.
 
 ## yargs-vs-argmate
 

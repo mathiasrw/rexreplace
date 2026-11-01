@@ -9,9 +9,9 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$DIR/../../.." && pwd)"
 SIZES="${*:-1KB 5KB 10KB 100KB 500KB 1MB 5MB 10MB 25MB 50MB 100MB}"
-VERSIONS='1.1.0 2.5.3 3.1.1 4.1.2 5.3.0 6.1.5 7.1.15'
+VERSIONS='1.1.1 2.5.4 3.1.2 4.1.3 5.3.1 6.1.6 7.1.16'
 
-# The file to change is in tmp of the repo, and given by a path from the repo, as rr 3 to 7 can not write to an absolute path outside the working folder
+# The file to change is in tmp of the repo, and given by a path from the repo, as rr is most often run on files under the working folder
 mkdir -p "$ROOT/tmp"
 TMP="$(mktemp -d)"
 WORK="$(mktemp -d "$ROOT/tmp/performance.XXXXXX")"
@@ -44,8 +44,11 @@ ARGS=(-n 'sed' "sed $SED_INPLACE 's/$TAGS//g' $FILE")
 for version in $VERSIONS; do
 	ARGS+=(-n "rr $version" "node $TMP/$version/node_modules/.bin/rexreplace '$TAGS_IN_A_LINE' '' $FILE")
 done
+# The flag u is on by default now, and -U turns it off, to see what it costs
 ARGS+=(-n 'rr now' "node $TMP/rr/node.mjs '$TAGS_IN_A_LINE' '' $FILE")
+ARGS+=(-n 'rr now -U' "node $TMP/rr/node.mjs '$TAGS_IN_A_LINE' '' $FILE -U")
 ARGS+=(-n 'rr now on Bun' "bun $TMP/rr/bun.mjs '$TAGS_IN_A_LINE' '' $FILE")
+ARGS+=(-n 'rr now on Bun -U' "bun $TMP/rr/bun.mjs '$TAGS_IN_A_LINE' '' $FILE -U")
 
 head -c $((500 * 1024)) "$DIR/../tools/1984.html" > "$TMP/500KB.part"
 

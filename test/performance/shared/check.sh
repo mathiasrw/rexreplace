@@ -11,8 +11,10 @@ check_same() {
 		if ! eval "$command" > /dev/null 2>&1 < /dev/null; then
 			echo "$name failed" && exit 1
 		fi
+		# The wrong file is kept in tmp of the repo, to see what went wrong
 		if ! cmp -s "$file" "$reference"; then
-			echo "$name does not give the same file as the others" && exit 1
+			cp "$file" "$ROOT/tmp/$name.wrong"
+			echo "$name does not give the same file as the others, see tmp/$name.wrong" && exit 1
 		fi
 	done
 }
