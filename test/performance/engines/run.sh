@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Shows what the flag u costs, as it is on by default and -U turns it off.
-# rr from the working tree runs with and without -U, on Node and on Bun, on short and long files, with a pattern that matches often and one that never matches.
+# Compares the regex engines of rr, and the flag u that is on by default against -U and the flag v.
+# rr from the working tree runs on Node and on Bun, on short and long files, with a pattern that matches often and one that never matches.
 # Give sizes as arguments to run only those, like `1KB 10MB`.
 
 set -e
@@ -49,19 +49,27 @@ for size in $SIZES; do
 	for kind in matches no-matches; do
 		pattern="$MATCHES"
 		[ "$kind" = no-matches ] && pattern="$NO_MATCHES"
-		ARGS=(
-			-n 'Node' "node $TMP/rr/node.mjs '$pattern' '' $FILE"
-			-n 'Node -U' "node $TMP/rr/node.mjs '$pattern' '' $FILE -U"
-			-n 'Bun' "bun $TMP/rr/bun.mjs '$pattern' '' $FILE"
-			-n 'Bun -U' "bun $TMP/rr/bun.mjs '$pattern' '' $FILE -U"
-		)
-		check_same "$TMP/$size.file" "$FILE" "$TMP/$size.$kind" "${ARGS[@]}"
+		for runtime in Node Bun; do
+			rr="node $TMP/rr/node.mjs '$pattern' '' $FILE"
+			[ "$runtime" = Bun ] && rr="bun $TMP/rr/bun.mjs '$pattern' '' $FILE"
+			# The default flags are gimu, so --flags gimv is the default with v in place of u
+			ARGS=(
+				-n 'rr' "$rr"
+				-n 'rr -U' "$rr -U"
+				-n 'rr v' "$rr --flags gimv"
+				-n 'runtime' "$rr -E runtime"
+				-n 'runtime -U' "$rr -E runtime -U"
+				-n 'runtime v' "$rr -E runtime --flags gimv"
+				-n 'regex+' "$rr -E regex+"
+			)
+			check_same "$TMP/$size.file" "$FILE" "$TMP/$size.$kind" "${ARGS[@]}"
 
-		row="$size $kind"
-		echo ''
-		echo "## $row"
-		hyperfine -N --warmup 2 --min-runs 10 --prepare "cp $TMP/$size.file $FILE" --export-json "$TMP/$row.json" "${ARGS[@]}"
-		ROWS+=("$TMP/$row.json")
+			row="$size $kind on $runtime"
+			echo ''
+			echo "## $row"
+			hyperfine -N --warmup 2 --min-runs 10 --prepare "cp $TMP/$size.file $FILE" --export-json "$TMP/$row.json" "${ARGS[@]}"
+			ROWS+=("$TMP/$row.json")
+		done
 	done
 done
 

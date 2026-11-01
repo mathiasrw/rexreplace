@@ -36,14 +36,16 @@ The files are made as the README says. Up to 500 KB they are cut from the book, 
 
 The releases are installed in the temp folder for the run. rr 6 needs `re2`, and the version it asks for does not build on a new Node, so a later `re2` stands in for it.
 
-## flag-u
+## engines
 
-Shows what the flag u costs, as it is on by default and `-U` turns it off. rr from the working tree runs with and without `-U`, on Node and on Bun, on files from 1 KB to 100 MB.
+Compares the regex engines of rr, and what the flag u costs, as it is on by default. rr from the working tree runs on Node and on Bun, on files from 1 KB to 100 MB.
 
 ```bash
-bash test/performance/flag-u/run.sh
-bash test/performance/flag-u/run.sh 1KB 10MB
+bash test/performance/engines/run.sh
+bash test/performance/engines/run.sh 1KB 10MB
 ```
+
+The engines are `rr`, the default, `runtime`, the native engine of the runtime, and `regex+`, which uses the flag v. `rr` and `runtime` each run with the default flag u, with `-U`, and with the flag v in place of u. Each row is one runtime, so the 1.00x is the fastest engine on that runtime.
 
 Each size runs with two patterns. One removes the HTML tags, so it matches often. The other looks for a tag that ends in `~>`, which is not in the book, so it never matches and the file stays the same. Both try at each `<` and read the tag, so they do the same work, apart from the replacing.
 
