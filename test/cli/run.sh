@@ -281,6 +281,15 @@ assert		 		"cat $OUTSIDE/my.file"    "$OUTSIDE/my.file"
 rm -rf "$OUTSIDE"
 
 
+# A file that gives an error makes the exit code 1 (#728)
+reset
+assert_raises		"rexreplace o x nope.file"    1
+echo 'foobar' > locked.file
+chmod 000 locked.file
+assert_raises		"rexreplace o x my.file locked.file"    1
+assert		 		"cat my.file"    "fxxbar"
+rm -f locked.file
+
 rm my.file
 
 assert_end 			"rexreplace"

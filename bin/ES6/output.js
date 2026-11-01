@@ -34,6 +34,7 @@ export const error = function (msg, data = '') {
     if (config.halt) {
         kill(msg);
     }
+    process.exitCode = 1;
     return false;
 };
 export function debug(data) {
