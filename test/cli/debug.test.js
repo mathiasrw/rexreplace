@@ -19,7 +19,7 @@ describe('--debug', () => {
 				engine: 'rr',
 				hiddenCaptures: [],
 				search: 'o',
-				flags: 'gimu',
+				flags: 'gim',
 				replacement: 'x',
 				replacementSrc: null,
 			});
