@@ -74,7 +74,7 @@
     var globs = require('globs');
     var now = new Date();
     var RE2 = require('re2');
-    var version = '6.1.5';
+    var version = '6.1.6';
     function engine(config) {
         if ( config === void 0 ) config = { engine: 'V8' };
 
