@@ -52,13 +52,13 @@ for size in $SIZES; do
 		for runtime in Node Bun; do
 			rr="node $TMP/rr/node.mjs '$pattern' '' $FILE"
 			[ "$runtime" = Bun ] && rr="bun $TMP/rr/bun.mjs '$pattern' '' $FILE"
-			# The default flags are gimu, so --flags gimv is the default with v in place of u
+			# Grouped by flag, as the flag is what moves the time. The default flags are gimu, so --flags gimv is the default with v in place of u
 			ARGS=(
 				-n 'rr' "$rr"
-				-n 'rr -U' "$rr -U"
-				-n 'rr v' "$rr --flags gimv"
 				-n 'runtime' "$rr -E runtime"
+				-n 'rr -U' "$rr -U"
 				-n 'runtime -U' "$rr -E runtime -U"
+				-n 'rr v' "$rr --flags gimv"
 				-n 'runtime v' "$rr -E runtime --flags gimv"
 				-n 'regex+' "$rr -E regex+"
 			)
