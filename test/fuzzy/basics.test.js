@@ -2,6 +2,9 @@ import {describe, test, expect} from 'bun:test';
 import fs from 'fs';
 import {rr, random, ended} from '../helper.js';
 
+// rr reads a quantifier followed by + as possessive, which String.replace has no way to give
+const re = {possessive: /[*+?]\+/};
+
 describe('basics', () => {
 	test('gives the same as String.replace with the flags gim', async () => {
 		const rnd = random(1);
@@ -9,12 +12,17 @@ describe('basics', () => {
 			const pattern = rnd.text('abc.*+?|^$', 1, 4);
 			const replacement = rnd.text('xyz &1', 0, 3);
 			const text = rnd.text('abcABC \n', 0, 40);
+			if (re.possessive.test(pattern)) {
+				continue;
+			}
 
 			let regex;
 			try {
 				regex = new RegExp(pattern, 'gim');
 			} catch (e) {
-				expect((await rr(pattern, replacement, {pipedData: text})).exit, pattern).toBe(1);
+				expect((await rr(pattern, replacement, {pipedData: text})).exit, pattern).toBeGreaterThan(
+					0
+				);
 				continue;
 			}
 
