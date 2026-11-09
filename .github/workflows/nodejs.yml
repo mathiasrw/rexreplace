@@ -12,7 +12,8 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [18.x, 20.x, 22.x, 23.x, latest]
+                # From the lowest Node rr runs on (??= needs 15) to the newest release, as latest can be a prerelease
+                node-version: [16.x, 18.x, 20.x, 22.x, 24.x, 26.x]
 
         steps:
             - uses: actions/checkout@v7
@@ -21,6 +22,5 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
             - uses: oven-sh/setup-bun@v2
-            # latest can be a prerelease of Node, like 27.0.0-alpha, which no engines range of a package takes
-            - run: yarn install --ignore-engines
+            - run: yarn install
             - run: yarn test-ci
