@@ -280,6 +280,13 @@ echo 'foo' > aab.file
 echo 'foo' > b.file
 assert		 		"LC_ALL=da_DK.UTF-8 rexreplace 'foo' 'x' b.file aab.file --sort natural --simulate --name-delimiter ','"    'aab.file,b.file,'
 
+# true and yes in any case are natural
+reset
+echo 'foo' > a10.file
+echo 'foo' > a9.file
+assert		 		"rexreplace 'foo' 'x' a10.file a9.file --sort YES --simulate --name-delimiter ','"    'a9.file,a10.file,'
+assert		 		"rexreplace 'foo' 'x' a10.file a9.file --sort true --simulate --name-delimiter ','"    'a9.file,a10.file,'
+
 
 # --full-path prints the full path of each name
 reset

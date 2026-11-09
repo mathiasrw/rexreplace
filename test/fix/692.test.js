@@ -5,21 +5,33 @@ import {$} from 'bun';
 import {cli, sh} from '../helper.js';
 
 describe('#692 a single argument', () => {
-	test.each(['-v', '-version', '--version'])('%s prints only the version', async arg => {
+	test.each(['-v', '--version'])('%s prints only the version', async arg => {
 		const result = await sh($`bun ${cli} ${arg}`);
 		expect(result).toEqual({out: (await sh($`bun ${cli} --version`)).out, err: '', exit: 0});
 		expect(result.out).toMatch(/^\S+\n$/);
 	});
 
-	test.each(['-h', '-help', '--help'])('%s prints the help to stdout', async arg => {
+	test.each(['-h', '--help'])('%s prints the help to stdout', async arg => {
 		const result = await sh($`bun ${cli} ${arg}`);
 		expect(result.out).toContain('Options:');
 		expect(result.err).toBe('');
 		expect(result.exit).toBe(0);
 	});
 
-	// -V is verbose and -H is halt: other flags, not a request for the version or the help
-	test.each(['my-vile', '-V', 'o-ho', '-H', 'a-v', 'a-h', 'xversion', 'xhelp'])(
+	// -V is verbose and -H is halt, other flags and not a request for the version or the help.
+	// -version and -help are the short flags -v -e -r -s -i -o -n and -h -e -l -p, as for argmate.
+	test.each([
+		'my-vile',
+		'-V',
+		'o-ho',
+		'-H',
+		'a-v',
+		'a-h',
+		'xversion',
+		'xhelp',
+		'-version',
+		'-help',
+	])(
 		'%s is wrong use: the help goes to stderr, nothing to stdout, and the exit code is 3',
 		async arg => {
 			const result = await sh($`bun ${cli} ${arg}`);

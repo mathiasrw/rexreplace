@@ -29,6 +29,6 @@ describe('--js-pipe', () => {
 		fs.writeFileSync('my.file', 'foobar\n');
 		const result = await sh($`echo -n x | bun ${cli} foo pipe my.file -o --js ${flag}`);
 		expect(result.exit).toBe(3);
-		expect(result.err).toContain('Unknown argument');
+		expect(result.err).toContain('Unknown parameter');
 	});
 });
