@@ -515,13 +515,13 @@ Z	z
 	.alias('c', 'status-compact')
 	.describe(
 		'c',
-		'As the last thing before ending any execution a status report will be printed as one line of JSON. Will print even in combination with `--quiet-total`. Will incude extra info about the inner workings of the engine in combination with the `--verbose` flag.'
+		'As the last thing before ending any execution a status report will be printed as one line of JSON. Will print even in combination with `--quiet-total`. Will include extra info about the inner workings of the engine in combination with the `--verbose` flag.'
 	)
 
 	.boolean('status')
 	.describe(
 		'status',
-		'Same as `--status-compact`, but always starting with a `\\n` followed by pretty printed JSON.'
+		'Same as `--status-compact`, but always starting with a `\\n` followed by pretty printed JSON. `--status-compact` wins when both are given.'
 	)
 
 	.boolean('d')
@@ -539,11 +539,12 @@ Z	z
 
 // The engine resolves with the status of the run, or throws a panic when the run can not go on.
 // The CLI is the only part that acts on the process.
+// Compact wins when both are given, as asking for it is asking for less output
 function printStatus(config, status) {
-	if (config.status) {
-		writeTo(process.stdout, '\n' + JSON.stringify(status, null, 2) + '\n');
-	} else if (config.statusCompact) {
+	if (config.statusCompact) {
 		writeTo(process.stdout, JSON.stringify(status) + '\n');
+	} else if (config.status) {
+		writeTo(process.stdout, '\n' + JSON.stringify(status, null, 2) + '\n');
 	}
 }
 
