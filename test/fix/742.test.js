@@ -208,6 +208,14 @@ describe('#742 the CLI', () => {
 		}
 	);
 
+	test('prints the status report on one line when both --status and --status-compact are given', async () => {
+		fs.writeFileSync('a.file', 'foo');
+		const result = await sh($`bun ${cli} o x a.file --status --status-compact --quiet-total`);
+		expect(result.out).toBe(
+			'{"files":{"searched":["a.file"],"updated":["a.file"]},"pipe":null,"warnings":[],"errors":[]}\n'
+		);
+	});
+
 	test('sets the exit code to 2 when a file gives an error, and prints the status report', async () => {
 		fs.writeFileSync('a.file', 'foo');
 		fs.chmodSync('a.file', 0);
