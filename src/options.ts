@@ -84,20 +84,13 @@ export const argConfig = {
 	unicode: {
 		type: 'boolean',
 		alias: ['u'],
-		description:
-			'Treat patterns as a sequence of unicode code points. For the default engine it is on by default. For the regex+ engine (`-E regex+`) it swaps from v mode to u mode.',
-	},
-	voidUnicode: {
-		type: 'boolean',
-		alias: ['U'],
-		description:
-			'Void unicode. For the default engine it means reading the pattern as UTF-16 parts (escapes of chars that need no escaping are allowed). For the regex+ engine it has no impact, as it defaults to v mode.',
+		description: 'Treat pattern as a sequence of unicode code points.',
 	},
 	flags: {
 		type: 'string',
 		description:
-			'The flags of the regex, like `gimsv`, in place of the defaults: `gimu`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`. Not with -G, -I, -M, -s, -u or -U.',
-		conflict: ['I', 'G', 'M', 's', 'u', 'U'],
+			'The flags of the regex, like `gimsv`, in place of the defaults: `gim`, or `gimvxn` with `-E regex+`. `x` and `n` need `-E regex+`. Not with -G, -I, -M, -s or -u.',
+		conflict: ['I', 'G', 'M', 's', 'u'],
 	},
 	// Not `valid` as node takes the name of an encoding in any case, like `UTF8`
 	encoding: {

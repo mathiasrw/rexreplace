@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Compares the regex engines of rr, and the flag u that is on by default against -U and the flag v.
+# Compares the regex engines of rr, and the default flags against the flag u and the flag v.
 # rr from the working tree runs on Node and on Bun, on short and long files, with a pattern that matches often and one that never matches.
 # Give sizes as arguments to run only those, like `1KB 10MB`.
 
@@ -52,12 +52,12 @@ for size in $SIZES; do
 		for runtime in Node Bun; do
 			rr="node $TMP/rr/node.mjs '$pattern' '' $FILE"
 			[ "$runtime" = Bun ] && rr="bun $TMP/rr/bun.mjs '$pattern' '' $FILE"
-			# Grouped by flag, as the flag is what moves the time. The default flags are gimu, so --flags gimv is the default with v in place of u
+			# Grouped by flag, as the flag is what moves the time. The default flags are gim, so --flags gimv is the default with v added
 			ARGS=(
 				-n 'rr' "$rr"
 				-n 'runtime' "$rr -E runtime"
-				-n 'rr -U' "$rr -U"
-				-n 'runtime -U' "$rr -E runtime -U"
+				-n 'rr -u' "$rr -u"
+				-n 'runtime -u' "$rr -E runtime -u"
 				-n 'rr v' "$rr --flags gimv"
 				-n 'runtime v' "$rr -E runtime --flags gimv"
 				-n 'regex+' "$rr -E regex+"

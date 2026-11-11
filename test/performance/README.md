@@ -25,7 +25,7 @@ A small file shows the start of each tool, and a big file shows the regex engine
 
 ## readme-speed
 
-Runs the speed test of the README again, so its numbers can be checked. rr runs against `sed` on the same sizes as the table there, from 1 KB to 100 MB, with the last release of each major of rr from npm, and with rr from the working tree on Node and on Bun. rr from the working tree also runs with `-U`, as the flag u is on by default and `-U` turns it off, so the table shows what the flag costs.
+Runs the speed test of the README again, so its numbers can be checked. rr runs against `sed` on the same sizes as the table there, from 1 KB to 100 MB, with the last release of each major of rr from npm, and with rr from the working tree on Node and on Bun. rr from the working tree also runs with `-u`, so the table shows what the flag u costs.
 
 ```bash
 bash test/performance/readme-speed/run.sh
@@ -38,16 +38,18 @@ The releases are installed in the temp folder for the run. rr 6 needs `re2`, and
 
 ## engines
 
-Compares the regex engines of rr, and what the flag u costs, as it is on by default. rr from the working tree runs on Node and on Bun, on files from 1 KB to 100 MB.
+Compares the regex engines of rr, and what the flags u and v cost. rr from the working tree runs on Node and on Bun, on files from 1 KB to 100 MB.
 
 ```bash
 bash test/performance/engines/run.sh
 bash test/performance/engines/run.sh 1KB 10MB
 ```
 
-The engines are `rr`, the default, `runtime`, the native engine of the runtime, and `regex+`, which uses the flag v. `rr` and `runtime` each run with the default flag u, with `-U`, and with the flag v in place of u. Each row is one runtime, so the 1.00x is the fastest engine on that runtime.
+The engines are `rr`, the default, `runtime`, the native engine of the runtime, and `regex+`, which uses the flag v. `rr` and `runtime` each run with the default flags, with the flag u (`-u`), and with the flag v. Each row is one runtime, so the 1.00x is the fastest engine on that runtime.
 
 Each size runs with two patterns. One removes the HTML tags, so it matches often. The other looks for a tag that ends in `~>`, which is not in the book, so it never matches and the file stays the same. Both try at each `<` and read the tag, so they do the same work, apart from the replacing.
+
+`results-nov-2026.md` was measured while the flag u was on by default, so its `rr` is with u and its `rr -U` is without.
 
 ## yargs-vs-argmate
 

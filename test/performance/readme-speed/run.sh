@@ -44,11 +44,11 @@ ARGS=(-n 'sed' "sed $SED_INPLACE 's/$TAGS//g' $FILE")
 for version in $VERSIONS; do
 	ARGS+=(-n "rr $version" "node $TMP/$version/node_modules/.bin/rexreplace '$TAGS_IN_A_LINE' '' $FILE")
 done
-# The flag u is on by default now, and -U turns it off, to see what it costs
+# With -u too, to see what the flag u costs
 ARGS+=(-n 'rr now' "node $TMP/rr/node.mjs '$TAGS_IN_A_LINE' '' $FILE")
-ARGS+=(-n 'rr now -U' "node $TMP/rr/node.mjs '$TAGS_IN_A_LINE' '' $FILE -U")
+ARGS+=(-n 'rr now -u' "node $TMP/rr/node.mjs '$TAGS_IN_A_LINE' '' $FILE -u")
 ARGS+=(-n 'rr now on Bun' "bun $TMP/rr/bun.mjs '$TAGS_IN_A_LINE' '' $FILE")
-ARGS+=(-n 'rr now on Bun -U' "bun $TMP/rr/bun.mjs '$TAGS_IN_A_LINE' '' $FILE -U")
+ARGS+=(-n 'rr now on Bun -u' "bun $TMP/rr/bun.mjs '$TAGS_IN_A_LINE' '' $FILE -u")
 
 head -c $((500 * 1024)) "$DIR/../tools/1984.html" > "$TMP/500KB.part"
 

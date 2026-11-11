@@ -144,7 +144,7 @@ describe('#742 the engine part of the status', () => {
 				engine: 'rr',
 				hiddenCaptures: [],
 				search: 'o+',
-				flags: 'giu',
+				flags: 'gi',
 				replacement,
 				replacementSrc: src,
 			});
