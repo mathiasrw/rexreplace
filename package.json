@@ -33,7 +33,7 @@
 		"postbuild": "cp bin/rexreplace.cli.node.js bin/rexreplace.cli.node.min.js && cp bin/rexreplace.cli.bun.js bin/rexreplace.cli.bun.min.js",
 		"version": "yarn build-minify && yarn sync-version && git add npm/rexreplace-bun/package.json",
 		"build": "yarn bundle-node --outfile=bin/rexreplace.cli.node.js && yarn bundle-bun --outfile=bin/rexreplace.cli.bun.js && yarn build-lib",
-		"build-lib": "bun build src/engine.ts --target=node --format=esm --packages=external --outfile=dist/engine.js && bun build src/engine.ts --target=node --format=cjs --external fast-glob --external yargs --outfile=dist/engine.cjs",
+		"build-lib": "bun build src/engine.ts --target=node --format=esm --packages=external --outfile=dist/engine.js && bun build src/engine.ts --target=node --format=cjs --external tinyglobby --external yargs --outfile=dist/engine.cjs",
 		"build-minify": "yarn build && yarn minify",
 		"minify": "yarn bundle-node --minify --outfile=bin/rexreplace.cli.node.min.js && yarn bundle-bun --minify --outfile=bin/rexreplace.cli.bun.min.js",
 		"bundle-node": "bun build src/cli.node.ts --target=node --format=esm --packages=external",
@@ -80,9 +80,9 @@
 		"test": "test"
 	},
 	"dependencies": {
-		"fast-glob": "^3.3.3",
 		"regex": "6.1.0",
 		"regex-utilities": "2.3.0",
+		"tinyglobby": "^0.2.17",
 		"yargs": "16"
 	}
 }
