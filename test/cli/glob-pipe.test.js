@@ -20,7 +20,7 @@ describe('--glob-pipe', () => {
 		async flag => {
 			fs.writeFileSync('my.file', 'foobar\n');
 			const result = await sh($`echo -n my.file | bun ${cli} b x --glob-pipe ${flag}`);
-			expect(result.err).toContain('are mutually exclusive');
+			expect(result.err).toContain('conflicts with');
 			expect(result.exit).toBe(3);
 			expect(fs.readFileSync('my.file', 'utf8')).toBe('foobar\n');
 		}
