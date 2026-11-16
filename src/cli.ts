@@ -398,7 +398,7 @@ The code has access to the following variables:
 \`r\` as an alias for \`require\` with both expanded to understand a relative path even if it is not starting with \`./\`, 
 \`fs\` from node, 
 \`path\` from node, 
-\`globs\` from npm, 
+\`globs\`: tinyglobby from npm, 
 \`pipe\`: the data piped into the command with --js-pipe (null if no piped data, and \`pipe_\` is \`❌ \`), 
 \`find\`: pattern searched for (the needle), 
 \`text\`: full text being searched i.e. file content or piped data (the haystack), 

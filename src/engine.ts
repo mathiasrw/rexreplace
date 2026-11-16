@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {createRequire} from 'module';
-import globs from 'fast-glob';
+import * as globs from 'tinyglobby';
 
 // --js code loads modules with require and r. An ES module has no require, and a CommonJS build of Bun
 // fixes import.meta.url to the path of the build, so the require of the CommonJS build is used there.
@@ -1088,7 +1088,8 @@ function dynamicReplacement(file, config, text, numbers = {n: 1, t: 1, i: 1, c: 
 		require: r,
 		r,
 		fs,
-		globs,
+		// sync is kept for code written for fast-glob, which rr used before
+		globs: {...globs, sync: globs.globSync},
 		path,
 		time_obj: config.startTime,
 		mtime_obj,
@@ -1351,16 +1352,38 @@ function pathKind(file) {
 // A glob that finds files and meets a folder that can not be read, like one with no access, is an error,
 // and the run goes on with the files that can be found. A glob of --exclude-glob that fails is a panic,
 // as the files it should take away can not be known, and they must not be changed.
+// tinyglobby skips a folder it can not read without a word, so the reading of folders is watched here.
 function glob(patterns, globOptions, exclude = false) {
-	try {
-		return globs.sync(patterns, globOptions);
-	} catch (e) {
-		if (exclude) {
-			return panic('The files to exclude can not be found', e.message);
+	const failed = [];
+	const readdirSync = (dir, options) => {
+		try {
+			return fs.readdirSync(dir, options);
+		} catch (e) {
+			failed.push(e);
+			throw e;
 		}
-		error('Not all paths could be accessed', e.message);
-		return globs.sync(patterns, {...globOptions, suppressErrors: true});
+	};
+	// A folder name finds nothing, so it never changes all the files in the folder
+	const options = {...globOptions, expandDirectories: false, fs: {readdirSync}};
+	// A glob from the root gives full paths, as it was given, and the others give paths from the working folder.
+	// The patterns with ! take files away from both.
+	const negated = patterns.filter(pattern => pattern.startsWith('!'));
+	const found = patterns.filter(pattern => !pattern.startsWith('!'));
+	const fromRoot = found.filter(pattern => path.isAbsolute(pattern));
+	const fromHere = found.filter(pattern => !path.isAbsolute(pattern));
+	const files = [
+		...(fromHere.length ? globs.globSync([...fromHere, ...negated], options) : []),
+		...(fromRoot.length
+			? globs.globSync([...fromRoot, ...negated], {...options, absolute: true})
+			: []),
+	];
+	if (failed.length) {
+		if (exclude) {
+			return panic('The files to exclude can not be found', failed[0].message);
+		}
+		error('Not all paths could be accessed', failed[0].message);
 	}
+	return files;
 }
 
 // A path that is a file is used as it is, so a name with glob characters, like `a[1].md` or `my (1).md`, gives only that file.
