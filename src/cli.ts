@@ -26,11 +26,12 @@ if (process.argv.length < 4) {
 
 // The engine resolves with the status of the run, or throws a panic when the run can not go on.
 // The CLI is the only part that acts on the process.
+// Compact wins when both are given, as asking for it is asking for less output
 function printStatus(config, status) {
-	if (config.status) {
-		writeTo(process.stdout, '\n' + JSON.stringify(status, null, 2) + '\n');
-	} else if (config.statusCompact) {
+	if (config.statusCompact) {
 		writeTo(process.stdout, JSON.stringify(status) + '\n');
+	} else if (config.status) {
+		writeTo(process.stdout, '\n' + JSON.stringify(status, null, 2) + '\n');
 	}
 }
 

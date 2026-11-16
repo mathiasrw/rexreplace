@@ -314,12 +314,12 @@ export const argConfig = {
 		type: 'boolean',
 		alias: ['c'],
 		description:
-			'As the last thing before ending any execution a status report will be printed as one line of JSON. Will print even in combination with `--quiet-total`. Will incude extra info about the inner workings of the engine in combination with the `--verbose` flag.',
+			'As the last thing before ending any execution a status report will be printed as one line of JSON. Will print even in combination with `--quiet-total`. Will include extra info about the inner workings of the engine in combination with the `--verbose` flag.',
 	},
 	status: {
 		type: 'boolean',
 		description:
-			'Same as `--status-compact`, but always starting with a `\\n` followed by pretty printed JSON.',
+			'Same as `--status-compact`, but always starting with a `\\n` followed by pretty printed JSON. `--status-compact` wins when both are given.',
 	},
 	debug: {
 		type: 'boolean',
